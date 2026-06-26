@@ -1,24 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Gunakan variabel lingkungan yang sudah Anda set di Vercel
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabase } from './supabaseClient';
 
 export default async function Home() {
-  // Kita coba ambil data dari 1 tabel saja dulu untuk tes
-  // Ganti 'nama_tabel_anda' dengan nama salah satu tabel Anda yang sudah di-set SELECT policy-nya
-  const { data, error } = await supabase.from('settings').select('*');
+  // Mengambil data dari tabel 'categories'
+  const { data: categories, error } = await supabase
+    .from('categories')
+    .select('*');
 
   return (
-    <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>Haul Dashboard</h1>
-      
+    <main className="p-10">
+      <h1 className="text-2xl font-bold mb-5">Data Kategori</h1>
       {error ? (
-        <p style={{ color: 'red' }}>Error: {error.message}</p>
+        <p className="text-red-500">Error: {error.message}</p>
       ) : (
-        <pre>{JSON.stringify(data, null, 2)}</pre>
+        <pre className="bg-gray-100 p-4 rounded overflow-auto">
+          {JSON.stringify(categories, null, 2)}
+        </pre>
       )}
     </main>
   );
