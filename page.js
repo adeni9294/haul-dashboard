@@ -1,35 +1,22 @@
-import { supabase } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+// Inisialisasi Supabase
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default async function Home() {
-  // Mengambil data dari 6 tabel
-  const { data: data1 } = await supabase.from('bank_acoounts').select('*');
-    const { data: data6 } = await supabase.from('transactions').select('*');
-  const { data: data2 } = await supabase.from('budgets').select('*');
-  const { data: data3 } = await supabase.from('categories').select('*');
-  const { data: data4 } = await supabase.from('committee').select('*');
-  const { data: data5 } = await supabase.from('settings').select('*');
-
-
-  const allData = [
-    { title: 'bank_acoounts', items: data1 },
-    { title: 'transactions', items: data2 },
-    { title: 'budgets', items: data3 },
-    { title: 'categories', items: data4 },
-    { title: 'committee', items: data5 },
-    { title: 'settings', items: data6 },
-  ];
+  // Mengambil data dari tabel (Ganti 'nama_tabel_anda' dengan salah satu dari 6 tabel Anda)
+  const { data, error } = await supabase.from('transactions').select('*');
 
   return (
     <main className="p-10">
-      <h1 className="text-3xl font-bold mb-8">Dashboard Data</h1>
-      {allData.map((tabel, index) => (
-        <section key={index} className="mb-10">
-          <h2 className="text-xl font-semibold mb-3">{tabel.title}</h2>
-          <div className="bg-gray-100 p-4 rounded overflow-auto">
-            <pre>{JSON.stringify(tabel.items, null, 2)}</pre>
-          </div>
-        </section>
-      ))}
+      <h1 className="text-2xl font-bold mb-5">Haul Dashboard</h1>
+      <div className="bg-gray-900 text-white p-4 rounded overflow-auto">
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      </div>
+      {error && <p className="text-red-500 mt-2">Error: {error.message}</p>}
     </main>
   );
 }
