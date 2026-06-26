@@ -11,23 +11,29 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-gray-950 text-white min-h-screen p-5 border-r border-gray-800">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold tracking-wider text-amber-500">HAUL DASHBOARD</h1>
-        <p className="text-xs text-gray-400 mt-1">Workspace Infrastructure</p>
+    <aside className="w-64 bg-black text-white min-h-screen p-5 border-r border-gray-800 flex flex-col justify-between">
+      <div>
+        <div className="mb-8 px-2">
+          <h1 className="text-lg font-bold tracking-wider text-yellow-500">HAUL DASHBOARD</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Workspace Management</p>
+        </div>
+        
+        <nav className="space-y-1">
+          {menus.map((menu, index) => (
+            <Link 
+              key={index} 
+              href={`/${menu.slug}`}
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-900 hover:text-white transition-colors"
+            >
+              {menu.name}
+            </Link>
+          ))}
+        </nav>
       </div>
       
-      <nav className="space-y-2">
-        {menus.map((menu, index) => (
-          <Link 
-            key={index} 
-            href={`/${menu.slug}`}
-            className="block px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all"
-          >
-            {menu.name}
-          </Link>
-        ))}
-      </nav>
+      <div className="px-2 pt-4 border-t border-gray-900 text-xs text-gray-500">
+        Status: <span className="text-green-500 font-medium">Production</span>
+      </div>
     </aside>
   );
 }
