@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
       }
     }
     loadHeaderSettings();
-  }, [pathname]); // Memuat ulang data konfigurasi setiap kali perpindahan menu terjadi
+  }, [pathname]);
 
   const menuItems = [
     { name: '📊 Dashboard', path: '/' },
@@ -49,15 +49,24 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="id">
-      {/* Menggabungkan variabel tema aktif ke dalam class body */}
       <body className={`theme-${activeTheme} bg-slate-950 text-slate-100 min-h-screen antialiased transition-colors duration-300`}>
         <div className="flex flex-col min-h-screen">
+          
+          {/* HEADER DENGAN TOMBOL LOGIN DI POJOK KANAN */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6">
-            <div className="p-4 md:p-6 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-center gap-4 shadow-lg w-full">
+            <div className="p-4 md:p-6 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-center gap-4 shadow-lg w-full relative">
+              
+              {/* Tombol Login */}
+              <div className="absolute top-4 right-4 z-10">
+                <Link href="/pengaturan" className="flex items-center gap-1.5 px-3 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-[11px] font-mono font-bold text-amber-500 transition-all">
+                  🔒 Login Admin
+                </Link>
+              </div>
+
               <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-950 rounded-full border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
                 {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <div className="text-xs text-amber-500 font-mono">LOGO</div>}
               </div>
-              <div className="text-center md:text-left space-y-1 flex-1">
+              <div className="text-center md:text-left space-y-1 flex-1 pr-16">
                 <h1 className="text-sm md:text-base font-black text-amber-500 tracking-wide">{orgName}</h1>
                 <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed">{address}</p>
                 <p className="text-[9px] md:text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-800/60 mt-1">💳 {bankInfo}</p>
