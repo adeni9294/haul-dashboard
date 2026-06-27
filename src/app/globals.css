@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* ==================== 15 DAFTAR TEMA MODERN GLOBAL PANITIA ==================== */
+body.theme-emerald-cyber { --accent-color: #10b981; }
+body.theme-velvet-rose { --accent-color: #ec4899; }
+body.theme-neon-sunset { --accent-color: #f97316; }
+body.theme-nordic-frost { --accent-color: #38bdf8; }
+body.theme-tokyo-night { --accent-color: #8b5cf6; }
+body.theme-amber-gold { --accent-color: #f59e0b; }
+body.theme-cyberpunk-2076 { --accent-color: #eab308; }
+body.theme-ocean-deep { --accent-color: #2563eb; }
+body.theme-forest-moss { --accent-color: #059669; }
+body.theme-crimson-tide { --accent-color: #dc2626; }
+body.theme-obsidian-stark { --accent-color: #94a3b8; }
+body.theme-dracula-vamp { --accent-color: #a855f7; }
+body.theme-coffee-latte { --accent-color: #b45309; }
+body.theme-mint-fresh { --accent-color: #2dd4bf; }
+body.theme-retro-wave { --accent-color: #f43f5e; }
