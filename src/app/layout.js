@@ -22,24 +22,30 @@ export default function RootLayout({ children }) {
     loadHeaderSettings();
   }, [pathname]);
 
-  async function loadHeaderSettings() {
+async function loadHeaderSettings() {
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      if (!supabaseUrl || !supabaseKey) return;
-
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      // Tambahkan { cache: 'no-store' } jika perlu atau gunakan query yang memaksa fresh data
       const { data, error } = await supabase.from('settings').select('*').eq('id', 'main_config');
 
       if (!error && data && data.length > 0) {
         const config = data[0];
-        if (config.org_name) setOrgName(config.org_name);
-        if (config.address) setAddress(config.address);
-        if (config.bank_info) setBankInfo(config.bank_info);
-        if (config.logo_url) setLogoUrl(config.logo_url);
+        // ... (biarkan setting orgName, address, dll tetap ada)
+        
+        // SINKRONISASI TEMA dengan cara memaksa update state
+        if (config.theme) {
+          const themeMap = {
+            'emerald-cyber': 'bg-zinc-950 text-emerald-100 selection:bg-emerald-500/20',
+            'velvet-rose': 'bg-neutral-950 text-rose-100 selection:bg-rose-500/20',
+            'neon-sunset': 'bg-stone-950 text-orange-100 selection:bg-orange-500/20',
+            'amber-gold': 'bg-gray-950 text-amber-100 selection:bg-amber-gold/20',
+            'slate-dark': 'bg-slate-950 text-slate-100 selection:bg-amber-500/30'
+          };
+          setThemeClass(themeMap[config.theme] || themeMap['slate-dark']);
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error("Gagal memuat tema:", err);
     }
   }
 
