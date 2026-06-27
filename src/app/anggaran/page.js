@@ -28,7 +28,6 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!itemName.trim() || !plannedAmount) return;
 
-    // Pastikan nama properti ini (item_name & planned_amount) sesuai dengan kolom di Supabase Anda
     const payload = { 
       item_name: itemName.trim(), 
       planned_amount: parseInt(plannedAmount, 10) 
@@ -36,11 +35,21 @@ export default function AnggaranPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
+        // Tambahkan .select() untuk memastikan data berhasil di-update tanpa memicu RLS bisu
+        const { error, data } = await supabase
+          .from('budgets')
+          .update(payload)
+          .eq('id', editingId)
+          .select();
+        
         if (error) throw error;
         alert('Rencana anggaran berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('budgets').insert([payload]);
+        const { error, data } = await supabase
+          .from('budgets')
+          .insert([payload])
+          .select();
+          
         if (error) throw error;
         alert('Rencana anggaran berhasil ditambahkan!');
       }
@@ -50,14 +59,17 @@ export default function AnggaranPage() {
       setEditingId(null);
       await loadBudgets();
     } catch (err) { 
-      alert(`Gagal menyimpan anggaran: ${err.message || 'Periksa kecocokan kolom database'}`); 
+      console.error(err);
+      // Membuka pesan detail error dari Supabase jika ada objek mendalam
+      const errorMsg = err.message || JSON.stringify(err);
+      alert(`Gagal menyimpan anggaran: ${errorMsg}\n\nTips: Pastikan kebijakan RLS (Row Level Security) untuk INSERT/UPDATE pada tabel "budgets" di Supabase sudah di-enable.`); 
     }
   };
 
   const handleEdit = (b) => {
     setEditingId(b.id);
-    setItemName(b.item_name || b.name || '');
-    setPlannedAmount(b.planned_amount || b.amount || '');
+    setItemName(b.item_name || '');
+    setPlannedAmount(b.planned_amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -103,9 +115,9 @@ export default function AnggaranPage() {
           ) : (
             budgets.map(b => (
               <div key={b.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <span>💡 {b.item_name || b.name}</span>
+                <span>💡 {b.item_name}</span>
                 <div className="flex items-center gap-4">
-                  <span className="font-mono font-bold text-amber-500">Rp {Number(b.planned_amount || b.amount || 0).toLocaleString('id-ID')}</span>
+                  <span className="font-mono font-bold text-amber-500">Rp {Number(b.planned_amount || 0).toLocaleString('id-ID')}</span>
                   {isAdmin && (
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(b)} className="text-amber-500 font-bold hover:underline">Edit</button>
