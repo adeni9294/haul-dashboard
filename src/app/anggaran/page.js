@@ -18,42 +18,42 @@ export default function AnggaranPage() {
 
   async function loadBudgets() {
     const { data, error } = await supabase.from('budgets').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      setBudgets(data);
-    }
+    if (!error && data) setBudgets(data);
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!itemName.trim() || !plannedAmount) return;
-    
-    // Perbaikan: Tambahkan created_at agar tidak error NULL
+
+    // Gunakan penampung ID lokal agar tidak terpengaruh re-render state mid-flight
+    const currentEditingId = editingId;
+
     const payload = { 
       item_name: itemName.trim(), 
-      planned_amount: Number(plannedAmount),
-      created_at: new Date().toISOString() 
+      planned_amount: Number(plannedAmount)
     };
 
     try {
-      if (editingId) {
-        // Saat update, created_at tidak perlu diubah, jadi kita hapus dari payload update
-        const updatePayload = { item_name: payload.item_name, planned_amount: payload.planned_amount };
-        const { error } = await supabase.from('budgets').update(updatePayload).eq('id', editingId);
+      if (currentEditingId) {
+        // Mode KOREKSI DATA (UPDATE) - Tanpa menyertakan created_at baru
+        const { error } = await supabase.from('budgets').update(payload).eq('id', currentEditingId);
         if (error) throw error;
         alert('Rencana anggaran berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('budgets').insert([payload]);
+        // Mode BUAT BARU (INSERT) - Menyertakan created_at agar lolos NOT NULL constraint
+        const insertPayload = { ...payload, created_at: new Date().toISOString() };
+        const { error } = await supabase.from('budgets').insert([insertPayload]);
         if (error) throw error;
         alert('Rencana anggaran berhasil ditambahkan!');
       }
 
+      // Reset form secara aman
       setItemName(''); 
       setPlannedAmount('');
       setEditingId(null);
-      
       await loadBudgets();
     } catch (err) { 
-      alert(`Gagal menyimpan: ${err.message}`); 
+      alert(`Gagal menyimpan data anggaran: ${err.message}`); 
     }
   };
 
@@ -65,13 +65,9 @@ export default function AnggaranPage() {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Hapus anggaran ini?')) {
+    if (confirm('Hapus anggaran ini secara permanen?')) {
       const { error } = await supabase.from('budgets').delete().eq('id', id);
-      if (!error) {
-        await loadBudgets();
-      } else {
-        alert('Gagal menghapus data.');
-      }
+      if (!error) await loadBudgets();
     }
   };
 
@@ -89,7 +85,7 @@ export default function AnggaranPage() {
           <label className="block text-[11px] text-slate-400 mb-1">Nominal Alokasi (Rp)</label>
           <input type="number" placeholder="Contoh: 5000000" required value={plannedAmount} onChange={(e) => setPlannedAmount(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
         </div>
-        <button type="submit" className="w-full py-2.5 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
+        <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
           {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
         </button>
         {editingId && (
