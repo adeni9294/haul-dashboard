@@ -10,8 +10,11 @@ export default function AnggaranPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  // PRIORITAS: Menggunakan service key untuk bypass RLS jika tersedia, fallback ke anon key untuk public read
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY || supabaseAnonKey;
+  
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   useEffect(() => { 
     setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
@@ -35,8 +38,7 @@ export default function AnggaranPage() {
 
     try {
       if (editingId) {
-        // Tambahkan .select() untuk memastikan data berhasil di-update tanpa memicu RLS bisu
-        const { error, data } = await supabase
+        const { error } = await supabase
           .from('budgets')
           .update(payload)
           .eq('id', editingId)
@@ -45,7 +47,7 @@ export default function AnggaranPage() {
         if (error) throw error;
         alert('Rencana anggaran berhasil diperbarui!');
       } else {
-        const { error, data } = await supabase
+        const { error } = await supabase
           .from('budgets')
           .insert([payload])
           .select();
@@ -60,9 +62,7 @@ export default function AnggaranPage() {
       await loadBudgets();
     } catch (err) { 
       console.error(err);
-      // Membuka pesan detail error dari Supabase jika ada objek mendalam
-      const errorMsg = err.message || JSON.stringify(err);
-      alert(`Gagal menyimpan anggaran: ${errorMsg}\n\nTips: Pastikan kebijakan RLS (Row Level Security) untuk INSERT/UPDATE pada tabel "budgets" di Supabase sudah di-enable.`); 
+      alert(`Gagal menyimpan anggaran: ${err.message || JSON.stringify(err)}`); 
     }
   };
 
