@@ -19,31 +19,28 @@ export default function KepanitiaanPage() {
 
   async function loadMembers() {
     const { data, error } = await supabase.from('committee').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      setMembers(data);
-    }
+    if (!error && data) setMembers(data);
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !role.trim()) return;
 
-    // Perbaikan: Tambahkan created_at agar lolos constraint NOT NULL Supabase
+    const currentEditingId = editingId;
     const payload = { 
       member_name: name.trim(), 
       role_position: role.trim(), 
-      phone_number: phone.trim(),
-      created_at: new Date().toISOString()
+      phone_number: phone.trim()
     };
 
     try {
-      if (editingId) {
-        const updatePayload = { member_name: payload.member_name, role_position: payload.role_position, phone_number: payload.phone_number };
-        const { error } = await supabase.from('committee').update(updatePayload).eq('id', editingId);
+      if (currentEditingId) {
+        const { error } = await supabase.from('committee').update(payload).eq('id', currentEditingId);
         if (error) throw error;
         alert('Data anggota panitia berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('committee').insert([payload]);
+        const insertPayload = { ...payload, created_at: new Date().toISOString() };
+        const { error } = await supabase.from('committee').insert([insertPayload]);
         if (error) throw error;
         alert('Anggota panitia baru berhasil ditambahkan!');
       }
@@ -52,10 +49,9 @@ export default function KepanitiaanPage() {
       setRole(''); 
       setPhone(''); 
       setEditingId(null);
-      
       await loadMembers();
     } catch (err) { 
-      alert(`Gagal memproses data: ${err.message}`); 
+      alert(`Gagal memproses data panitia: ${err.message}`); 
     }
   };
 
