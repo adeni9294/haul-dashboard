@@ -9,14 +9,12 @@ export default function DashboardPage() {
   const [targetAnggaran, setTargetAnggaran] = useState(0);
   const [rincianMasuk, setRincianMasuk] = useState([]);
   const [rincianKeluar, setRincianKeluar] = useState([]);
-  const [rawTransactions, setRawTransactions] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        
         if (!supabaseUrl || !supabaseKey) {
           setLoading(false);
           return;
@@ -27,8 +25,7 @@ export default function DashboardPage() {
         // 1. Ambil data transaksi
         const { data: transData, error: transError } = await supabase
           .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: true });
+          .select('*');
 
         if (transError) throw transError;
 
@@ -45,7 +42,6 @@ export default function DashboardPage() {
         const mapKeluar = {};
 
         if (transData) {
-          setRawTransactions(transData);
           transData.forEach(item => {
             const nominal = Number(item.amount || 0);
             const itemType = String(item.type || '').toLowerCase();
@@ -84,44 +80,6 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  // Fungsi kompilasi file CSV untuk Lampiran LPJ Fisik
-  const handleExportCSV = () => {
-    if (rawTransactions.length === 0) {
-      alert('Belum ada data kas yang bisa diekspor!');
-      return;
-    }
-
-    // Header Tabel Dokumen LPJ
-    const headers = ['No', 'Tanggal Pembuatan', 'Kategori Khas', 'Jenis Kas', 'Nominal Angka', 'Keterangan'];
-    
-    // Konversi baris data transaksi
-    const rows = rawTransactions.map((item, idx) => [
-      idx + 1,
-      item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-',
-      `"${item.category || ''}"`,
-      item.type || '',
-      item.amount || 0,
-      `"${item.note || ''}"`
-    ]);
-
-    // Tambahkan baris ringkasan akumulasi saldo akhir di bawah lampiran
-    rows.push([]);
-    rows.push(['', '', '', 'TOTAL PEMASUKAN', pemasukan]);
-    rows.push(['', '', '', 'TOTAL PENGELUARAN', pengeluaran]);
-    rows.push(['', '', '', 'SISA SALDO AKHIR', pemasukan - pengeluaran]);
-
-    const csvContent = 'data:text/csv;charset=utf-8,' 
-      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'LAPORAN_PERTANGGUNGJAWABAN_KAS_HAUL.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const saldoAkhir = pemasukan - pengeluaran;
   const persentaseProgres = targetAnggaran > 0 ? Math.min(Math.round((pemasukan / targetAnggaran) * 100), 100) : 0;
 
@@ -135,18 +93,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-6xl animate-fadeIn">
-      {/* HEADER DASHBOARD + TOMBOL LPJ */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/60 pb-4">
-        <div>
-          <h2 className="text-xl font-bold text-white">📊 Ringkasan Kas & Anggaran</h2>
-          <p className="text-xs text-slate-400">Pantauan neraca saldo aktual dan kendali ekspor berkas laporan pertanggungjawaban.</p>
-        </div>
-        <button
-          onClick={handleExportCSV}
-          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-        >
-          📄 Cetak Lampiran LPJ (.CSV)
-        </button>
+      {/* HEADER DASHBOARD BERSIH TANPA TOMBOL LPJ */}
+      <div>
+        <h2 className="text-xl font-bold text-white">📊 Ringkasan Kas & Anggaran</h2>
+        <p className="text-xs text-slate-400">Pantauan neraca saldo aktual dan kendali pencatatan keuangan panitia secara terpusat.</p>
       </div>
 
       {/* CARD TOP SUMMARY */}
