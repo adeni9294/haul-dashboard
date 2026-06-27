@@ -20,7 +20,8 @@ export default function KepanitiaanPage() {
   }, []);
 
   async function loadMembers() {
-    const { data, error } = await supabase.from('committee').select('*').order('created_at', { ascending: false });
+    // Diubah: Urutkan murni berdasarkan id panitia terkini
+    const { data, error } = await supabase.from('committee').select('*').order('id', { ascending: false });
     if (!error && data) setMembers(data);
   }
 
@@ -38,14 +39,14 @@ export default function KepanitiaanPage() {
         if (error) throw error;
         alert('Data panitia diperbarui!');
       } else {
-        const insertPayload = { ...payload, created_at: new Date().toISOString() };
-        const { error } = await supabase.from('committee').insert([insertPayload]);
+        // Bersih dari created_at
+        const { error } = await supabase.from('committee').insert([payload]);
         if (error) throw error;
         alert('Anggota panitia ditambahkan!');
       }
       setName(''); setRole(''); setPhone(''); setEditingId(null);
       await loadMembers();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert(`Gagal: ${err.message}`); }
   };
 
   const handleEdit = (m) => {
@@ -90,8 +91,7 @@ export default function KepanitiaanPage() {
         </form>
       ) : (
         <div className="p-6 bg-slate-900/40 border border-slate-900 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di <b>Mode Publik (Lihat Saja)</b>.</p>
-          <p className="text-[10px] text-slate-600">Gunakan tombol "Login Admin" di atas untuk memodifikasi struktur kepanitiaan.</p>
+          <p className="text-xs text-slate-400 font-medium">💡 Mode Publik (Lihat Saja).</p>
         </div>
       )}
 
