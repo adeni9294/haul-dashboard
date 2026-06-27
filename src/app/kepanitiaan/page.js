@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export default function KepanitiaanPage() {
   const [members, setMembers] = useState([]);
   const [name, setName] = useState('');
@@ -10,10 +14,6 @@ export default function KepanitiaanPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
   useEffect(() => { 
     setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
     loadMembers(); 
@@ -21,7 +21,12 @@ export default function KepanitiaanPage() {
 
   async function loadMembers() {
     const { data, error } = await supabase.from('committee').select('*').order('id', { ascending: false });
-    if (!error && data) setMembers(data);
+    if (error) {
+      console.error(error);
+      alert(`Gagal memuat susunan panitia: ${error.message || JSON.stringify(error)}`);
+    } else if (data) {
+      setMembers(data);
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -29,28 +34,34 @@ export default function KepanitiaanPage() {
     if (!isAdmin) return alert('Aksi ditolak!');
     if (!name.trim() || !role.trim()) return;
 
-    const payload = { member_name: name.trim(), role_position: role.trim(), phone_number: phone.trim() };
+    const payload = { 
+      member_name: name.trim(), 
+      role_position: role.trim(), 
+      phone_number: phone.trim() 
+    };
 
     try {
       if (editingId) {
-        // PERBAIKAN: Penggunaan editId murni untuk update panitia
         const { error } = await supabase.from('committee').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert('Data panitia diperbarui!');
+        alert('🎯 Data panitia berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('committee').insert([payload]);
         if (error) throw error;
-        alert('Anggota panitia ditambahkan!');
+        alert('✅ Anggota panitia berhasil ditambahkan!');
       }
       setName(''); setRole(''); setPhone(''); setEditingId(null);
       await loadMembers();
-    } catch (err) { alert(`Gagal menyimpan: ${err.message}`); }
+    } catch (err) { 
+      console.error(err);
+      alert(`Gagal menyimpan panitia: ${err.message || err.details || JSON.stringify(err)}`); 
+    }
   };
 
   const handleEdit = (m) => {
     setEditingId(m.id);
-    setName(m.member_name);
-    setRole(m.role_position);
+    setName(m.member_name || '');
+    setRole(m.role_position || '');
     setPhone(m.phone_number || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -103,7 +114,7 @@ export default function KepanitiaanPage() {
               <div key={m.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                 <div>
                   <p className="font-bold text-slate-200">👤 {m.member_name}</p>
-                  <p className="text-[11px] text-amber-500 font-medium">{m.role_position} {m.phone_number && <span className="text-slate-500 text-[10px] ml-1">({m.phone_number})</span>}</p>
+                  <p className="text-[11px] text-amber-500 font-medium">{m.role_position} {m.phone_number ? `(${m.phone_number})` : ''}</p>
                 </div>
                 {isAdmin && (
                   <div className="flex gap-3">
