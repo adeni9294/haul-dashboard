@@ -5,10 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalMasuk: 0, totalKeluar: 0, saldo: 0 });
+  const [targetAnggaran, setTargetAnggaran] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   const [recentTransactions, setRecentTransactions] = useState([]);
-  
-  // State baru untuk menampung total pengeluaran per kategori secara dinamis
   const [categoryTotals, setCategoryTotals] = useState({});
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -21,7 +20,7 @@ export default function DashboardPage() {
       try {
         setLoading(true);
 
-        // 1. Ambil data konfigurasi dengan pengaman jika kolom/data belum tersedia
+        // 1. Ambil data konfigurasi pengumuman & tema
         const { data: configData, error: configError } = await supabase
           .from('settings')
           .select('*')
@@ -31,15 +30,26 @@ export default function DashboardPage() {
 
         if (!configError && configData && configData.length > 0) {
           const config = configData[0];
-          if (config.announcement) {
-            setAnnouncement(config.announcement);
-          }
+          if (config.announcement) setAnnouncement(config.announcement);
           if (config.theme) {
             document.body.className = `theme-${config.theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
           }
         }
 
-        // 2. Ambil data semua transaksi kas secara sinkron
+        // 2. Ambil data target plafon anggaran dari tabel budgets
+        const { data: budgetData } = await supabase
+          .from('budgets')
+          .select('planned_amount');
+
+        let totalTarget = 0;
+        if (budgetData) {
+          budgetData.forEach(b => {
+            totalTarget += Number(b.planned_amount || 0);
+          });
+        }
+        setTargetAnggaran(totalTarget);
+
+        // 3. Ambil data transaksi kas (Membaca tipe data 'pemasukan' & 'pengeluaran' dengan benar)
         const { data: trxData } = await supabase
           .from('transactions')
           .select('*')
@@ -48,28 +58,35 @@ export default function DashboardPage() {
         if (trxData) {
           let masuk = 0;
           let keluar = 0;
-          let totalsKategori = {}; // Objek penampung sementara untuk kalkulasi kategori
+          let totalsKategori = {};
 
           trxData.forEach(t => {
             const nominal = Number(t.amount || 0);
+            const tipeKas = String(t.type || '').toLowerCase().trim();
             
-            if (t.type === 'masuk') {
+            // Perbaikan Logika: Menyelaraskan string database milik Anda
+            if (tipeKas === 'pemasukan' || tipeKas === 'masuk') {
               masuk += nominal;
-            } else if (t.type === 'keluar') {
+            } else if (tipeKas === 'pengeluaran' || tipeKas === 'keluar') {
               keluar += nominal;
               
-              // Kalkulasi pengeluaran berdasarkan nama kategorinya
-              const namaKategori = t.category || 'Umum';
-              if (!totalsKategori[namaKategori]) {
-                totalsKategori[namaKategori] = 0;
-              }
-              totalsKategori[namaKategori] += nominal;
+              // Kelompokkan pengeluaran untuk widget tengah
+              const namaKategori = t.category || 'Lain-lain';
+              // Pemetaan kecocokan kata kunci kategori agar masuk ke kotak visual dashboard
+              let grupKategori = 'Lain-lain';
+              if (namaKategori.toLowerCase().includes('konsumsi')) grupKategori = 'Konsumsi';
+              else if (namaKategori.toLowerCase().includes('logistik') || namaKategori.toLowerCase().includes('perlengkapan')) grupKategori = 'Perlengkapan';
+              else if (namaKategori.toLowerCase().includes('akomodasi') || namaKategori.toLowerCase().includes('transportasi')) grupKategori = 'Humas / Transp';
+              else if (namaKategori.toLowerCase().includes('acara')) grupKategori = 'Kesenian / Acara';
+              else if (namaKategori.toLowerCase().includes('administrasi')) grupKategori = 'Sekretariat / ATK';
+              
+              totalsKategori[grupKategori] = (totalsKategori[grupKategori] || 0) + nominal;
             }
           });
 
           setStats({ totalMasuk: masuk, totalKeluar: keluar, saldo: masuk - keluar });
-          setCategoryTotals(totalsKategori); // Masukkan hasil kalkulasi ke dalam state
-          setRecentTransactions(trxData.slice(0, 5)); // Ambil 5 transaksi terbaru
+          setCategoryTotals(totalsKategori);
+          setRecentTransactions(trxData.slice(0, 5));
         }
 
       } catch (err) {
@@ -85,68 +102,77 @@ export default function DashboardPage() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number || 0);
   };
 
+  const persentaseProgres = targetAnggaran > 0 ? Math.min(Math.round((stats.totalMasuk / targetAnggaran) * 100), 100) : 0;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-xs font-mono text-slate-400 animate-pulse">⏳ Memuat sinkronisasi kalkulasi data kas...</p>
+        <p className="text-xs font-mono text-slate-400 animate-pulse">⏳ Menyelaraskan seluruh kalkulasi buku besar...</p>
       </div>
     );
   }
 
-  // Daftar kategori yang tampil di layar sesuai gambar Anda
   const listKategoriTampilan = ['Konsumsi', 'Perlengkapan', 'Humas / Transp', 'Kesenian / Acara', 'Sekretariat / ATK', 'Lain-lain'];
 
   return (
     <div className="space-y-6">
-      {/* JUDUL UTAMA */}
+      {/* JUDUL */}
       <div>
         <h2 className="text-xl font-bold text-white">📊 Dashboard Ringkasan Panitia</h2>
         <p className="text-xs text-slate-400">Pantau pergerakan anggaran, total saldo masuk/keluar, dan info aktual panitia.</p>
       </div>
 
-      {/* BANNER PENGUMUMAN */}
+      {/* PENGUMUMAN */}
       <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
         <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
         <h4 className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">📢 Pengumuman Internal</h4>
         <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{announcement}</p>
       </div>
 
-      {/* 3 KARTU UTAMA DANA KAS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 4 KARTU RINGKASAN UTAMA (SUDAH TERMASUK PROGRES TARGET) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl shadow-sm relative">
           <p className="text-[10px] uppercase font-bold text-amber-500 tracking-wider mb-1">💰 Sisa Saldo Kas Utama</p>
-          <h3 className="text-xl font-black text-white font-mono">{formatRupiah(stats.saldo)}</h3>
-          <div className="absolute top-4 right-4 text-xl opacity-20">💳</div>
+          <h3 className="text-lg font-black text-white font-mono">{formatRupiah(stats.saldo)}</h3>
         </div>
 
-        <div className="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl shadow-sm">
+        <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl shadow-sm">
           <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider mb-1">📈 Total Dana Masuk</p>
           <h3 className="text-lg font-bold text-emerald-400 font-mono">{formatRupiah(stats.totalMasuk)}</h3>
         </div>
 
-        <div className="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl shadow-sm">
+        <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl shadow-sm">
           <p className="text-[10px] uppercase font-bold text-rose-400 tracking-wider mb-1">📉 Total Dana Keluar</p>
           <h3 className="text-lg font-bold text-rose-400 font-mono">{formatRupiah(stats.totalKeluar)}</h3>
         </div>
-      </div>
 
-      {/* SEKSI DIAGRAM KATEGORI PENGELUARAN YANG SEKARANG SUDAH SINKRON */}
-      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">📉 Realisasi Pengeluaran per Kategori</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {listKategoriTampilan.map((kat) => {
-            const totalPengeluaranKat = categoryTotals[kat] || 0;
-            return (
-              <div key={kat} className="p-4 bg-slate-950 border border-slate-800/60 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-400 font-medium">{kat}</span>
-                <h4 className="text-sm font-bold text-rose-400 font-mono">{formatRupiah(totalPengeluaranKat)}</h4>
-              </div>
-            );
-          })}
+        {/* KARTU PROGRES TARGET YANG SUDAH KEMBALI */}
+        <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl shadow-sm space-y-2">
+          <div className="flex justify-between items-center">
+            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">🎯 Progres Target</p>
+            <span className="text-xs font-mono font-black text-amber-500">{persentaseProgres}%</span>
+          </div>
+          <h3 className="text-lg font-bold text-white font-mono">{formatRupiah(targetAnggaran)}</h3>
+          <div className="w-full bg-slate-950 h-1 rounded-full overflow-hidden">
+            <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${persentaseProgres}%` }}></div>
+          </div>
         </div>
       </div>
 
-      {/* TABEL MUTASI TERBARU */}
+      {/* REALISASI KATEGORI */}
+      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">📉 Realisasi Pengeluaran per Kategori</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {listKategoriTampilan.map((kat) => (
+            <div key={kat} className="p-4 bg-slate-950 border border-slate-800/60 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-400 font-medium">{kat}</span>
+              <h4 className="text-sm font-bold text-rose-400 font-mono">{formatRupiah(categoryTotals[kat] || 0)}</h4>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TABEL MUTASI JALUR KAS TERAKHIR */}
       <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
         <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">⏱️ 5 Transaksi Buku Kas Terakhir</h3>
         <div className="overflow-x-auto">
@@ -164,22 +190,25 @@ export default function DashboardPage() {
                   <td colSpan="3" className="py-4 text-center text-slate-500 font-mono text-[11px]">Belum ada riwayat transaksi kas masuk atau keluar.</td>
                 </tr>
               ) : (
-                recentTransactions.map((t, idx) => (
-                  <tr key={idx} className="hover:bg-slate-950/40">
-                    <td className="py-2.5 font-medium text-slate-300">
-                      <div>{t.description}</div>
-                      <span className="text-[10px] text-slate-500 font-mono">{t.category || 'Umum'}</span>
-                    </td>
-                    <td className="py-2.5">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${t.type === 'masuk' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                        {t.type === 'masuk' ? 'Masuk' : 'Keluar'}
-                      </span>
-                    </td>
-                    <td className={`py-2.5 text-right font-mono font-bold ${t.type === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount)}
-                    </td>
-                  </tr>
-                ))
+                recentTransactions.map((t, idx) => {
+                  const isPemasukan = String(t.type).toLowerCase() === 'pemasukan' || String(t.type).toLowerCase() === 'masuk';
+                  return (
+                    <tr key={idx} className="hover:bg-slate-950/40">
+                      <td className="py-2.5 font-medium text-slate-300">
+                        <div>{t.note || 'Tanpa Catatan'}</div>
+                        <span className="text-[10px] text-slate-500 font-mono">{t.category || 'Umum'}</span>
+                      </td>
+                      <td className="py-2.5">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${isPemasukan ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                          {isPemasukan ? 'Masuk' : 'Keluar'}
+                        </span>
+                      </td>
+                      <td className={`py-2.5 text-right font-mono font-bold ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
