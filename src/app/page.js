@@ -2,26 +2,20 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [targetNominal, setTargetNominal] = useState(50000000);
-  const [ringkasan, setRingkasan] = useState({
-    pemasukan: 0,
-    pengeluaran: 0,
-    saldo: 0
-  });
-  
-  const [rincianPemasukan, setRincianPemasukan] = useState([]);
-  const [rincianPengeluaran, setRincianPengeluaran] = useState([]);
+  const [pemasukan, setPemasukan] = useState(0);
+  const [pengeluaran, setPengeluaran] = useState(0);
+  const [targetAnggaran, setTargetAnggaran] = useState(0); // State dinamis dari tabel budgets
+  const [rincianMasuk, setRincianMasuk] = useState([]);
+  const [rincianKeluar, setRincianKeluar] = useState([]);
 
   useEffect(() => {
-    async function fetchDashboardData() {
+    async function fetchData() {
       try {
-        // Ambil token secara aman dari environment variable
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-        // Jika variabel env belum di-set di Vercel, lewati kueri agar tidak crash
+        
         if (!supabaseUrl || !supabaseKey) {
           setLoading(false);
           return;
@@ -29,123 +23,126 @@ export default function Dashboard() {
 
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // 1. Ambil Pengaturan Target
-        const { data: settingsData } = await supabase
-          .from('settings')
-          .select('value')
-          .eq('key', 'target_nominal')
-          .maybeSingle();
-        
-        if (settingsData && settingsData.value) {
-          setTargetNominal(Number(settingsData.value));
-        }
-
-        // 2. Ambil Transaksi Keuangan
-        const { data: transactions, error } = await supabase
+        // 1. Ambil semua data transaksi
+        const { data: transData, error: transError } = await supabase
           .from('transactions')
-          .select('amount, type, category');
+          .select('*');
 
-        if (error) throw error;
+        if (transError) throw transError;
 
-        if (transactions) {
-          let totalMasuk = 0;
-          let totalKeluar = 0;
-          const mapMasuk = {};
-          const mapKeluar = {};
+        // 2. Ambil semua data target anggaran
+        const { data: budgetData, error: budgetError } = await supabase
+          .from('budgets')
+          .select('planned_amount');
 
-          transactions.forEach((tx) => {
-            const nominal = Number(tx.amount || 0);
-            if (tx.type === 'pemasukan') {
+        if (budgetError) throw budgetError;
+
+        // Hitung total transaksi
+        let totalMasuk = 0;
+        let totalKeluar = 0;
+        const mapMasuk = {};
+        const mapKeluar = {};
+
+        if (transData) {
+          transData.forEach(item => {
+            const nominal = Number(item.amount || 0);
+            if (item.type === 'Pemasukan') {
               totalMasuk += nominal;
-              mapMasuk[tx.category] = (mapMasuk[tx.category] || 0) + nominal;
-            } else if (tx.type === 'pengeluaran') {
+              mapMasuk[item.category] = (mapMasuk[item.category] || 0) + nominal;
+            } else if (item.type === 'Pengeluaran') {
               totalKeluar += nominal;
-              mapKeluar[tx.category] = (mapKeluar[tx.category] || 0) + nominal;
+              mapKeluar[item.category] = (mapKeluar[item.category] || 0) + nominal;
             }
           });
-
-          setRingkasan({
-            pemasukan: totalMasuk,
-            pengeluaran: totalKeluar,
-            saldo: totalMasuk - totalKeluar
-          });
-
-          setRincianPemasukan(
-            Object.keys(mapMasuk).map(key => ({ nama: key, jumlah: mapMasuk[key] }))
-          );
-          setRincianPengeluaran(
-            Object.keys(mapKeluar).map(key => ({ nama: key, jumlah: mapKeluar[key] }))
-          );
         }
+
+        // Hitung total target anggaran dinamis dari database
+        let totalTarget = 0;
+        if (budgetData) {
+          budgetData.forEach(b => {
+            totalTarget += Number(b.planned_amount || 0);
+          });
+        }
+
+        // Jika belum ada target anggaran sama sekali di database, berikan fallback default agar tidak 0
+        setTargetAnggaran(totalTarget > 0 ? totalTarget : 50000000);
+        setPemasukan(totalMasuk);
+        setPengeluaran(totalKeluar);
+        
+        setRincianMasuk(Object.entries(mapMasuk).map(([category, amount]) => ({ category, amount })));
+        setRincianKeluar(Object.entries(mapKeluar).map(([category, amount]) => ({ category, amount })));
+
       } catch (err) {
-        console.error('Kueri error:', err);
+        console.error('Error dashboard:', err.message);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchDashboardData();
+    fetchData();
   }, []);
 
-  const progresPersen = targetNominal > 0 
-    ? Math.min(Math.round((ringkasan.pemasukan / targetNominal) * 100), 100) 
-    : 0;
+  const saldoAkhir = pemasukan - pengeluaran;
+  
+  // Hitung persentase progres berdasarkan total pemasukan dibanding target anggaran dinamis
+  const persentaseProgres = targetAnggaran > 0 ? Math.min(Math.round((pemasukan / targetAnggaran) * 100), 100) : 0;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <div className="text-center space-y-2">
-          <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs text-slate-400 font-mono">Sinkronisasi Cloud Supabase...</p>
-        </div>
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      {/* SECTION 1: KARTU UTAMA */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="p-6 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Pemasukan</p>
-          <p className="text-2xl font-black text-emerald-400 mt-2 font-mono">Rp {ringkasan.pemasukan.toLocaleString('id-ID')}</p>
-          <div className="absolute -right-2 -bottom-2 text-slate-800/10 text-6xl font-bold select-none">📈</div>
+    <div className="space-y-6 max-w-6xl animate-fadeIn">
+      {/* CARD TOP SUMMARY */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
+          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">TOTAL PEMASUKAN</p>
+          <p className="text-xl font-mono font-black text-emerald-400 mt-1">Rp {pemasukan.toLocaleString('id-ID')}</p>
+          <div className="absolute -bottom-2 -right-2 text-emerald-500/5 text-6xl font-black">IN</div>
         </div>
 
-        <div className="p-6 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Pengeluaran</p>
-          <p className="text-2xl font-black text-red-400 mt-2 font-mono">Rp {ringkasan.pengeluaran.toLocaleString('id-ID')}</p>
-          <div className="absolute -right-2 -bottom-2 text-slate-800/10 text-6xl font-bold select-none">📉</div>
+        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
+          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">TOTAL PENGELUARAN</p>
+          <p className="text-xl font-mono font-black text-rose-400 mt-1">Rp {pengeluaran.toLocaleString('id-ID')}</p>
+          <div className="absolute -bottom-2 -right-2 text-rose-500/5 text-6xl font-black">OUT</div>
         </div>
 
-        <div className="p-6 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sisa Saldo Akhir</p>
-          <p className="text-2xl font-black text-amber-400 mt-2 font-mono">Rp {ringkasan.saldo.toLocaleString('id-ID')}</p>
-          <div className="absolute -right-2 -bottom-2 text-slate-800/10 text-6xl font-bold select-none">💰</div>
+        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
+          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">SISA SALDO AKHIR</p>
+          <p className="text-xl font-mono font-black text-amber-400 mt-1">Rp {saldoAkhir.toLocaleString('id-ID')}</p>
+          <div className="absolute -bottom-2 -right-2 text-amber-500/5 text-6xl font-black">BAL</div>
         </div>
 
-        <div className="p-6 bg-slate-900/80 border border-slate-800 rounded-2xl shadow-lg">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-            <span>Progres Target</span>
-            <span className="text-blue-400 font-mono font-bold text-sm">{progresPersen}%</span>
+        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
+          <div className="flex justify-between items-center">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">PROGRES TARGET</p>
+            <span className="text-xs font-mono font-black text-amber-400">{persentaseProgres}%</span>
           </div>
-          <p className="text-lg font-black text-white mt-1.5 font-mono">Rp {targetNominal.toLocaleString('id-ID')}</p>
-          <div className="w-full bg-slate-950 h-2.5 rounded-full mt-3 overflow-hidden border border-slate-800/50">
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full" style={{ width: `${progresPersen}%` }}></div>
+          <p className="text-xl font-mono font-black text-white mt-1">Rp {targetAnggaran.toLocaleString('id-ID')}</p>
+          <div className="w-full bg-slate-950 h-1.5 rounded-full mt-3 overflow-hidden border border-slate-800/50">
+            <div 
+              className="bg-gradient-to-r from-amber-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
+              style={{ width: `${persentaseProgres}%` }}
+            ></div>
           </div>
         </div>
       </div>
 
-      {/* SECTION 2: DETAIL DATA RINCIAN BY KATEGORI */}
+      {/* BLOCK DETAIL SECTIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-          <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4">📥 Rincian Aktual Pemasukan</h3>
-          {rincianPemasukan.length > 0 ? (
-            <div className="space-y-2 font-mono text-xs">
-              {rincianPemasukan.map((item, i) => (
-                <div key={i} className="flex justify-between p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
-                  <span className="text-slate-300">{item.nama}</span>
-                  <span className="font-bold text-emerald-400">Rp {item.jumlah.toLocaleString('id-ID')}</span>
+        {/* PEMASUKAN */}
+        <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
+          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">📥 Rincian Aktual Pemasukan</h3>
+          {rincianMasuk.length > 0 ? (
+            <div className="space-y-2">
+              {rincianMasuk.map((rm, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-xl text-[11px] font-mono">
+                  <span className="text-slate-300 font-medium">{rm.category}</span>
+                  <span className="text-emerald-400 font-bold">Rp {rm.amount.toLocaleString('id-ID')}</span>
                 </div>
               ))}
             </div>
@@ -154,14 +151,15 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
-          <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-4">📤 Rincian Aktual Pengeluaran</h3>
-          {rincianPengeluaran.length > 0 ? (
-            <div className="space-y-2 font-mono text-xs">
-              {rincianPengeluaran.map((item, i) => (
-                <div key={i} className="flex justify-between p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
-                  <span className="text-slate-300">{item.nama}</span>
-                  <span className="font-bold text-red-400">Rp {item.jumlah.toLocaleString('id-ID')}</span>
+        {/* PENGELUARAN */}
+        <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
+          <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">📤 Rincian Aktual Pengeluaran</h3>
+          {rincianKeluar.length > 0 ? (
+            <div className="space-y-2">
+              {rincianKeluar.map((rk, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-xl text-[11px] font-mono">
+                  <span className="text-slate-300 font-medium">{rk.category}</span>
+                  <span className="text-rose-400 font-bold">Rp {rk.amount.toLocaleString('id-ID')}</span>
                 </div>
               ))}
             </div>
