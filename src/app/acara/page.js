@@ -22,33 +22,30 @@ export default function AcaraPage() {
 
   async function loadSchedules() {
     const { data, error } = await supabase.from('schedules').select('*').order('event_date', { ascending: true }).order('start_time', { ascending: true });
-    if (!error && data) {
-      setSchedules(data);
-    }
+    if (!error && data) setSchedules(data);
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    // Perbaikan: Tambahkan created_at agar lolos constraint NOT NULL Supabase
+    const currentEditingId = editingId;
     const payload = { 
       event_date: eventDate, 
       start_time: startTime, 
       end_time: endTime, 
       activity_title: title.trim(), 
-      pic_name: pic.trim(),
-      created_at: new Date().toISOString()
+      pic_name: pic.trim()
     };
 
     try {
-      if (editingId) {
-        const updatePayload = { event_date: payload.event_date, start_time: payload.start_time, end_time: payload.end_time, activity_title: payload.activity_title, pic_name: payload.pic_name };
-        const { error } = await supabase.from('schedules').update(updatePayload).eq('id', editingId);
+      if (currentEditingId) {
+        const { error } = await supabase.from('schedules').update(payload).eq('id', currentEditingId);
         if (error) throw error;
         alert('Rundown acara berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('schedules').insert([payload]);
+        const insertPayload = { ...payload, created_at: new Date().toISOString() };
+        const { error } = await supabase.from('schedules').insert([insertPayload]);
         if (error) throw error;
         alert('Rundown acara baru berhasil ditambahkan!');
       }
@@ -56,10 +53,9 @@ export default function AcaraPage() {
       setTitle(''); 
       setPic(''); 
       setEditingId(null);
-      
       await loadSchedules();
     } catch (err) { 
-      alert(`Gagal memproses data: ${err.message}`); 
+      alert(`Gagal memproses data acara: ${err.message}`); 
     }
   };
 
