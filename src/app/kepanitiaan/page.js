@@ -28,15 +28,18 @@ export default function KepanitiaanPage() {
     e.preventDefault();
     if (!name.trim() || !role.trim()) return;
 
+    // Perbaikan: Tambahkan created_at agar lolos constraint NOT NULL Supabase
     const payload = { 
       member_name: name.trim(), 
       role_position: role.trim(), 
-      phone_number: phone.trim() 
+      phone_number: phone.trim(),
+      created_at: new Date().toISOString()
     };
 
     try {
       if (editingId) {
-        const { error } = await supabase.from('committee').update(payload).eq('id', editingId);
+        const updatePayload = { member_name: payload.member_name, role_position: payload.role_position, phone_number: payload.phone_number };
+        const { error } = await supabase.from('committee').update(updatePayload).eq('id', editingId);
         if (error) throw error;
         alert('Data anggota panitia berhasil diperbarui!');
       } else {
@@ -45,13 +48,11 @@ export default function KepanitiaanPage() {
         alert('Anggota panitia baru berhasil ditambahkan!');
       }
 
-      // CLEAR FORM INPUT
       setName(''); 
       setRole(''); 
       setPhone(''); 
       setEditingId(null);
       
-      // RE-LOAD LIST LIVE SECARA SINKRON
       await loadMembers();
     } catch (err) { 
       alert(`Gagal memproses data: ${err.message}`); 
