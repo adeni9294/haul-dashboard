@@ -23,7 +23,6 @@ export default function AcaraPage() {
   }, []);
 
   async function loadSchedules() {
-    // Urutkan murni berdasarkan tanggal acara dan jam mulai
     const { data, error } = await supabase.from('schedules').select('*').order('event_date', { ascending: true }).order('start_time', { ascending: true });
     if (!error && data) setSchedules(data);
   }
@@ -33,23 +32,22 @@ export default function AcaraPage() {
     if (!isAdmin) return alert('Aksi ditolak!');
     if (!title.trim()) return;
 
-    const currentEditingId = editingId;
     const payload = { event_date: eventDate, start_time: startTime, end_time: endTime, activity_title: title.trim(), pic_name: pic.trim() };
 
     try {
-      if (currentEditingId) {
-        const { error } = await supabase.from('schedules').update(payload).eq('id', currentEditingId);
+      if (editingId) {
+        // PERBAIKAN: Update murni berdasarkan id penampung
+        const { error } = await supabase.from('schedules').update(payload).eq('id', editingId);
         if (error) throw error;
         alert('Rundown acara diperbarui!');
       } else {
-        // Bersih dari created_at
         const { error } = await supabase.from('schedules').insert([payload]);
         if (error) throw error;
         alert('Rundown acara ditambahkan!');
       }
       setTitle(''); setPic(''); setEditingId(null);
       await loadSchedules();
-    } catch (err) { alert(`Gagal: ${err.message}`); }
+    } catch (err) { alert(`Gagal menyimpan: ${err.message}`); }
   };
 
   const handleEdit = (s) => {
@@ -101,7 +99,7 @@ export default function AcaraPage() {
             {editingId ? '💾 Simpan Perubahan' : 'Simpan Rundown'}
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setTitle(''); setPic(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl">Batal Edit</button>
+            <button type="button" onClick={() => { setEditingId(null); setTitle(''); setPic(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
           )}
         </form>
       ) : (
