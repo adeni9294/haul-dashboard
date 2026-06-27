@@ -2,6 +2,11 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// Inisialisasi DI LUAR komponen utama agar koneksi stabil dan tidak dibuat ulang setiap re-render
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export default function AnggaranPage() {
   const [budgets, setBudgets] = useState([]);
   const [itemName, setItemName] = useState('');
@@ -9,21 +14,18 @@ export default function AnggaranPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
   useEffect(() => { 
     setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
     loadBudgets(); 
   }, []);
 
   async function loadBudgets() {
-    try {
-      const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
-      if (!error && data) setBudgets(data);
-    } catch (err) {
-      console.error("Gagal memuat list:", err);
+    const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
+    if (error) {
+      console.error(error);
+      alert(`Gagal memuat daftar anggaran: ${error.message || JSON.stringify(error)}`);
+    } else if (data) {
+      setBudgets(data);
     }
   }
 
@@ -41,11 +43,11 @@ export default function AnggaranPage() {
       if (editingId) {
         const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert('Rencana anggaran berhasil diperbarui!');
+        alert('🎯 Rencana anggaran berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('budgets').insert([payload]);
         if (error) throw error;
-        alert('Rencana anggaran berhasil ditambahkan!');
+        alert('✅ Rencana anggaran berhasil ditambahkan!');
       }
 
       setItemName(''); 
@@ -54,7 +56,8 @@ export default function AnggaranPage() {
       await loadBudgets();
     } catch (err) { 
       console.error(err);
-      alert(`Gagal menyimpan: ${err.message || "Pastikan field database sesuai"}`); 
+      // Membongkar seluruh isi objek error agar terlihat detail kendala kolom/tipe data
+      alert(`Gagal menyimpan anggaran: ${err.message || err.details || JSON.stringify(err)}`); 
     }
   };
 
@@ -69,7 +72,11 @@ export default function AnggaranPage() {
     if (!isAdmin) return;
     if (confirm('Hapus anggaran ini?')) {
       const { error } = await supabase.from('budgets').delete().eq('id', id);
-      if (!error) await loadBudgets();
+      if (!error) {
+        await loadBudgets();
+      } else {
+        alert(`Gagal menghapus: ${error.message}`);
+      }
     }
   };
 
@@ -95,7 +102,7 @@ export default function AnggaranPage() {
         </form>
       ) : (
         <div className="p-6 bg-slate-900/40 border border-slate-900 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Mode Publik (Lihat Saja).</p>
+          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
         </div>
       )}
 
