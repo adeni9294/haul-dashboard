@@ -41,13 +41,13 @@ export default function RootLayout({ children }) {
     loadHeaderSettings();
   }, []);
 
-  // DAFTAR MENU NAVIGASI PANITIA LENGKAP 100%
+  // DAFTAR MENU NAVIGASI PANITIA LENGKAP
   const menuItems = [
     { name: '📊 Dashboard', path: '/' },
     { name: '💰 Buku Kas', path: '/transaksi' },
     { name: '📈 Anggaran', path: '/anggaran' },
     { name: '👥 Kepanitiaan', path: '/kepanitiaan' },
-    { name: '📅 Acara & Schedule', path: '/acara' }, // Sesuaikan ke '/acara-schedule' jika nama folder Anda di GitHub menggunakan nama itu
+    { name: '📅 Acara & Schedule', path: '/acara' },
     { name: '⚙️ Pengaturan', path: '/pengaturan' },
   ];
 
