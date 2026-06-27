@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
       setShowLoginModal(false);
       setPasswordInput('');
       alert('Login Berhasil sebagai Admin!');
-      window.location.reload(); // Refresh untuk memperbarui semua menu
+      window.location.reload();
     } else {
       alert('Password salah!');
     }
@@ -53,11 +53,19 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
+          {/* NAVBAR UTAMA */}
           <nav className="flex items-center gap-1 bg-slate-900/50 border border-slate-800 p-1 rounded-xl text-xs font-bold">
             <Link href="/" className={`px-3 py-1.5 rounded-lg transition-all ${pathname === '/' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>Transaksi</Link>
             <Link href="/anggaran" className={`px-3 py-1.5 rounded-lg transition-all ${pathname === '/anggaran' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>Anggaran</Link>
             <Link href="/acara" className={`px-3 py-1.5 rounded-lg transition-all ${pathname === '/acara' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>Acara</Link>
             <Link href="/kepanitiaan" className={`px-3 py-1.5 rounded-lg transition-all ${pathname === '/kepanitiaan' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>Panitia</Link>
+            
+            {/* MENU PENGATURAN KEMBALI DISEDIAKAN (KHUSUS MODE ADMIN) */}
+            {isAdmin && (
+              <Link href="/pengaturan" className={`px-3 py-1.5 rounded-lg transition-all ${pathname === '/pengaturan' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
+                ⚙️ Pengaturan
+              </Link>
+            )}
           </nav>
 
           <div>
@@ -80,7 +88,7 @@ export default function RootLayout({ children }) {
 
         {/* FOOTER */}
         <footer className="py-4 border-t border-slate-900 text-center text-[11px] text-slate-600 font-mono">
-          Dashboard Manajemen Acara Haul &copy; {new Date().getFullYear()}
+          Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
         </footer>
 
         {/* MODAL LOGIN POPUP */}
