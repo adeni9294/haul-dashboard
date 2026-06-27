@@ -23,6 +23,7 @@ export default function AcaraPage() {
   }, []);
 
   async function loadSchedules() {
+    // Urutkan murni berdasarkan tanggal acara dan jam mulai
     const { data, error } = await supabase.from('schedules').select('*').order('event_date', { ascending: true }).order('start_time', { ascending: true });
     if (!error && data) setSchedules(data);
   }
@@ -41,14 +42,14 @@ export default function AcaraPage() {
         if (error) throw error;
         alert('Rundown acara diperbarui!');
       } else {
-        const insertPayload = { ...payload, created_at: new Date().toISOString() };
-        const { error } = await supabase.from('schedules').insert([insertPayload]);
+        // Bersih dari created_at
+        const { error } = await supabase.from('schedules').insert([payload]);
         if (error) throw error;
         alert('Rundown acara ditambahkan!');
       }
       setTitle(''); setPic(''); setEditingId(null);
       await loadSchedules();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert(`Gagal: ${err.message}`); }
   };
 
   const handleEdit = (s) => {
@@ -76,7 +77,7 @@ export default function AcaraPage() {
           <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Acara' : '➕ Tambah Rundown Acara'}</h3>
           <div>
             <label className="block text-[11px] text-slate-400 mb-1">Tanggal</label>
-            <input type="date" required value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            <input type="date" required value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -90,11 +91,11 @@ export default function AcaraPage() {
           </div>
           <div>
             <label className="block text-[11px] text-slate-400 mb-1">Nama Kegiatan</label>
-            <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
           </div>
           <div>
             <label className="block text-[11px] text-slate-400 mb-1">PIC</label>
-            <input type="text" required value={pic} onChange={(e) => setPic(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            <input type="text" required value={pic} onChange={(e) => setPic(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
           </div>
           <button type="submit" className="w-full py-2.5 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400">
             {editingId ? '💾 Simpan Perubahan' : 'Simpan Rundown'}
@@ -105,8 +106,7 @@ export default function AcaraPage() {
         </form>
       ) : (
         <div className="p-6 bg-slate-900/40 border border-slate-900 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di <b>Mode Publik (Lihat Saja)</b>.</p>
-          <p className="text-[10px] text-slate-600">Gunakan tombol "Login Admin" di atas untuk menambahkan rundown susunan agenda acara.</p>
+          <p className="text-xs text-slate-400 font-medium">💡 Mode Publik (Lihat Saja).</p>
         </div>
       )}
 
