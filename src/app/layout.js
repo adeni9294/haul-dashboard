@@ -41,11 +41,13 @@ export default function RootLayout({ children }) {
     loadHeaderSettings();
   }, []);
 
-  // Daftar Menu Navigasi Aplikasi Anda
+  // DAFTAR MENU NAVIGASI PANITIA LENGKAP 100%
   const menuItems = [
     { name: '📊 Dashboard', path: '/' },
     { name: '💰 Buku Kas', path: '/transaksi' },
     { name: '📈 Anggaran', path: '/anggaran' },
+    { name: '👥 Kepanitiaan', path: '/kepanitiaan' },
+    { name: '📅 Acara & Schedule', path: '/acara' }, // Sesuaikan ke '/acara-schedule' jika nama folder Anda di GitHub menggunakan nama itu
     { name: '⚙️ Pengaturan', path: '/pengaturan' },
   ];
 
@@ -74,10 +76,10 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* 2. AREA KONTEN UTAMA DENGAN NAVIGASI STRUKTUR SIDEBAR / TOPBAR */}
+          {/* 2. AREA KONTEN UTAMA DENGAN NAVIGASI SIDEBAR */}
           <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">
             
-            {/* BILAH MENU NAVIGASI (SIDEBAR) */}
+            {/* BILAH MENU NAVIGASI LENGKAP */}
             <aside className="w-full md:w-64 shrink-0">
               <nav className="flex md:flex-col gap-2 p-2 bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-x-auto md:overflow-x-visible whitespace-nowrap md:whitespace-normal">
                 {menuItems.map((item) => {
