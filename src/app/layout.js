@@ -1,76 +1,63 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Sidebar from './Sidebar'; // Jalur diperbaiki agar membaca file di folder yang sama
-import './globals.css';
+import { createClient } from '@supabase/supabase-js';
 
-export default function RootLayout({ children }) {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [time, setTime] = useState('');
-  const [theme, setTheme] = useState('emerald-luxury');
+export default function HeaderTop() {
   const [config, setConfig] = useState({
-    logo: null,
-    bank1: 'Bank Mandiri - 134xxxxxxxx (a.n Panitia Haul)',
-    bank2: 'BCA - 822xxxxxxx (a.n Panitia Haul)',
-    bank3: 'BJB - 009xxxxxxx (a.n Panitia Haul)'
+    org_name: 'Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus',
+    address: 'Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon',
+    bank_info: 'Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx',
+    logo_url: ''
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      setTime(now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ' - ' + now.toLocaleTimeString('id-ID'));
-    }, 1000);
-    return () => clearInterval(interval);
+    async function loadHeaderSettings() {
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+        if (!supabaseUrl || !supabaseKey) return;
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('id', 'main_config')
+          .single();
+
+        if (data) {
+          setConfig({
+            org_name: data.org_name || config.org_name,
+            address: data.address || config.address,
+            bank_info: data.bank_info || config.bank_info,
+            logo_url: data.logo_url || ''
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadHeaderSettings();
   }, []);
 
-  const themeClasses = {
-    'emerald-luxury': 'bg-slate-950 text-slate-100',
-    'royal-gold': 'bg-neutral-950 text-amber-100',
-    'midnight-blue': 'bg-zinc-950 text-indigo-100',
-    'deep-crimson': 'bg-stone-950 text-rose-100',
-    'dark-charcoal': 'bg-neutral-900 text-neutral-100',
-    'cyberpunk-neon': 'bg-gray-950 text-cyan-400',
-    'vintage-bronze': 'bg-stone-900 text-amber-200/90',
-    'oceanic-abyss': 'bg-slate-900 text-sky-100',
-    'amethyst-purple': 'bg-neutral-950 text-purple-200',
-    'forest-deep': 'bg-zinc-900 text-emerald-200'
-  };
-
   return (
-    <html lang="id">
-      <body className={`flex min-h-screen antialiased transition-all duration-300 ${themeClasses[theme] || themeClasses['emerald-luxury']}`}>
-        <Sidebar isAdmin={isAdmin} onLogout={() => setIsAdmin(false)} />
-        
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="p-6 border-b border-slate-800 bg-slate-900/60 backdrop-blur flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-slate-800 border border-amber-500/30 flex items-center justify-between overflow-hidden shadow-inner">
-                {config.logo ? (
-                  <img src={config.logo} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xs text-amber-500 font-bold m-auto">LOGO</span>
-                )}
-              </div>
-              <div className="text-center md:text-left">
-                <h2 className="text-lg font-black tracking-wide text-amber-500">Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus</h2>
-                <p className="text-xs text-slate-400 font-medium">Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 text-[11px] text-slate-500 font-mono mt-1">
-                  <span>💳 {config.bank1}</span>
-                  <span>💳 {config.bank2}</span>
-                  <span>💳 {config.bank3}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-right font-mono text-xs bg-slate-950/50 px-4 py-2 rounded-xl border border-slate-800 shadow-sm text-amber-400/80">
-              ⏱️ {time || 'Memuat Waktu...'}
-            </div>
-          </header>
-          
-          <main className="p-8 flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </div>
-      </body>
-    </html>
+    <div className="p-4 md:p-6 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-center gap-4 shadow-lg">
+      {/* ELEMEN LOGO DINAMIS - Berubah Otomatis Setelah Upload Berhasil */}
+      <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-950 rounded-full border border-slate-800/80 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+        {config.logo_url ? (
+          <img src={config.logo_url} alt="Logo Resmi" className="w-full h-full object-cover" />
+        ) : (
+          <div className="text-[10px] md:text-xs font-black text-amber-500 font-mono tracking-widest animate-pulse">LOGO</div>
+        )}
+      </div>
+
+      {/* INFORMASI UTAMA PANITIA */}
+      <div className="text-center md:text-left space-y-1 flex-1">
+        <h1 className="text-sm md:text-base font-black text-amber-500 tracking-wide">{config.org_name}</h1>
+        <p className="text-[10px] md:text-xs text-slate-400 font-medium leading-relaxed">{config.address}</p>
+        <p className="text-[9px] md:text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-850 max-w-max mx-auto md:mx-0">
+          💳 {config.bank_info}
+        </p>
+      </div>
+    </div>
   );
 }
