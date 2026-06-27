@@ -15,8 +15,8 @@ export default function Dashboard() {
   async function loadDashboardData() {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     
-    // Mengambil data
-    const { data: trans } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+    // Mengambil data berdasarkan nama kolom yang Anda berikan
+    const { data: trans } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
     
     if (!trans) return;
 
@@ -24,7 +24,7 @@ export default function Dashboard() {
     let catIn = {}, catOut = {};
     
     trans.forEach(t => {
-      // Pastikan 'type' sesuai dengan data di database Anda ('in'/'out')
+      // Menggunakan kolom 'type', 'amount', 'category', dan 'note'
       if (t.type === 'in') {
         m += t.amount;
         catIn[t.category] = (catIn[t.category] || 0) + t.amount;
@@ -35,7 +35,7 @@ export default function Dashboard() {
     });
     
     setStats({ masuk: m, keluar: k, saldo: m - k });
-    setTransactions(trans.slice(0, 5)); // Ambil 5 terbaru
+    setTransactions(trans.slice(0, 5)); 
     setCategories({ in: catIn, out: catOut });
   }
 
@@ -97,8 +97,8 @@ export default function Dashboard() {
         {transactions.map((t, i) => (
           <div key={i} className="flex justify-between items-center p-3 bg-slate-900 border border-slate-800 rounded-xl">
             <div>
-              <p className="text-xs font-bold">{t.description}</p>
-              <p className="text-[9px] text-slate-500">{new Date(t.created_at).toLocaleDateString()}</p>
+              <p className="text-xs font-bold">{t.note}</p>
+              <p className="text-[9px] text-slate-500">{new Date(t.transaction_date).toLocaleDateString()}</p>
             </div>
             <p className={`text-xs font-bold ${t.type === 'in' ? 'text-emerald-400' : 'text-rose-400'}`}>
               {t.type === 'in' ? '+' : '-'} Rp {t.amount.toLocaleString()}
