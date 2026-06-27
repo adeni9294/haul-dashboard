@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { ArrowUpCircle, ArrowDownCircle, Bell } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ masuk: 0, keluar: 0, saldo: 0 });
   const [transactions, setTransactions] = useState([]);
-  const [target, setTarget] = useState({ total: 300000, current: 0 }); // Sesuaikan target Anda
+  const [target] = useState(300000); // Sesuaikan dengan target Anda
 
   useEffect(() => {
     loadDashboardData();
@@ -15,7 +15,7 @@ export default function Dashboard() {
   async function loadDashboardData() {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     
-    // 1. Ambil semua transaksi
+    // Ambil data transaksi
     const { data: trans } = await supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(5);
     
     let m = 0, k = 0;
@@ -23,20 +23,37 @@ export default function Dashboard() {
     
     setStats({ masuk: m, keluar: k, saldo: m - k });
     setTransactions(trans || []);
-    setTarget({ total: 300000, current: m }); // Asumsi progres berdasarkan total masuk
   }
 
-  const progress = (target.current / target.total) * 100;
+  const progress = (stats.masuk / target) * 100;
 
   return (
     <div className="space-y-6 pb-24 px-4 pt-4">
-      {/* Header & Kartu Saldo (Sama seperti sebelumnya) */}
+      {/* 1. KARTU SALDO UTAMA */}
       <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
         <p className="text-slate-400 text-sm">Total Kas Haul</p>
         <h1 className="text-3xl font-black text-white mt-1">Rp {stats.saldo.toLocaleString()}</h1>
+        
+        {/* KAS MASUK & KELUAR (YANG HILANG TADI) */}
+        <div className="mt-6 flex gap-4 border-t border-slate-800 pt-4">
+          <div className="flex-1 flex items-center gap-2">
+            <ArrowUpCircle className="text-emerald-400" size={18} />
+            <div>
+              <p className="text-[10px] text-slate-500 uppercase">Masuk</p>
+              <p className="font-bold text-white text-xs">Rp {stats.masuk.toLocaleString()}</p>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center gap-2">
+            <ArrowDownCircle className="text-rose-400" size={18} />
+            <div>
+              <p className="text-[10px] text-slate-500 uppercase">Keluar</p>
+              <p className="font-bold text-white text-xs">Rp {stats.keluar.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* PROGRES ANGGARAN */}
+      {/* 2. PROGRES TARGET */}
       <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
         <div className="flex justify-between text-xs mb-2">
           <span className="text-slate-400">Progres Target</span>
@@ -47,7 +64,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* DAFTAR TRANSAKSI */}
+      {/* 3. DAFTAR TRANSAKSI */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold text-slate-200">Aktivitas Terakhir</h2>
         {transactions.map((t, index) => (
