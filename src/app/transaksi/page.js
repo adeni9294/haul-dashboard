@@ -8,13 +8,13 @@ export default function TransaksiPage() {
   const [submitting, setSubmitting] = useState(false);
   const [transactions, setTransactions] = useState([]);
   
-  // State Form Input
+  // State Form Input Lengkap
   const [amount, setAmount] = useState('');
   const [type, setType] = useState('pemasukan');
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
+  const [transactionDate, setTransactionDate] = useState(''); // State Tanggal Manual
 
-  // Kategori default panitia
   const kategoriPemasukan = [
     'Iuran wajib warga cibogo kidul (ahli waris)',
     'Iuran wajib warga luar cibogo kidul (ahli waris)',
@@ -29,37 +29,40 @@ export default function TransaksiPage() {
     'Honorarium', 'Pubdekdok', 'Dana tak terduga', 'Acara(Hiburan & Atraksi)'
   ];
 
-  // Inisialisasi Supabase secara aman
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
-
   useEffect(() => {
-    // 1. Cek status login admin dari localStorage
+    // Set status admin dari session login lokal
     const authStatus = localStorage.getItem('isAdminAuthenticated');
     if (authStatus === 'true') {
       setIsAdmin(true);
     }
 
-    // Set kategori default awal
+    // Set tanggal default ke hari ini (Format ISO lokal untuk input date: YYYY-MM-DD)
+    const today = new Date().toISOString().split('T')[0];
+    setTransactionDate(today);
     setCategory(kategoriPemasukan[0]);
 
-    // 2. Tarik Riwayat Transaksi dari Supabase
+    // Jalankan penarikan riwayat data kas
     async function fetchTransactions() {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
       try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+        
+        if (!supabaseUrl || !supabaseKey) {
+          setLoading(false);
+          return;
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
         const { data, error } = await supabase
           .from('transactions')
           .select('*')
+          .order('transaction_date', { ascending: false }) // Urutkan berdasarkan tanggal transaksi terbaru
           .order('created_at', { ascending: false });
 
         if (error) throw error;
         if (data) setTransactions(data);
       } catch (err) {
-        console.error('Error fetching transactions:', err.message);
+        console.error('Error fetching data:', err.message);
       } finally {
         setLoading(false);
       }
@@ -68,19 +71,28 @@ export default function TransaksiPage() {
     fetchTransactions();
   }, []);
 
-  // Handler perubahan tipe otomatis mengubah kategori pertama yang dipilih
   const handleTypeChange = (newType) => {
     setType(newType);
     setCategory(newType === 'pemasukan' ? kategoriPemasukan[0] : kategoriPengeluaran[0]);
   };
 
-  // Handler Submit Transaksi Baru (Hanya untuk mode Admin)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!supabase || !isAdmin || submitting) return;
+    if (!isAdmin || submitting) return;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+    if (!supabaseUrl || !supabaseKey) {
+      alert('Konfigurasi database Supabase di hosting Vercel belum lengkap!');
+      return;
+    }
 
     setSubmitting(true);
     try {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Kirim objek data ke tabel transactions Supabase
       const { data, error } = await supabase
         .from('transactions')
         .insert([
@@ -89,6 +101,7 @@ export default function TransaksiPage() {
             type,
             category,
             note,
+            transaction_date: transactionDate, // Masuk ke kolom tanggal pilihan manual
             created_at: new Date().toISOString()
           }
         ])
@@ -96,12 +109,12 @@ export default function TransaksiPage() {
 
       if (error) throw error;
 
-      alert('Sukses! Data transaksi berhasil disimpan secara cloud.');
+      alert('Sukses! Data transaksi berhasil disimpan permanen secara cloud.');
       if (data) {
         setTransactions([data[0], ...transactions]);
       }
       
-      // Reset Form
+      // Reset Form Input Teks
       setAmount('');
       setNote('');
     } catch (err) {
@@ -114,7 +127,7 @@ export default function TransaksiPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[250px]">
-        <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -127,7 +140,7 @@ export default function TransaksiPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* KOLOM KIRI: FORM ENTRI TRANSAKSI (HANYA MUNCUL DI MODE ADMIN) */}
+        {/* FORM INPUT UTAMA */}
         <div className="lg:col-span-1">
           {isAdmin ? (
             <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
@@ -153,6 +166,18 @@ export default function TransaksiPage() {
                 </div>
               </div>
 
+              {/* BARU: INPUT PILIHAN TANGGAL TRANSAKSI */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Tanggal Transaksi</label>
+                <input 
+                  type="date" 
+                  required
+                  value={transactionDate}
+                  onChange={(e) => setTransactionDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 mb-1">Nominal Angka (Rp)</label>
                 <input 
@@ -160,7 +185,7 @@ export default function TransaksiPage() {
                   required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Contoh: 50000"
+                  placeholder="Contoh: 755000"
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>
@@ -184,7 +209,7 @@ export default function TransaksiPage() {
                 <textarea 
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Nama pengirim/tujuan belanja..." 
+                  placeholder="Keterangan cash..." 
                   className="w-full h-16 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -194,27 +219,28 @@ export default function TransaksiPage() {
                 disabled={submitting}
                 className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all disabled:bg-slate-800"
               >
-                {submitting ? '⏳ Memproses...' : '💾 Simpan Transaksi'}
+                {submitting ? '⏳ Memproses Cloud...' : '💾 Simpan Transaksi'}
               </button>
             </form>
           ) : (
             <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl text-center space-y-2">
               <p className="text-xs text-slate-400 font-medium">🔒 Mode Pengisian Terkunci</p>
-              <p className="text-[11px] text-slate-500">Anda masuk sebagai publik. Silakan klik tombol masuk admin di sudut kiri bawah untuk mengisi rekam arus kas.</p>
+              <p className="text-[11px] text-slate-500">Silakan klik masuk admin di sudut kiri bawah untuk memunculkan form pengisian kas.</p>
             </div>
           )}
         </div>
 
-        {/* KOLOM KANAN: TABEL RIWAYAT TRANSAKSI AKTUAL */}
+        {/* TABEL JURNAL PEMBUKUAN */}
         <div className="lg:col-span-2 space-y-4">
           <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-lg space-y-4">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">📜 Jurnal Pembukuan Kas Panitia</h3>
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">📜 Jurnal Pembukuan Kas Panitia Haul</h3>
             
             {transactions.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px] font-mono text-left">
                   <thead>
                     <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-widest text-[10px]">
+                      <th className="pb-3 font-semibold">Tanggal</th>
                       <th className="pb-3 font-semibold">Kategori / Catatan</th>
                       <th className="pb-3 font-semibold">Tipe</th>
                       <th className="pb-3 font-semibold text-right">Jumlah</th>
@@ -223,6 +249,9 @@ export default function TransaksiPage() {
                   <tbody className="divide-y divide-slate-800/40">
                     {transactions.map((tx) => (
                       <tr key={tx.id} className="hover:bg-slate-950/20 transition-all">
+                        <td className="py-3 pr-2 text-slate-400 whitespace-nowrap">
+                          {tx.transaction_date ? new Date(tx.transaction_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                        </td>
                         <td className="py-3 pr-2">
                           <div className="font-bold text-slate-200">{tx.category}</div>
                           <div className="text-[10px] text-slate-500 font-sans mt-0.5">{tx.note || '-'}</div>
