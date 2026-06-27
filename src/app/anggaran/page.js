@@ -19,7 +19,8 @@ export default function AnggaranPage() {
   }, []);
 
   async function loadBudgets() {
-    const { data, error } = await supabase.from('budgets').select('*').order('created_at', { ascending: false });
+    // Diubah: Mengurutkan berdasarkan 'id' secara descending, bukan created_at
+    const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
     if (!error && data) setBudgets(data);
   }
 
@@ -29,22 +30,30 @@ export default function AnggaranPage() {
     if (!itemName.trim() || !plannedAmount) return;
 
     const currentEditingId = editingId;
-    const payload = { item_name: itemName.trim(), planned_amount: Number(plannedAmount) };
+    const payload = { 
+      item_name: itemName.trim(), 
+      planned_amount: Number(plannedAmount) 
+    };
 
     try {
       if (currentEditingId) {
         const { error } = await supabase.from('budgets').update(payload).eq('id', currentEditingId);
         if (error) throw error;
-        alert('Anggaran diperbarui!');
+        alert('Rencana anggaran diperbarui!');
       } else {
-        const insertPayload = { ...payload, created_at: new Date().toISOString() };
-        const { error } = await supabase.from('budgets').insert([insertPayload]);
+        // Bersih: Tanpa menyisipkan properti created_at
+        const { error } = await supabase.from('budgets').insert([payload]);
         if (error) throw error;
-        alert('Anggaran ditambahkan!');
+        alert('Rencana anggaran ditambahkan!');
       }
-      setItemName(''); setPlannedAmount(''); setEditingId(null);
+
+      setItemName(''); 
+      setPlannedAmount('');
+      setEditingId(null);
       await loadBudgets();
-    } catch (err) { alert(err.message); }
+    } catch (err) { 
+      alert(`Gagal: ${err.message}`); 
+    }
   };
 
   const handleEdit = (b) => {
@@ -64,7 +73,6 @@ export default function AnggaranPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* TAMPILKAN FORM HANYA JIKA ADMIN */}
       {isAdmin ? (
         <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
           <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Target Anggaran'}</h3>
@@ -76,7 +84,7 @@ export default function AnggaranPage() {
             <label className="block text-[11px] text-slate-400 mb-1">Nominal Alokasi (Rp)</label>
             <input type="number" required value={plannedAmount} onChange={(e) => setPlannedAmount(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
           </div>
-          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400">
+          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
             {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
           </button>
           {editingId && (
@@ -85,8 +93,7 @@ export default function AnggaranPage() {
         </form>
       ) : (
         <div className="p-6 bg-slate-900/40 border border-slate-900 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di <b>Mode Publik (Lihat Saja)</b>.</p>
-          <p className="text-[10px] text-slate-600">Gunakan tombol "Login Admin" di atas untuk menambahkan atau mengubah data anggaran ini.</p>
+          <p className="text-xs text-slate-400 font-medium">💡 Mode Publik (Lihat Saja).</p>
         </div>
       )}
 
@@ -101,7 +108,6 @@ export default function AnggaranPage() {
                 <span>💡 {b.item_name}</span>
                 <div className="flex items-center gap-4">
                   <span className="font-mono font-bold text-amber-500">Rp {Number(b.planned_amount).toLocaleString('id-ID')}</span>
-                  {/* AKSI EDIT/HAPUS HANYA UNTUK ADMIN */}
                   {isAdmin && (
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(b)} className="text-amber-500 font-bold hover:underline">Edit</button>
