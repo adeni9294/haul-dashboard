@@ -92,14 +92,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl animate-fadeIn">
-      {/* HEADER DASHBOARD BERSIH TANPA TOMBOL LPJ */}
+    <div className="space-y-6 max-w-6xl">
+      {/* HEADER DASHBOARD */}
       <div>
         <h2 className="text-xl font-bold text-white">📊 Ringkasan Kas & Anggaran</h2>
         <p className="text-xs text-slate-400">Pantauan neraca saldo aktual dan kendali pencatatan keuangan panitia secara terpusat.</p>
       </div>
 
-      {/* CARD TOP SUMMARY */}
+      {/* CARD KOTAK RINGKASAN */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
           <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">TOTAL PEMASUKAN</p>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* BLOCK DETAIL SECTIONS */}
+      {/* TABEL RINCIAN PEMASUKAN & PENGELUARAN */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* PEMASUKAN */}
         <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
