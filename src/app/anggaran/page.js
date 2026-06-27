@@ -10,11 +10,8 @@ export default function AnggaranPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  // PRIORITAS: Menggunakan service key untuk bypass RLS jika tersedia, fallback ke anon key untuk public read
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY || supabaseAnonKey;
-  
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   useEffect(() => { 
     setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
@@ -22,8 +19,12 @@ export default function AnggaranPage() {
   }, []);
 
   async function loadBudgets() {
-    const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
-    if (!error && data) setBudgets(data);
+    try {
+      const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
+      if (!error && data) setBudgets(data);
+    } catch (err) {
+      console.error("Gagal memuat list:", err);
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -38,20 +39,11 @@ export default function AnggaranPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('budgets')
-          .update(payload)
-          .eq('id', editingId)
-          .select();
-        
+        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
         if (error) throw error;
         alert('Rencana anggaran berhasil diperbarui!');
       } else {
-        const { error } = await supabase
-          .from('budgets')
-          .insert([payload])
-          .select();
-          
+        const { error } = await supabase.from('budgets').insert([payload]);
         if (error) throw error;
         alert('Rencana anggaran berhasil ditambahkan!');
       }
@@ -62,7 +54,7 @@ export default function AnggaranPage() {
       await loadBudgets();
     } catch (err) { 
       console.error(err);
-      alert(`Gagal menyimpan anggaran: ${err.message || JSON.stringify(err)}`); 
+      alert(`Gagal menyimpan: ${err.message || "Pastikan field database sesuai"}`); 
     }
   };
 
