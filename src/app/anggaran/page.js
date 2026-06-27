@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export default function AnggaranPage() {
   const [budgets, setBudgets] = useState([]);
-  const [itemName, setItemName] = useState('');
+  const [categoryName, setCategoryName] = useState(''); // DIUBAH: Menggunakan korelasi kolom category
   const [plannedAmount, setPlannedAmount] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -29,41 +29,40 @@ export default function AnggaranPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
-    if (!itemName.trim() || !plannedAmount) return;
+    if (!categoryName.trim() || !plannedAmount) return;
 
     const supabase = getSupabase();
+    // FIX: payload sekarang menembak kolom 'category' dan 'planned_amount' sesuai Supabase Anda
     const payload = { 
-      item_name: itemName.trim(), 
+      category: categoryName.trim(), 
       planned_amount: parseInt(plannedAmount, 10) 
     };
 
     try {
       if (editingId) {
-        // PERBAIKAN: Menambahkan .select() di akhir perintah update
-        const { error, data } = await supabase.from('budgets').update(payload).eq('id', editingId).select();
+        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId).select();
         if (error) throw error;
         alert('🎯 Rencana anggaran berhasil diperbarui!');
       } else {
-        // PERBAIKAN: Menambahkan .select() di akhir perintah insert
-        const { error, data } = await supabase.from('budgets').insert([payload]).select();
+        const { error } = await supabase.from('budgets').insert([payload]).select();
         if (error) throw error;
         alert('✅ Rencana anggaran berhasil ditambahkan!');
       }
 
-      setItemName(''); 
+      setCategoryName(''); 
       setPlannedAmount('');
       setEditingId(null);
       await loadBudgets();
     } catch (err) { 
-      console.error("Eror Supabase Anggaran:", err);
-      // Membongkar seluruh teks objek eror agar terhindar dari tulisan "null"
-      alert(`❌ Gagal menyimpan anggaran:\n${err?.message || err?.details || JSON.stringify(err)}`); 
+      console.error(err);
+      const detailEror = `Kode: ${err?.code || '-'}\nPesan: ${err?.message || err}\nDetail: ${err?.details || '-'}`;
+      alert(`❌ Gagal menyimpan anggaran:\n\n${detailEror}`); 
     }
   };
 
   const handleEdit = (b) => {
     setEditingId(b.id);
-    setItemName(b.item_name || '');
+    setCategoryName(b.category || ''); // FIX: Membaca properti .category
     setPlannedAmount(b.planned_amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -83,8 +82,8 @@ export default function AnggaranPage() {
         <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
           <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Target Anggaran'}</h3>
           <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Nama Keperluan Pos</label>
-            <input type="text" required value={itemName} onChange={(e) => setItemName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+            <label className="block text-[11px] text-slate-400 mb-1">Nama Keperluan Pos / Kategori</label>
+            <input type="text" required value={categoryName} onChange={(e) => setCategoryName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
           </div>
           <div>
             <label className="block text-[11px] text-slate-400 mb-1">Nominal Alokasi (Rp)</label>
@@ -94,7 +93,7 @@ export default function AnggaranPage() {
             {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setItemName(''); setPlannedAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+            <button type="button" onClick={() => { setEditingId(null); setCategoryName(''); setPlannedAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
           )}
         </form>
       ) : (
@@ -111,7 +110,8 @@ export default function AnggaranPage() {
           ) : (
             budgets.map(b => (
               <div key={b.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <span>💡 {b.item_name}</span>
+                {/* FIX: Render b.category, bukan b.item_name */}
+                <span>💡 {b.category}</span>
                 <div className="flex items-center gap-4">
                   <span className="font-mono font-bold text-amber-500">Rp {Number(b.planned_amount || 0).toLocaleString('id-ID')}</span>
                   {isAdmin && (
