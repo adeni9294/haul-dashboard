@@ -31,17 +31,20 @@ export default function AcaraPage() {
     e.preventDefault();
     if (!title.trim()) return;
 
+    // Perbaikan: Tambahkan created_at agar lolos constraint NOT NULL Supabase
     const payload = { 
       event_date: eventDate, 
       start_time: startTime, 
       end_time: endTime, 
       activity_title: title.trim(), 
-      pic_name: pic.trim() 
+      pic_name: pic.trim(),
+      created_at: new Date().toISOString()
     };
 
     try {
       if (editingId) {
-        const { error } = await supabase.from('schedules').update(payload).eq('id', editingId);
+        const updatePayload = { event_date: payload.event_date, start_time: payload.start_time, end_time: payload.end_time, activity_title: payload.activity_title, pic_name: payload.pic_name };
+        const { error } = await supabase.from('schedules').update(updatePayload).eq('id', editingId);
         if (error) throw error;
         alert('Rundown acara berhasil diperbarui!');
       } else {
@@ -50,12 +53,10 @@ export default function AcaraPage() {
         alert('Rundown acara baru berhasil ditambahkan!');
       }
 
-      // RESET STATE FORM
       setTitle(''); 
       setPic(''); 
       setEditingId(null);
       
-      // RE-LOAD SECARA SINKRONUS
       await loadSchedules();
     } catch (err) { 
       alert(`Gagal memproses data: ${err.message}`); 
