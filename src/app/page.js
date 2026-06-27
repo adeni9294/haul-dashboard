@@ -2,171 +2,249 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [pemasukan, setPemasukan] = useState(0);
-  const [pengeluaran, setPengeluaran] = useState(0);
-  const [targetAnggaran, setTargetAnggaran] = useState(50000000);
-  const [rincianMasuk, setRincianMasuk] = useState([]);
-  const [rincianKeluar, setRincianKeluar] = useState([]);
+export default function PengaturanPage() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // State Konfigurasi Aplikasi
+  const [orgName, setOrgName] = useState('');
+  const [address, setAddress] = useState('');
+  const [bankInfo, setBankInfo] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [theme, setTheme] = useState('slate-dark'); // State Tema Utama
+
+  // State Kategori Dinamis
+  const [categories, setCategories] = useState([]);
+  const [newCategory, setNewCategory] = useState('');
+
+  // State Target Anggaran Dinamis
+  const [budgets, setBudgets] = useState([]);
+  const [newBudgetItem, setNewBudgetItem] = useState('');
+  const [newBudgetAmount, setNewBudgetAmount] = useState('');
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // DAFTAR 15 TEMA MODERN + TEMA LAMA
+  const availableThemes = [
+    { id: 'slate-dark', name: '🌌 Slate Classic (Bawaan)' },
+    { id: 'emerald-cyber', name: '📟 Emerald Cyber (Hijau Neon)' },
+    { id: 'velvet-rose', name: '🔮 Velvet Rose (Ungu Rose)' },
+    { id: 'neon-sunset', name: '🌆 Neon Sunset (Oranye Jingga)' },
+    { id: 'nordic-frost', name: '❄️ Nordic Frost (Biru Es)' },
+    { id: 'tokyo-night', name: '🗼 Tokyo Night (Ungu Gelap)' },
+    { id: 'amber-gold', name: '👑 Amber Gold (Emas Mewah)' },
+    { id: 'cyberpunk-2076', name: '🦾 Cyberpunk (Kuning Hitam)' },
+    { id: 'ocean-deep', name: '🌊 Ocean Deep (Biru Samudra)' },
+    { id: 'forest-moss', name: '🌲 Forest Moss (Hijau Lumut)' },
+    { id: 'crimson-tide', name: '🩸 Crimson Tide (Merah Marun)' },
+    { id: 'obsidian-stark', name: '🖤 Obsidian Stark (Hitam Pekat)' },
+    { id: 'dracula-vamp', name: '🧛 Dracula (Ungu Klasik AI)' },
+    { id: 'coffee-latte', name: '☕ Coffee Latte (Cokelat Estetik)' },
+    { id: 'mint-fresh', name: '🍃 Mint Fresh (Hijau Toska)' },
+    { id: 'retro-wave', name: '📼 Retro Wave (Merah Muda Vapor)' }
+  ];
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        if (!supabaseUrl || !supabaseKey) {
-          setLoading(false);
-          return;
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        // 1. Ambil data transaksi dengan proteksi aman
-        const { data: transData, error: transError } = await supabase
-          .from('transactions')
-          .select('*');
-
-        if (!transError && transData) {
-          let totalMasuk = 0;
-          let totalKeluar = 0;
-          const mapMasuk = {};
-          const mapKeluar = {};
-
-          transData.forEach(item => {
-            if (!item) return;
-            const nominal = Number(item.amount || 0);
-            const itemType = String(item.type || '').toLowerCase();
-            const kategori = item.category || 'Lain-lain';
-            
-            if (itemType === 'pemasukan') {
-              totalMasuk += nominal;
-              mapMasuk[kategori] = (mapMasuk[kategori] || 0) + nominal;
-            } else if (itemType === 'pengeluaran') {
-              totalKeluar += nominal;
-              mapKeluar[kategori] = (mapKeluar[kategori] || 0) + nominal;
-            }
-          });
-
-          setPemasukan(totalMasuk);
-          setPengeluaran(totalKeluar);
-          setRincianMasuk(Object.entries(mapMasuk).map(([category, amount]) => ({ category, amount })));
-          setRincianKeluar(Object.entries(mapKeluar).map(([category, amount]) => ({ category, amount })));
-        }
-
-        // 2. Ambil data target anggaran dengan proteksi aman
-        const { data: budgetData, error: budgetError } = await supabase
-          .from('budgets')
-          .select('planned_amount');
-
-        if (!budgetError && budgetData && budgetData.length > 0) {
-          let totalTarget = 0;
-          budgetData.forEach(b => {
-            if (b && b.planned_amount) totalTarget += Number(b.planned_amount);
-          });
-          if (totalTarget > 0) setTargetAnggaran(totalTarget);
-        }
-
-      } catch (err) {
-        console.error('Gagal memuat data dashboard, menggunakan fallback aman:', err);
-      } finally {
-        setLoading(false);
-      }
+    const authStatus = localStorage.getItem('isAdminAuthenticated');
+    if (authStatus === 'true') {
+      setIsAdmin(true);
     }
-
-    fetchData();
+    loadSemuaPengaturan();
   }, []);
 
-  const saldoAkhir = pemasukan - pengeluaran;
-  const persentaseProgres = targetAnggaran > 0 ? Math.min(Math.round((pemasukan / targetAnggaran) * 100), 100) : 0;
+  async function loadSemuaPengaturan() {
+    if (!supabaseUrl || !supabaseKey) return;
+    try {
+      // 1. Ambil data Main Config & Tema
+      const { data: configData } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('id', 'main_config')
+        .single();
+      
+      if (configData) {
+        setOrgName(configData.org_name || '');
+        setAddress(configData.address || '');
+        setBankInfo(configData.bank_info || '');
+        setLogoUrl(configData.logo_url || '');
+        if (configData.theme) {
+          setTheme(configData.theme);
+          // Terapkan perubahan tema ke elemen body HTML secara langsung
+          document.body.className = `theme-${configData.theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
+        }
+      }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+      // 2. Ambil Kategori
+      const { data: catData } = await supabase.from('categories').select('*').order('name');
+      if (catData) setCategories(catData);
+
+      // 3. Ambil Anggaran
+      const { data: budData } = await supabase.from('budgets').select('*');
+      if (budData) setBudgets(budData);
+
+    } catch (err) {
+      console.error(err);
+    }
   }
 
+  // FUNGSI MENYIMPAN TEMA & KONFIGURASI KE DATABASE
+  const handleSaveConfig = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) return;
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          id: 'main_config',
+          org_name: orgName,
+          address: address,
+          bank_info: bankInfo,
+          logo_url: logoUrl,
+          theme: theme // Menyimpan pilihan tema ke database
+        });
+
+      if (error) throw error;
+      
+      // Terapkan tema langsung di browser sesaat setelah disimpan
+      document.body.className = `theme-${theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
+      
+      alert('Konfigurasi panitia dan tema berhasil diperbarui!');
+      window.location.reload(); // Refresh halaman agar layout utama ikut berubah
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- FUNGSI TAMBAHAN MANAJEMEN KATEGORI DAN ANGGARAN ---
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.trim()) return;
+    try {
+      await supabase.from('categories').insert([{ name: newCategory.trim() }]);
+      setNewCategory('');
+      loadSemuaPengaturan();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleAddBudget = async (e) => {
+    e.preventDefault();
+    if (!newBudgetItem.trim() || !newBudgetAmount) return;
+    try {
+      await supabase.from('budgets').insert([{ item_name: newBudgetItem.trim(), planned_amount: Number(newBudgetAmount) }]);
+      setNewBudgetItem('');
+      setNewBudgetAmount('');
+      loadSemuaPengaturan();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleLoginAdmin = (e) => {
+    e.preventDefault();
+    if (password === 'admin123') { // Ganti password sesuai kebutuhan Anda
+      localStorage.setItem('isAdminAuthenticated', 'true');
+      setIsAdmin(true);
+      alert('Akses Admin Berhasil Diberikan!');
+    } else {
+      alert('Password Salah!');
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* HEADER DASHBOARD */}
+    <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-xl font-bold text-white">📊 Ringkasan Kas & Anggaran</h2>
-        <p className="text-xs text-slate-400">Pantauan neraca saldo aktual dan kendali pencatatan keuangan panitia secara terpusat.</p>
+        <h2 className="text-xl font-bold text-white">⚙️ Ruang Kendali Pengaturan</h2>
+        <p className="text-xs text-slate-400">Atur profil identitas organisasi, sesuaikan 15+ tema modern, dan kelola pos anggaran.</p>
       </div>
 
-      {/* CARD UTAMA */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
-          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">TOTAL PEMASUKAN</p>
-          <p className="text-xl font-mono font-black text-emerald-400 mt-1">Rp {pemasukan.toLocaleString('id-ID')}</p>
-          <div className="absolute -bottom-2 -right-2 text-emerald-500/5 text-6xl font-black">IN</div>
-        </div>
-
-        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
-          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">TOTAL PENGELUARAN</p>
-          <p className="text-xl font-mono font-black text-rose-400 mt-1">Rp {pengeluaran.toLocaleString('id-ID')}</p>
-          <div className="absolute -bottom-2 -right-2 text-rose-500/5 text-6xl font-black">OUT</div>
-        </div>
-
-        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
-          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">SISA SALDO AKHIR</p>
-          <p className="text-xl font-mono font-black text-amber-400 mt-1">Rp {saldoAkhir.toLocaleString('id-ID')}</p>
-          <div className="absolute -bottom-2 -right-2 text-amber-500/5 text-6xl font-black">BAL</div>
-        </div>
-
-        <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
-          <div className="flex justify-between items-center">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">PROGRES TARGET</p>
-            <span className="text-xs font-mono font-black text-amber-400">{persentaseProgres}%</span>
-          </div>
-          <p className="text-xl font-mono font-black text-white mt-1">Rp {targetAnggaran.toLocaleString('id-ID')}</p>
-          <div className="w-full bg-slate-950 h-1.5 rounded-full mt-3 overflow-hidden border border-slate-800/50">
-            <div 
-              className="bg-gradient-to-r from-amber-500 to-emerald-400 h-full rounded-full transition-all duration-500" 
-              style={{ width: `${persentaseProgres}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* DAFTAR DATA */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* TABEL PEMASUKAN */}
-        <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
-          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">📥 Rincian Aktual Pemasukan</h3>
-          {Array.isArray(rincianMasuk) && rincianMasuk.length > 0 ? (
-            <div className="space-y-2">
-              {rincianMasuk.map((rm, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-xl text-[11px] font-mono">
-                  <span className="text-slate-300 font-medium">{rm.category}</span>
-                  <span className="text-emerald-400 font-bold">Rp {rm.amount.toLocaleString('id-ID')}</span>
-                </div>
-              ))}
+      {!isAdmin ? (
+        <form onSubmit={handleLoginAdmin} className="max-w-md p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+          <h3 className="text-xs font-bold text-amber-500 uppercase tracking-wider">🔒 Verifikasi Keamanan Admin</h3>
+          <input 
+            type="password" 
+            placeholder="Masukkan Password Admin" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
+          />
+          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 text-xs font-bold rounded-xl uppercase">Buka Akses</button>
+        </form>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* UTAMA: PROFIL & DROPDOWN 15 TEMA MODERN */}
+          <form onSubmit={handleSaveConfig} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+            <h3 className="text-xs font-bold text-amber-500 uppercase tracking-wider border-b border-slate-800 pb-2">🎨 Profil & Pilihan Tema</h3>
+            
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Pilih Tema Tampilan Modern</label>
+              <select 
+                value={theme} 
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-bold"
+              >
+                {availableThemes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </div>
-          ) : (
-            <p className="text-xs text-slate-500 text-center py-6">Belum ada data masuk dari database Supabase.</p>
-          )}
-        </div>
 
-        {/* TABEL PENGELUARAN */}
-        <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
-          <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">📤 Rincian Aktual Pengeluaran</h3>
-          {Array.isArray(rincianKeluar) && rincianKeluar.length > 0 ? (
-            <div className="space-y-2">
-              {rincianKeluar.map((rk, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-xl text-[11px] font-mono">
-                  <span className="text-slate-300 font-medium">{rk.category}</span>
-                  <span className="text-rose-400 font-bold">Rp {rk.amount.toLocaleString('id-ID')}</span>
-                </div>
-              ))}
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Nama Organisasi / Panitia</label>
+              <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
             </div>
-          ) : (
-            <p className="text-xs text-slate-500 text-center py-6">Belum ada data keluar dari database Supabase.</p>
-          )}
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Alamat Resmi</label>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Informasi Rekening Bank (Kop)</label>
+              <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Link URL Foto Logo Resmi</label>
+              <input type="text" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
+            </div>
+
+            <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs uppercase rounded-xl shadow-lg">
+              {loading ? '⏳ Menyimpan...' : '💾 Simpan Perubahan'}
+            </button>
+          </form>
+
+          {/* SISI KANAN: KELOLA KATEGORI DAN ANGGARAN */}
+          <div className="space-y-6">
+            {/* Kategori */}
+            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">📁 Tambah Kategori Pos Kas</h3>
+              <form onSubmit={handleAddCategory} className="flex gap-2">
+                <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Nama pos baru..." className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+                <button type="submit" className="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl">Tambah</button>
+              </form>
+              <div className="flex flex-wrap gap-1.5 pt-2">
+                {categories.map((c, i) => (
+                  <span key={i} className="px-2.5 py-1 bg-slate-950 border border-slate-800 text-[10px] text-slate-300 rounded-lg">🏷️ {c.name}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Anggaran */}
+            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">📈 Alokasi Anggaran</h3>
+              <form onSubmit={handleAddBudget} className="space-y-2">
+                <input type="text" value={newBudgetItem} onChange={(e) => setNewBudgetItem(e.target.value)} placeholder="Nama kebutuhan..." className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+                <input type="number" value={newBudgetAmount} onChange={(e) => setNewBudgetAmount(e.target.value)} placeholder="Nominal target Rp..." className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
+                <button type="submit" className="w-full py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Simpan Anggaran</button>
+              </form>
+            </div>
+          </div>
+
         </div>
-      </div>
+      )}
     </div>
   );
 }
