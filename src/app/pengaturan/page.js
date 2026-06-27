@@ -4,269 +4,271 @@ import { createClient } from '@supabase/supabase-js';
 
 export default function PengaturanPage() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // State Pengaturan Identitas
+  // State Konfigurasi Aplikasi (Lama + Baru)
   const [orgName, setOrgName] = useState('');
   const [address, setAddress] = useState('');
   const [bankInfo, setBankInfo] = useState('');
-  const [theme, setTheme] = useState('dark_amber');
   const [logoUrl, setLogoUrl] = useState('');
-  const [announcement, setAnnouncement] = useState('');
-  const [phoneContact, setPhoneContact] = useState('');
-  const [targetNotes, setTargetNotes] = useState('');
+  const [theme, setTheme] = useState('slate-dark');
+  const [announcement, setAnnouncement] = useState(''); // State Baru untuk Pengumuman
+  const [budgetNote, setBudgetNote] = useState(''); // State Baru untuk Catatan Anggaran
 
-  // State Manajemen Kategori Dinamis
+  // State Kategori Dinamis
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
-  const [addingCategory, setAddingCategory] = useState(false);
+
+  // State Target Anggaran Dinamis
+  const [budgets, setBudgets] = useState([]);
+  const [newBudgetItem, setNewBudgetItem] = useState('');
+  const [newBudgetAmount, setNewBudgetAmount] = useState('');
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const availableThemes = [
+    { id: 'slate-dark', name: '🌌 Slate Classic (Bawaan)' },
+    { id: 'emerald-cyber', name: '📟 Emerald Cyber (Hijau Neon)' },
+    { id: 'velvet-rose', name: '🔮 Velvet Rose (Ungu Rose)' },
+    { id: 'neon-sunset', name: '🌆 Neon Sunset (Oranye Jingga)' },
+    { id: 'nordic-frost', name: '❄️ Nordic Frost (Biru Es)' },
+    { id: 'tokyo-night', name: '🗼 Tokyo Night (Ungu Gelap)' },
+    { id: 'amber-gold', name: '👑 Amber Gold (Emas Mewah)' },
+    { id: 'cyberpunk-2076', name: '🦾 Cyberpunk (Kuning Hitam)' },
+    { id: 'ocean-deep', name: '🌊 Ocean Deep (Biru Samudra)' },
+    { id: 'forest-moss', name: '🌲 Forest Moss (Hijau Lumut)' },
+    { id: 'crimson-tide', name: '🩸 Crimson Tide (Merah Marun)' },
+    { id: 'obsidian-stark', name: '🖤 Obsidian Stark (Hitam Pekat)' },
+    { id: 'dracula-vamp', name: '🧛 Dracula (Ungu Klasik AI)' },
+    { id: 'coffee-latte', name: '☕ Coffee Latte (Cokelat Estetik)' },
+    { id: 'mint-fresh', name: '🍃 Mint Fresh (Hijau Toska)' },
+    { id: 'retro-wave', name: '📼 Retro Wave (Merah Muda Vapor)' }
+  ];
 
   useEffect(() => {
     const authStatus = localStorage.getItem('isAdminAuthenticated');
     if (authStatus === 'true') {
       setIsAdmin(true);
     }
-
-    async function loadData() {
-      try {
-        if (!supabaseUrl || !supabaseKey) return;
-
-        // Fetch Data Pengaturan
-        const { data: setConfig } = await supabase
-          .from('settings')
-          .select('*')
-          .eq('id', 'main_config')
-          .single();
-
-        if (setConfig) {
-          setOrgName(setConfig.org_name || '');
-          setAddress(setConfig.address || '');
-          setBankInfo(setConfig.bank_info || '');
-          setTheme(setConfig.theme || 'dark_amber');
-          setLogoUrl(setConfig.logo_url || '');
-          setAnnouncement(setConfig.announcement || '');
-          setPhoneContact(setConfig.phone_contact || '');
-          setTargetNotes(setConfig.target_notes || '');
-        }
-
-        // Fetch Data Kategori dari Database
-        const { data: catData } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name', { ascending: true });
-        
-        if (catData) setCategories(catData);
-
-      } catch (err) {
-        console.error(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    loadSemuaPengaturan();
   }, []);
 
-  // Fungsi Unggah Logo
-  const handleUploadLogo = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !isAdmin) return;
-
-    setUploading(true);
+  async function loadSemuaPengaturan() {
+    if (!supabaseUrl || !supabaseKey) return;
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('logos').upload(fileName, file);
-      if (uploadError) throw uploadError;
+      // 1. Ambil data Main Config, Tema, Pengumuman, dan Catatan Anggaran
+      const { data: configData } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('id', 'main_config')
+        .single();
+      
+      if (configData) {
+        setOrgName(configData.org_name || '');
+        setAddress(configData.address || '');
+        setBankInfo(configData.bank_info || '');
+        setLogoUrl(configData.logo_url || '');
+        setAnnouncement(configData.announcement || ''); // Load data pengumuman
+        setBudgetNote(configData.budget_note || ''); // Load data catatan anggaran
+        if (configData.theme) {
+          setTheme(configData.theme);
+          document.body.className = `theme-${configData.theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
+        }
+      }
 
-      const { data } = supabase.storage.from('logos').getPublicUrl(fileName);
-      setLogoUrl(data.publicUrl);
-      alert('Logo terunggah! Jangan lupa simpan pengaturan di bawah.');
+      // 2. Ambil Kategori
+      const { data: catData } = await supabase.from('categories').select('*').order('name');
+      if (catData) setCategories(catData);
+
+      // 3. Ambil Anggaran
+      const { data: budData } = await supabase.from('budgets').select('*');
+      if (budData) setBudgets(budData);
+
     } catch (err) {
-      alert(err.message);
-    } finally {
-      setUploading(false);
+      console.error(err);
     }
-  };
+  }
 
-  // Fungsi Tambah Kategori Baru
-  const handleAddCategory = async (e) => {
+  // MENYIMPAN KONFIGURASI TERMASUK PENGUMUMAN DAN CATATAN ANGGARAN
+  const handleSaveConfig = async (e) => {
     e.preventDefault();
-    if (!newCategory.trim() || !isAdmin || addingCategory) return;
-
-    setAddingCategory(true);
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .insert([{ name: newCategory.trim() }])
-        .select();
-
-      if (error) throw error;
-      alert('Kategori baru berhasil ditambahkan!');
-      if (data) setCategories([...categories, data[0]].sort((a,b) => a.name.localeCompare(b.name)));
-      setNewCategory('');
-    } catch (err) {
-      alert(`Gagal menambah kategori: ${err.message}`);
-    } finally {
-      setAddingCategory(false);
-    }
-  };
-
-  // Fungsi Hapus Kategori
-  const handleDeleteCategory = async (id, name) => {
-    if (!isAdmin || !confirm(`Hapus kategori "${name}"? Kategori yang sudah terpakai di Transaksi sebaiknya jangan dihapus.`)) return;
+    if (!isAdmin) return;
+    setLoading(true);
 
     try {
-      const { error } = await supabase.from('categories').delete().eq('id', id);
-      if (error) throw error;
-      setCategories(categories.filter(c => c.id !== id));
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          id: 'main_config',
+          org_name: orgName,
+          address: address,
+          bank_info: bankInfo,
+          logo_url: logoUrl,
+          theme: theme,
+          announcement: announcement, // Menyimpan teks pengumuman ke database
+          budget_note: budgetNote // Menyimpan catatan anggaran ke database
+        });
 
-  const handleSaveSettings = async (e) => {
-    e.preventDefault();
-    if (!isAdmin || submitting) return;
-
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.from('settings').upsert({
-        id: 'main_config', org_name: orgName, address, bank_info: bankInfo,
-        theme, logo_url: logoUrl, announcement, phone_contact: phoneContact, target_notes: targetNotes
-      });
       if (error) throw error;
-      alert('Pengaturan global berhasil disimpan!');
+      
+      document.body.className = `theme-${theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
+      
+      alert('Semua pengaturan dan catatan berhasil diperbarui!');
       window.location.reload();
     } catch (err) {
       alert(err.message);
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[250px]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.trim()) return;
+    try {
+      await supabase.from('categories').insert([{ name: newCategory.trim() }]);
+      setNewCategory('');
+      loadSemuaPengaturan();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleAddBudget = async (e) => {
+    e.preventDefault();
+    if (!newBudgetItem.trim() || !newBudgetAmount) return;
+    try {
+      await supabase.from('budgets').insert([{ item_name: newBudgetItem.trim(), planned_amount: Number(newBudgetAmount) }]);
+      setNewBudgetItem('');
+      setNewBudgetAmount('');
+      loadSemuaPengaturan();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleLoginAdmin = (e) => {
+    e.preventDefault();
+    if (password === 'admin123') {
+      localStorage.setItem('isAdminAuthenticated', 'true');
+      setIsAdmin(true);
+      alert('Akses Admin Berhasil Diberikan!');
+    } else {
+      alert('Password Salah!');
+    }
+  };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto px-2 pb-12">
+    <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-xl font-bold text-white">⚙️ Pengaturan Global Workspace</h2>
-        <p className="text-xs text-slate-400">Modifikasi penuh identitas kepanitiaan, kelola kategori kas, logo, dan info operasional.</p>
+        <h2 className="text-xl font-bold text-white">⚙️ Ruang Kendali Pengaturan</h2>
+        <p className="text-xs text-slate-400">Atur profil identitas organisasi, sesuaikan tema, pengumuman, dan pos anggaran.</p>
       </div>
 
-      {/* BLOCK 1: MANAJEMEN KATEGORI DINAMIS */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-4 md:p-6 space-y-4">
-        <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-slate-800 pb-3">🗂️ Manajemen Kategori Buku Kas</h3>
-        
-        {isAdmin ? (
-          <form onSubmit={handleAddCategory} className="flex gap-2">
-            <input 
-              type="text" required value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Ketik Nama Kategori Baru... (Contoh: Donatur Sembako)"
-              className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
-            />
-            <button type="submit" disabled={addingCategory} className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl transition-all">
-              {addingCategory ? '⏳...' : '➕ Tambah'}
+      {!isAdmin ? (
+        <form onSubmit={handleLoginAdmin} className="max-w-md p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+          <h3 className="text-xs font-bold text-amber-500 uppercase tracking-wider">🔒 Verifikasi Keamanan Admin</h3>
+          <input 
+            type="password" 
+            placeholder="Masukkan Password Admin" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
+          />
+          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 text-xs font-bold rounded-xl uppercase">Buka Akses</button>
+        </form>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* SISI KIRI: FORM CONFIG UTAMA */}
+          <form onSubmit={handleSaveConfig} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+            <h3 className="text-xs font-bold text-amber-500 uppercase tracking-wider border-b border-slate-800 pb-2">🎨 Profil, Tema & Pengumuman</h3>
+            
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Pilih Tema Tampilan Modern</label>
+              <select 
+                value={theme} 
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-bold"
+              >
+                {availableThemes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Nama Organisasi / Panitia</label>
+              <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Alamat Resmi</label>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Informasi Rekening Bank (Kop)</label>
+              <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Link URL Foto Logo Resmi</label>
+              <input type="text" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
+            </div>
+
+            {/* KOLOM TEKS PENGUMUMAN BERFUNGSI 100% */}
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">📋 Teks Pengumuman Halaman Utama</label>
+              <textarea 
+                value={announcement} 
+                onChange={(e) => setAnnouncement(e.target.value)} 
+                placeholder="Tulis informasi atau pengumuman penting panitia di sini..."
+                rows={3}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* KOLOM CATATAN ANGGARAN BERFUNGSI 100% */}
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">📝 Catatan Tambahan Anggaran</label>
+              <textarea 
+                value={budgetNote} 
+                onChange={(e) => setBudgetNote(e.target.value)} 
+                placeholder="Tulis catatan, kebijakan keuangan, atau keterangan target anggaran..."
+                rows={3}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none resize-none"
+              />
+            </div>
+
+            <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs uppercase rounded-xl shadow-lg">
+              {loading ? '⏳ Menyimpan...' : '💾 Simpan Perubahan'}
             </button>
           </form>
-        ) : (
-          <p className="text-[11px] text-slate-500">🔒 Aktifkan Mode Admin untuk mengelola/menambah kategori kustom.</p>
-        )}
 
-        <div className="flex flex-wrap gap-2 pt-2">
-          {categories.map((c) => (
-            <div key={c.id} className="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-[11px] font-mono text-slate-300 flex items-center gap-2">
-              <span>📁 {c.name}</span>
-              {isAdmin && (
-                <button type="button" onClick={() => handleDeleteCategory(c.id, c.name)} className="text-slate-600 hover:text-red-400 font-bold ml-1">✕</button>
-              )}
+          {/* SISI KANAN: KATEGORI & ANGGARAN */}
+          <div className="space-y-6">
+            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">📁 Tambah Kategori Pos Kas</h3>
+              <form onSubmit={handleAddCategory} className="flex gap-2">
+                <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Nama pos baru..." className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+                <button type="submit" className="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl">Tambah</button>
+              </form>
+              <div className="flex flex-wrap gap-1.5 pt-2">
+                {categories.map((c, i) => (
+                  <span key={i} className="px-2.5 py-1 bg-slate-950 border border-slate-800 text-[10px] text-slate-300 rounded-lg">🏷️ {c.name}</span>
+                ))}
+              </div>
             </div>
-          ))}
+
+            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">📈 Alokasi Anggaran</h3>
+              <form onSubmit={handleAddBudget} className="space-y-2">
+                <input type="text" value={newBudgetItem} onChange={(e) => setNewBudgetItem(e.target.value)} placeholder="Nama kebutuhan..." className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+                <input type="number" value={newBudgetAmount} onChange={(e) => setNewBudgetAmount(e.target.value)} placeholder="Nominal target Rp..." className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
+                <button type="submit" className="w-full py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Simpan Anggaran</button>
+              </form>
+            </div>
+          </div>
+
         </div>
-      </div>
-
-      {/* BLOCK 2: IDENTITAS & KUSTOMISASI KORPORAT */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-        <form onSubmit={handleSaveSettings} className="p-4 md:p-6 space-y-6">
-          <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-slate-800 pb-3">🎨 Kustomisasi Tampilan & Header</h3>
-          
-          <div className="grid grid-cols-1 gap-4 text-xs">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">Nama Organisasi / Panitia</label>
-                <input type="text" required value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none" />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">Nomor Kontak / WhatsApp Sekretariat</label>
-                <input type="text" value={phoneContact} onChange={(e) => setPhoneContact(e.target.value)} placeholder="08123456xxx" className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none font-mono" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-400 mb-1">Alamat / Lokasi Sekretariat</label>
-              <textarea rows="2" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none"></textarea>
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-400 mb-1">Informasi Rekening Bank Panitia</label>
-              <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">Teks Pengumuman / Info Depan</label>
-                <textarea rows="2" value={announcement} onChange={(e) => setAnnouncement(e.target.value)} className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none"></textarea>
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">Catatan Tambahan Progres Anggaran</label>
-                <textarea rows="2" value={targetNotes} onChange={(e) => setTargetNotes(e.target.value)} className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none"></textarea>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800/60 pt-4">
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">⚙️ Berkas Gambar Logo</label>
-                <div className="space-y-2">
-                  <input type="file" accept="image/*" disabled={!isAdmin || uploading} onChange={handleUploadLogo} className="w-full text-slate-400 text-[11px] file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-800 file:text-slate-200 file:cursor-pointer" />
-                  {logoUrl && (
-                    <div className="flex items-center gap-2 p-2 bg-slate-950 border border-slate-800 rounded-xl">
-                      <img src={logoUrl} alt="Preview Logo" className="w-8 h-8 rounded-lg object-cover" />
-                      <span className="text-[10px] text-slate-500 font-mono truncate max-w-[200px]">{logoUrl}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">Pilih Tema Gaya Visual</label>
-                <select value={theme} onChange={(e) => setTheme(e.target.value)} className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none">
-                  <option value="dark_amber">Premium Dark Amber (Emas Gelap)</option>
-                  <option value="dark_emerald">Classic Dark Emerald (Hijau Islami)</option>
-                  <option value="dark_slate">Minimalist Modern Slate (Abu-abu)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-800/60 pt-4 flex flex-col md:flex-row justify-between gap-3">
-            {!isAdmin && <p className="text-[11px] text-rose-400 font-medium text-center">🔒 Masuk ke Mode Admin untuk menyimpan kustomisasi.</p>}
-            <button type="submit" disabled={!isAdmin || submitting || uploading} className="w-full md:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 text-slate-950 text-xs font-black uppercase rounded-xl shadow-md transition-all md:ml-auto">
-              {submitting ? '⏳ Memproses...' : '💾 Simpan Konformasi Pengaturan'}
-            </button>
-          </div>
-        </form>
-      </div>
+      )}
     </div>
   );
 }
