@@ -7,6 +7,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ totalMasuk: 0, totalKeluar: 0, saldo: 0 });
   const [announcement, setAnnouncement] = useState('');
   const [recentTransactions, setRecentTransactions] = useState([]);
+  
+  // State baru untuk menampung total pengeluaran per kategori secara dinamis
+  const [categoryTotals, setCategoryTotals] = useState({});
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -24,7 +27,6 @@ export default function DashboardPage() {
           .select('*')
           .eq('id', 'main_config');
 
-        // Berikan teks default jika database kosong atau kolom announcement belum ada
         setAnnouncement('Selamat Datang di Sistem Informasi Keuangan Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus.');
 
         if (!configError && configData && configData.length > 0) {
@@ -37,7 +39,7 @@ export default function DashboardPage() {
           }
         }
 
-        // 2. Ambil data transaksi kas secara sinkron untuk menghitung total saldo live
+        // 2. Ambil data semua transaksi kas secara sinkron
         const { data: trxData } = await supabase
           .from('transactions')
           .select('*')
@@ -46,11 +48,27 @@ export default function DashboardPage() {
         if (trxData) {
           let masuk = 0;
           let keluar = 0;
+          let totalsKategori = {}; // Objek penampung sementara untuk kalkulasi kategori
+
           trxData.forEach(t => {
-            if (t.type === 'masuk') masuk += Number(t.amount || 0);
-            if (t.type === 'keluar') keluar += Number(t.amount || 0);
+            const nominal = Number(t.amount || 0);
+            
+            if (t.type === 'masuk') {
+              masuk += nominal;
+            } else if (t.type === 'keluar') {
+              keluar += nominal;
+              
+              // Kalkulasi pengeluaran berdasarkan nama kategorinya
+              const namaKategori = t.category || 'Umum';
+              if (!totalsKategori[namaKategori]) {
+                totalsKategori[namaKategori] = 0;
+              }
+              totalsKategori[namaKategori] += nominal;
+            }
           });
+
           setStats({ totalMasuk: masuk, totalKeluar: keluar, saldo: masuk - keluar });
+          setCategoryTotals(totalsKategori); // Masukkan hasil kalkulasi ke dalam state
           setRecentTransactions(trxData.slice(0, 5)); // Ambil 5 transaksi terbaru
         }
 
@@ -64,16 +82,19 @@ export default function DashboardPage() {
   }, []);
 
   const formatRupiah = (number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number || 0);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-xs font-mono text-slate-400 animate-pulse">⏳ Memuat sinkronisasi data statistik...</p>
+        <p className="text-xs font-mono text-slate-400 animate-pulse">⏳ Memuat sinkronisasi kalkulasi data kas...</p>
       </div>
     );
   }
+
+  // Daftar kategori yang tampil di layar sesuai gambar Anda
+  const listKategoriTampilan = ['Konsumsi', 'Perlengkapan', 'Humas / Transp', 'Kesenian / Acara', 'Sekretariat / ATK', 'Lain-lain'];
 
   return (
     <div className="space-y-6">
@@ -83,14 +104,14 @@ export default function DashboardPage() {
         <p className="text-xs text-slate-400">Pantau pergerakan anggaran, total saldo masuk/keluar, dan info aktual panitia.</p>
       </div>
 
-      {/* BANNER PENGUMUMAN AMAN */}
+      {/* BANNER PENGUMUMAN */}
       <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
         <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
         <h4 className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">📢 Pengumuman Internal</h4>
         <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{announcement}</p>
       </div>
 
-      {/* 3 KARTU INFORMASI UTAMA */}
+      {/* 3 KARTU UTAMA DANA KAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl shadow-sm relative">
           <p className="text-[10px] uppercase font-bold text-amber-500 tracking-wider mb-1">💰 Sisa Saldo Kas Utama</p>
@@ -106,6 +127,22 @@ export default function DashboardPage() {
         <div className="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl shadow-sm">
           <p className="text-[10px] uppercase font-bold text-rose-400 tracking-wider mb-1">📉 Total Dana Keluar</p>
           <h3 className="text-lg font-bold text-rose-400 font-mono">{formatRupiah(stats.totalKeluar)}</h3>
+        </div>
+      </div>
+
+      {/* SEKSI DIAGRAM KATEGORI PENGELUARAN YANG SEKARANG SUDAH SINKRON */}
+      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">📉 Realisasi Pengeluaran per Kategori</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {listKategoriTampilan.map((kat) => {
+            const totalPengeluaranKat = categoryTotals[kat] || 0;
+            return (
+              <div key={kat} className="p-4 bg-slate-950 border border-slate-800/60 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-400 font-medium">{kat}</span>
+                <h4 className="text-sm font-bold text-rose-400 font-mono">{formatRupiah(totalPengeluaranKat)}</h4>
+              </div>
+            );
+          })}
         </div>
       </div>
 
