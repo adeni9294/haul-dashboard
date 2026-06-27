@@ -20,7 +20,6 @@ export default function KepanitiaanPage() {
   }, []);
 
   async function loadMembers() {
-    // Diubah: Urutkan murni berdasarkan id panitia terkini
     const { data, error } = await supabase.from('committee').select('*').order('id', { ascending: false });
     if (!error && data) setMembers(data);
   }
@@ -30,23 +29,22 @@ export default function KepanitiaanPage() {
     if (!isAdmin) return alert('Aksi ditolak!');
     if (!name.trim() || !role.trim()) return;
 
-    const currentEditingId = editingId;
     const payload = { member_name: name.trim(), role_position: role.trim(), phone_number: phone.trim() };
 
     try {
-      if (currentEditingId) {
-        const { error } = await supabase.from('committee').update(payload).eq('id', currentEditingId);
+      if (editingId) {
+        // PERBAIKAN: Penggunaan editId murni untuk update panitia
+        const { error } = await supabase.from('committee').update(payload).eq('id', editingId);
         if (error) throw error;
         alert('Data panitia diperbarui!');
       } else {
-        // Bersih dari created_at
         const { error } = await supabase.from('committee').insert([payload]);
         if (error) throw error;
         alert('Anggota panitia ditambahkan!');
       }
       setName(''); setRole(''); setPhone(''); setEditingId(null);
       await loadMembers();
-    } catch (err) { alert(`Gagal: ${err.message}`); }
+    } catch (err) { alert(`Gagal menyimpan: ${err.message}`); }
   };
 
   const handleEdit = (m) => {
@@ -86,7 +84,7 @@ export default function KepanitiaanPage() {
             {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggota'}
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setName(''); setRole(''); setPhone(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl">Batal Edit</button>
+            <button type="button" onClick={() => { setEditingId(null); setName(''); setRole(''); setPhone(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
           )}
         </form>
       ) : (
