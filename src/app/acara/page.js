@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export default function AcaraPage() {
   const [schedules, setSchedules] = useState([]);
   const [eventDate, setEventDate] = useState('');
@@ -12,10 +16,6 @@ export default function AcaraPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
   useEffect(() => { 
     setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
     setEventDate(new Date().toISOString().split('T')[0]);
@@ -24,7 +24,12 @@ export default function AcaraPage() {
 
   async function loadSchedules() {
     const { data, error } = await supabase.from('schedules').select('*').order('event_date', { ascending: true }).order('start_time', { ascending: true });
-    if (!error && data) setSchedules(data);
+    if (error) {
+      console.error(error);
+      alert(`Gagal memuat jadwal acara: ${error.message || JSON.stringify(error)}`);
+    } else if (data) {
+      setSchedules(data);
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -32,29 +37,37 @@ export default function AcaraPage() {
     if (!isAdmin) return alert('Aksi ditolak!');
     if (!title.trim()) return;
 
-    const payload = { event_date: eventDate, start_time: startTime, end_time: endTime, activity_title: title.trim(), pic_name: pic.trim() };
+    const payload = { 
+      event_date: eventDate, 
+      start_time: startTime, 
+      end_time: endTime, 
+      activity_title: title.trim(), 
+      pic_name: pic.trim() 
+    };
 
     try {
       if (editingId) {
-        // PERBAIKAN: Update murni berdasarkan id penampung
         const { error } = await supabase.from('schedules').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert('Rundown acara diperbarui!');
+        alert('🎯 Rundown acara berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('schedules').insert([payload]);
         if (error) throw error;
-        alert('Rundown acara ditambahkan!');
+        alert('✅ Rundown acara berhasil ditambahkan!');
       }
       setTitle(''); setPic(''); setEditingId(null);
       await loadSchedules();
-    } catch (err) { alert(`Gagal menyimpan: ${err.message}`); }
+    } catch (err) { 
+      console.error(err);
+      alert(`Gagal menyimpan acara: ${err.message || err.details || JSON.stringify(err)}`); 
+    }
   };
 
   const handleEdit = (s) => {
     setEditingId(s.id);
-    setStartTime(s.start_time);
-    setEndTime(s.end_time);
-    setTitle(s.activity_title);
+    setStartTime(s.start_time || '');
+    setEndTime(s.end_time || '');
+    setTitle(s.activity_title || '');
     setPic(s.pic_name || '');
     if (s.event_date) setEventDate(s.event_date);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -104,7 +117,7 @@ export default function AcaraPage() {
         </form>
       ) : (
         <div className="p-6 bg-slate-900/40 border border-slate-900 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Mode Publik (Lihat Saja).</p>
+          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
         </div>
       )}
 
