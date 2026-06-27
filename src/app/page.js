@@ -6,7 +6,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [pemasukan, setPemasukan] = useState(0);
   const [pengeluaran, setPengeluaran] = useState(0);
-  const [targetAnggaran, setTargetAnggaran] = useState(0);
+  const [targetAnggaran, setTargetAnggaran] = useState(50000000);
   const [rincianMasuk, setRincianMasuk] = useState([]);
   const [rincianKeluar, setRincianKeluar] = useState([]);
 
@@ -22,56 +22,53 @@ export default function DashboardPage() {
 
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // 1. Ambil data transaksi
+        // 1. Ambil data transaksi dengan proteksi aman
         const { data: transData, error: transError } = await supabase
           .from('transactions')
           .select('*');
 
-        if (transError) throw transError;
+        if (!transError && transData) {
+          let totalMasuk = 0;
+          let totalKeluar = 0;
+          const mapMasuk = {};
+          const mapKeluar = {};
 
-        // 2. Ambil data target anggaran
+          transData.forEach(item => {
+            if (!item) return;
+            const nominal = Number(item.amount || 0);
+            const itemType = String(item.type || '').toLowerCase();
+            const kategori = item.category || 'Lain-lain';
+            
+            if (itemType === 'pemasukan') {
+              totalMasuk += nominal;
+              mapMasuk[kategori] = (mapMasuk[kategori] || 0) + nominal;
+            } else if (itemType === 'pengeluaran') {
+              totalKeluar += nominal;
+              mapKeluar[kategori] = (mapKeluar[kategori] || 0) + nominal;
+            }
+          });
+
+          setPemasukan(totalMasuk);
+          setPengeluaran(totalKeluar);
+          setRincianMasuk(Object.entries(mapMasuk).map(([category, amount]) => ({ category, amount })));
+          setRincianKeluar(Object.entries(mapKeluar).map(([category, amount]) => ({ category, amount })));
+        }
+
+        // 2. Ambil data target anggaran dengan proteksi aman
         const { data: budgetData, error: budgetError } = await supabase
           .from('budgets')
           .select('planned_amount');
 
-        if (budgetError) throw budgetError;
-
-        let totalMasuk = 0;
-        let totalKeluar = 0;
-        const mapMasuk = {};
-        const mapKeluar = {};
-
-        if (transData) {
-          transData.forEach(item => {
-            const nominal = Number(item.amount || 0);
-            const itemType = String(item.type || '').toLowerCase();
-            
-            if (itemType === 'pemasukan') {
-              totalMasuk += nominal;
-              mapMasuk[item.category] = (mapMasuk[item.category] || 0) + nominal;
-            } else if (itemType === 'pengeluaran') {
-              totalKeluar += nominal;
-              mapKeluar[item.category] = (mapKeluar[item.category] || 0) + nominal;
-            }
-          });
-        }
-
-        let totalTarget = 0;
-        if (budgetData) {
+        if (!budgetError && budgetData && budgetData.length > 0) {
+          let totalTarget = 0;
           budgetData.forEach(b => {
-            totalTarget += Number(b.planned_amount || 0);
+            if (b && b.planned_amount) totalTarget += Number(b.planned_amount);
           });
+          if (totalTarget > 0) setTargetAnggaran(totalTarget);
         }
-
-        setTargetAnggaran(totalTarget > 0 ? totalTarget : 50000000);
-        setPemasukan(totalMasuk);
-        setPengeluaran(totalKeluar);
-        
-        setRincianMasuk(Object.entries(mapMasuk).map(([category, amount]) => ({ category, amount })));
-        setRincianKeluar(Object.entries(mapKeluar).map(([category, amount]) => ({ category, amount })));
 
       } catch (err) {
-        console.error('Error dashboard:', err.message);
+        console.error('Gagal memuat data dashboard, menggunakan fallback aman:', err);
       } finally {
         setLoading(false);
       }
@@ -99,7 +96,7 @@ export default function DashboardPage() {
         <p className="text-xs text-slate-400">Pantauan neraca saldo aktual dan kendali pencatatan keuangan panitia secara terpusat.</p>
       </div>
 
-      {/* CARD KOTAK RINGKASAN */}
+      {/* CARD UTAMA */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden shadow-md">
           <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">TOTAL PEMASUKAN</p>
@@ -134,12 +131,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* TABEL RINCIAN PEMASUKAN & PENGELUARAN */}
+      {/* DAFTAR DATA */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* PEMASUKAN */}
+        {/* TABEL PEMASUKAN */}
         <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
           <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">📥 Rincian Aktual Pemasukan</h3>
-          {rincianMasuk.length > 0 ? (
+          {Array.isArray(rincianMasuk) && rincianMasuk.length > 0 ? (
             <div className="space-y-2">
               {rincianMasuk.map((rm, idx) => (
                 <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-xl text-[11px] font-mono">
@@ -153,10 +150,10 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* PENGELUARAN */}
+        {/* TABEL PENGELUARAN */}
         <div className="p-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-4">
           <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">📤 Rincian Aktual Pengeluaran</h3>
-          {rincianKeluar.length > 0 ? (
+          {Array.isArray(rincianKeluar) && rincianKeluar.length > 0 ? (
             <div className="space-y-2">
               {rincianKeluar.map((rk, idx) => (
                 <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-xl text-[11px] font-mono">
