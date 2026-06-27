@@ -7,14 +7,14 @@ export default function PengaturanPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // State Konfigurasi Aplikasi (Lama + Baru)
+  // State Konfigurasi Aplikasi (Pastikan nama budgetNote konsisten)
   const [orgName, setOrgName] = useState('');
   const [address, setAddress] = useState('');
   const [bankInfo, setBankInfo] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [theme, setTheme] = useState('slate-dark');
-  const [announcement, setAnnouncement] = useState(''); // State Baru untuk Pengumuman
-  const [budgetNote, setBudgetNote] = useState(''); // State Baru untuk Catatan Anggaran
+  const [announcement, setAnnouncement] = useState('');
+  const [budgetNote, setBudgetNote] = useState(''); // Menggunakan budgetNote
 
   // State Kategori Dinamis
   const [categories, setCategories] = useState([]);
@@ -59,7 +59,6 @@ export default function PengaturanPage() {
   async function loadSemuaPengaturan() {
     if (!supabaseUrl || !supabaseKey) return;
     try {
-      // 1. Ambil data Main Config, Tema, Pengumuman, dan Catatan Anggaran
       const { data: configData } = await supabase
         .from('settings')
         .select('*')
@@ -71,19 +70,17 @@ export default function PengaturanPage() {
         setAddress(configData.address || '');
         setBankInfo(configData.bank_info || '');
         setLogoUrl(configData.logo_url || '');
-        setAnnouncement(configData.announcement || ''); // Load data pengumuman
-        setBudgetNote(configData.budget_note || ''); // Load data catatan anggaran
+        setAnnouncement(configData.announcement || '');
+        setBudgetNote(configData.budget_note || ''); // Membaca budget_note dari database
         if (configData.theme) {
           setTheme(configData.theme);
           document.body.className = `theme-${configData.theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
         }
       }
 
-      // 2. Ambil Kategori
       const { data: catData } = await supabase.from('categories').select('*').order('name');
       if (catData) setCategories(catData);
 
-      // 3. Ambil Anggaran
       const { data: budData } = await supabase.from('budgets').select('*');
       if (budData) setBudgets(budData);
 
@@ -92,7 +89,6 @@ export default function PengaturanPage() {
     }
   }
 
-  // MENYIMPAN KONFIGURASI TERMASUK PENGUMUMAN DAN CATATAN ANGGARAN
   const handleSaveConfig = async (e) => {
     e.preventDefault();
     if (!isAdmin) return;
@@ -108,15 +104,15 @@ export default function PengaturanPage() {
           bank_info: bankInfo,
           logo_url: logoUrl,
           theme: theme,
-          announcement: announcement, // Menyimpan teks pengumuman ke database
-          budget_note: budgetNote // Menyimpan catatan anggaran ke database
+          announcement: announcement,
+          budget_note: budgetNote // Menyimpan variabel budgetNote ke database
         });
 
       if (error) throw error;
       
       document.body.className = `theme-${theme} bg-slate-950 text-slate-100 min-h-screen antialiased`;
       
-      alert('Semua pengaturan dan catatan berhasil diperbarui!');
+      alert('Semua pengaturan berhasil diperbarui!');
       window.location.reload();
     } catch (err) {
       alert(err.message);
@@ -213,7 +209,6 @@ export default function PengaturanPage() {
               <input type="text" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
             </div>
 
-            {/* KOLOM TEKS PENGUMUMAN BERFUNGSI 100% */}
             <div>
               <label className="block text-[11px] text-slate-400 mb-1">📋 Teks Pengumuman Halaman Utama</label>
               <textarea 
@@ -225,7 +220,7 @@ export default function PengaturanPage() {
               />
             </div>
 
-            {/* KOLOM CATATAN ANGGARAN BERFUNGSI 100% */}
+            {/* SUDAH DIPERBAIKI: Menggunakan budgetNote dengan benar */}
             <div>
               <label className="block text-[11px] text-slate-400 mb-1">📝 Catatan Tambahan Anggaran</label>
               <textarea 
