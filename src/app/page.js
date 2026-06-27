@@ -2,15 +2,9 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Inisialisasi Supabase Client secara aman di sisi klien
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const [targetNominal, setTargetNominal] = useState(50000000); // Nilai default bawaan
+  const [targetNominal, setTargetNominal] = useState(50000000);
   const [ringkasan, setRingkasan] = useState({
     pemasukan: 0,
     pengeluaran: 0,
@@ -23,20 +17,30 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        setLoading(true);
+        // Ambil token secara aman dari environment variable
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-        // 1. Ambil Pengaturan Target Nominal dari tabel settings jika ada
+        // Jika variabel env belum di-set di Vercel, lewati kueri agar tidak crash
+        if (!supabaseUrl || !supabaseKey) {
+          setLoading(false);
+          return;
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // 1. Ambil Pengaturan Target
         const { data: settingsData } = await supabase
           .from('settings')
           .select('value')
           .eq('key', 'target_nominal')
-          .single();
+          .maybeSingle();
         
-        if (settingsData) {
+        if (settingsData && settingsData.value) {
           setTargetNominal(Number(settingsData.value));
         }
 
-        // 2. Ambil Semua Data Transaksi untuk Kalkulasi Keuangan Realtime
+        // 2. Ambil Transaksi Keuangan
         const { data: transactions, error } = await supabase
           .from('transactions')
           .select('amount, type, category');
@@ -46,14 +50,11 @@ export default function Dashboard() {
         if (transactions) {
           let totalMasuk = 0;
           let totalKeluar = 0;
-          
-          // Map untuk menampung penjumlahan per kategori secara dinamis
           const mapMasuk = {};
           const mapKeluar = {};
 
           transactions.forEach((tx) => {
-            const nominal = Number(tx.amount);
-            // Validasi jenis tipe transaksi: 'pemasukan' atau 'pengeluaran'
+            const nominal = Number(tx.amount || 0);
             if (tx.type === 'pemasukan') {
               totalMasuk += nominal;
               mapMasuk[tx.category] = (mapMasuk[tx.category] || 0) + nominal;
@@ -69,7 +70,6 @@ export default function Dashboard() {
             saldo: totalMasuk - totalKeluar
           });
 
-          // Ubah hasil pengelompokan map objek menjadi bentuk Array agar bisa di-render (.map)
           setRincianPemasukan(
             Object.keys(mapMasuk).map(key => ({ nama: key, jumlah: mapMasuk[key] }))
           );
@@ -77,9 +77,8 @@ export default function Dashboard() {
             Object.keys(mapKeluar).map(key => ({ nama: key, jumlah: mapKeluar[key] }))
           );
         }
-
       } catch (err) {
-        console.error('Gagal mengambil kueri data dashboard:', err.message);
+        console.error('Kueri error:', err);
       } finally {
         setLoading(false);
       }
@@ -88,7 +87,6 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  // Hitung persentase progres target secara realtime
   const progresPersen = targetNominal > 0 
     ? Math.min(Math.round((ringkasan.pemasukan / targetNominal) * 100), 100) 
     : 0;
@@ -98,7 +96,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-center min-h-[300px]">
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs text-slate-400 font-mono">Menghubungkan ke Cloud Supabase...</p>
+          <p className="text-xs text-slate-400 font-mono">Sinkronisasi Cloud Supabase...</p>
         </div>
       </div>
     );
@@ -106,7 +104,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* SECTION 1: INDIKATOR KARTU FINANSIAL REALTIME */}
+      {/* SECTION 1: KARTU UTAMA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="p-6 bg-slate-900/80 border border-slate-800 rounded-2xl relative overflow-hidden">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Pemasukan</p>
@@ -138,9 +136,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* SECTION 2: GRAFIK RINCIAN SINKRON OTOMATIS */}
+      {/* SECTION 2: DETAIL DATA RINCIAN BY KATEGORI */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* KATEGORI PEMASUKAN */}
         <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
           <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4">📥 Rincian Aktual Pemasukan</h3>
           {rincianPemasukan.length > 0 ? (
@@ -157,7 +154,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* KATEGORI PENGELUARAN */}
         <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl">
           <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-4">📤 Rincian Aktual Pengeluaran</h3>
           {rincianPengeluaran.length > 0 ? (
