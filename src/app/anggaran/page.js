@@ -2,11 +2,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Inisialisasi DI LUAR komponen utama agar koneksi stabil dan tidak dibuat ulang setiap re-render
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 export default function AnggaranPage() {
   const [budgets, setBudgets] = useState([]);
   const [itemName, setItemName] = useState('');
@@ -14,19 +9,22 @@ export default function AnggaranPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Inisialisasi Dinamis (Mencegah bug Empty String saat Build Time Next.js)
+  const getSupabase = () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    return createClient(url, key);
+  };
+
   useEffect(() => { 
     setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
     loadBudgets(); 
   }, []);
 
   async function loadBudgets() {
+    const supabase = getSupabase();
     const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
-    if (error) {
-      console.error(error);
-      alert(`Gagal memuat daftar anggaran: ${error.message || JSON.stringify(error)}`);
-    } else if (data) {
-      setBudgets(data);
-    }
+    if (!error && data) setBudgets(data);
   }
 
   const handleSubmit = async (e) => {
@@ -34,6 +32,7 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!itemName.trim() || !plannedAmount) return;
 
+    const supabase = getSupabase();
     const payload = { 
       item_name: itemName.trim(), 
       planned_amount: parseInt(plannedAmount, 10) 
@@ -56,8 +55,9 @@ export default function AnggaranPage() {
       await loadBudgets();
     } catch (err) { 
       console.error(err);
-      // Membongkar seluruh isi objek error agar terlihat detail kendala kolom/tipe data
-      alert(`Gagal menyimpan anggaran: ${err.message || err.details || JSON.stringify(err)}`); 
+      // Membongkar pesan eror secara eksplisit agar tidak keluar tulisan "null"
+      const detailEror = `Kode: ${err?.code || '-'}\nPesan: ${err?.message || err}\nDetail: ${err?.details || '-'}\nHint: ${err?.hint || '-'}`;
+      alert(`❌ Gagal menyimpan anggaran:\n\n${detailEror}`); 
     }
   };
 
@@ -71,12 +71,9 @@ export default function AnggaranPage() {
   const handleDelete = async (id) => {
     if (!isAdmin) return;
     if (confirm('Hapus anggaran ini?')) {
+      const supabase = getSupabase();
       const { error } = await supabase.from('budgets').delete().eq('id', id);
-      if (!error) {
-        await loadBudgets();
-      } else {
-        alert(`Gagal menghapus: ${error.message}`);
-      }
+      if (!error) await loadBudgets();
     }
   };
 
