@@ -40,3 +40,8 @@ body.theme-dracula-vamp { --accent-color: #a855f7; }
 body.theme-coffee-latte { --accent-color: #b45309; }
 body.theme-mint-fresh { --accent-color: #2dd4bf; }
 body.theme-retro-wave { --accent-color: #f43f5e; }
+
+@layer base {
+  /* Memastikan kelas-kelas ini tidak dihapus oleh sistem build */
+  .bg-zinc-950, .bg-neutral-950, .bg-stone-950, .bg-gray-950, .bg-slate-950 {}
+}
