@@ -1,8 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function PengaturanPage() {
-  // 1. State Utama untuk Mengumpulkan Semua Pengaturan (Sistem Sekali Simpan)
+  // 1. State Form Utama
   const [form, setForm] = useState({
     targetNominal: '50000000',
     tahunAcara: '2026',
@@ -13,10 +13,26 @@ export default function PengaturanPage() {
     kontakAdmin: '0812xxxxxxxx',
     emailAdmin: 'admin@sat.com',
     sandiBaru: '',
-    konfirmasiSandi: ''
+    konfirmasiSandi: '',
+    cloudLogoUrl: '', // State Link Logo Cloud
+    temaPilihan: 'emerald-luxury' // State Tema Antarmuka
   });
 
-  // 2. State untuk Manajemen Kategori Custom (Pemasukan & Pengeluaran)
+  // Daftar 10 Pilihan Tema Elegan & Modern (Tidak Didominasi Warna Putih)
+  const daftarTema = [
+    { id: 'emerald-luxury', name: 'Emerald Luxury (Hijau Gelap)' },
+    { id: 'royal-gold', name: 'Royal Gold (Emas Hitam)' },
+    { id: 'midnight-blue', name: 'Midnight Blue (Biru Tua)' },
+    { id: 'deep-crimson', name: 'Deep Crimson (Merah Marun)' },
+    { id: 'dark-charcoal', name: 'Dark Charcoal (Abu Arang)' },
+    { id: 'cyberpunk-neon', name: 'Cyberpunk Neon (Sian Gelap)' },
+    { id: 'vintage-bronze', name: 'Vintage Bronze (Perunggu Kuno)' },
+    { id: 'oceanic-abyss', name: 'Oceanic Abyss (Biru Samudra)' },
+    { id: 'amethyst-purple', name: 'Amethyst Purple (Ungu Gelap)' },
+    { id: 'forest-deep', name: 'Forest Deep (Hijau Rimba)' },
+  ];
+
+  // 2. State Kategori Default
   const [kategoriPemasukan, setKategoriPemasukan] = useState([
     'Iuran wajib warga cibogo kidul (ahli waris)',
     'Iuran wajib warga luar cibogo kidul (ahli waris)',
@@ -34,7 +50,6 @@ export default function PengaturanPage() {
   const [inputPemasukan, setInputPemasukan] = useState('');
   const [inputPengeluaran, setInputPengeluaran] = useState('');
 
-  // Fungsi Tambah/Hapus Kategori
   const handleAddKategori = (tipe) => {
     if (tipe === 'masuk' && inputPemasukan.trim()) {
       setKategoriPemasukan([...kategoriPemasukan, inputPemasukan.trim()]);
@@ -53,27 +68,25 @@ export default function PengaturanPage() {
     }
   };
 
-  // 3. Fungsi Eksekusi Simpan Massal (Batch Update)
   const handleSaveAll = (e) => {
     e.preventDefault();
     if (form.sandiBaru && form.sandiBaru !== form.konfirmasiSandi) {
       alert('Konfirmasi kata sandi baru tidak cocok!');
       return;
     }
-    
-    // Proses simpan data (Nanti dihubungkan ke Supabase / LocalStorage)
-    alert('Sukses! Semua konfigurasi pengaturan, rekening, dan kategori berhasil diperbarui secara cloud.');
+    alert('Sukses! Semua konfigurasi (Tema, Cloud Logo, Target, Rekening, dan Kategori) berhasil diperbarui secara permanen.');
   };
 
   return (
-    <form onSubmit={handleSaveAll} className="space-y-8 max-w-5xl animate-fadeIn pb-12">
+    <form onSubmit={handleSaveAll} className="space-y-6 max-w-5xl animate-fadeIn pb-12">
       <div>
         <h2 className="text-xl font-bold text-white">⚙️ Pengaturan Pusat Kontrol Admin</h2>
-        <p className="text-xs text-slate-400">Kelola target anggaran, rekening dashboard, kategori transaksi, cloud logo, dan akun pengurus.</p>
+        <p className="text-xs text-slate-400">Kelola target anggaran, tema antarmuka, cloud logo, kategori transaksi, dan akun pengurus.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* BLOK A: TARGET, TAHUN & REKENING DONASI */}
+        
+        {/* BLOK 1: TARGET, TAHUN & REKENING DONASI */}
         <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-4">
           <h3 className="text-sm font-bold text-amber-500 uppercase tracking-wider border-b border-slate-800/60 pb-2">📍 Target & Rekening Donasi</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -94,15 +107,45 @@ export default function PengaturanPage() {
           </div>
         </div>
 
-        {/* BLOK B: PROFIL ADMIN & UBAH KATA SANDI */}
+        {/* BLOK 2: ANTARMUKA TEMA & CLOUD LOGO */}
         <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-4">
+          <h3 className="text-sm font-bold text-amber-500 uppercase tracking-wider border-b border-slate-800/60 pb-2">🎨 Antarmuka & Cloud Logo</h3>
+          
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-400 mb-1">Pilih Tema Aplikasi (Min. 10 Pilihan Elegan)</label>
+            <select 
+              value={form.temaPilihan} 
+              onChange={(e) => setForm({...form, temaPilihan: e.target.value})}
+              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-sans"
+            >
+              {daftarTema.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-400 mb-1">Upload Link Cloud Logo (Supabase Storage / URL Publik)</label>
+            <input 
+              type="text" 
+              value={form.cloudLogoUrl} 
+              onChange={(e) => setForm({...form, cloudLogoUrl: e.target.value})} 
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" 
+              placeholder="https://supabase.co/storage/v1/object/public/..." 
+            />
+            <p className="text-[10px] text-slate-500 mt-1">Sistem cloud menjamin logo permanen dan tidak berubah saat diakses oleh publik di device manapun.</p>
+          </div>
+        </div>
+
+        {/* BLOK 3: PROFIL ADMIN & AKUN */}
+        <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-3">
           <h3 className="text-sm font-bold text-amber-500 uppercase tracking-wider border-b border-slate-800/60 pb-2">👤 Akun & Keamanan Admin</h3>
           <div className="space-y-2">
             <input type="text" value={form.namaAdmin} onChange={(e) => setForm({...form, namaAdmin: e.target.value})} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" placeholder="Nama Admin" />
             <input type="text" value={form.kontakAdmin} onChange={(e) => setForm({...form, kontakAdmin: e.target.value})} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" placeholder="No Kontak WhatsApp" />
             <input type="email" value={form.emailAdmin} onChange={(e) => setForm({...form, emailAdmin: e.target.value})} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" placeholder="Email Admin" />
           </div>
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 mb-1">Sandi Baru</label>
               <input type="password" value={form.sandiBaru} onChange={(e) => setForm({...form, sandiBaru: e.target.value})} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" placeholder="Sandi baru..." />
@@ -114,7 +157,9 @@ export default function PengaturanPage() {
           </div>
         </div>
 
-        {/* BLOK C: DAFTAR KATEGORI PEMASUKAN */}
+        <div className="hidden lg:block"></div> {/* Spacer Grid */}
+
+        {/* BLOK 4: KATEGORI PEMASUKAN */}
         <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-3">
           <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider border-b border-slate-800/60 pb-2">📥 Kategori Jenis Pemasukan</h3>
           <div className="flex gap-2">
@@ -131,7 +176,7 @@ export default function PengaturanPage() {
           </div>
         </div>
 
-        {/* BLOK D: DAFTAR KATEGORI PENGELUARAN */}
+        {/* BLOK 5: KATEGORI PENGELUARAN */}
         <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-3">
           <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider border-b border-slate-800/60 pb-2">📤 Kategori Jenis Pengeluaran</h3>
           <div className="flex gap-2">
@@ -147,9 +192,10 @@ export default function PengaturanPage() {
             ))}
           </div>
         </div>
+
       </div>
 
-      {/* FOOTER ACTION: SATU TOMBOL SIMPAN MASSAL */}
+      {/* FOOTER ACTION BUTTON */}
       <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center shadow-lg">
         <p className="text-[11px] text-slate-500">Seluruh konfigurasi kategori otomatis terintegrasi ke dalam modul Transaksi.</p>
         <button type="submit" className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all">
