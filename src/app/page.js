@@ -8,7 +8,10 @@ export default function DashboardPage() {
   const [targetAnggaran, setTargetAnggaran] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [categoryTotals, setCategoryTotals] = useState({});
+  
+  // State untuk menampung rincian per kategori secara dinamis
+  const [pemasukanKategori, setPemasukanKategori] = useState([]);
+  const [pengeluaranKategori, setPengeluaranKategori] = useState([]);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -20,7 +23,7 @@ export default function DashboardPage() {
       try {
         setLoading(true);
 
-        // 1. Ambil data konfigurasi pengumuman & tema
+        // 1. Ambil data konfigurasi pengumuman
         const { data: configData, error: configError } = await supabase
           .from('settings')
           .select('*')
@@ -49,7 +52,7 @@ export default function DashboardPage() {
         }
         setTargetAnggaran(totalTarget);
 
-        // 3. Ambil data transaksi kas (Membaca tipe data 'pemasukan' & 'pengeluaran' dengan benar)
+        // 3. Ambil data transaksi kas
         const { data: trxData } = await supabase
           .from('transactions')
           .select('*')
@@ -58,34 +61,28 @@ export default function DashboardPage() {
         if (trxData) {
           let masuk = 0;
           let keluar = 0;
-          let totalsKategori = {};
+          let mapMasuk = {};
+          let mapKeluar = {};
 
           trxData.forEach(t => {
             const nominal = Number(t.amount || 0);
             const tipeKas = String(t.type || '').toLowerCase().trim();
+            const kategori = t.category || 'Umum';
             
-            // Perbaikan Logika: Menyelaraskan string database milik Anda
             if (tipeKas === 'pemasukan' || tipeKas === 'masuk') {
               masuk += nominal;
+              mapMasuk[kategori] = (mapMasuk[kategori] || 0) + nominal;
             } else if (tipeKas === 'pengeluaran' || tipeKas === 'keluar') {
               keluar += nominal;
-              
-              // Kelompokkan pengeluaran untuk widget tengah
-              const namaKategori = t.category || 'Lain-lain';
-              // Pemetaan kecocokan kata kunci kategori agar masuk ke kotak visual dashboard
-              let grupKategori = 'Lain-lain';
-              if (namaKategori.toLowerCase().includes('konsumsi')) grupKategori = 'Konsumsi';
-              else if (namaKategori.toLowerCase().includes('logistik') || namaKategori.toLowerCase().includes('perlengkapan')) grupKategori = 'Perlengkapan';
-              else if (namaKategori.toLowerCase().includes('akomodasi') || namaKategori.toLowerCase().includes('transportasi')) grupKategori = 'Humas / Transp';
-              else if (namaKategori.toLowerCase().includes('acara')) grupKategori = 'Kesenian / Acara';
-              else if (namaKategori.toLowerCase().includes('administrasi')) grupKategori = 'Sekretariat / ATK';
-              
-              totalsKategori[grupKategori] = (totalsKategori[grupKategori] || 0) + nominal;
+              mapKeluar[kategori] = (mapKeluar[kategori] || 0) + nominal;
             }
           });
 
           setStats({ totalMasuk: masuk, totalKeluar: keluar, saldo: masuk - keluar });
-          setCategoryTotals(totalsKategori);
+          
+          // Mengubah objek map menjadi struktur array agar mudah di-render
+          setPemasukanKategori(Object.entries(mapMasuk).map(([category, amount]) => ({ category, amount })));
+          setPengeluaranKategori(Object.entries(mapKeluar).map(([category, amount]) => ({ category, amount })));
           setRecentTransactions(trxData.slice(0, 5));
         }
 
@@ -107,12 +104,10 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-xs font-mono text-slate-400 animate-pulse">⏳ Menyelaraskan seluruh kalkulasi buku besar...</p>
+        <p className="text-xs font-mono text-slate-400 animate-pulse">⏳ Menyusun rincian kategori buku besar...</p>
       </div>
     );
   }
-
-  const listKategoriTampilan = ['Konsumsi', 'Perlengkapan', 'Humas / Transp', 'Kesenian / Acara', 'Sekretariat / ATK', 'Lain-lain'];
 
   return (
     <div className="space-y-6">
@@ -129,7 +124,7 @@ export default function DashboardPage() {
         <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{announcement}</p>
       </div>
 
-      {/* 4 KARTU RINGKASAN UTAMA (SUDAH TERMASUK PROGRES TARGET) */}
+      {/* 4 KARTU RINGKASAN UTAMA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl shadow-sm relative">
           <p className="text-[10px] uppercase font-bold text-amber-500 tracking-wider mb-1">💰 Sisa Saldo Kas Utama</p>
@@ -146,7 +141,6 @@ export default function DashboardPage() {
           <h3 className="text-lg font-bold text-rose-400 font-mono">{formatRupiah(stats.totalKeluar)}</h3>
         </div>
 
-        {/* KARTU PROGRES TARGET YANG SUDAH KEMBALI */}
         <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl shadow-sm space-y-2">
           <div className="flex justify-between items-center">
             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">🎯 Progres Target</p>
@@ -159,17 +153,43 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* REALISASI KATEGORI */}
-      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">📉 Realisasi Pengeluaran per Kategori</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {listKategoriTampilan.map((kat) => (
-            <div key={kat} className="p-4 bg-slate-950 border border-slate-800/60 rounded-xl space-y-1">
-              <span className="text-[10px] text-slate-400 font-medium">{kat}</span>
-              <h4 className="text-sm font-bold text-rose-400 font-mono">{formatRupiah(categoryTotals[kat] || 0)}</h4>
+      {/* SEKSI: RINCIAN PEMASUKAN DAN PENGELUARAN PER KATEGORI */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* KOLOM KIRI: RINCIAN PEMASUKAN PER KATEGORI */}
+        <div className="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-4">
+          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">📥 Rincian Pemasukan per Kategori</h3>
+          {pemasukanKategori.length > 0 ? (
+            <div className="space-y-2">
+              {pemasukanKategori.map((pk, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/60 border border-slate-800/40 rounded-xl text-xs font-mono">
+                  <span className="text-slate-300 font-medium text-[11px] truncate max-w-[200px]">🏷️ {pk.category}</span>
+                  <span className="text-emerald-400 font-bold">{formatRupiah(pk.amount)}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <p className="text-xs text-slate-500 text-center py-6">Belum ada rincian dana masuk yang tercatat.</p>
+          )}
         </div>
+
+        {/* KOLOM KANAN: RINCIAN PENGELUARAN PER KATEGORI */}
+        <div className="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-4">
+          <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">📤 Rincian Pengeluaran per Kategori</h3>
+          {pengeluaranKategori.length > 0 ? (
+            <div className="space-y-2">
+              {pengeluaranKategori.map((pk, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/60 border border-slate-800/40 rounded-xl text-xs font-mono">
+                  <span className="text-slate-300 font-medium text-[11px] truncate max-w-[200px]">📦 {pk.category}</span>
+                  <span className="text-rose-400 font-bold">{formatRupiah(pk.amount)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500 text-center py-6">Belum ada rincian dana keluar yang tercatat.</p>
+          )}
+        </div>
+
       </div>
 
       {/* TABEL MUTASI JALUR KAS TERAKHIR */}
