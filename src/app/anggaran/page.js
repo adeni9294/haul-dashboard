@@ -27,14 +27,18 @@ export default function AnggaranPage() {
     e.preventDefault();
     if (!itemName.trim() || !plannedAmount) return;
     
+    // Perbaikan: Tambahkan created_at agar tidak error NULL
     const payload = { 
       item_name: itemName.trim(), 
-      planned_amount: Number(plannedAmount) 
+      planned_amount: Number(plannedAmount),
+      created_at: new Date().toISOString() 
     };
 
     try {
       if (editingId) {
-        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
+        // Saat update, created_at tidak perlu diubah, jadi kita hapus dari payload update
+        const updatePayload = { item_name: payload.item_name, planned_amount: payload.planned_amount };
+        const { error } = await supabase.from('budgets').update(updatePayload).eq('id', editingId);
         if (error) throw error;
         alert('Rencana anggaran berhasil diperbarui!');
       } else {
@@ -43,12 +47,10 @@ export default function AnggaranPage() {
         alert('Rencana anggaran berhasil ditambahkan!');
       }
 
-      // RESET FORM & STATE SECARA BERSIH
       setItemName(''); 
       setPlannedAmount('');
       setEditingId(null);
       
-      // WAJIB AWAIT: Pastikan data baru selesai dimuat ulang dari Supabase
       await loadBudgets();
     } catch (err) { 
       alert(`Gagal menyimpan: ${err.message}`); 
@@ -87,7 +89,7 @@ export default function AnggaranPage() {
           <label className="block text-[11px] text-slate-400 mb-1">Nominal Alokasi (Rp)</label>
           <input type="number" placeholder="Contoh: 5000000" required value={plannedAmount} onChange={(e) => setPlannedAmount(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
         </div>
-        <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
+        <button type="submit" className="w-full py-2.5 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
           {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
         </button>
         {editingId && (
