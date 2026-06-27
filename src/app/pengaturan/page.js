@@ -28,7 +28,9 @@ export default function PengaturanPage() {
     { id: 'cyberpunk-2076', name: '🦾 Cyberpunk (Kuning Hitam)' }
   ];
 
-  useEffect(() => { loadPengaturan(); }, []);
+  useEffect(() => { 
+    loadPengaturan(); 
+  }, []);
 
   async function loadPengaturan() {
     try {
@@ -50,7 +52,15 @@ export default function PengaturanPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await supabase.from('settings').upsert({ id: 'main_config', org_name: orgName, address, bank_info: bankInfo, logo_url: logoUrl, theme, announcement });
+      await supabase.from('settings').upsert({ 
+        id: 'main_config', 
+        org_name: orgName, 
+        address, 
+        bank_info: bankInfo, 
+        logo_url: logoUrl, 
+        theme, 
+        announcement 
+      });
       alert('Konfigurasi identitas & tema gaya berhasil disimpan!');
       window.location.reload();
     } catch (err) { alert(err.message); }
@@ -61,14 +71,32 @@ export default function PengaturanPage() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <form onSubmit={handleSaveConfig} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
         <h3 className="text-xs font-bold text-amber-500 uppercase border-b border-slate-800 pb-2">🎨 Profil & Pilihan Tema</h3>
-        <select value={theme} onChange={(e) => setTheme(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-bold">
-          {availableThemes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
-        <input type="text" placeholder="Nama Panitia..." value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
-        <input type="text" placeholder="Alamat Resmi..." value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
-        <input type="text" placeholder="Info Rekening..." value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
-        <input type="text" placeholder="Link URL Teks Logo..." value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
-        <textarea placeholder="Teks Informasi Utama..." value={announcement} onChange={(e) => setAnnouncement(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white resize-none" rows={3} />
+        <div>
+          <label className="block text-[11px] text-slate-400 mb-1">Gaya Tema Warna</label>
+          <select value={theme} onChange={(e) => setTheme(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-bold">
+            {availableThemes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] text-slate-400 mb-1">Nama Organisasi</label>
+          <input type="text" placeholder="Nama Panitia..." value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+        </div>
+        <div>
+          <label className="block text-[11px] text-slate-400 mb-1">Alamat Kesekretariatan</label>
+          <input type="text" placeholder="Alamat Resmi..." value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+        </div>
+        <div>
+          <label className="block text-[11px] text-slate-400 mb-1">Rekening Pembayaran Kop resmi</label>
+          <input type="text" placeholder="Info Rekening..." value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white" />
+        </div>
+        <div>
+          <label className="block text-[11px] text-slate-400 mb-1">Link URL Foto Logo Resmi Gambar</label>
+          <input type="text" placeholder="Link URL Gambar Logo..." value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono" />
+        </div>
+        <div>
+          <label className="block text-[11px] text-slate-400 mb-1">Teks Banner Informasi Beranda Utama</label>
+          <textarea placeholder="Teks Informasi Utama..." value={announcement} onChange={(e) => setAnnouncement(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white resize-none" rows={3} />
+        </div>
         <button type="submit" className="w-full py-2.5 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl">{loading ? '⏳ Menyimpan...' : '💾 Simpan Perubahan'}</button>
       </form>
 
