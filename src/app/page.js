@@ -6,7 +6,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [pemasukan, setPemasukan] = useState(0);
   const [pengeluaran, setPengeluaran] = useState(0);
-  const [targetAnggaran, setTargetAnggaran] = useState(0); // State dinamis dari tabel budgets
+  const [targetAnggaran, setTargetAnggaran] = useState(0);
   const [rincianMasuk, setRincianMasuk] = useState([]);
   const [rincianKeluar, setRincianKeluar] = useState([]);
 
@@ -23,21 +23,20 @@ export default function DashboardPage() {
 
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // 1. Ambil semua data transaksi
+        // 1. Ambil data transaksi
         const { data: transData, error: transError } = await supabase
           .from('transactions')
           .select('*');
 
         if (transError) throw transError;
 
-        // 2. Ambil semua data target anggaran
+        // 2. Ambil data target anggaran
         const { data: budgetData, error: budgetError } = await supabase
           .from('budgets')
           .select('planned_amount');
 
         if (budgetError) throw budgetError;
 
-        // Hitung total transaksi
         let totalMasuk = 0;
         let totalKeluar = 0;
         const mapMasuk = {};
@@ -46,17 +45,20 @@ export default function DashboardPage() {
         if (transData) {
           transData.forEach(item => {
             const nominal = Number(item.amount || 0);
-            if (item.type === 'Pemasukan') {
+            // Ubah tipe ke huruf kecil semua saat pengecekan agar aman dari case-sensitive
+            const itemType = String(item.type || '').toLowerCase();
+            
+            if (itemType === 'pemasukan') {
               totalMasuk += nominal;
               mapMasuk[item.category] = (mapMasuk[item.category] || 0) + nominal;
-            } else if (item.type === 'Pengeluaran') {
+            } else if (itemType === 'pengeluaran') {
               totalKeluar += nominal;
               mapKeluar[item.category] = (mapKeluar[item.category] || 0) + nominal;
             }
           });
         }
 
-        // Hitung total target anggaran dinamis dari database
+        // Hitung total target anggaran
         let totalTarget = 0;
         if (budgetData) {
           budgetData.forEach(b => {
@@ -64,7 +66,6 @@ export default function DashboardPage() {
           });
         }
 
-        // Jika belum ada target anggaran sama sekali di database, berikan fallback default agar tidak 0
         setTargetAnggaran(totalTarget > 0 ? totalTarget : 50000000);
         setPemasukan(totalMasuk);
         setPengeluaran(totalKeluar);
@@ -83,8 +84,6 @@ export default function DashboardPage() {
   }, []);
 
   const saldoAkhir = pemasukan - pengeluaran;
-  
-  // Hitung persentase progres berdasarkan total pemasukan dibanding target anggaran dinamis
   const persentaseProgres = targetAnggaran > 0 ? Math.min(Math.round((pemasukan / targetAnggaran) * 100), 100) : 0;
 
   if (loading) {
