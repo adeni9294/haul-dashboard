@@ -9,7 +9,6 @@ export default function AnggaranPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Inisialisasi Dinamis (Mencegah bug Empty String saat Build Time Next.js)
   const getSupabase = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -40,11 +39,13 @@ export default function AnggaranPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
+        // PERBAIKAN: Menambahkan .select() di akhir perintah update
+        const { error, data } = await supabase.from('budgets').update(payload).eq('id', editingId).select();
         if (error) throw error;
         alert('🎯 Rencana anggaran berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('budgets').insert([payload]);
+        // PERBAIKAN: Menambahkan .select() di akhir perintah insert
+        const { error, data } = await supabase.from('budgets').insert([payload]).select();
         if (error) throw error;
         alert('✅ Rencana anggaran berhasil ditambahkan!');
       }
@@ -54,10 +55,9 @@ export default function AnggaranPage() {
       setEditingId(null);
       await loadBudgets();
     } catch (err) { 
-      console.error(err);
-      // Membongkar pesan eror secara eksplisit agar tidak keluar tulisan "null"
-      const detailEror = `Kode: ${err?.code || '-'}\nPesan: ${err?.message || err}\nDetail: ${err?.details || '-'}\nHint: ${err?.hint || '-'}`;
-      alert(`❌ Gagal menyimpan anggaran:\n\n${detailEror}`); 
+      console.error("Eror Supabase Anggaran:", err);
+      // Membongkar seluruh teks objek eror agar terhindar dari tulisan "null"
+      alert(`❌ Gagal menyimpan anggaran:\n${err?.message || err?.details || JSON.stringify(err)}`); 
     }
   };
 
