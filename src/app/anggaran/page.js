@@ -28,14 +28,14 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!itemName.trim() || !plannedAmount) return;
 
+    // Pastikan nama properti ini (item_name & planned_amount) sesuai dengan kolom di Supabase Anda
     const payload = { 
       item_name: itemName.trim(), 
-      planned_amount: Number(plannedAmount) 
+      planned_amount: parseInt(plannedAmount, 10) 
     };
 
     try {
       if (editingId) {
-        // PERBAIKAN: Logika update murni tanpa bentrok ID dasar
         const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
         if (error) throw error;
         alert('Rencana anggaran berhasil diperbarui!');
@@ -50,14 +50,14 @@ export default function AnggaranPage() {
       setEditingId(null);
       await loadBudgets();
     } catch (err) { 
-      alert(`Gagal menyimpan: ${err.message}`); 
+      alert(`Gagal menyimpan anggaran: ${err.message || 'Periksa kecocokan kolom database'}`); 
     }
   };
 
   const handleEdit = (b) => {
     setEditingId(b.id);
-    setItemName(b.item_name);
-    setPlannedAmount(b.planned_amount);
+    setItemName(b.item_name || b.name || '');
+    setPlannedAmount(b.planned_amount || b.amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -103,9 +103,9 @@ export default function AnggaranPage() {
           ) : (
             budgets.map(b => (
               <div key={b.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <span>💡 {b.item_name}</span>
+                <span>💡 {b.item_name || b.name}</span>
                 <div className="flex items-center gap-4">
-                  <span className="font-mono font-bold text-amber-500">Rp {Number(b.planned_amount).toLocaleString('id-ID')}</span>
+                  <span className="font-mono font-bold text-amber-500">Rp {Number(b.planned_amount || b.amount || 0).toLocaleString('id-ID')}</span>
                   {isAdmin && (
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(b)} className="text-amber-500 font-bold hover:underline">Edit</button>
