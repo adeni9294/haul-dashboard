@@ -19,7 +19,6 @@ export default function AnggaranPage() {
   }, []);
 
   async function loadBudgets() {
-    // Diubah: Mengurutkan berdasarkan 'id' secara descending, bukan created_at
     const { data, error } = await supabase.from('budgets').select('*').order('id', { ascending: false });
     if (!error && data) setBudgets(data);
   }
@@ -29,22 +28,21 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!itemName.trim() || !plannedAmount) return;
 
-    const currentEditingId = editingId;
     const payload = { 
       item_name: itemName.trim(), 
       planned_amount: Number(plannedAmount) 
     };
 
     try {
-      if (currentEditingId) {
-        const { error } = await supabase.from('budgets').update(payload).eq('id', currentEditingId);
+      if (editingId) {
+        // PERBAIKAN: Logika update murni tanpa bentrok ID dasar
+        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert('Rencana anggaran diperbarui!');
+        alert('Rencana anggaran berhasil diperbarui!');
       } else {
-        // Bersih: Tanpa menyisipkan properti created_at
         const { error } = await supabase.from('budgets').insert([payload]);
         if (error) throw error;
-        alert('Rencana anggaran ditambahkan!');
+        alert('Rencana anggaran berhasil ditambahkan!');
       }
 
       setItemName(''); 
@@ -52,7 +50,7 @@ export default function AnggaranPage() {
       setEditingId(null);
       await loadBudgets();
     } catch (err) { 
-      alert(`Gagal: ${err.message}`); 
+      alert(`Gagal menyimpan: ${err.message}`); 
     }
   };
 
@@ -88,7 +86,7 @@ export default function AnggaranPage() {
             {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setItemName(''); setPlannedAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl">Batal Edit</button>
+            <button type="button" onClick={() => { setEditingId(null); setItemName(''); setPlannedAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
           )}
         </form>
       ) : (
