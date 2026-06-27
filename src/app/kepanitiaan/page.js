@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 export default function KepanitiaanPage() {
   const [members, setMembers] = useState([]);
   const [name, setName] = useState('');
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState(''); // State penampung input di form
   const [phone, setPhone] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -33,10 +33,10 @@ export default function KepanitiaanPage() {
     if (!name.trim() || !role.trim()) return;
 
     const supabase = getSupabase();
-    // PAYLOAD FIX: Menyesuaikan nama kolom asli di Supabase Anda (name, role, phone)
+    // PAYLOAD FIX: Menembak kolom asli 'name', 'position', dan 'phone' sesuai Supabase Anda
     const payload = { 
       name: name.trim(), 
-      role: role.trim(), 
+      position: role.trim(), 
       phone: phone.trim() 
     };
 
@@ -61,9 +61,9 @@ export default function KepanitiaanPage() {
 
   const handleEdit = (m) => {
     setEditingId(m.id);
-    setName(m.name || '');  // FIX: Membaca dari b.name
-    setRole(m.role || '');  // FIX: Membaca dari b.role
-    setPhone(m.phone || ''); // FIX: Membaca dari b.phone
+    setName(m.name || '');
+    setRole(m.position || '');  // FIX: Membaca dari data kolom .position
+    setPhone(m.phone || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -115,9 +115,9 @@ export default function KepanitiaanPage() {
             members.map(m => (
               <div key={m.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                 <div>
-                  {/* FIX: Render m.name dan m.role sesuai kolom Supabase */}
+                  {/* FIX RENDER: Membaca m.name, m.position, dan m.phone */}
                   <p className="font-bold text-slate-200">👤 {m.name}</p>
-                  <p className="text-[11px] text-amber-500 font-medium">{m.role} {m.phone ? `(${m.phone})` : ''}</p>
+                  <p className="text-[11px] text-amber-500 font-medium">{m.position} {m.phone ? `(${m.phone})` : ''}</p>
                 </div>
                 {isAdmin && (
                   <div className="flex gap-3">
