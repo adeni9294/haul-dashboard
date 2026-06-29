@@ -8,7 +8,7 @@ export default function TransaksiPage() {
   const [categories, setCategories] = useState([]);
   const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
-  // Filter & Form Input State
+  // Filter State
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
@@ -20,7 +20,6 @@ export default function TransaksiPage() {
       setLoading(true);
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
       
-      // Ambil metadata KOP untuk cetak dokumen
       const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (setDb && setDb.length > 0) {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
@@ -34,7 +33,7 @@ export default function TransaksiPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }
 
-  // Pengelompokan Kategori untuk Dokumen LPJ Formal
+  // Pengelompokan Data LPJ
   const lpjMasuk = {}; const lpjKeluar = {};
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
@@ -57,7 +56,6 @@ export default function TransaksiPage() {
   const triggerCetakLpj = () => { window.print(); };
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  // Filter data untuk preview di layar browser biasa
   const filteredTrans = allTransactions.filter(t => {
     const matchSearch = (t.description || '').toLowerCase().includes(search.toLowerCase());
     const matchType = typeFilter === 'all' || t.type === typeFilter;
@@ -65,53 +63,52 @@ export default function TransaksiPage() {
     return matchSearch && matchType && matchCat;
   });
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat Manajer Kas Buku Besar...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Membuka lembar kendali kas...</div>;
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto pb-12 text-xs">
+    <div className="space-y-4 max-w-7xl mx-auto pb-12 text-xs text-white">
       
-      {/* ================= AREA ELEMEN LAYAR UTAMA (TIDAK IKUT DICETAK) ================= */}
+      {/* AREA LAYAR UTAMA (TERSEMBUNYI SAAT PRINT) */}
       <div className="print:hidden space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl">
+        <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
-            <h2 className="text-sm font-black text-white uppercase tracking-wider">💰 Manajer Buku Kas Transaksi</h2>
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Total data: {allTransactions.length} baris riwayat kas</p>
+            <h2 className="text-xs font-black uppercase tracking-wider">📋 Audit Buku Besar Transaksi (Read-Only)</h2>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Seluruh fungsi input/modifikasi dinonaktifkan demi integritas data.</p>
           </div>
-          {/* Tombol Cetak Dokumen LPJ */}
-          <button onClick={triggerCetakLpj} className="px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all shadow-md">
-            🖨️ Cetak Dokumen LPJ (PDF)
+          <button onClick={triggerCetakLpj} className="px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all shadow-lg">
+            🖨️ Unduh Berkas LPJ (PDF)
           </button>
         </div>
 
-        {/* Panel Filter Navigasi Layar */}
+        {/* Panel Pencarian & Filter */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 border border-slate-800/60 p-3 rounded-xl">
-          <input type="text" placeholder="Cari keterangan..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white" />
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white">
-            <option value="all">Semua Jenis Alur</option>
-            <option value="masuk">🟢 Hanya Kas Masuk</option>
-            <option value="keluar">🔴 Hanya Kas Keluar</option>
+          <input type="text" placeholder="Cari uraian transaksi..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none" />
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none">
+            <option value="all">Semua Aliran Kas</option>
+            <option value="masuk">🟢 Aliran Masuk</option>
+            <option value="keluar">🔴 Aliran Keluar</option>
           </select>
-          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white">
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none">
             <option value="all">Semua Kategori Pos</option>
             {categories.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
           </select>
         </div>
 
-        {/* Tabel Preview di Layar */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        {/* Tabel Utama Kas */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[10px]">
-                <th className="p-3">Tanggal</th><th className="p-3">Kategori</th><th className="p-3">Keterangan</th><th className="p-3 text-right">Nominal</th>
+              <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[9px] tracking-wider">
+                <th className="p-3">Tanggal</th><th className="p-3">Pos Kategori</th><th className="p-3">Uraian Keterangan</th><th className="p-3 text-right">Nominal Angka</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/40 text-slate-200 font-medium">
+            <tbody className="divide-y divide-slate-800/40 text-slate-200">
               {filteredTrans.map((t, idx) => (
-                <tr key={idx} className="hover:bg-slate-950/20">
-                  <td className="p-3 font-mono text-slate-400">{t.transaction_date}</td>
-                  <td className="p-3"><span className="px-2 py-0.5 bg-slate-950 rounded border border-white/5 text-[10px] uppercase font-mono">{t.category}</span></td>
-                  <td className="p-3 truncate max-w-xs">{t.description}</td>
-                  <td className={`p-3 text-right font-mono font-bold ${t.type === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}`}>{t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount)}</td>
+                <tr key={idx} className="hover:bg-slate-950/20 transition-all">
+                  <td className="p-3 font-mono text-slate-500">{t.transaction_date}</td>
+                  <td className="p-3"><span className="px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-mono text-[9px] uppercase">{t.category}</span></td>
+                  <td className="p-3 truncate max-w-xs font-medium">{t.description}</td>
+                  <td className={`p-3 text-right font-mono font-black ${t.type === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}`}>{t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount)}</td>
                 </tr>
               ))}
             </tbody>
@@ -119,37 +116,33 @@ export default function TransaksiPage() {
         </div>
       </div>
 
-
-      {/* ================= AREA STRUKTUR STRUK LPJ FORMAL A4 (HANYA MUNCUL SAAT DI-PRINT) ================= */}
-      <div className="hidden print:block bg-white text-black p-8 font-serif leading-relaxed text-xs">
-        
-        {/* KOP SURAT FORMAL */}
-        <div className="text-center border-b-4 border-double border-black pb-4 mb-6 space-y-1">
-          <h1 className="text-lg font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
-          <p className="text-[10px] font-sans italic text-gray-600">{metaOrg.address}</p>
-          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN KAS</h2>
+      {/* ================= AREA FORM LPJ DOKUMEN CETAK KERTAS A4 (MURNI HITAM PUTIH FORMAL) ================= */}
+      <div className="hidden print:block bg-white text-black p-10 font-serif leading-relaxed text-xs">
+        <div className="text-center border-b-4 border-double border-black pb-3 mb-6 space-y-1">
+          <h1 className="text-base font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
+          <p className="text-[9px] font-sans italic text-gray-500">{metaOrg.address}</p>
+          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL REAL-TIME</h2>
         </div>
 
-        {/* RINGKASAN SALDO BUKU BESAR */}
-        <div className="grid grid-cols-3 gap-2 font-sans border border-black p-3 rounded mb-6 text-[10px]">
-          <div><p className="text-gray-500 uppercase font-bold">Total Pemasukan</p><p className="text-sm font-bold text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
-          <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran</p><p className="text-sm font-bold text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
-          <div><p className="text-gray-500 uppercase font-bold">Sisa Kas Bersih</p><p className="text-sm font-bold text-blue-800 underline">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
+        <div className="grid grid-cols-3 gap-4 font-sans border border-black p-3 rounded mb-6 text-[10px] bg-gray-50">
+          <div><p className="text-gray-500 uppercase font-bold">Total Penerimaan</p><p className="text-xs font-black text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
+          <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran Alokasi</p><p className="text-xs font-black text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
+          <div><p className="text-gray-500 uppercase font-bold">Sisa Saldo Kas Bersih</p><p className="text-xs font-black text-blue-800 underline">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
         </div>
 
-        {/* RINCIAN MASUK BY KATEGORI */}
+        {/* REKAP POS IN */}
         <div className="space-y-4">
-          <h3 className="font-sans font-bold uppercase text-xs border-b border-black pb-1 text-green-800">🟢 RINCIAN REALISASI PEMASUKAN</h3>
-          {Object.keys(lpjMasuk).map((catName, idx) => (
-            <div key={idx} className="space-y-1">
-              <h4 className="font-sans font-bold text-[11px] text-gray-700 uppercase pl-1 bg-gray-100">Pos Kategori: {catName}</h4>
-              <table className="w-full text-left border-collapse text-[10px]">
+          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-green-800">1. REALISASI KAS MASUK (PENERIMAAN)</h3>
+          {Object.keys(lpjMasuk).map((cat, i) => (
+            <div key={i} className="space-y-1">
+              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos Anggaran: {cat}</h4>
+              <table className="w-full text-left border-collapse text-[9px]">
                 <thead>
-                  <tr className="border-b border-gray-400 font-bold italic text-gray-600"><th className="py-1 w-24">Tanggal</th><th className="py-1">Uraian Keterangan</th><th className="py-1 text-right w-36">Jumlah</th></tr>
+                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th className="py-1">Keterangan / Donatur</th><th className="py-1 text-right w-28">Jumlah</th></tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {lpjMasuk[catName].map((t, i) => (
-                    <tr key={i}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                <tbody className="divide-y divide-gray-100">
+                  {lpjMasuk[cat].map((t, idx) => (
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -157,19 +150,19 @@ export default function TransaksiPage() {
           ))}
         </div>
 
-        {/* RINCIAN KELUAR BY KATEGORI */}
+        {/* REKAP POS OUT */}
         <div className="space-y-4 pt-6">
-          <h3 className="font-sans font-bold uppercase text-xs border-b border-black pb-1 text-red-800">🔴 RINCIAN REALISASI PENGELUARAN</h3>
-          {Object.keys(lpjKeluar).map((catName, idx) => (
-            <div key={idx} className="space-y-1">
-              <h4 className="font-sans font-bold text-[11px] text-gray-700 uppercase pl-1 bg-gray-100">Pos Kategori: {catName}</h4>
-              <table className="w-full text-left border-collapse text-[10px]">
+          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-red-800">2. REALISASI KAS KELUAR (BELANJA OPERASIONAL)</h3>
+          {Object.keys(lpjKeluar).map((cat, i) => (
+            <div key={i} className="space-y-1">
+              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos Operasional: {cat}</h4>
+              <table className="w-full text-left border-collapse text-[9px]">
                 <thead>
-                  <tr className="border-b border-gray-400 font-bold italic text-gray-600"><th className="py-1 w-24">Tanggal</th><th className="py-1">Uraian Keterangan</th><th className="py-1 text-right w-36">Jumlah</th></tr>
+                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th className="py-1">Uraian Alokasi Keperluan</th><th className="py-1 text-right w-28">Jumlah</th></tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {lpjKeluar[catName].map((t, i) => (
-                    <tr key={i}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                <tbody className="divide-y divide-gray-100">
+                  {lpjKeluar[cat].map((t, idx) => (
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -177,18 +170,11 @@ export default function TransaksiPage() {
           ))}
         </div>
 
-        {/* KOLOM TANDA TANGAN FORMAL */}
-        <div className="mt-12 grid grid-cols-2 text-center font-sans text-[10px] pt-12">
-          <div className="space-y-14">
-            <p>Mengetahui,<br /><b className="uppercase">Ketua Panitia Haul</b></p>
-            <p className="underline font-bold">( ........................................ )</p>
-          </div>
-          <div className="space-y-14">
-            <p>Cirebon, {new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}<br /><b className="uppercase">Bendahara Umum</b></p>
-            <p className="underline font-bold">( ........................................ )</p>
-          </div>
+        {/* TANDA TANGAN VALIDASI */}
+        <div className="mt-16 grid grid-cols-2 text-center font-sans text-[10px] pt-8">
+          <div className="space-y-14"><p>Mengetahui,<br /><b>Ketua Panitia Haul</b></p><p className="underline font-bold">( ........................................ )</p></div>
+          <div className="space-y-14"><p>Cirebon, {new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}<br /><b>Bendahara Panitia</b></p><p className="underline font-bold">( ........................................ )</p></div>
         </div>
-
       </div>
 
     </div>
