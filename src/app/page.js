@@ -40,17 +40,17 @@ export default function DashboardPage() {
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
       }
 
-      // 2. HITUNG OTOMATIS DANA TARGET DARI TABEL BUDGETS
-      const { data: budgetsData } = await supabase.from('budgets').select('*');
+      // 2. AMBIL DAN HITUNG TOTAL TARGET DARI TABEL BUDGETS (Menggunakan kolom planned_amount)
+      const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
       let totalPlafonDinamis = 0;
       if (budgetsData) {
         budgetsData.forEach(b => {
-          const nilaiAnggaran = parseFloat(b.amount || b.nominal) || 0;
+          const nilaiAnggaran = parseFloat(b.planned_amount) || 0;
           totalPlafonDinamis += nilaiAnggaran;
         });
       }
 
-      // 3. AMBIL DATA TRANSAKSI (Gunakan select biasa tanpa join yang merusak query)
+      // 3. AMBIL DATA TRANSAKSI
       const { data: trans, error } = await supabase
         .from('transactions')
         .select('*')
@@ -68,13 +68,12 @@ export default function DashboardPage() {
           const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
           const catNameLower = catName.toLowerCase();
 
-          // KONDISI LOGIKA PINTAR UNTUK MEMISAHKAN MASUK / KELUAR
           if (
             rawType === 'masuk' || 
             rawType === 'pemasukan' || 
             rawType === 'income' ||
             catNameLower.includes('masuk') || 
-            catNameLower.includes('iuran') ||
+            catNameLower.includes('iuran') || 
             catNameLower.includes('sumbangan') ||
             catNameLower.includes('kas awal')
           ) {
@@ -100,8 +99,11 @@ export default function DashboardPage() {
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
 
-        // Progress bar dihitung berdasarkan perbandingan total Pengeluaran nyata vs Total Target Anggaran (budgets)
-        const hitungPersen = totalPlafonDinamis > 0 ? Math.min(Math.round((calcKeluar / totalPlafonDinamis) * 100), 100) : 0;
+        // Menghitung persentase keterpakaian plafon anggaran
+        let hitungPersen = 0;
+        if (totalPlafonDinamis > 0) {
+          hitungPersen = Math.round((calcKeluar / totalPlafonDinamis) * 100);
+        }
         setProgress({ percent: hitungPersen, current: calcKeluar, target: totalPlafonDinamis });
       }
     } catch (err) { console.error(err); } finally { setLoading(false); }
@@ -149,7 +151,7 @@ export default function DashboardPage() {
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
                   <circle cx="70" cy="70" r={radius} stroke="#1e293b" strokeWidth="20" fill="transparent" />
-                  <circle cx="70" cy="70" r={radius} stroke="#f59e0b" strokeWidth="20" strokeDasharray={circumference} strokeDashoffset={circumference - (progress.percent / 100) * circumference} fill="transparent" />
+                  <circle cx="70" cy="70" r={radius} stroke="#f59e0b" strokeWidth="20" strokeDasharray={circumference} strokeDashoffset={circumference - (Math.min(progress.percent, 100) / 100) * circumference} fill="transparent" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center"><span className="text-[9px] font-black text-white font-mono">{progress.percent}%</span></div>
               </div>
@@ -206,7 +208,7 @@ export default function DashboardPage() {
           <span className="text-amber-400 font-mono text-[10px] font-black">{progress.percent}%</span>
         </div>
         <div className="w-full h-2 bg-black rounded-full overflow-hidden p-0.5 border border-slate-800">
-          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full`} style={{ width: `${progress.percent}%` }}></div>
+          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
       </div>
 
