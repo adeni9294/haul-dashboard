@@ -11,7 +11,7 @@ export default function PengaturanPage() {
   const [bannerText, setBannerText] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
 
-  // State Tambahan Untuk Proses Upload File Gambar
+  // State Upload Gambar
   const [isUploading, setIsUploading] = useState(false);
 
   // State Ubah Sandi
@@ -19,7 +19,7 @@ export default function PengaturanPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // State Kategori Buku Kas
+  // State Kategori
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
 
@@ -64,7 +64,7 @@ export default function PengaturanPage() {
       setOrgName(c.org_name || '');
       setAddress(c.address || '');
       setBankInfo(c.bank_info || '');
-      setBannerText(c.banner_text || '');
+      setBannerText(c.banner_text || c.banner_info || c.welcome_text || '');
       setLogoUrl(c.logo_url || '');
       setTheme(c.theme || 'default');
     }
@@ -76,7 +76,6 @@ export default function PengaturanPage() {
     if (data) setCategories(data);
   }
 
-  // LOGIKA UTAMA: FUNGSI UNGGAL FILE GAMBAR KE SUPABASE STORAGE
   const handleUploadLogo = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -85,19 +84,16 @@ export default function PengaturanPage() {
       setIsUploading(true);
       const supabase = getSupabase();
 
-      // Buat nama file unik berdasarkan waktu saat ini
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
-      // Upload file ke bucket bernama 'logos' (Pastikan bucket ini sudah dibuat/di-set Public di Supabase Anda)
       const { error: uploadError } = await supabase.storage
         .from('logos')
         .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Ambil tautan URL publik gambar yang baru saja di-upload
       const { data: { publicUrl } } = supabase.storage
         .from('logos')
         .getPublicUrl(filePath);
@@ -117,14 +113,26 @@ export default function PengaturanPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     
     const supabase = getSupabase();
-    const payload = { org_name: orgName, address, bank_info: bankInfo, banner_text: bannerText, logo_url: logoUrl, theme };
+    
+    // Payload data yang dikirim
+    const payload = { 
+      org_name: orgName, 
+      address, 
+      bank_info: bankInfo, 
+      banner_text: bannerText, // Jika di DB Anda namanya 'banner_info', ganti bagian kiri ini jadi 'banner_info'
+      logo_url: logoUrl, 
+      theme 
+    };
 
     const { error } = await supabase.from('settings').update(payload).eq('id', 'main_config');
+    
     if (!error) {
       alert('✅ Konfigurasi & Tema aplikasi berhasil disimpan!');
       window.location.reload();
     } else {
-      alert('❌ Gagal menyimpan konfigurasi.');
+      console.error(error);
+      // PERBAIKAN: Menampilkan detail alasan gagal dari Supabase
+      alert(`❌ Gagal menyimpan konfigurasi:\nPesan: ${error.message || error}\nDetail: ${error.details || '-'}`);
     }
   };
 
@@ -219,7 +227,6 @@ export default function PengaturanPage() {
             <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
           </div>
 
-          {/* PERBAIKAN: MERUBAH INPUT TEKS MENJADI TOMBOL UPLOAD FILE ELEGAN */}
           <div>
             <label className="block text-slate-400 mb-1">Logo Organisasi Resmi</label>
             <div className="flex items-center gap-4 p-3 bg-slate-950 border border-slate-800 rounded-xl">
@@ -284,6 +291,7 @@ export default function PengaturanPage() {
           </div>
           <div>
             <label className="block text-slate-400 mb-1">Konfirmasi Sandi Baru</label>
+            {/* PERBAIKAN TYPO: Sekarang menggunakan setConfirmPassword */}
             <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-center" />
           </div>
           <button type="submit" className="w-full py-2 bg-rose-600 text-white font-black uppercase rounded-xl hover:bg-rose-500 transition-all">
