@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import '@/app/globals.css';
 
-// PERBAIKAN TOTAL: Warna dibuat solid tanpa opacity/transparansi agar tidak abu-abu di HP
+// KUNCI UTAMA: Warna background dasar (body) harus solid & pekat agar tidak tembus warna browser HP
 const THEME_STYLES = {
   'emerald-cyber': { body: 'bg-zinc-950 text-emerald-100', card: 'bg-zinc-900 border-zinc-800 text-emerald-100', navBg: 'bg-zinc-900 border-zinc-800', innerBg: 'bg-zinc-950 border border-zinc-850', textMuted: 'text-zinc-500', accentText: 'text-emerald-400' },
   'velvet-rose': { body: 'bg-neutral-950 text-rose-100', card: 'bg-neutral-900 border-purple-950 text-rose-100', navBg: 'bg-purple-950 border-purple-900', innerBg: 'bg-purple-950 border border-purple-900/60', textMuted: 'text-purple-400', accentText: 'text-rose-400' },
@@ -87,10 +87,10 @@ export default function RootLayout({ children }) {
         setIsAdmin(true);
         setShowLoginModal(false);
         setPasswordInput('');
-        alert('🟢 Login Berhasil! Autentikasi diverifikasi oleh Supabase.');
+        alert('🟢 Login Berhasil!');
         window.location.reload();
       } else {
-        alert('❌ Password salah atau ditolak oleh Supabase!');
+        alert('❌ Password salah!');
       }
     } catch (err) {
       alert('❌ Gagal terhubung ke server autentikasi.');
@@ -116,48 +116,54 @@ export default function RootLayout({ children }) {
   ];
 
   return (
-    <html lang="id">
+    // PERBAIKAN UTAMA: Pasang h-full dan class body tema langsung di HTML agar area terluar sinkron
+    <html lang="id" className={`${currentStyle.body} min-h-screen`}>
       <body className={`${currentStyle.body} font-sans min-h-screen flex flex-col pb-28 sm:pb-6 transition-all duration-300`}>
         
-        {/* HEADER ATAS - Menggunakan warna solid dari theme style */}
-        <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
-          <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-col md:flex-row items-center gap-4 shadow-xl w-full relative`}>
-            <div className="absolute top-4 right-4 z-10">
-              {isAdmin ? (
-                <button onClick={handleLogout} className="px-3 py-1 bg-rose-950 text-rose-400 border border-rose-900 rounded-xl text-[11px] font-mono font-bold hover:bg-rose-900 hover:text-white transition-all">🚪 Keluar Admin</button>
-              ) : (
-                <button onClick={() => setShowLoginModal(true)} className={`px-3 py-1 ${currentStyle.innerBg} rounded-xl text-[11px] font-mono font-bold ${currentStyle.accentText}`}>🔒 Login Admin</button>
-              )}
-            </div>
-
-            <div className={`w-16 h-16 md:w-20 md:h-20 ${currentStyle.innerBg} rounded-full flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
-              {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <div className="text-[10px] text-slate-600 font-mono">NO LOGO</div>}
-            </div>
-            
-            <div className="text-center md:text-left space-y-1 flex-1 pr-0 md:pr-16">
-              <div className="flex flex-col md:flex-row md:items-center gap-2">
-                <h1 className={`text-sm md:text-base font-black ${currentStyle.accentText} tracking-wide uppercase`}>{orgName}</h1>
-                <span className={`w-fit px-2 py-0.5 text-[9px] rounded-md font-mono font-bold uppercase mx-auto md:mx-0 ${currentStyle.innerBg} ${currentStyle.textMuted}`}>{isAdmin ? '🟢 Admin Mode' : '🔵 Public View'}</span>
+        {/* WRAPPER UTAMA UNTUK MEMASTIKAN TIDAK ADA BACKGROUND PUTIH YANG BOCOR */}
+        <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
+          
+          {/* HEADER ATAS */}
+          <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
+            <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-col md:flex-row items-center gap-4 shadow-xl w-full relative`}>
+              <div className="absolute top-4 right-4 z-10">
+                {isAdmin ? (
+                  <button onClick={handleLogout} className="px-3 py-1 bg-rose-950 text-rose-400 border border-rose-900 rounded-xl text-[11px] font-mono font-bold hover:bg-rose-900 hover:text-white transition-all">🚪 Keluar Admin</button>
+                ) : (
+                  <button onClick={() => setShowLoginModal(true)} className={`px-3 py-1 ${currentStyle.innerBg} rounded-xl text-[11px] font-mono font-bold ${currentStyle.accentText}`}>🔒 Login Admin</button>
+                )}
               </div>
-              <p className={`text-[10px] md:text-xs ${currentStyle.textMuted} leading-relaxed font-medium`}>{address}</p>
-              <p className={`text-[9px] md:text-[10px] ${currentStyle.textMuted} font-mono pt-1 border-t border-white/5 mt-1`}>💳 {bankInfo}</p>
+
+              <div className={`w-16 h-16 md:w-20 md:h-20 ${currentStyle.innerBg} rounded-full flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
+                {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <div className="text-[10px] text-slate-600 font-mono">NO LOGO</div>}
+              </div>
+              
+              <div className="text-center md:text-left space-y-1 flex-1 pr-0 md:pr-16">
+                <div className="flex flex-col md:flex-row md:items-center gap-2">
+                  <h1 className={`text-sm md:text-base font-black ${currentStyle.accentText} tracking-wide uppercase`}>{orgName}</h1>
+                  <span className={`w-fit px-2 py-0.5 text-[9px] rounded-md font-mono font-bold uppercase mx-auto md:mx-0 ${currentStyle.innerBg} ${currentStyle.textMuted}`}>{isAdmin ? '🟢 Admin Mode' : '🔵 Public View'}</span>
+                </div>
+                <p className={`text-[10px] md:text-xs ${currentStyle.textMuted} leading-relaxed font-medium`}>{address}</p>
+                <p className={`text-[9px] md:text-[10px] ${currentStyle.textMuted} font-mono pt-1 border-t border-white/5 mt-1`}>💳 {bankInfo}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* KONTEN UTAMA */}
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">{children}</main>
+          {/* KONTEN UTAMA */}
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">{children}</main>
 
-        {/* FOOTER */}
-        <footer className={`py-4 mb-20 sm:mb-0 border-t border-white/5 text-center text-[11px] ${currentStyle.textMuted} font-mono`}>Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}</footer>
+          {/* FOOTER */}
+          <footer className={`py-4 mb-20 sm:mb-0 border-t border-white/5 text-center text-[11px] ${currentStyle.textMuted} font-mono`}>Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}</footer>
 
-        {/* BOTTOM NAVBAR UNTUK HP - Menggunakan warna solid */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-0 sm:static sm:w-full sm:max-w-7xl sm:mx-auto sm:px-4 sm:mb-4">
-          <nav className={`grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 ${currentStyle.navBg} border p-2 rounded-2xl text-[11px] sm:text-xs font-bold w-full sm:w-fit text-center shadow-2xl sm:shadow-none`}>
-            {menus.map((m) => (
-              <Link key={m.href} href={m.href} className={`py-2 px-1 sm:px-4 rounded-xl transition-all truncate ${pathname === m.href ? 'bg-amber-500 text-slate-950 shadow-md font-black' : `${currentStyle.textMuted} hover:text-white`}`}>{m.name}</Link>
-            ))}
-          </nav>
+          {/* BOTTOM NAVBAR UNTUK HP */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-0 sm:static sm:w-full sm:max-w-7xl sm:mx-auto sm:px-4 sm:mb-4">
+            <nav className={`grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 ${currentStyle.navBg} border p-2 rounded-2xl text-[11px] sm:text-xs font-bold w-full sm:w-fit text-center shadow-2xl sm:shadow-none`}>
+              {menus.map((m) => (
+                <Link key={m.href} href={m.href} className={`py-2 px-1 sm:px-4 rounded-xl transition-all truncate ${pathname === m.href ? 'bg-amber-500 text-slate-950 shadow-md font-black' : `${currentStyle.textMuted} hover:text-white`}`}>{m.name}</Link>
+              ))}
+            </nav>
+          </div>
+
         </div>
 
         {/* MODAL LOGIN POPUP */}
