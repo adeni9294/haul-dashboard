@@ -2,25 +2,24 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// 1. PERBAIKAN UTAMA: Warna dibuat padat (Tanpa "/" opacity berlebih yang bikin buram di HP)
 const THEME_STYLES = {
-  'emerald-cyber': { card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', innerBg: 'bg-zinc-950 border border-zinc-850', textMuted: 'text-zinc-400', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400' },
-  'velvet-rose': { card: 'bg-neutral-900 border-purple-900/60 text-rose-50 shadow-2xl', innerBg: 'bg-purple-950 border border-purple-900/40', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500' },
-  'neon-sunset': { card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', innerBg: 'bg-stone-950 border border-stone-850', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400' },
-  'amber-gold': { card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', innerBg: 'bg-gray-950 border border-gray-850', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400' },
-  'midnight-blue': { card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', innerBg: 'bg-blue-950 border border-blue-900/40', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500' },
-  'nordic-frost': { card: 'bg-slate-800 border-slate-700 text-slate-50 shadow-2xl', innerBg: 'bg-slate-900 border border-slate-750', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400' },
-  'dracula-vamp': { card: 'bg-zinc-900 border-fuchsia-950 text-purple-100 shadow-2xl', innerBg: 'bg-black border border-fuchsia-950/60', textMuted: 'text-zinc-400', accentText: 'text-fuchsia-400', progressBg: 'from-fuchsia-600 to-purple-500' },
-  'forest-moss': { card: 'bg-stone-900 border-emerald-950 text-stone-50 shadow-2xl', innerBg: 'bg-emerald-950 border border-emerald-900/40', textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-green-600 to-emerald-400' },
-  'cyberpunk-2077': { card: 'bg-black border-yellow-500 text-yellow-400 shadow-2xl', innerBg: 'bg-zinc-950 border border-yellow-600/40', textMuted: 'text-yellow-600', accentText: 'text-yellow-400', progressBg: 'from-yellow-500 to-amber-400' },
-  'ocean-breeze': { card: 'bg-teal-900 border-teal-800 text-teal-50 shadow-2xl', innerBg: 'bg-teal-950 border border-teal-850', textMuted: 'text-teal-400', accentText: 'text-cyan-300', progressBg: 'from-cyan-600 to-teal-400' },
-  'rose-gold': { card: 'bg-stone-900 border-rose-900/40 text-rose-100 shadow-2xl', innerBg: 'bg-rose-950 border border-rose-900/30', textMuted: 'text-stone-400', accentText: 'text-rose-300', progressBg: 'from-rose-500 to-pink-400' },
-  'lavender-dream': { card: 'bg-neutral-900 border-indigo-900/40 text-indigo-100 shadow-2xl', innerBg: 'bg-indigo-950 border border-indigo-900/30', textMuted: 'text-neutral-400', accentText: 'text-indigo-400', progressBg: 'from-indigo-500 to-purple-400' },
-  'coffee-latte': { card: 'bg-stone-900 border-amber-900/30 text-amber-100 shadow-2xl', innerBg: 'bg-amber-950 border border-amber-900/20', textMuted: 'text-stone-400', accentText: 'text-amber-500', progressBg: 'from-amber-600 to-yellow-600' },
-  'toxic-lime': { card: 'bg-zinc-900 border-lime-950 text-lime-100 shadow-2xl', innerBg: 'bg-zinc-950 border border-lime-900/40', textMuted: 'text-zinc-500', accentText: 'text-lime-400', progressBg: 'from-lime-500 to-green-400' },
-  'crimson-tide': { card: 'bg-neutral-900 border-red-950 text-red-100 shadow-2xl', innerBg: 'bg-red-950 border border-red-900/40', textMuted: 'text-neutral-400', accentText: 'text-red-400', progressBg: 'from-red-600 to-orange-600' },
-  'solarized-dark': { card: 'bg-slate-900 border-teal-950 text-teal-100 shadow-2xl', innerBg: 'bg-slate-950 border border-teal-900/30', textMuted: 'text-slate-400', accentText: 'text-teal-400', progressBg: 'from-teal-600 to-cyan-500' },
-  'default': { card: 'bg-slate-900 border-slate-800 text-slate-100 shadow-2xl', innerBg: 'bg-slate-950 border border-slate-800/60', textMuted: 'text-slate-400', accentText: 'text-amber-500', progressBg: 'from-amber-600 to-amber-400' }
+  'emerald-cyber': { card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', innerBg: 'bg-zinc-950 border border-zinc-850', textMuted: 'text-zinc-400', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', chartStroke: '#10b981' },
+  'velvet-rose': { card: 'bg-neutral-900 border-purple-900/60 text-rose-50 shadow-2xl', innerBg: 'bg-purple-950 border border-purple-900/40', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', chartStroke: '#fb7185' },
+  'neon-sunset': { card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', innerBg: 'bg-stone-950 border border-stone-850', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', chartStroke: '#f97316' },
+  'amber-gold': { card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', innerBg: 'bg-gray-950 border border-gray-850', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', chartStroke: '#fbbf24' },
+  'midnight-blue': { card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', innerBg: 'bg-blue-950 border border-blue-900/40', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', chartStroke: '#60a5fa' },
+  'nordic-frost': { card: 'bg-slate-800 border-slate-700 text-slate-50 shadow-2xl', innerBg: 'bg-slate-900 border border-slate-750', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', chartStroke: '#22d3ee' },
+  'dracula-vamp': { card: 'bg-zinc-900 border-fuchsia-950 text-purple-100 shadow-2xl', innerBg: 'bg-black border border-fuchsia-950/60', textMuted: 'text-zinc-400', accentText: 'text-fuchsia-400', progressBg: 'from-fuchsia-600 to-purple-500', chartStroke: '#e879f9' },
+  'forest-moss': { card: 'bg-stone-900 border-emerald-950 text-stone-50 shadow-2xl', innerBg: 'bg-emerald-950 border border-emerald-900/40', textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-green-600 to-emerald-400', chartStroke: '#4ade80' },
+  'cyberpunk-2077': { card: 'bg-black border-yellow-500 text-yellow-400 shadow-2xl', innerBg: 'bg-zinc-950 border border-yellow-600/40', textMuted: 'text-yellow-600', accentText: 'text-yellow-400', progressBg: 'from-yellow-500 to-amber-400', chartStroke: '#eab308' },
+  'ocean-breeze': { card: 'bg-teal-900 border-teal-800 text-teal-50 shadow-2xl', innerBg: 'bg-teal-950 border border-teal-850', textMuted: 'text-teal-400', accentText: 'text-cyan-300', progressBg: 'from-cyan-600 to-teal-400', chartStroke: '#67e8f9' },
+  'rose-gold': { card: 'bg-stone-900 border-rose-900/40 text-rose-100 shadow-2xl', innerBg: 'bg-rose-950 border border-rose-900/30', textMuted: 'text-stone-400', accentText: 'text-rose-300', progressBg: 'from-rose-500 to-pink-400', chartStroke: '#f43f5e' },
+  'lavender-dream': { card: 'bg-neutral-900 border-indigo-900/40 text-indigo-100 shadow-2xl', innerBg: 'bg-indigo-950 border border-indigo-900/30', textMuted: 'text-neutral-400', accentText: 'text-indigo-400', progressBg: 'from-indigo-500 to-purple-400', chartStroke: '#818cf8' },
+  'coffee-latte': { card: 'bg-stone-900 border-amber-900/30 text-amber-100 shadow-2xl', innerBg: 'bg-amber-950 border border-amber-900/20', textMuted: 'text-stone-400', accentText: 'text-amber-500', progressBg: 'from-amber-600 to-yellow-600', chartStroke: '#f59e0b' },
+  'toxic-lime': { card: 'bg-zinc-900 border-lime-950 text-lime-100 shadow-2xl', innerBg: 'bg-zinc-950 border border-lime-900/40', textMuted: 'text-zinc-500', accentText: 'text-lime-400', progressBg: 'from-lime-500 to-green-400', chartStroke: '#a3e635' },
+  'crimson-tide': { card: 'bg-neutral-900 border-red-950 text-red-100 shadow-2xl', innerBg: 'bg-red-950 border border-red-900/40', textMuted: 'text-neutral-400', accentText: 'text-red-400', progressBg: 'from-red-600 to-orange-600', chartStroke: '#dc2626' },
+  'solarized-dark': { card: 'bg-slate-900 border-teal-950 text-teal-100 shadow-2xl', innerBg: 'bg-slate-950 border border-teal-900/30', textMuted: 'text-slate-400', accentText: 'text-teal-400', progressBg: 'from-teal-600 to-cyan-500', chartStroke: '#2dd4bf' },
+  'default': { card: 'bg-slate-900 border-slate-800 text-slate-100 shadow-2xl', innerBg: 'bg-slate-950 border border-slate-800/60', textMuted: 'text-slate-400', accentText: 'text-amber-500', progressBg: 'from-amber-600 to-amber-400', chartStroke: '#f59e0b' }
 };
 
 export default function DashboardPage() {
@@ -112,7 +111,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3 font-mono text-xs text-slate-400">
         <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        <p>Mematangkan Warna Kontras...</p>
+        <p>Menyelaraskan Visual Dasbor...</p>
       </div>
     );
   }
@@ -131,23 +130,51 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2. KARTU UTAMA TOTAL SISA KAS */}
+      {/* 2. KARTU UTAMA TOTAL SISA KAS + MINI FLOWCHART TREN */}
       <div className={`p-5 sm:p-8 ${style.card} border rounded-2xl sm:rounded-3xl space-y-5 relative overflow-hidden`}>
         <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
         
-        <div className="space-y-0.5">
-          <p className={`${style.textMuted} font-mono text-[10px] sm:text-xs uppercase tracking-widest font-semibold`}>Total Sisa Kas Haul</p>
-          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight break-words">
-            {formatRupiah(totals.total)}
-          </h2>
+        {/* Konten Atas Kartu (Nilai Kas & Mini Flowchart Tren) */}
+        <div className="flex justify-between items-end gap-2">
+          <div className="space-y-0.5">
+            <p className={`${style.textMuted} font-mono text-[10px] sm:text-xs uppercase tracking-widest font-semibold`}>Total Sisa Kas Haul</p>
+            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight break-words">
+              {formatRupiah(totals.total)}
+            </h2>
+          </div>
+
+          {/* MINI GRAPHICS / FLOWCHART VECTOR (Disisipkan di sebelah kanan sisa kas) */}
+          <div className="w-24 sm:w-36 h-12 shrink-0 opacity-80 pb-1">
+            <svg viewBox="0 0 140 40" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path 
+                d="M0 35 Q 20 38 35 25 T 70 15 T 105 28 T 140 5" 
+                stroke={style.chartStroke} 
+                strokeWidth="3" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+              />
+              <path 
+                d="M0 35 Q 20 38 35 25 T 70 15 T 105 28 T 140 5 L 140 40 L 0 40 Z" 
+                fill={`url(#gradient-${currentThemeKey})`} 
+                opacity="0.15" 
+              />
+              <defs>
+                <linearGradient id={`gradient-${currentThemeKey}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={style.chartStroke} />
+                  <stop offset="100%" stopColor="transparent" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
         </div>
 
+        {/* Kotak Info Dana Masuk & Keluar dengan Ikon Baru */}
         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800">
-          {/* Box Masuk */}
+          {/* Box Masuk + Ikon Simbol Pemasukan */}
           <div className={`p-3 ${style.innerBg} rounded-xl flex items-center gap-2.5 shadow-md`}>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 border border-emerald-500/20">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 0 5.814-5.518l2.74-8.74m0 0-3.393.117m3.393-.117-2.618 5.74" />
               </svg>
             </div>
             <div className="min-w-0">
@@ -156,11 +183,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Box Keluar */}
+          {/* Box Keluar + Ikon Simbol Pengeluaran */}
           <div className={`p-3 ${style.innerBg} rounded-xl flex items-center gap-2.5 shadow-md`}>
-            <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0 border border-rose-500/20">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6 9 12.75l4.306-4.306a11.95 11.95 0 0 1 5.814 5.519l2.74 8.74m0 0-3.393-.117m3.393.117-2.618-5.74" />
               </svg>
             </div>
             <div className="min-w-0">
