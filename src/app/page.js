@@ -1,12 +1,29 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { ArrowUpCircle, ArrowDownCircle, Bell, PieChart } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Bell, PieChart, Target } from 'lucide-react';
+
+// Pemetaan kelas CSS berdasarkan pilihan tema
+const THEMES = {
+  'Emerald Cyber (Hijau Hitam)': {
+    bg: 'bg-slate-950',
+    card: 'bg-slate-900 border-slate-800',
+    text: 'text-white',
+    accent: 'text-emerald-400',
+    primary: 'text-amber-500',
+    inputBg: 'bg-slate-900 border-slate-800'
+  }
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ masuk: 0, keluar: 0, saldo: 0 });
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState({ in: {}, out: {} });
+  const [totalAnggaran, setTotalAnggaran] = useState(0);
+  const [progressPersen, setProgressPersen] = useState(0);
+  
+  // State manajemen tema aplikasi
+  const [selectedTheme, setSelectedTheme] = useState('Emerald Cyber (Hijau Hitam)');
 
   useEffect(() => {
     loadDashboardData();
@@ -15,16 +32,21 @@ export default function Dashboard() {
   async function loadDashboardData() {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     
-    // Mengambil data transaksi
+    // 1. Ambil data transaksi & data anggaran secara bersamaan
     const { data: trans } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+    const { data: budgetsData } = await supabase.from('budgets').select('*');
     
+    // Opsi tambahan jika Anda menyimpan konfigurasi tema di tabel terpisah (misal: 'settings')
+    // const { data: settings } = await supabase.from('settings').select('*').single();
+    // if (settings?.theme) setSelectedTheme(settings.theme);
+
     if (!trans) return;
 
     let m = 0, k = 0;
     let catIn = {}, catOut = {};
     
     trans.forEach(t => {
-      // PERBAIKAN LOGIKA: Cek apakah tipe data mengandung kata 'Pemasukan' atau 'in'
+      // Perbaikan deteksi string untuk mengantisipasi teks "Pemasukan (Cash In)" dari form
       const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
 
       if (isPemasukan) {
@@ -36,26 +58,42 @@ export default function Dashboard() {
       }
     });
     
+    // Perhitungan Akumulasi Plafon Anggaran
+    let totalTarget = 0;
+    if (budgetsData) {
+      totalTarget = budgetsData.reduce((sum, b) => sum + Number(b.amount || b.nominal || 0), 0);
+    }
+
+    // Kalkulasi persentase pencapaian dana masuk terhadap target anggaran
+    let persen = 0;
+    if (totalTarget > 0) {
+      persen = Math.min(Math.round((m / totalTarget) * 100), 100);
+    }
+    
     setStats({ masuk: m, keluar: k, saldo: m - k });
     setTransactions(trans.slice(0, 5)); 
     setCategories({ in: catIn, out: catOut });
+    setTotalAnggaran(totalTarget);
+    setProgressPersen(persen);
   }
 
+  // Pilih tema aktif berdasarkan data state
+  const theme = THEMES[selectedTheme] || THEMES['Emerald Cyber (Hijau Hitam)'];
+
   return (
-    <div className="space-y-6 pb-24 px-4 pt-4 text-white">
+    <div className={`space-y-6 pb-24 px-4 pt-4 ${theme.text}`}>
       {/* 1. HEADER */}
       <header className="flex justify-between items-center">
         <div>
           <p className="text-slate-400 text-xs">Selamat Datang,</p>
           <h2 className="text-lg font-bold">Panitia Haul</h2>
         </div>
-        <Bell className="text-amber-500" size={20} />
+        <Bell className={theme.primary} size={20} />
       </header>
 
       {/* 2. KARTU SALDO */}
-      <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
+      <div className={`p-6 ${theme.card} rounded-3xl shadow-2xl`}>
         <p className="text-slate-400 text-sm">Total Kas Haul</p>
-        {/* Menggunakan tanda minus jika saldo negatif dan otomatis memformat rupiah dengan benar */}
         <h1 className="text-3xl font-black mt-1">
           {stats.saldo < 0 ? `- Rp ${Math.abs(stats.saldo).toLocaleString()}` : `Rp ${stats.saldo.toLocaleString()}`}
         </h1>
@@ -77,34 +115,63 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 3. RINCIAN KATEGORI */}
+      {/* 3. PROGRES TARGET ANGGARAN */}
+      <div className={`p-4 ${theme.card} rounded-2xl`}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <Target size={16} className={theme.primary} />
+            <p className="text-xs font-bold text-slate-300">Progres Kebutuhan Dana</p>
+          </div>
+          <p className="text-xs font-mono text-amber-400 font-bold">{progressPersen}%</p>
+        </div>
+        
+        <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
+          <div 
+            className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-500"
+            style={{ width: `${progressPersen}%` }}
+          ></div>
+        </div>
+        
+        <div className="flex justify-between items-center mt-2 text-[10px] text-slate-400">
+          <p>Terkumpul: <span className="text-emerald-400 font-bold">Rp {stats.masuk.toLocaleString()}</span></p>
+          <p>Target Plafon: <span className="text-slate-200 font-bold">Rp {totalAnggaran.toLocaleString()}</span></p>
+        </div>
+      </div>
+
+      {/* 4. RINCIAN KATEGORI */}
       <div>
-        <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><PieChart size={16} className="text-amber-500"/> Rincian</h2>
+        <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
+          <PieChart size={16} className={theme.primary}/> Rincian
+        </h2>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+          <div className={`p-4 ${theme.card} rounded-2xl`}>
             <p className="text-[10px] text-emerald-400 mb-2 uppercase">Masuk</p>
             {Object.entries(categories.in).map(([k, v]) => (
-              <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300"><span>{k}</span><span>Rp {v.toLocaleString()}</span></div>
+              <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
+                <span>{k}</span>
+                <span>Rp {v.toLocaleString()}</span>
+              </div>
             ))}
           </div>
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+          <div className={`p-4 ${theme.card} rounded-2xl`}>
             <p className="text-[10px] text-rose-400 mb-2 uppercase">Keluar</p>
             {Object.entries(categories.out).map(([k, v]) => (
-              <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300"><span>{k}</span><span>Rp {v.toLocaleString()}</span></div>
+              <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
+                <span>{k}</span>
+                <span>Rp {v.toLocaleString()}</span>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* 4. AKTIVITAS */}
+      {/* 5. AKTIVITAS TERAKHIR */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold">Aktivitas Terakhir</h2>
         {transactions.map((t, i) => {
-          // Menggunakan logika pengkondisian warna yang sama dengan perhitungan data di atas
           const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
-          
           return (
-            <div key={i} className="flex justify-between items-center p-3 bg-slate-900 border border-slate-800 rounded-xl">
+            <div key={i} className={`flex justify-between items-center p-3 ${theme.card} rounded-xl`}>
               <div>
                 <p className="text-xs font-bold">{t.note || t.category}</p>
                 <p className="text-[9px] text-slate-500">{new Date(t.transaction_date).toLocaleDateString()}</p>
