@@ -54,14 +54,30 @@ export default function DashboardPage() {
 
         trans.forEach((item) => {
           const nominal = parseFloat(item.amount || item.nominal) || 0;
+          
+          // Ambil teks indikator kategori dan tipe
           const rawType = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
-          const catName = item.category || item.kategori || 'Lain-lain';
+          const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
+          const catNameLower = catName.toLowerCase();
 
-          if (rawType === 'masuk' || rawType === 'pemasukan' || rawType === 'income') {
-            calcMasuk += nominal; listMasuk.push(item);
+          // SINKRONISASI LOGIKA PINTAR: Deteksi otomatis agar iuran kas / pemasangan tidak lari ke merah
+          if (
+            rawType === 'masuk' || 
+            rawType === 'pemasukan' || 
+            rawType === 'income' ||
+            catNameLower.includes('masuk') || 
+            catNameLower.includes('iuran') ||
+            catNameLower.includes('sumbangan') ||
+            catNameLower.includes('kas awal')
+          ) {
+            calcMasuk += nominal;
+            item.runtime_type = 'masuk'; // Dipakai untuk indikator visual tabel
+            listMasuk.push(item);
             incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
           } else {
-            calcKeluar += nominal; listKeluar.push(item);
+            calcKeluar += nominal;
+            item.runtime_type = 'keluar';
+            listKeluar.push(item);
             expenseMap[catName] = (expenseMap[catName] || 0) + nominal;
           }
         });
@@ -89,29 +105,29 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4.5 max-w-7xl mx-auto px-1 sm:px-0 pb-16">
+      
+      {/* 1. TEXT BANNER */}
       {announcement && (
         <div className="w-full bg-amber-500/10 border border-amber-500/30 py-2.5 px-3 rounded-xl overflow-hidden flex items-center">
           <div className="animate-marquee inline-block text-amber-400 font-bold text-[11px] tracking-wide uppercase font-mono">📢 {announcement}</div>
         </div>
       )}
 
-      {/* 2. KARTU SALDO + 3 DIAGRAM PIE SEJAJAR HORIZONTAL */}
+      {/* 2. KARTU SALDO UTAMA + 3 DIAGRAM PIE SEJAJAR HORIZONTAL */}
       <div className={`p-5 sm:p-7 ${style.card} border rounded-2xl sm:rounded-3xl shadow-xl space-y-6 relative overflow-hidden`}>
         <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
         
-        {/* Konten Grid Responsif */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          
-          {/* Sisi Kiri (4 Kolom): Nominal Besar Kas */}
+          {/* Sisi Kiri: Angka Sisa Kas */}
           <div className="lg:col-span-4 space-y-1 text-center lg:text-left">
             <p className={`${style.textMuted} font-mono text-[10px] sm:text-xs uppercase tracking-widest font-semibold`}>Total Sisa Kas Haul</p>
             <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight break-words">{formatRupiah(totals.total)}</h2>
           </div>
 
-          {/* Sisi Kanan (8 Kolom): 3 Pie Chart Berbaris Sejajar Horisontal */}
+          {/* Sisi Kanan: 3 Pie Chart Sejajar Horisontal */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
             
-            {/* Chart 1: Bagan Anggaran */}
+            {/* Chart 1: Bagan Plafon Anggaran */}
             <div className="flex items-center gap-3 bg-black/30 p-3 rounded-xl border border-white/5 justify-start">
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
@@ -123,7 +139,7 @@ export default function DashboardPage() {
               <div className="min-w-0"><p className="text-[10px] font-bold text-slate-300 uppercase truncate">Bagan Plafon</p><p className="text-[9px] font-mono text-amber-400 truncate font-semibold">{formatRupiah(progress.target)}</p></div>
             </div>
 
-            {/* Chart 2: Pemasukan */}
+            {/* Chart 2: Komposisi Pos Pemasukan (Hijau) */}
             <div className="flex items-center gap-3 bg-black/30 p-3 rounded-xl border border-white/5 justify-start">
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
@@ -135,7 +151,7 @@ export default function DashboardPage() {
               <div className="min-w-0"><p className="text-[10px] font-bold text-slate-300 uppercase truncate">Pemasukan</p><p className="text-[9px] font-mono text-emerald-400 truncate font-semibold">{formatRupiah(totals.masuk)}</p></div>
             </div>
 
-            {/* Chart 3: Pengeluaran */}
+            {/* Chart 3: Komposisi Pos Pengeluaran (Merah) */}
             <div className="flex items-center gap-3 bg-black/30 p-3 rounded-xl border border-white/5 justify-start">
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
@@ -150,7 +166,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Kotak Mini Border Bawah */}
+        {/* Info Border Bawah Kotak */}
         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-850">
           <div className={`p-2.5 ${style.innerBg} rounded-xl flex items-center gap-2`}>
             <div className="text-emerald-400 font-bold">🟢</div>
@@ -163,7 +179,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 3. PROGRESS TARGET CAPAIAN BAR */}
+      {/* 3. PROGRESS TARGET BAR */}
       <div className={`p-4 sm:p-5 ${style.card} border rounded-xl space-y-2`}>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider">🎯 Progres Capaian Target Plafon</h3>
@@ -174,7 +190,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. REKAP NOMINAL PER KATEGORI */}
+      {/* 4. REKAP NOMINAL PER KATEGORI (DIBAWAH PROGRESS BAR) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className={`p-4 ${style.card} border rounded-xl space-y-2`}><h4 className="text-[10px] font-black text-emerald-400 uppercase">📊 Rekap Pos Pemasukan</h4><div className="space-y-1.5">{catSummaryMasuk.map((c, i) => (<div key={i} className="flex justify-between text-[11px] border-b border-white/5 pb-1"><span className="text-slate-300">🏷️ {c.label}</span><span className="font-mono font-bold text-emerald-400">{formatRupiah(c.value)}</span></div>))}</div></div>
         <div className={`p-4 ${style.card} border rounded-xl space-y-2`}><h4 className="text-[10px] font-black text-rose-400 uppercase">📊 Rekap Pos Belanja</h4><div className="space-y-1.5">{catSummaryKeluar.map((c, i) => (<div key={i} className="flex justify-between text-[11px] border-b border-white/5 pb-1"><span className="text-slate-300">📦 {c.label}</span><span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span></div>))}</div></div>
@@ -182,8 +198,8 @@ export default function DashboardPage() {
 
       {/* 5. DATA RINCIAN MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className={`p-4 ${style.card} border-l-4 border-l-emerald-500 rounded-xl space-y-2`}><h5 className="text-[10px] font-black text-emerald-400 uppercase">Mutasi Masuk Terbaru</h5><div className="space-y-2">{rincianMasuk.map((t, i) => (<div key={i} className="flex justify-between text-xs"><div className="min-w-0 flex-1"><p className="text-slate-100 font-bold truncate">{t.description}</p><p className="text-[9px] text-slate-500 font-mono">{t.transaction_date}</p></div><p className="font-mono font-black text-emerald-400 shrink-0">+{formatRupiah(t.amount)}</p></div>))}</div></div>
-        <div className={`p-4 ${style.card} border-l-4 border-l-rose-500 rounded-xl space-y-2`}><h5 className="text-[10px] font-black text-rose-400 uppercase">Mutasi Keluar Terbaru</h5><div className="space-y-2">{rincianKeluar.map((t, i) => (<div key={i} className="flex justify-between text-xs"><div className="min-w-0 flex-1"><p className="text-slate-100 font-bold truncate">{t.description}</p><p className="text-[9px] text-slate-500 font-mono">{t.transaction_date}</p></div><p className="font-mono font-black text-rose-400 shrink-0">-{formatRupiah(t.amount)}</p></div>))}</div></div>
+        <div className={`p-4 ${style.card} border-l-4 border-l-emerald-500 rounded-xl space-y-2`}><h5 className="text-[10px] font-black text-emerald-400 uppercase">Mutasi Masuk Terbaru</h5><div className="space-y-2">{rincianMasuk.map((t, i) => (<div key={i} className="flex justify-between text-xs"><div className="min-w-0 flex-1"><p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p><p className="text-[9px] text-slate-500 font-mono">{t.transaction_date}</p></div><p className="font-mono font-black text-emerald-400 shrink-0">+{formatRupiah(t.amount)}</p></div>))}</div></div>
+        <div className={`p-4 ${style.card} border-l-4 border-l-rose-500 rounded-xl space-y-2`}><h5 className="text-[10px] font-black text-rose-400 uppercase">Mutasi Keluar Terbaru</h5><div className="space-y-2">{rincianKeluar.map((t, i) => (<div key={i} className="flex justify-between text-xs"><div className="min-w-0 flex-1"><p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p><p className="text-[9px] text-slate-500 font-mono">{t.transaction_date}</p></div><p className="font-mono font-black text-rose-400 shrink-0">-{formatRupiah(t.amount)}</p></div>))}</div></div>
       </div>
 
     </div>
