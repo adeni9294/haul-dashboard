@@ -47,7 +47,7 @@ export default function Dashboard() {
       let m = 0, k = 0;
       let catIn = {}, catOut = {};
       
-      // Hitung akumulasi masuk dan keluar transaksi
+      // Hitung transaksi masuk dan keluar
       trans.forEach(t => {
         const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
 
@@ -60,7 +60,7 @@ export default function Dashboard() {
         }
       });
       
-      // 3. HITUNG TOTAL TARGET ANGGARAN (Membaca kolom 'planned_amount' sesuai file anggaran Anda)
+      // 3. Hitung total anggaran dari kolom 'planned_amount'
       let totalTarget = 0;
       if (budgetsData && budgetsData.length > 0) {
         totalTarget = budgetsData.reduce((sum, b) => {
@@ -68,7 +68,7 @@ export default function Dashboard() {
         }, 0);
       }
 
-      // RUMUS: (Total Pemasukan / Total Target Anggaran) * 100%
+      // Rumus progres: (Pemasukan / Target Anggaran) * 100%
       let persen = 0;
       if (totalTarget > 0) {
         persen = Math.round((m / totalTarget) * 100);
@@ -76,7 +76,7 @@ export default function Dashboard() {
       
       setStats({ masuk: m, keluar: k, saldo: m - k });
       setTransactions(trans.slice(0, 5)); 
-      setCategories({ in: catIn, out: out: catOut });
+      setCategories({ in: catIn, out: catOut });
       setTotalAnggaran(totalTarget);
       setProgressPersen(persen);
     } catch (err) {
