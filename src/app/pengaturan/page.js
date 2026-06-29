@@ -11,7 +11,7 @@ export default function PengaturanPage() {
   const [bannerText, setBannerText] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
 
-  // State Upload Gambar
+  // State Unggah Gambar
   const [isUploading, setIsUploading] = useState(false);
 
   // State Ubah Sandi
@@ -19,7 +19,7 @@ export default function PengaturanPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // State Kategori
+  // State Kategori Pos Kas
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
 
@@ -48,13 +48,22 @@ export default function PengaturanPage() {
   };
 
   useEffect(() => {
-    setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
-    if (!localStorage.getItem('admin_password_haul')) {
-      localStorage.setItem('admin_password_haul', 'admin123');
-    }
+    validateAdminFromSupabase();
     loadSettings();
     loadCategories();
   }, []);
+
+  // Memastikan hak akses admin berdasarkan password session di database Supabase
+  async function validateAdminFromSupabase() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) {
+      setIsAdmin(false);
+      return;
+    }
+    const supabase = getSupabase();
+    const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+    setIsAdmin(!!isValid);
+  }
 
   async function loadSettings() {
     const supabase = getSupabase();
@@ -64,7 +73,7 @@ export default function PengaturanPage() {
       setOrgName(c.org_name || '');
       setAddress(c.address || '');
       setBankInfo(c.bank_info || '');
-      setBannerText(c.banner_text || c.banner_info || c.welcome_text || '');
+      setBannerText(c.announcement || c.banner_text || '');
       setLogoUrl(c.logo_url || '');
       setTheme(c.theme || 'default');
     }
@@ -76,6 +85,7 @@ export default function PengaturanPage() {
     if (data) setCategories(data);
   }
 
+  // UNGHAH FILE LOGO KE SUPABASE STORAGE BUCKET
   const handleUploadLogo = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -99,7 +109,7 @@ export default function PengaturanPage() {
         .getPublicUrl(filePath);
 
       setLogoUrl(publicUrl);
-      alert('📸 Logo berhasil diunggah! Jangan lupa klik Simpan Konfigurasi bawah.');
+      alert('📸 Gambar berhasil diunggah! Tekan tombol "Simpan Konfigurasi" di bawah untuk mengaktifkan.');
     } catch (error) {
       console.error(error);
       alert(`❌ Gagal mengunggah gambar: ${error.message || error}`);
@@ -108,47 +118,37 @@ export default function PengaturanPage() {
     }
   };
 
+  // SIMPAN CONFIG: Menggunakan RPC Terproteksi database (Melewati RLS secara aman)
   const handleSaveConfig = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     
     const supabase = getSupabase();
-    
-    // Mengambil kata sandi aktif yang tersimpan di browser admin (default: admin123)
     const savedPassword = localStorage.getItem('admin_password_haul') || 'admin123';
 
-    try {
-      // Memanggil fungsi RPC database yang melewati RLS secara aman menggunakan parameter sandi
-      const { error } = await supabase.rpc('update_settings_secure', {
-        p_password: savedPassword,
-        p_org_name: orgName,
-        p_address: address,
-        p_bank_info: bankInfo,
-        p_banner_text: bannerText,
-        p_logo_url: logoUrl,
-        p_theme: theme
-      });
-      
-      if (!error) {
-        alert('✅ Konfigurasi & Tema aplikasi berhasil disimpan dengan aman!');
-        window.location.reload();
-      } else {
-        console.error(error);
-        alert(`❌ Gagal menyimpan:\nPesan: ${error.message || error}\nDetail: ${error.details || '-'}`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert(`❌ Terjadi kesalahan sistem: ${err.message || err}`);
+    const { error } = await supabase.rpc('update_settings_secure', {
+      p_password: savedPassword,
+      p_org_name: orgName,
+      p_address: address,
+      p_bank_info: bankInfo,
+      p_banner_text: bannerText,
+      p_logo_url: logoUrl,
+      p_theme: theme
+    });
+    
+    if (!error) {
+      alert('✅ Konfigurasi & Pilihan tema berhasil disimpan dengan aman di Supabase!');
+      window.location.reload();
+    } else {
+      console.error(error);
+      alert(`❌ Gagal menyimpan:\nPesan: ${error.message || error}\nDetail: ${error.details || '-'}`);
     }
   };
 
-  const handleUpdatePassword = (e) => {
+  // GANTI PASSWORD ADMIN: Merubah data sandi absolut di dalam Supabase Cloud
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    const savedPassword = localStorage.getItem('admin_password_haul') || 'admin123';
 
-    if (currentPassword !== savedPassword) {
-      return alert('❌ Sandi lama yang Anda masukkan salah!');
-    }
     if (newPassword !== confirmPassword) {
       return alert('❌ Konfirmasi sandi baru tidak cocok!');
     }
@@ -156,11 +156,29 @@ export default function PengaturanPage() {
       return alert('❌ Sandi baru minimal harus 4 karakter!');
     }
 
-    localStorage.setItem('admin_password_haul', newPassword);
-    alert('🎯 Sandi Admin berhasil diubah!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    const supabase = getSupabase();
+
+    try {
+      const { error } = await supabase.rpc('change_admin_password_secure', {
+        p_old_password: currentPassword,
+        p_new_password: newPassword
+      });
+
+      if (!error) {
+        alert('🎯 Sukses! Sandi Admin resmi diperbarui di database Supabase.');
+        localStorage.setItem('admin_password_haul', newPassword);
+        
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        window.location.reload();
+      } else {
+        alert(`❌ Gagal mengubah sandi: ${error.message}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Terjadi kesalahan sistem: ${err.message || err}`);
+    }
   };
 
   const handleAddCategory = async (e) => {
@@ -191,7 +209,7 @@ export default function PengaturanPage() {
   if (!isAdmin) {
     return (
       <div className="p-6 text-center text-slate-400 text-xs font-mono">
-        🔒 Halaman ini dilindungi. Silakan login sebagai admin untuk mengakses pengaturan.
+        🔒 Halaman dilindungi. Silakan login sebagai admin di header atas untuk mengaktifkan setelan.
       </div>
     );
   }
@@ -240,20 +258,8 @@ export default function PengaturanPage() {
                 {logoUrl ? <img src={logoUrl} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-[9px] text-slate-600">NO LOGO</span>}
               </div>
               <div className="flex-1">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  id="upload-logo-input"
-                  onChange={handleUploadLogo} 
-                  disabled={isUploading}
-                  className="hidden" 
-                />
-                <label 
-                  htmlFor="upload-logo-input" 
-                  className={`inline-block px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${
-                    isUploading ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-                  }`}
-                >
+                <input type="file" accept="image/*" id="upload-logo-input" onChange={handleUploadLogo} disabled={isUploading} className="hidden" />
+                <label htmlFor="upload-logo-input" className={`inline-block px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${isUploading ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}>
                   {isUploading ? '⏳ Mengunggah...' : '📁 Pilih Gambar Logo'}
                 </label>
                 <p className="text-[9px] text-slate-500 mt-1 truncate max-w-[180px]">{logoUrl || 'Belum ada file dipilih'}</p>
@@ -297,7 +303,6 @@ export default function PengaturanPage() {
           </div>
           <div>
             <label className="block text-slate-400 mb-1">Konfirmasi Sandi Baru</label>
-            {/* PERBAIKAN TYPO: Sekarang menggunakan setConfirmPassword */}
             <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-center" />
           </div>
           <button type="submit" className="w-full py-2 bg-rose-600 text-white font-black uppercase rounded-xl hover:bg-rose-500 transition-all">
