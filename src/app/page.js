@@ -40,8 +40,8 @@ export default function DashboardPage() {
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
       }
 
-      // 2. PERBAIKAN UTAMA: Hitung total target plafon secara dinamis langsung dari penjumlahan isi tabel 'budgets'
-      const { data: budgetsData } = await supabase.from('budgets').select('amount, nominal');
+      // 2. HITUNG OTOMATIS DANA TARGET DARI TABEL BUDGETS
+      const { data: budgetsData } = await supabase.from('budgets').select('*');
       let totalPlafonDinamis = 0;
       if (budgetsData) {
         budgetsData.forEach(b => {
@@ -50,16 +50,10 @@ export default function DashboardPage() {
         });
       }
 
-      // 3. AMBIL DATA TRANSAKSI DENGAN CO-RELATION CATEGORIES
+      // 3. AMBIL DATA TRANSAKSI (Gunakan select biasa tanpa join yang merusak query)
       const { data: trans, error } = await supabase
         .from('transactions')
-        .select(`
-          *,
-          categories (
-            name,
-            type
-          )
-        `)
+        .select('*')
         .order('transaction_date', { ascending: false });
       
       if (!error && trans) {
@@ -70,19 +64,19 @@ export default function DashboardPage() {
         trans.forEach((item) => {
           const nominal = parseFloat(item.amount || item.nominal) || 0;
           
-          const officialType = item.categories?.type ? item.categories.type.toLowerCase().trim() : '';
-          const catName = item.categories?.name || item.category || item.kategori || 'Lain-lain';
+          const rawType = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
+          const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
           const catNameLower = catName.toLowerCase();
 
+          // KONDISI LOGIKA PINTAR UNTUK MEMISAHKAN MASUK / KELUAR
           if (
-            officialType === 'pemasukan' || 
-            officialType === 'masuk' ||
-            (!officialType && (
-              catNameLower.includes('masuk') || 
-              catNameLower.includes('iuran') ||
-              catNameLower.includes('sumbangan') ||
-              catNameLower.includes('kas awal')
-            ))
+            rawType === 'masuk' || 
+            rawType === 'pemasukan' || 
+            rawType === 'income' ||
+            catNameLower.includes('masuk') || 
+            catNameLower.includes('iuran') ||
+            catNameLower.includes('sumbangan') ||
+            catNameLower.includes('kas awal')
           ) {
             calcMasuk += nominal;
             item.runtime_type = 'masuk'; 
@@ -106,7 +100,7 @@ export default function DashboardPage() {
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
 
-        // Hitung persentase keterpakaian/pencapaian berdasarkan total dari tabel anggaran belanja
+        // Progress bar dihitung berdasarkan perbandingan total Pengeluaran nyata vs Total Target Anggaran (budgets)
         const hitungPersen = totalPlafonDinamis > 0 ? Math.min(Math.round((calcKeluar / totalPlafonDinamis) * 100), 100) : 0;
         setProgress({ percent: hitungPersen, current: calcKeluar, target: totalPlafonDinamis });
       }
@@ -150,7 +144,7 @@ export default function DashboardPage() {
           {/* Sisi Kanan: 3 Pie Chart Sejajar Horisontal */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
             
-            {/* Chart 1: Bagan Plafon Anggaran (Sekarang Otomatis dari jumlah tabel budgets) */}
+            {/* Chart 1: Bagan Plafon Anggaran */}
             <div className="flex items-center gap-3 bg-black/30 p-3 rounded-xl border border-white/5 justify-start">
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
