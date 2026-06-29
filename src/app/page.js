@@ -22,8 +22,9 @@ const THEME_STYLES = {
   'default': { card: 'bg-slate-900 border-slate-800 text-slate-100 shadow-2xl', innerBg: 'bg-slate-950 border border-slate-800/60', textMuted: 'text-slate-400', accentText: 'text-amber-500', progressBg: 'from-amber-600 to-amber-400', chartStroke: '#f59e0b' }
 };
 
-// Skema Warna Bagian Donut Chart (Persis seperti variasi infografis di gambar.jpg)
-const PIE_COLORS = ['#ff0055', '#db52de', '#9394f5', '#7dd3fc', '#c7f7ff'];
+// Palet warna infografis premium (Hijau/Biru untuk Pemasukan, Merah/Oranye untuk Pengeluaran)
+const INCOME_COLORS = ['#10b981', '#34d399', '#059669', '#6ee7b7', '#a7f3d0'];
+const EXPENSE_COLORS = ['#f43f5e', '#fb7185', '#e11d48', '#fda4af', '#fecdd3'];
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -34,8 +35,9 @@ export default function DashboardPage() {
   const [announcement, setAnnouncement] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
   
-  // State untuk data olahan infografis kategori kas masuk
-  const [chartData, setChartData] = useState([]);
+  // State terpisah untuk diagram Masuk dan Keluar
+  const [incomeChart, setIncomeChart] = useState([]);
+  const [expenseChart, setExpenseChart] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -68,39 +70,50 @@ export default function DashboardPage() {
         let calcKeluar = 0;
         const listMasuk = [];
         const listKeluar = [];
-        const categoryMap = {};
+        const incomeMap = {};
+        const expenseMap = {};
 
         trans.forEach((item) => {
           const nominal = parseFloat(item.amount || item.nominal) || 0;
           const rawType = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
+          const catName = item.category || item.kategori || 'Lain-lain';
 
           if (rawType === 'masuk' || rawType === 'pemasukan' || rawType === 'income') {
             calcMasuk += nominal;
             listMasuk.push(item);
-            
-            // Pengelompokan kategori untuk pie chart
-            const catName = item.category || item.description || 'Iuran Umum';
-            categoryMap[catName] = (categoryMap[catName] || 0) + nominal;
-          } else {
+            incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
+          } else if (rawType === 'keluar' || rawType === 'pengeluaran' || rawType === 'expense') {
             calcKeluar += nominal;
             listKeluar.push(item);
+            expenseMap[catName] = (expenseMap[catName] || 0) + nominal;
+          } else {
+            if (nominal >= 0) {
+              calcMasuk += nominal;
+              listMasuk.push(item);
+              incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
+            } else {
+              const absNominal = Math.abs(nominal);
+              calcKeluar += absNominal;
+              listKeluar.push(item);
+              expenseMap[catName] = (expenseMap[catName] || 0) + absNominal;
+            }
           }
         });
 
-        // Konversi pemetaan kategori ke array persentase untuk Donut Chart
-        let parsedChart = Object.keys(categoryMap).map((key) => ({
-          label: key,
-          value: categoryMap[key]
-        })).sort((a, b) => b.value - a.value);
-
+        // Pengolahan data chart Pemasukan
+        let parsedIncome = Object.keys(incomeMap).map(key => ({ label: key, value: incomeMap[key] })).sort((a,b) => b.value - a.value);
         if (calcMasuk > 0) {
-          parsedChart = parsedChart.map((item) => ({
-            ...item,
-            percentage: parseFloat(((item.value / calcMasuk) * 100).toFixed(1))
-          }));
+          parsedIncome = parsedIncome.map(item => ({ ...item, percentage: parseFloat(((item.value / calcMasuk) * 100).toFixed(1)) }));
+        }
+
+        // Pengolahan data chart Pengeluaran
+        let parsedExpense = Object.keys(expenseMap).map(key => ({ label: key, value: expenseMap[key] })).sort((a,b) => b.value - a.value);
+        if (calcKeluar > 0) {
+          parsedExpense = parsedExpense.map(item => ({ ...item, percentage: parseFloat(((item.value / calcKeluar) * 100).toFixed(1)) }));
         }
         
-        setChartData(parsedChart.slice(0, 5)); // Ambil top 5 kategori iuran terbesar
+        setIncomeChart(parsedIncome.slice(0, 5));
+        setExpenseChart(parsedExpense.slice(0, 5));
         setTotals({ total: calcMasuk - calcKeluar, masuk: calcMasuk, keluar: calcKeluar });
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
@@ -120,17 +133,14 @@ export default function DashboardPage() {
   };
 
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
-
-  // Variabel bantu kalkulasi keliling lingkaran SVG Donut Chart ($2 \cdot \pi \cdot r$)
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
-  let accumulatedOffset = 0;
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3 font-mono text-xs text-slate-400">
         <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        <p>Menyiapkan Infografis Keuangan...</p>
+        <p>Memisahkan Bagan Alokasi Pos Kas...</p>
       </div>
     );
   }
@@ -138,7 +148,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4.5 max-w-7xl mx-auto px-1 sm:px-0 pb-16">
       
-      {/* 1. TEXT BANNER */}
+      {/* 1. BANNER TEXT */}
       {announcement && (
         <div className="w-full bg-amber-500/10 border border-amber-500/30 py-2.5 px-3 rounded-xl overflow-hidden flex items-center">
           <div className="flex whitespace-nowrap min-w-full relative">
@@ -149,7 +159,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2. KARTU UTAMA TOTAL KAS */}
+      {/* 2. KARTU UTAMA TOTAL SISA KAS */}
       <div className={`p-5 sm:p-8 ${style.card} border rounded-2xl sm:rounded-3xl space-y-5 relative overflow-hidden`}>
         <div className="flex justify-between items-end gap-2">
           <div className="space-y-0.5">
@@ -187,68 +197,91 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 3. MODEL INFOGRAFIS DONUT CHART (SESUAI REQUEST GAMBAR.JPG) */}
-      <div className={`p-5 ${style.card} border rounded-2xl shadow-xl space-y-4`}>
-        <div className="border-b border-white/5 pb-2">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-200">📊 Pie Chart Infographics</h3>
-          <p className={`text-[10px] ${style.textMuted} font-medium mt-0.5`}>Komposisi alokasi sumber dana masuk panitia haul</p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-around gap-6 pt-2">
-          {/* Grafik Lingkaran SVG Donut */}
-          <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
-              <circle cx="70" cy="70" r={radius} stroke="#1e293b" strokeWidth="20" fill="transparent" />
-              {chartData.map((item, index) => {
-                const strokeLength = (item.percentage / 100) * circumference;
-                const strokeOffset = circumference - strokeLength + accumulatedOffset;
-                accumulatedOffset -= strokeLength;
-                const color = PIE_COLORS[index % PIE_COLORS.length];
-
-                return (
-                  <circle
-                    key={index}
-                    cx="70"
-                    cy="70"
-                    r={radius}
-                    stroke={color}
-                    strokeWidth="20"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeOffset}
-                    strokeLinecap="flat"
-                    fill="transparent"
-                    className="transition-all duration-500 hover:opacity-80 cursor-pointer"
-                  />
-                );
-              })}
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400">Total In</span>
-              <span className="text-xs font-black text-white mt-0.5">{chartData.length}%</span>
+      {/* 3. MODEL INFOGRAFIS DONUT CHART GANDA (PEMASUKAN VS PENGELUARAN SINKRON) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
+        {/* BAGAN PEMASUKAN */}
+        <div className={`p-5 ${style.card} border rounded-2xl shadow-xl space-y-4`}>
+          <div className="border-b border-white/5 pb-2">
+            <h3 className="text-xs font-black uppercase tracking-wider text-emerald-400">🟢 Komposisi Pemasukan</h3>
+            <p className={`text-[10px] ${style.textMuted} font-medium mt-0.5`}>Persentase kontribusi berdasarkan pos kategori masuk</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-around gap-4 pt-1">
+            <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
+                <circle cx="70" cy="70" r={radius} stroke="#1e293b" strokeWidth="18" fill="transparent" />
+                {(() => {
+                  let accumulatedOffset = 0;
+                  return incomeChart.map((item, index) => {
+                    const strokeLength = (item.percentage / 100) * circumference;
+                    const strokeOffset = circumference - strokeLength + accumulatedOffset;
+                    accumulatedOffset -= strokeLength;
+                    return (
+                      <circle key={index} cx="70" cy="70" r={radius} stroke={INCOME_COLORS[index % INCOME_COLORS.length]} strokeWidth="18" strokeDasharray={circumference} strokeDashoffset={strokeOffset} fill="transparent" />
+                    );
+                  });
+                })()}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[9px] uppercase font-mono tracking-wider text-slate-400">Masuk</span>
+                <span className="text-xs font-black text-emerald-400 mt-0.5">{incomeChart.length} Pos</span>
+              </div>
+            </div>
+            <div className="flex-1 w-full space-y-2">
+              {incomeChart.map((item, index) => (
+                <div key={index} className="flex items-center justify-between text-[11px] font-medium border-b border-white/5 pb-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="w-2.5 h-2.5 rounded shrink-0" style={{ backgroundColor: INCOME_COLORS[index % INCOME_COLORS.length] }}></span>
+                    <span className="text-slate-200 truncate uppercase tracking-wide">{item.label}</span>
+                  </div>
+                  <span className="font-mono shrink-0 font-bold text-emerald-400">{item.percentage}%</span>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Kolom Indikator Keterangan Teks (Persis Seperti Sisi Kiri gambar.jpg) */}
-          <div className="flex-1 w-full space-y-2.5">
-            {chartData.map((item, index) => {
-              const color = PIE_COLORS[index % PIE_COLORS.length];
-              return (
-                <div key={index} className="flex items-center justify-between text-[11px] font-medium border-b border-white/5 pb-1.5">
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <span className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: color }}></span>
-                    <span className="text-slate-200 truncate pr-2 uppercase tracking-wide">{item.label}</span>
+        {/* BAGAN PENGELUARAN */}
+        <div className={`p-5 ${style.card} border rounded-2xl shadow-xl space-y-4`}>
+          <div className="border-b border-white/5 pb-2">
+            <h3 className="text-xs font-black uppercase tracking-wider text-rose-400">🔴 Komposisi Pengeluaran</h3>
+            <p className={`text-[10px] ${style.textMuted} font-medium mt-0.5`}>Persentase alokasi belanja berdasarkan pos belanja keluar</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-around gap-4 pt-1">
+            <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
+                <circle cx="70" cy="70" r={radius} stroke="#1e293b" strokeWidth="18" fill="transparent" />
+                {(() => {
+                  let accumulatedOffset = 0;
+                  return expenseChart.map((item, index) => {
+                    const strokeLength = (item.percentage / 100) * circumference;
+                    const strokeOffset = circumference - strokeLength + accumulatedOffset;
+                    accumulatedOffset -= strokeLength;
+                    return (
+                      <circle key={index} cx="70" cy="70" r={radius} stroke={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} strokeWidth="18" strokeDasharray={circumference} strokeDashoffset={strokeOffset} fill="transparent" />
+                    );
+                  });
+                })()}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[9px] uppercase font-mono tracking-wider text-slate-400">Keluar</span>
+                <span className="text-xs font-black text-rose-400 mt-0.5">{expenseChart.length} Pos</span>
+              </div>
+            </div>
+            <div className="flex-1 w-full space-y-2">
+              {expenseChart.map((item, index) => (
+                <div key={index} className="flex items-center justify-between text-[11px] font-medium border-b border-white/5 pb-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="w-2.5 h-2.5 rounded shrink-0" style={{ backgroundColor: EXPENSE_COLORS[index % EXPENSE_COLORS.length] }}></span>
+                    <span className="text-slate-200 truncate uppercase tracking-wide">{item.label}</span>
                   </div>
-                  <div className="text-right font-mono shrink-0 font-bold" style={{ color: color }}>
-                    {item.percentage}%
-                  </div>
+                  <span className="font-mono shrink-0 font-bold text-rose-400">{item.percentage}%</span>
                 </div>
-              );
-            })}
-            {chartData.length === 0 && (
-              <p className={`text-[10px] ${style.textMuted} text-center font-mono py-6`}>Menunggu input transaksi untuk membentuk bagan...</p>
-            )}
+              ))}
+            </div>
           </div>
         </div>
+
       </div>
 
       {/* 4. PROGRES TARGET PLAFON */}
