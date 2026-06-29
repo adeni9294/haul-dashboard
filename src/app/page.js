@@ -3,50 +3,49 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { ArrowUpCircle, ArrowDownCircle, Bell, PieChart, Target } from 'lucide-react';
 
-// Pemetaan kelas CSS berdasarkan pilihan tema
-const THEMES = {
-  'Emerald Cyber (Hijau Hitam)': {
-    bg: 'bg-slate-950',
-    card: 'bg-slate-900 border-slate-800',
-    text: 'text-white',
-    accent: 'text-emerald-400',
-    primary: 'text-amber-500',
-    inputBg: 'bg-slate-900 border-slate-800'
-  }
-};
-
 export default function Dashboard() {
   const [stats, setStats] = useState({ masuk: 0, keluar: 0, saldo: 0 });
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState({ in: {}, out: {} });
+  
+  // State untuk melacak Target Anggaran
   const [totalAnggaran, setTotalAnggaran] = useState(0);
   const [progressPersen, setProgressPersen] = useState(0);
-  
-  // State manajemen tema aplikasi
-  const [selectedTheme, setSelectedTheme] = useState('Emerald Cyber (Hijau Hitam)');
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   async function loadDashboardData() {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL, 
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
     
-    // 1. Ambil data transaksi & data anggaran secara bersamaan
-    const { data: trans } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
-    const { data: budgetsData } = await supabase.from('budgets').select('*');
+    // 1. Ambil data dari tabel transaksi
+    const { data: trans } = await supabase
+      .from('transactions')
+      .select('*')
+      .order('transaction_date', { ascending: false });
     
-    // Opsi tambahan jika Anda menyimpan konfigurasi tema di tabel terpisah (misal: 'settings')
-    // const { data: settings } = await supabase.from('settings').select('*').single();
-    // if (settings?.theme) setSelectedTheme(settings.theme);
-
+    // 2. Ambil data dari tabel anggaran
+    // ⚠️ CATATAN: Jika nama tabel Anda di Supabase adalah 'anggaran', ganti 'budgets' menjadi 'anggaran'
+    const { data: budgetsData, error: budgetError } = await supabase
+      .from('budgets')
+      .select('*');
+    
+    if (budgetError) {
+      console.error("Gagal mengambil data anggaran:", budgetError);
+    }
+    
     if (!trans) return;
 
     let m = 0, k = 0;
     let catIn = {}, catOut = {};
     
+    // Proses perhitungan data transaksi
     trans.forEach(t => {
-      // Perbaikan deteksi string untuk mengantisipasi teks "Pemasukan (Cash In)" dari form
+      // Menangani jika data di database berupa string 'in' atau mengandung kata 'pemasukan'
       const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
 
       if (isPemasukan) {
@@ -58,13 +57,17 @@ export default function Dashboard() {
       }
     });
     
-    // Perhitungan Akumulasi Plafon Anggaran
+    // Proses perhitungan total target dari tabel anggaran
     let totalTarget = 0;
-    if (budgetsData) {
-      totalTarget = budgetsData.reduce((sum, b) => sum + Number(b.amount || b.nominal || 0), 0);
+    if (budgetsData && budgetsData.length > 0) {
+      totalTarget = budgetsData.reduce((sum, b) => {
+        // Toleransi nama kolom nominal: mendeteksi 'amount', 'nominal', atau 'nominal_alokasi'
+        const nilaiNominal = b.amount || b.nominal || b.nominal_alokasi || 0;
+        return sum + Number(nilaiNominal);
+      }, 0);
     }
 
-    // Kalkulasi persentase pencapaian dana masuk terhadap target anggaran
+    // Hitung persentase progres kebutuhan dana (Pemasukan saat ini / Total Target Anggaran)
     let persen = 0;
     if (totalTarget > 0) {
       persen = Math.min(Math.round((m / totalTarget) * 100), 100);
@@ -77,22 +80,19 @@ export default function Dashboard() {
     setProgressPersen(persen);
   }
 
-  // Pilih tema aktif berdasarkan data state
-  const theme = THEMES[selectedTheme] || THEMES['Emerald Cyber (Hijau Hitam)'];
-
   return (
-    <div className={`space-y-6 pb-24 px-4 pt-4 ${theme.text}`}>
+    <div className="space-y-6 pb-24 px-4 pt-4 text-white">
       {/* 1. HEADER */}
       <header className="flex justify-between items-center">
         <div>
           <p className="text-slate-400 text-xs">Selamat Datang,</p>
           <h2 className="text-lg font-bold">Panitia Haul</h2>
         </div>
-        <Bell className={theme.primary} size={20} />
+        <Bell className="text-amber-500" size={20} />
       </header>
 
       {/* 2. KARTU SALDO */}
-      <div className={`p-6 ${theme.card} rounded-3xl shadow-2xl`}>
+      <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
         <p className="text-slate-400 text-sm">Total Kas Haul</p>
         <h1 className="text-3xl font-black mt-1">
           {stats.saldo < 0 ? `- Rp ${Math.abs(stats.saldo).toLocaleString()}` : `Rp ${stats.saldo.toLocaleString()}`}
@@ -116,18 +116,19 @@ export default function Dashboard() {
       </div>
 
       {/* 3. PROGRES TARGET ANGGARAN */}
-      <div className={`p-4 ${theme.card} rounded-2xl`}>
+      <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
-            <Target size={16} className={theme.primary} />
-            <p className="text-xs font-bold text-slate-300">Progres Kebutuhan Dana</p>
+            <Target size={16} className="text-amber-500" />
+            <p className="text-xs font-bold text-slate-300">Progres Target</p>
           </div>
           <p className="text-xs font-mono text-amber-400 font-bold">{progressPersen}%</p>
         </div>
         
+        {/* Progress Bar Line */}
         <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
           <div 
-            className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-500"
+            className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-300"
             style={{ width: `${progressPersen}%` }}
           ></div>
         </div>
@@ -141,10 +142,10 @@ export default function Dashboard() {
       {/* 4. RINCIAN KATEGORI */}
       <div>
         <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-          <PieChart size={16} className={theme.primary}/> Rincian
+          <PieChart size={16} className="text-amber-500"/> Rincian
         </h2>
         <div className="grid grid-cols-2 gap-4">
-          <div className={`p-4 ${theme.card} rounded-2xl`}>
+          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
             <p className="text-[10px] text-emerald-400 mb-2 uppercase">Masuk</p>
             {Object.entries(categories.in).map(([k, v]) => (
               <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
@@ -153,7 +154,7 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-          <div className={`p-4 ${theme.card} rounded-2xl`}>
+          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
             <p className="text-[10px] text-rose-400 mb-2 uppercase">Keluar</p>
             {Object.entries(categories.out).map(([k, v]) => (
               <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
@@ -170,19 +171,3 @@ export default function Dashboard() {
         <h2 className="text-sm font-bold">Aktivitas Terakhir</h2>
         {transactions.map((t, i) => {
           const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
-          return (
-            <div key={i} className={`flex justify-between items-center p-3 ${theme.card} rounded-xl`}>
-              <div>
-                <p className="text-xs font-bold">{t.note || t.category}</p>
-                <p className="text-[9px] text-slate-500">{new Date(t.transaction_date).toLocaleDateString()}</p>
-              </div>
-              <p className={`text-xs font-bold ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isPemasukan ? '+' : '-'} Rp {t.amount.toLocaleString()}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
