@@ -3,158 +3,194 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 export default function TransaksiPage() {
-  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [allTransactions, setAllTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [type, setType] = useState('pemasukan');
-  const [category, setCategory] = useState('');
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  // Filter & Form Input State
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [catFilter, setCatFilter] = useState('all');
 
-  useEffect(() => {
-    setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
-    setDate(new Date().toISOString().split('T')[0]);
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const { data: trx } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
-    if (trx) setTransactions(trx);
-    const { data: cat } = await supabase.from('categories').select('name').order('name');
-    if (cat && cat.length > 0) {
-      setCategories(cat);
-      setCategory(cat[0].name);
-    }
+    try {
+      setLoading(true);
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+      
+      // Ambil metadata KOP untuk cetak dokumen
+      const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
+      if (setDb && setDb.length > 0) {
+        setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
+      }
+
+      const { data: catDb } = await supabase.from('categories').select('*');
+      if (catDb) setCategories(catDb);
+
+      const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+      if (transDb) setAllTransactions(transDb);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
-    if (!amount || !category) return;
+  // Pengelompokan Kategori untuk Dokumen LPJ Formal
+  const lpjMasuk = {}; const lpjKeluar = {};
+  let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
-    const currentEditingId = editingId;
-    const payload = {
-      type,
-      category,
-      amount: Number(amount),
-      description: note.trim(),
-      created_at: date ? new Date(date).toISOString() : new Date().toISOString()
-    };
+  allTransactions.forEach(item => {
+    const nominal = parseFloat(item.amount || item.nominal) || 0;
+    const type = (item.type || '').toLowerCase().trim();
+    const cat = item.category || 'Lain-lain';
 
-    try {
-      if (currentEditingId) {
-        const { error } = await supabase.from('transactions').update(payload).eq('id', currentEditingId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('transactions').insert([payload]);
-        if (error) throw error;
-      }
-      setAmount(''); setNote(''); setEditingId(null);
-      await loadData();
-      alert('Data transaksi buku besar sukses disimpan!');
-    } catch (err) { alert(err.message); }
-  };
-
-  const handleEdit = (t) => {
-    setEditingId(t.id);
-    setType(t.type === 'pemasukan' || t.type === 'masuk' ? 'pemasukan' : 'pengeluaran');
-    setCategory(t.category);
-    setAmount(t.amount);
-    setNote(t.description || t.note || '');
-    if (t.created_at) setDate(new Date(t.created_at).toISOString().split('T')[0]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDelete = async (id) => {
-    if (!isAdmin) return;
-    if (confirm('Hapus transaksi ini?')) {
-      await supabase.from('transactions').delete().eq('id', id);
-      await loadData();
+    if (type === 'masuk') {
+      totalLpjMasuk += nominal;
+      if (!lpjMasuk[cat]) lpjMasuk[cat] = [];
+      lpjMasuk[cat].push(item);
+    } else {
+      totalLpjKeluar += nominal;
+      if (!lpjKeluar[cat]) lpjKeluar[cat] = [];
+      lpjKeluar[cat].push(item);
     }
-  };
+  });
+
+  const triggerCetakLpj = () => { window.print(); };
+  const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+
+  // Filter data untuk preview di layar browser biasa
+  const filteredTrans = allTransactions.filter(t => {
+    const matchSearch = (t.description || '').toLowerCase().includes(search.toLowerCase());
+    const matchType = typeFilter === 'all' || t.type === typeFilter;
+    const matchCat = catFilter === 'all' || t.category === catFilter;
+    return matchSearch && matchType && matchCat;
+  });
+
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat Manajer Kas Buku Besar...</div>;
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-bold text-white">💰 Jurnal Mutasi & Buku Kas</h2>
-        <p className="text-xs text-slate-400">Kelola entri data finansial, pembukuan donasi, iuran warga, dan pengeluaran operasional.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
-        {isAdmin ? (
-          <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 h-fit shadow-xl">
-            <h3 className="text-xs font-bold text-amber-500 uppercase tracking-wider">{editingId ? '🔄 Koreksi Transaksi' : '➕ Catat Mutasi Kas'}</h3>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Tanggal Transaksi</label>
-              <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Jenis Kas Arus</label>
-              <select value={type} onChange={(e) => setType(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
-                <option value="pemasukan">📥 Pemasukan (Cash In)</option>
-                <option value="pengeluaran">📤 Pengeluaran (Cash Out)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Pilih Kategori Pos</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
-                {categories.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Nominal Rupiah (Rp)</label>
-              <input type="number" required placeholder="Contoh: 150000" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Keterangan Catatan Tambahan</label>
-              <input type="text" placeholder="Catatan ringkas..." value={note} onChange={(e) => setNote(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
-            </div>
-            <button type="submit" className="w-full py-2.5 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl shadow-md transition-all">
-              {editingId ? '💾 Perbarui Kas' : 'Simpan Kas'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setAmount(''); setNote(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl">Batal Edit</button>
-            )}
-          </form>
-        ) : (
-          <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
-            <p className="text-xs text-slate-400 font-medium">💡 Mode Publik (Lihat Saja).</p>
-            <p className="text-[10px] text-slate-600">Form pengisian mutasi kas dikunci. Hubungi admin atau klik "Login Admin" di kanan atas layar untuk memodifikasi laporan pembukuan ini.</p>
+    <div className="space-y-4 max-w-7xl mx-auto pb-12 text-xs">
+      
+      {/* ================= AREA ELEMEN LAYAR UTAMA (TIDAK IKUT DICETAK) ================= */}
+      <div className="print:hidden space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <div>
+            <h2 className="text-sm font-black text-white uppercase tracking-wider">💰 Manajer Buku Kas Transaksi</h2>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Total data: {allTransactions.length} baris riwayat kas</p>
           </div>
-        )}
+          {/* Tombol Cetak Dokumen LPJ */}
+          <button onClick={triggerCetakLpj} className="px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all shadow-md">
+            🖨️ Cetak Dokumen LPJ (PDF)
+          </button>
+        </div>
 
-        <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-4 shadow-md">
-          <h3 className="text-xs font-bold text-slate-300 uppercase">📋 Log Jurnal Arus Kas Seluruh Keuangan ({transactions.length})</h3>
-          <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-            {transactions.map((t) => {
-              const checkMasuk = String(t.type).toLowerCase() === 'pemasukan' || String(t.type).toLowerCase() === 'masuk';
-              return (
-                <div key={t.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                  <div>
-                    <p className="font-bold text-slate-200">{t.category} <span className="text-[10px] text-slate-500 font-mono">({t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID') : '-'})</span></p>
-                    <p className="text-slate-400 text-[11px] mt-0.5">📝 {t.description || t.note || '-'}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`font-mono font-bold mr-2 ${checkMasuk ? 'text-emerald-400' : 'text-rose-400'}`}>{checkMasuk ? '+' : '-'} Rp {Number(t.amount).toLocaleString('id-ID')}</span>
-                    {isAdmin && (
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => handleEdit(t)} className="text-amber-500 font-bold hover:underline">Edit</button>
-                        <button type="button" onClick={() => handleDelete(t.id)} className="text-rose-400 font-bold hover:underline">Hapus</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* Panel Filter Navigasi Layar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 border border-slate-800/60 p-3 rounded-xl">
+          <input type="text" placeholder="Cari keterangan..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white" />
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white">
+            <option value="all">Semua Jenis Alur</option>
+            <option value="masuk">🟢 Hanya Kas Masuk</option>
+            <option value="keluar">🔴 Hanya Kas Keluar</option>
+          </select>
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white">
+            <option value="all">Semua Kategori Pos</option>
+            {categories.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
+          </select>
+        </div>
+
+        {/* Tabel Preview di Layar */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[10px]">
+                <th className="p-3">Tanggal</th><th className="p-3">Kategori</th><th className="p-3">Keterangan</th><th className="p-3 text-right">Nominal</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/40 text-slate-200 font-medium">
+              {filteredTrans.map((t, idx) => (
+                <tr key={idx} className="hover:bg-slate-950/20">
+                  <td className="p-3 font-mono text-slate-400">{t.transaction_date}</td>
+                  <td className="p-3"><span className="px-2 py-0.5 bg-slate-950 rounded border border-white/5 text-[10px] uppercase font-mono">{t.category}</span></td>
+                  <td className="p-3 truncate max-w-xs">{t.description}</td>
+                  <td className={`p-3 text-right font-mono font-bold ${t.type === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}`}>{t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
+
+
+      {/* ================= AREA STRUKTUR STRUK LPJ FORMAL A4 (HANYA MUNCUL SAAT DI-PRINT) ================= */}
+      <div className="hidden print:block bg-white text-black p-8 font-serif leading-relaxed text-xs">
+        
+        {/* KOP SURAT FORMAL */}
+        <div className="text-center border-b-4 border-double border-black pb-4 mb-6 space-y-1">
+          <h1 className="text-lg font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
+          <p className="text-[10px] font-sans italic text-gray-600">{metaOrg.address}</p>
+          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN KAS</h2>
+        </div>
+
+        {/* RINGKASAN SALDO BUKU BESAR */}
+        <div className="grid grid-cols-3 gap-2 font-sans border border-black p-3 rounded mb-6 text-[10px]">
+          <div><p className="text-gray-500 uppercase font-bold">Total Pemasukan</p><p className="text-sm font-bold text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
+          <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran</p><p className="text-sm font-bold text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
+          <div><p className="text-gray-500 uppercase font-bold">Sisa Kas Bersih</p><p className="text-sm font-bold text-blue-800 underline">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
+        </div>
+
+        {/* RINCIAN MASUK BY KATEGORI */}
+        <div className="space-y-4">
+          <h3 className="font-sans font-bold uppercase text-xs border-b border-black pb-1 text-green-800">🟢 RINCIAN REALISASI PEMASUKAN</h3>
+          {Object.keys(lpjMasuk).map((catName, idx) => (
+            <div key={idx} className="space-y-1">
+              <h4 className="font-sans font-bold text-[11px] text-gray-700 uppercase pl-1 bg-gray-100">Pos Kategori: {catName}</h4>
+              <table className="w-full text-left border-collapse text-[10px]">
+                <thead>
+                  <tr className="border-b border-gray-400 font-bold italic text-gray-600"><th className="py-1 w-24">Tanggal</th><th className="py-1">Uraian Keterangan</th><th className="py-1 text-right w-36">Jumlah</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {lpjMasuk[catName].map((t, i) => (
+                    <tr key={i}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+
+        {/* RINCIAN KELUAR BY KATEGORI */}
+        <div className="space-y-4 pt-6">
+          <h3 className="font-sans font-bold uppercase text-xs border-b border-black pb-1 text-red-800">🔴 RINCIAN REALISASI PENGELUARAN</h3>
+          {Object.keys(lpjKeluar).map((catName, idx) => (
+            <div key={idx} className="space-y-1">
+              <h4 className="font-sans font-bold text-[11px] text-gray-700 uppercase pl-1 bg-gray-100">Pos Kategori: {catName}</h4>
+              <table className="w-full text-left border-collapse text-[10px]">
+                <thead>
+                  <tr className="border-b border-gray-400 font-bold italic text-gray-600"><th className="py-1 w-24">Tanggal</th><th className="py-1">Uraian Keterangan</th><th className="py-1 text-right w-36">Jumlah</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {lpjKeluar[catName].map((t, i) => (
+                    <tr key={i}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+
+        {/* KOLOM TANDA TANGAN FORMAL */}
+        <div className="mt-12 grid grid-cols-2 text-center font-sans text-[10px] pt-12">
+          <div className="space-y-14">
+            <p>Mengetahui,<br /><b className="uppercase">Ketua Panitia Haul</b></p>
+            <p className="underline font-bold">( ........................................ )</p>
+          </div>
+          <div className="space-y-14">
+            <p>Cirebon, {new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}<br /><b className="uppercase">Bendahara Umum</b></p>
+            <p className="underline font-bold">( ........................................ )</p>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
 }
