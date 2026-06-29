@@ -22,13 +22,23 @@ export default function DashboardPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
       );
 
-      // 1. Ambil Data Pengaturan Banner
+      // 1. Ambil Data Pengaturan & Target Plafon dari Database
+      let targetDana = 15300000; // Default fallback
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
+        
+        // Membaca target dari target_notes atau target_amount jika ada
+        const dbTarget = settingsData[0].target_notes || settingsData[0].target_amount;
+        if (dbTarget) {
+          const parsingTarget = parseInt(dbTarget);
+          if (!isNaN(parsingTarget) && parsingTarget > 0) {
+            targetDana = parsingTarget;
+          }
+        }
       }
 
-      // 2. Ambil Data Transaksi (MENGGUNAKAN LOGIKA ASLI KODE LAMA ANDA)
+      // 2. Ambil Data Transaksi
       const { data: trans, error } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       
       if (!error && trans) {
@@ -37,17 +47,28 @@ export default function DashboardPage() {
         const listMasuk = [];
         const listKeluar = [];
 
-        // KEMBALI KE LOGIKA LAMA: Membaca kriteria jenis transaksi dari database Anda
         trans.forEach((item) => {
-          const nominal = parseFloat(item.amount) || 0;
+          const nominal = parseFloat(item.amount || item.nominal) || 0;
           
-          // Deteksi Kas Masuk vs Kas Keluar sesuai struktur lama
-          if (item.type === 'masuk' || item.jenis === 'masuk' || item.category_type === 'masuk') {
+          // Ambil nilai type / jenis / category_type dan ubah ke huruf kecil semua agar aman
+          const rawType = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
+
+          // Cek kecocokan jenis transaksi secara fleksibel
+          if (rawType === 'masuk' || rawType === 'pemasukan' || rawType === 'income') {
             calcMasuk += nominal;
             listMasuk.push(item);
-          } else {
+          } else if (rawType === 'keluar' || rawType === 'pengeluaran' || rawType === 'expense') {
             calcKeluar += nominal;
             listKeluar.push(item);
+          } else {
+            // Fallback cadangan: Jika tidak terdeteksi tapi nominal positif masuk ke "masuk"
+            if (nominal >= 0) {
+              calcMasuk += nominal;
+              listMasuk.push(item);
+            } else {
+              calcKeluar += Math.abs(nominal);
+              listKeluar.push(item);
+            }
           }
         });
 
@@ -56,8 +77,7 @@ export default function DashboardPage() {
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
 
-        // Kalkulasi Target Plafon
-        const targetDana = 15300000;
+        // Kalkulasi Persentase Target Progres Dana Masuk
         const hitungPersen = Math.min(Math.round((calcMasuk / targetDana) * 100), 100);
         setProgress({ percent: hitungPersen, current: calcMasuk, target: targetDana });
       }
@@ -76,7 +96,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3 font-mono text-xs text-slate-400">
         <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        <p>Sinkronisasi Database Supabase...</p>
+        <p>Menyelaraskan Data Transaksi Supabase...</p>
       </div>
     );
   }
@@ -93,7 +113,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2. KARTU UTAMA TOTAL KAS */}
+      {/* 2. KARTU UTAMA TOTAL SISA KAS */}
       <div className="p-6 md:p-8 bg-slate-900 border border-slate-800/80 rounded-3xl shadow-xl space-y-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
         
@@ -105,7 +125,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800/60">
-          {/* Box Masuk */}
+          {/* Sub Box Masuk */}
           <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -118,7 +138,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Box Keluar */}
+          {/* Sub Box Keluar */}
           <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -133,7 +153,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 3. PROGRES TARGET */}
+      {/* 3. PROGRES TARGET PLAFON */}
       <div className="p-5 bg-slate-900 border border-slate-800/80 rounded-2xl shadow-lg space-y-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -155,7 +175,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. RINCIAN TRANSAKSI */}
+      {/* 4. SEKSYEN RINCIAN BARU */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-amber-500 text-sm">🕒</span>
