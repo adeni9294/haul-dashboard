@@ -120,7 +120,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Sisi Kiri: Angka Sisa Kas */}
           <div className="lg:col-span-4 space-y-1 text-center lg:text-left">
-            <p className={`${style.textMuted} font-mono text-[10px] sm:text-xs uppercase tracking-widest font-semibold`}>Total Sisa Kas Haul</p>
+            <p className={`${style.textMuted} font-mono text-[10px] sm:text-xs uppercase tracking-widest font-semibold`}>Saldo Akhir Kas Haul</p>
             <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight break-words">{formatRupiah(totals.total)}</h2>
           </div>
 
