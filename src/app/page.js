@@ -18,7 +18,7 @@ const EXPENSE_COLORS = ['#f43f5e', '#fb7185', '#e11d48', '#fda4af', '#fecdd3'];
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0 });
-  const [progress, setProgress] = useState({ percent: 0, current: 0, target: 15300000 });
+  const [progress, setProgress] = useState({ percent: 0, current: 0, target: 0 });
   const [rincianMasuk, setRincianMasuk] = useState([]);
   const [rincianKeluar, setRincianKeluar] = useState([]);
   const [catSummaryMasuk, setCatSummaryMasuk] = useState([]);
@@ -33,19 +33,34 @@ export default function DashboardPage() {
       setLoading(true);
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
-      let targetDana = 15300000;
+      // 1. AMBIL SETELAN BANNER DAN TEMA
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
-        const dbTarget = settingsData[0].target_notes || settingsData[0].target_amount;
-        if (dbTarget) {
-          const parsingTarget = parseInt(dbTarget);
-          if (!isNaN(parsingTarget) && parsingTarget > 0) targetDana = parsingTarget;
-        }
       }
 
-      const { data: trans, error } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+      // 2. PERBAIKAN UTAMA: Hitung total target plafon secara dinamis langsung dari penjumlahan isi tabel 'budgets'
+      const { data: budgetsData } = await supabase.from('budgets').select('amount, nominal');
+      let totalPlafonDinamis = 0;
+      if (budgetsData) {
+        budgetsData.forEach(b => {
+          const nilaiAnggaran = parseFloat(b.amount || b.nominal) || 0;
+          totalPlafonDinamis += nilaiAnggaran;
+        });
+      }
+
+      // 3. AMBIL DATA TRANSAKSI DENGAN CO-RELATION CATEGORIES
+      const { data: trans, error } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          categories (
+            name,
+            type
+          )
+        `)
+        .order('transaction_date', { ascending: false });
       
       if (!error && trans) {
         let calcMasuk = 0; let calcKeluar = 0;
@@ -55,23 +70,22 @@ export default function DashboardPage() {
         trans.forEach((item) => {
           const nominal = parseFloat(item.amount || item.nominal) || 0;
           
-          // Ambil teks indikator kategori dan tipe
-          const rawType = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
-          const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
+          const officialType = item.categories?.type ? item.categories.type.toLowerCase().trim() : '';
+          const catName = item.categories?.name || item.category || item.kategori || 'Lain-lain';
           const catNameLower = catName.toLowerCase();
 
-          // SINKRONISASI LOGIKA PINTAR: Deteksi otomatis agar iuran kas / pemasangan tidak lari ke merah
           if (
-            rawType === 'masuk' || 
-            rawType === 'pemasukan' || 
-            rawType === 'income' ||
-            catNameLower.includes('masuk') || 
-            catNameLower.includes('iuran') ||
-            catNameLower.includes('sumbangan') ||
-            catNameLower.includes('kas awal')
+            officialType === 'pemasukan' || 
+            officialType === 'masuk' ||
+            (!officialType && (
+              catNameLower.includes('masuk') || 
+              catNameLower.includes('iuran') ||
+              catNameLower.includes('sumbangan') ||
+              catNameLower.includes('kas awal')
+            ))
           ) {
             calcMasuk += nominal;
-            item.runtime_type = 'masuk'; // Dipakai untuk indikator visual tabel
+            item.runtime_type = 'masuk'; 
             listMasuk.push(item);
             incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
           } else {
@@ -92,8 +106,9 @@ export default function DashboardPage() {
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
 
-        const hitungPersen = Math.min(Math.round((calcMasuk / targetDana) * 100), 100);
-        setProgress({ percent: hitungPersen, current: calcMasuk, target: targetDana });
+        // Hitung persentase keterpakaian/pencapaian berdasarkan total dari tabel anggaran belanja
+        const hitungPersen = totalPlafonDinamis > 0 ? Math.min(Math.round((calcKeluar / totalPlafonDinamis) * 100), 100) : 0;
+        setProgress({ percent: hitungPersen, current: calcKeluar, target: totalPlafonDinamis });
       }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
@@ -102,6 +117,14 @@ export default function DashboardPage() {
 
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const radius = 50; const circumference = 2 * Math.PI * radius;
+
+  if (loading) {
+    return (
+      <div className="p-12 text-center text-slate-400 text-xs font-mono animate-pulse">
+        ⏳ Mensinkronkan data Anggaran Plafon dengan Beranda...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4.5 max-w-7xl mx-auto px-1 sm:px-0 pb-16">
@@ -127,7 +150,7 @@ export default function DashboardPage() {
           {/* Sisi Kanan: 3 Pie Chart Sejajar Horisontal */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
             
-            {/* Chart 1: Bagan Plafon Anggaran */}
+            {/* Chart 1: Bagan Plafon Anggaran (Sekarang Otomatis dari jumlah tabel budgets) */}
             <div className="flex items-center gap-3 bg-black/30 p-3 rounded-xl border border-white/5 justify-start">
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 140 140" className="w-full h-full transform -rotate-90">
@@ -136,7 +159,10 @@ export default function DashboardPage() {
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center"><span className="text-[9px] font-black text-white font-mono">{progress.percent}%</span></div>
               </div>
-              <div className="min-w-0"><p className="text-[10px] font-bold text-slate-300 uppercase truncate">Bagan Plafon</p><p className="text-[9px] font-mono text-amber-400 truncate font-semibold">{formatRupiah(progress.target)}</p></div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-slate-300 uppercase truncate">Bagan Plafon</p>
+                <p className="text-[9px] font-mono text-amber-400 truncate font-semibold">{formatRupiah(progress.target)}</p>
+              </div>
             </div>
 
             {/* Chart 2: Komposisi Pos Pemasukan (Hijau) */}
@@ -190,7 +216,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. REKAP NOMINAL PER KATEGORI (DIBAWAH PROGRESS BAR) */}
+      {/* 4. REKAP NOMINAL PER KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className={`p-4 ${style.card} border rounded-xl space-y-2`}><h4 className="text-[10px] font-black text-emerald-400 uppercase">📊 Rekap Pos Pemasukan</h4><div className="space-y-1.5">{catSummaryMasuk.map((c, i) => (<div key={i} className="flex justify-between text-[11px] border-b border-white/5 pb-1"><span className="text-slate-300">🏷️ {c.label}</span><span className="font-mono font-bold text-emerald-400">{formatRupiah(c.value)}</span></div>))}</div></div>
         <div className={`p-4 ${style.card} border rounded-xl space-y-2`}><h4 className="text-[10px] font-black text-rose-400 uppercase">📊 Rekap Pos Belanja</h4><div className="space-y-1.5">{catSummaryKeluar.map((c, i) => (<div key={i} className="flex justify-between text-[11px] border-b border-white/5 pb-1"><span className="text-slate-300">📦 {c.label}</span><span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span></div>))}</div></div>
