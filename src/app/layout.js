@@ -5,44 +5,44 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import '@/app/globals.css';
 
-// 1. PEMETAAN WARNA TEMA YANG KONSISTEN UNTUK SELURUH ELEMEN LAYOUT
+// 1. PEMETAAN WARNA TEMA SECARA TOTAL UNTUK KONTAINER DAN LATAR BELAKANG
 const THEME_STYLES = {
   'emerald-cyber': {
     body: 'bg-zinc-950 text-emerald-100 selection:bg-emerald-500/20',
-    card: 'bg-zinc-900/60 border-zinc-800 text-emerald-100',
-    navBg: 'bg-zinc-900/60 border-zinc-800',
+    card: 'bg-zinc-900 border-zinc-800 text-emerald-100',
+    navBg: 'bg-zinc-900 border-zinc-800',
     innerBg: 'bg-zinc-950',
     textMuted: 'text-zinc-400',
     accentText: 'text-emerald-400'
   },
   'velvet-rose': {
     body: 'bg-neutral-950 text-rose-100 selection:bg-rose-500/20',
-    card: 'bg-neutral-900/60 border-neutral-800 text-rose-100',
-    navBg: 'bg-neutral-900/60 border-neutral-800',
+    card: 'bg-neutral-900 border-neutral-800 text-rose-100',
+    navBg: 'bg-neutral-900 border-neutral-800',
     innerBg: 'bg-neutral-950',
     textMuted: 'text-neutral-400',
     accentText: 'text-rose-400'
   },
   'neon-sunset': {
     body: 'bg-stone-950 text-orange-100 selection:bg-orange-500/20',
-    card: 'bg-stone-900/60 border-stone-800 text-orange-100',
-    navBg: 'bg-stone-900/60 border-stone-800',
+    card: 'bg-stone-900 border-stone-800 text-orange-100',
+    navBg: 'bg-stone-900 border-stone-800',
     innerBg: 'bg-stone-950',
     textMuted: 'text-stone-400',
     accentText: 'text-orange-400'
   },
   'amber-gold': {
     body: 'bg-gray-950 text-amber-100 selection:bg-amber-500/20',
-    card: 'bg-gray-900/60 border-gray-800 text-amber-100',
-    navBg: 'bg-gray-900/60 border-gray-800',
+    card: 'bg-gray-900 border-gray-800 text-amber-100',
+    navBg: 'bg-gray-900 border-gray-800',
     innerBg: 'bg-gray-950',
     textMuted: 'text-gray-400',
     accentText: 'text-amber-400'
   },
   'default': {
     body: 'bg-slate-950 text-slate-100 selection:bg-amber-500/30',
-    card: 'bg-slate-900/40 border-slate-900 text-slate-100',
-    navBg: 'bg-slate-900/40 border-slate-900',
+    card: 'bg-slate-900 border-slate-800 text-slate-100',
+    navBg: 'bg-slate-900 border-slate-800',
     innerBg: 'bg-slate-950',
     textMuted: 'text-slate-400',
     accentText: 'text-amber-500'
@@ -60,7 +60,6 @@ export default function RootLayout({ children }) {
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
   const [logoUrl, setLogoUrl] = useState('');
   
-  // State id string tema aktif
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
   useEffect(() => {
@@ -85,7 +84,6 @@ export default function RootLayout({ children }) {
         if (config.bank_info) setBankInfo(config.bank_info);
         if (config.logo_url) setLogoUrl(config.logo_url);
         
-        // Simpan key id tema dari database langsung ke state
         if (config.theme && THEME_STYLES[config.theme]) {
           setCurrentThemeKey(config.theme);
         } else {
@@ -118,7 +116,6 @@ export default function RootLayout({ children }) {
     window.location.reload();
   };
 
-  // Ambil paket style warna berdasarkan tema aktif
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
   return (
@@ -127,6 +124,7 @@ export default function RootLayout({ children }) {
         
         {/* HEADER ATAS */}
         <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
+          {/* PERBAIKAN: Menggunakan warna latar dari tema aktif */}
           <div className={`p-4 md:p-6 ${currentStyle.card} border backdrop-blur-sm rounded-2xl flex flex-col md:flex-row items-center gap-4 shadow-lg w-full relative`}>
             
             <div className="absolute top-4 right-4 z-10">
@@ -135,7 +133,7 @@ export default function RootLayout({ children }) {
                   🚪 Keluar Admin
                 </button>
               ) : (
-                <button onClick={() => setShowLoginModal(true)} className={`px-3 py-1 ${currentStyle.innerBg} border border-slate-800/60 rounded-xl text-[11px] font-mono font-bold ${currentStyle.accentText} transition-all`}>
+                <button onClick={() => setShowLoginModal(true)} className={`px-3 py-1 ${currentStyle.innerBg} border border-slate-800/40 rounded-xl text-[11px] font-mono font-bold ${currentStyle.accentText} transition-all`}>
                   🔒 Login Admin
                 </button>
               )}
@@ -158,8 +156,9 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* NAVBAR MENU (DIUBAH TOTAL AGAR RESPONSIF PC & HP) */}
+        {/* NAVBAR MENU */}
         <div className="w-full max-w-7xl mx-auto px-4 pt-4">
+          {/* PERBAIKAN: Menggunakan warna latar menu dari tema aktif */}
           <nav className={`grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 ${currentStyle.navBg} border p-1.5 rounded-2xl text-[11px] sm:text-xs font-bold w-full sm:w-fit backdrop-blur-sm text-center`}>
             <Link href="/" className={`py-2 px-1 sm:px-4 rounded-xl transition-all truncate ${pathname === '/' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : `${currentStyle.textMuted} hover:text-white`}`}>📊 Dashboard</Link>
             <Link href="/transaksi" className={`py-2 px-1 sm:px-4 rounded-xl transition-all truncate ${pathname === '/transaksi' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : `${currentStyle.textMuted} hover:text-white`}`}>💰 Transaksi</Link>
@@ -177,7 +176,7 @@ export default function RootLayout({ children }) {
           {children}
         </main>
 
-        <footer className={`py-4 border-t border-slate-900/40 text-center text-[11px] ${currentStyle.textMuted} font-mono`}>
+        <footer className={`py-4 border-t border-slate-800/40 text-center text-[11px] ${currentStyle.textMuted} font-mono`}>
           Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
         </footer>
 
