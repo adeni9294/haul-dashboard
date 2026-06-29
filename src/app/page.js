@@ -35,32 +35,19 @@ export default function Dashboard() {
       
       if (transError) throw transError;
 
-      // 2. MENCARI DATA TABEL ANGGARAN SECARA OTOMATIS
-      let budgetsData = [];
+      // 2. Mengambil data anggaran langsung dari tabel 'budgets'
+      const { data: budgetsData, error: budgetError } = await supabase
+        .from('budgets')
+        .select('*');
       
-      // Coba kemungkinan ke-1: Nama tabel 'anggaran' (Sesuai dengan nama menu di URL web Anda)
-      const { data: dataAnggaran } = await supabase.from('anggaran').select('*');
-      
-      if (dataAnggaran && dataAnggaran.length > 0) {
-        budgetsData = dataAnggaran;
-      } else {
-        // Coba kemungkinan ke-2: Nama tabel 'budgets'
-        const { data: dataBudgets } = await supabase.from('budgets').select('*');
-        if (dataBudgets && dataBudgets.length > 0) {
-          budgetsData = dataBudgets;
-        } else {
-          // Coba kemungkinan ke-3: Nama tabel 'budget'
-          const { data: dataBudget } = await supabase.from('budget').select('*');
-          if (dataBudget) budgetsData = dataBudget;
-        }
-      }
+      if (budgetError) throw budgetError;
 
       if (!trans) return;
 
       let m = 0, k = 0;
       let catIn = {}, catOut = {};
       
-      // Hitung akumulasi masuk dan keluar
+      // Hitung akumulasi masuk dan keluar transaksi
       trans.forEach(t => {
         const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
 
@@ -73,16 +60,15 @@ export default function Dashboard() {
         }
       });
       
-      // 3. HITUNG TOTAL PLAFON ANGGARAN (Mendukung kolom 'amount', 'nominal', atau 'nominal_alokasi')
+      // 3. HITUNG TOTAL TARGET ANGGARAN (Membaca kolom 'planned_amount' sesuai file anggaran Anda)
       let totalTarget = 0;
       if (budgetsData && budgetsData.length > 0) {
         totalTarget = budgetsData.reduce((sum, b) => {
-          const nilaiNominal = b.amount || b.nominal || b.nominal_alokasi || 0;
-          return sum + Number(nilaiNominal);
+          return sum + Number(b.planned_amount || 0);
         }, 0);
       }
 
-      // RUMUS UTAMA: (Total Pemasukan / Total Target Anggaran) * 100%
+      // RUMUS: (Total Pemasukan / Total Target Anggaran) * 100%
       let persen = 0;
       if (totalTarget > 0) {
         persen = Math.round((m / totalTarget) * 100);
@@ -90,7 +76,7 @@ export default function Dashboard() {
       
       setStats({ masuk: m, keluar: k, saldo: m - k });
       setTransactions(trans.slice(0, 5)); 
-      setCategories({ in: catIn, out: catOut });
+      setCategories({ in: catIn, out: out: catOut });
       setTotalAnggaran(totalTarget);
       setProgressPersen(persen);
     } catch (err) {
@@ -113,21 +99,21 @@ export default function Dashboard() {
       <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
         <p className="text-slate-400 text-sm">Total Kas Haul</p>
         <h1 className="text-3xl font-black mt-1">
-          {stats.saldo < 0 ? `- Rp ${Math.abs(stats.saldo).toLocaleString()}` : `Rp ${stats.saldo.toLocaleString()}`}
+          {stats.saldo < 0 ? `- Rp ${Math.abs(stats.saldo).toLocaleString('id-ID')}` : `Rp ${stats.saldo.toLocaleString('id-ID')}`}
         </h1>
         <div className="mt-6 flex gap-4 border-t border-slate-800 pt-4">
           <div className="flex-1 flex items-center gap-2">
             <ArrowUpCircle className="text-emerald-400" size={18} />
             <div>
               <p className="text-[10px] text-slate-500 uppercase">Masuk</p>
-              <p className="font-bold text-xs">Rp {stats.masuk.toLocaleString()}</p>
+              <p className="font-bold text-xs">Rp {stats.masuk.toLocaleString('id-ID')}</p>
             </div>
           </div>
           <div className="flex-1 flex items-center gap-2">
             <ArrowDownCircle className="text-rose-400" size={18} />
             <div>
               <p className="text-[10px] text-slate-500 uppercase">Keluar</p>
-              <p className="font-bold text-xs">Rp {stats.keluar.toLocaleString()}</p>
+              <p className="font-bold text-xs">Rp {stats.keluar.toLocaleString('id-ID')}</p>
             </div>
           </div>
         </div>
@@ -152,8 +138,8 @@ export default function Dashboard() {
         </div>
         
         <div className="flex justify-between items-center mt-2 text-[10px] text-slate-400">
-          <p>Terkumpul: <span className="text-emerald-400 font-bold">Rp {stats.masuk.toLocaleString()}</span></p>
-          <p>Target Plafon: <span className="text-slate-200 font-bold">Rp {totalAnggaran.toLocaleString()}</span></p>
+          <p>Terkumpul: <span className="text-emerald-400 font-bold">Rp {stats.masuk.toLocaleString('id-ID')}</span></p>
+          <p>Target Plafon: <span className="text-slate-200 font-bold">Rp {totalAnggaran.toLocaleString('id-ID')}</span></p>
         </div>
       </div>
 
@@ -168,7 +154,7 @@ export default function Dashboard() {
             {Object.entries(categories.in).map(([k, v]) => (
               <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
                 <span>{k}</span>
-                <span>Rp {v.toLocaleString()}</span>
+                <span>Rp {v.toLocaleString('id-ID')}</span>
               </div>
             ))}
           </div>
@@ -177,7 +163,7 @@ export default function Dashboard() {
             {Object.entries(categories.out).map(([k, v]) => (
               <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
                 <span>{k}</span>
-                <span>Rp {v.toLocaleString()}</span>
+                <span>Rp {v.toLocaleString('id-ID')}</span>
               </div>
             ))}
           </div>
@@ -194,11 +180,11 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs font-bold">{t.note || t.category}</p>
                 <p className="text-[9px] text-slate-500">
-                  {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : ''}
+                  {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString('id-ID') : ''}
                 </p>
               </div>
               <p className={`text-xs font-bold ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isPemasukan ? '+' : '-'} Rp {(t.amount || 0).toLocaleString()}
+                {isPemasukan ? '+' : '-'} Rp {(t.amount || 0).toLocaleString('id-ID')}
               </p>
             </div>
           );
