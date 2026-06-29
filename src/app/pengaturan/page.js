@@ -22,6 +22,7 @@ export default function PengaturanPage() {
   // State Kategori Pos Kas
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
+  const [categoryType, setCategoryType] = useState('pemasukan'); // Default untuk kategori baru
 
   const listTema = [
     { id: 'default', name: 'Slate Default (Bawaan)' },
@@ -53,7 +54,6 @@ export default function PengaturanPage() {
     loadCategories();
   }, []);
 
-  // Memastikan hak akses admin berdasarkan password session di database Supabase
   async function validateAdminFromSupabase() {
     const savedPassword = localStorage.getItem('admin_password_haul');
     if (!savedPassword) {
@@ -85,7 +85,6 @@ export default function PengaturanPage() {
     if (data) setCategories(data);
   }
 
-  // UNGHAH FILE LOGO KE SUPABASE STORAGE BUCKET
   const handleUploadLogo = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -93,7 +92,6 @@ export default function PengaturanPage() {
     try {
       setIsUploading(true);
       const supabase = getSupabase();
-
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
@@ -104,10 +102,7 @@ export default function PengaturanPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('logos')
-        .getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(filePath);
       setLogoUrl(publicUrl);
       alert('📸 Gambar berhasil diunggah! Tekan tombol "Simpan Konfigurasi" di bawah untuk mengaktifkan.');
     } catch (error) {
@@ -118,7 +113,6 @@ export default function PengaturanPage() {
     }
   };
 
-  // SIMPAN CONFIG: Menggunakan RPC Terproteksi database (Melewati RLS secara aman)
   const handleSaveConfig = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
@@ -145,19 +139,12 @@ export default function PengaturanPage() {
     }
   };
 
-  // GANTI PASSWORD ADMIN: Merubah data sandi absolut di dalam Supabase Cloud
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      return alert('❌ Konfirmasi sandi baru tidak cocok!');
-    }
-    if (newPassword.length < 4) {
-      return alert('❌ Sandi baru minimal harus 4 karakter!');
-    }
+    if (newPassword !== confirmPassword) return alert('❌ Konfirmasi sandi baru tidak cocok!');
+    if (newPassword.length < 4) return alert('❌ Sandi baru minimal harus 4 karakter!');
 
     const supabase = getSupabase();
-
     try {
       const { error } = await supabase.rpc('change_admin_password_secure', {
         p_old_password: currentPassword,
@@ -167,7 +154,6 @@ export default function PengaturanPage() {
       if (!error) {
         alert('🎯 Sukses! Sandi Admin resmi diperbarui di database Supabase.');
         localStorage.setItem('admin_password_haul', newPassword);
-        
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -181,17 +167,40 @@ export default function PengaturanPage() {
     }
   };
 
+  // 1. FUNGSI TAMBAH KATEGORI BARU
   const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
     const supabase = getSupabase();
     
-    const { error } = await supabase.from('categories').insert([{ name: newCategory.trim() }]);
+    const { error } = await supabase.from('categories').insert([
+      { 
+        name: newCategory.trim(),
+        type: categoryType 
+      }
+    ]);
+
     if (!error) {
       setNewCategory('');
       await loadCategories();
     } else {
       alert('❌ Gagal menambah kategori baru.');
+    }
+  };
+
+  // 2. FUNGSI UPDATE/PILIH JENIS KATEGORI LANGSUNG DARI LIST UI
+  const handleUpdateCategoryType = async (id, updatedType) => {
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from('categories')
+      .update({ type: updatedType })
+      .eq('id', id);
+
+    if (!error) {
+      // Perbarui state lokal secara instan agar UI terasa responsif tanpa reload halaman
+      setCategories(categories.map(cat => cat.id === id ? { ...cat, type: updatedType } : cat));
+    } else {
+      alert('❌ Gagal memperbarui jenis kategori.');
     }
   };
 
@@ -277,15 +286,56 @@ export default function PengaturanPage() {
       <div className="space-y-6">
         <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
           <h3 className="text-slate-300 font-bold uppercase tracking-wider">📁 Kategori Pos Buku Kas</h3>
-          <form onSubmit={handleAddCategory} className="flex gap-2">
-            <input type="text" placeholder="Nama Pos Baru..." required value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white" />
-            <button type="submit" className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl hover:bg-emerald-400 transition-all">Tambah</button>
+          
+          <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2">
+            <input 
+              type="text" 
+              placeholder="Nama Pos Baru..." 
+              required 
+              value={newCategory} 
+              onChange={(e) => setNewCategory(e.target.value)} 
+              className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white" 
+            />
+            
+            <select
+              value={categoryType}
+              onChange={(e) => setCategoryType(e.target.value)}
+              className="px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white cursor-pointer"
+            >
+              <option value="pemasukan">📥 Pemasukan</option>
+              <option value="pengeluaran">📤 Pengeluaran</option>
+            </select>
+
+            <button type="submit" className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl hover:bg-emerald-400 transition-all shrink-0">
+              Tambah
+            </button>
           </form>
+
+          {/* LIST KATEGORI DENGAN EDIT PILIHAN JENIS LANGSUNG */}
           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {categories.map((cat) => (
               <div key={cat.id} className="flex justify-between items-center p-2.5 bg-slate-950 border border-slate-800 rounded-xl">
-                <span>🏷️ {cat.name}</span>
-                <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="text-rose-400 font-bold hover:underline">Hapus</button>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="truncate">🏷️ {cat.name}</span>
+                  
+                  {/* Dropdown untuk memilih/merubah jenis kategori langsung */}
+                  <select
+                    value={cat.type || ''}
+                    onChange={(e) => handleUpdateCategoryType(cat.id, e.target.value)}
+                    className={`px-1.5 py-0.5 rounded text-[10px] bg-slate-900 border focus:outline-none cursor-pointer ${
+                      cat.type === 'pemasukan' 
+                        ? 'text-emerald-400 border-emerald-800' 
+                        : cat.type === 'pengeluaran' 
+                        ? 'text-rose-400 border-rose-800' 
+                        : 'text-slate-400 border-slate-800'
+                    }`}
+                  >
+                    <option value="" disabled>-- Pilih Jenis --</option>
+                    <option value="pemasukan" className="text-emerald-400 bg-slate-950">📥 Pemasukan</option>
+                    <option value="pengeluaran" className="text-rose-400 bg-slate-950">📤 Pengeluaran</option>
+                  </select>
+                </div>
+                <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="text-rose-400 font-bold hover:underline ml-2 shrink-0">Hapus</button>
               </div>
             ))}
           </div>
