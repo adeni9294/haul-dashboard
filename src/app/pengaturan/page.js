@@ -114,25 +114,31 @@ export default function PengaturanPage() {
     
     const supabase = getSupabase();
     
-    // Payload data yang dikirim
-    const payload = { 
-      org_name: orgName, 
-      address, 
-      bank_info: bankInfo, 
-      banner_text: bannerText, // Jika di DB Anda namanya 'banner_info', ganti bagian kiri ini jadi 'banner_info'
-      logo_url: logoUrl, 
-      theme 
-    };
+    // Mengambil kata sandi aktif yang tersimpan di browser admin (default: admin123)
+    const savedPassword = localStorage.getItem('admin_password_haul') || 'admin123';
 
-    const { error } = await supabase.from('settings').update(payload).eq('id', 'main_config');
-    
-    if (!error) {
-      alert('✅ Konfigurasi & Tema aplikasi berhasil disimpan!');
-      window.location.reload();
-    } else {
-      console.error(error);
-      // PERBAIKAN: Menampilkan detail alasan gagal dari Supabase
-      alert(`❌ Gagal menyimpan konfigurasi:\nPesan: ${error.message || error}\nDetail: ${error.details || '-'}`);
+    try {
+      // Memanggil fungsi RPC database yang melewati RLS secara aman menggunakan parameter sandi
+      const { error } = await supabase.rpc('update_settings_secure', {
+        p_password: savedPassword,
+        p_org_name: orgName,
+        p_address: address,
+        p_bank_info: bankInfo,
+        p_banner_text: bannerText,
+        p_logo_url: logoUrl,
+        p_theme: theme
+      });
+      
+      if (!error) {
+        alert('✅ Konfigurasi & Tema aplikasi berhasil disimpan dengan aman!');
+        window.location.reload();
+      } else {
+        console.error(error);
+        alert(`❌ Gagal menyimpan:\nPesan: ${error.message || error}\nDetail: ${error.details || '-'}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Terjadi kesalahan sistem: ${err.message || err}`);
     }
   };
 
