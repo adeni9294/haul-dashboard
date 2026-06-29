@@ -71,45 +71,59 @@ export default function TransaksiPage() {
     }
   }
 
-  // Aksi submit tambah atau edit data
+  // Aksi submit tambah atau edit data (Disesuaikan akurat ke kolom 'note')
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
 
     const supabase = getSupabase();
+    
+    // PEMBARUAN DI SINI: Menyimpan uraian keterangan secara absolut ke kolom 'note' sesuai database Anda
     const payload = {
       transaction_date: formDate,
       type: formType,
       category: formCategory,
-      description: formDescription.trim(),
+      note: formDescription.trim(), 
       amount: parseFloat(formAmount) || 0
     };
 
     try {
       if (isEditMode) {
         const { error } = await supabase.from('transactions').update(payload).eq('id', selectedId);
-        if (error) throw error;
+        if (error) {
+          // Fallback cadangan ke kolom alternatif jika skema cache beralih
+          const fallbackPayload = { ...payload, keterangan: formDescription.trim() };
+          delete fallbackPayload.note;
+          const { error: errFallback } = await supabase.from('transactions').update(fallbackPayload).eq('id', selectedId);
+          if (errFallback) throw errFallback;
+        }
         alert('🟢 Transaksi berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('transactions').insert([payload]);
-        if (error) throw error;
+        if (error) {
+          // Fallback cadangan ke kolom alternatif jika skema cache beralih
+          const fallbackPayload = { ...payload, keterangan: formDescription.trim() };
+          delete fallbackPayload.note;
+          const { error: errFallback } = await supabase.from('transactions').insert([fallbackPayload]);
+          if (errFallback) throw errFallback;
+        }
         alert('🟢 Transaksi baru berhasil ditambahkan!');
       }
       resetForm();
       await loadData();
     } catch (err) {
-      alert(`❌ Gagal menyimpan data: ${err.message}`);
+      alert(`❌ Gagal menyimpan data:\nPesan: ${err.message || err}`);
     }
   };
 
   const triggerEdit = (item) => {
     setIsEditMode(true);
     setSelectedId(item.id);
-    setFormDate(item.transaction_date);
+    setFormDate(item.transaction_date || item.tanggal);
     setFormType(item.type);
-    setFormCategory(item.category);
-    setFormDescription(item.description || '');
-    setFormAmount(item.amount || '');
+    setFormCategory(item.category || item.kategori);
+    setFormDescription(item.note || item.keterangan || item.description || '');
+    setFormAmount(item.amount || item.nominal || '');
     setShowModal(true);
   };
 
@@ -142,11 +156,11 @@ export default function TransaksiPage() {
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
   allTransactions.forEach(item => {
-    const nominal = parseFloat(item.amount) || 0;
-    const type = (item.type || '').toLowerCase().trim();
-    const cat = item.category || 'Lain-lain';
+    const nominal = parseFloat(item.amount || item.nominal) || 0;
+    const type = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
+    const cat = item.category || item.kategori || 'Lain-lain';
 
-    if (type === 'masuk') {
+    if (type === 'masuk' || type === 'pemasukan') {
       totalLpjMasuk += nominal;
       if (!lpjMasuk[cat]) lpjMasuk[cat] = [];
       lpjMasuk[cat].push(item);
@@ -160,9 +174,10 @@ export default function TransaksiPage() {
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
   const filteredTrans = allTransactions.filter(t => {
-    const matchSearch = (t.description || '').toLowerCase().includes(search.toLowerCase());
+    const txt = (t.note || t.keterangan || t.description || '').toLowerCase();
+    const matchSearch = txt.includes(search.toLowerCase());
     const matchType = typeFilter === 'all' || t.type === typeFilter;
-    const matchCat = catFilter === 'all' || t.category === catFilter;
+    const matchCat = catFilter === 'all' || t.category === catFilter || t.kategori === catFilter;
     return matchSearch && matchType && matchCat;
   });
 
@@ -171,7 +186,7 @@ export default function TransaksiPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* ================= AREA ELEMEN INTERFASE SCREEN (TERSEMBUNYI SAAT PRINT) ================= */}
+      {/* AREA UTAMA PANEL KONTROL */}
       <div className="print:hidden space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
@@ -219,16 +234,15 @@ export default function TransaksiPage() {
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
               {filteredTrans.map((t, idx) => (
                 <tr key={idx} className="hover:bg-slate-950/20 transition-all">
-                  <td className="p-3 font-mono text-slate-500">{t.transaction_date}</td>
+                  <td className="p-3 font-mono text-slate-500">{t.transaction_date || t.tanggal}</td>
                   <td className="p-3">
-                    {/* INDIKATOR HIJAU UNTUK PEMASUKAN, MERAH UNTUK PENGELUARAN */}
                     <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${t.type === 'masuk' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
-                      {t.category}
+                      {t.category || t.kategori}
                     </span>
                   </td>
-                  <td className="p-3 truncate max-w-xs font-medium">{t.description}</td>
+                  <td className="p-3 truncate max-w-xs font-medium">{t.note || t.keterangan || t.description}</td>
                   <td className={`p-3 text-right font-mono font-black ${t.type === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount)}
+                    {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount || t.nominal)}
                   </td>
                   {isAdmin && (
                     <td className="p-3 text-center space-x-2">
@@ -246,9 +260,9 @@ export default function TransaksiPage() {
         </div>
       </div>
 
-      {/* ================= MODAL DIALOG INPUT & EDIT (ADMIN ONLY) ================= */}
+      {/* ================= MODAL DIALOG INPUT & EDIT ================= */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <form onSubmit={handleSaveTransaction} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
             <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">{isEditMode ? '📝 Edit Transaksi Kas' : '➕ Catat Transaksi Baru'}</h3>
             
@@ -291,7 +305,7 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* ================= AREA FORM PRINT DOKUMEN LPJ (OTOMATIS AKTIF SAAT WINDOW.PRINT) ================= */}
+      {/* ================= AREA CETAK DOKUMEN LPJ ================= */}
       <div className="hidden print:block bg-white text-black p-10 font-serif leading-relaxed text-xs">
         <div className="text-center border-b-4 border-double border-black pb-3 mb-6 space-y-1">
           <h1 className="text-base font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
@@ -317,7 +331,7 @@ export default function TransaksiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjMasuk[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date || t.tanggal}</td><td className="py-1">{t.note || t.keterangan || t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount || t.nominal)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -337,7 +351,7 @@ export default function TransaksiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjKeluar[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date || t.tanggal}</td><td className="py-1">{t.note || t.keterangan || t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount || t.nominal)}</td></tr>
                   ))}
                 </tbody>
               </table>
