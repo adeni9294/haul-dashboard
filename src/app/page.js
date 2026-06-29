@@ -3,54 +3,65 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { ArrowUpCircle, ArrowDownCircle, Bell, PieChart, Target } from 'lucide-react';
 
-// Inisialisasi Supabase di luar komponen agar aman saat proses build produksi Vercel
+// Inisialisasi Supabase aman build Vercel
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+// DEFINISI WARNA TEMA (Sesuaikan dengan pilihan di Pengaturan Anda)
+const CONFIG_TEMA = {
+  'Emerald Cyber (Hijau Hitam)': {
+    bg: 'bg-slate-950',
+    card: 'bg-slate-900 border-slate-800',
+    text: 'text-slate-100',
+    textMuted: 'text-slate-400',
+    accent: 'text-emerald-400',
+    primary: 'text-amber-500',
+    bar: 'from-amber-500 to-yellow-400'
+  },
+  'Velvet Rose (Ungu Gelap)': {
+    bg: 'bg-neutral-950',
+    card: 'bg-purple-950/40 border-purple-900/50',
+    text: 'text-purple-50',
+    textMuted: 'text-purple-300/70',
+    accent: 'text-fuchsia-400',
+    primary: 'text-pink-500',
+    bar: 'from-pink-500 to-fuchsia-400'
+  }
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ masuk: 0, keluar: 0, saldo: 0 });
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState({ in: {}, out: {} });
-  
-  // State Anggaran Dana
   const [totalAnggaran, setTotalAnggaran] = useState(0);
   const [progressPersen, setProgressPersen] = useState(0);
+  
+  // State Tema Dinamis
+  const [temaAktif, setTemaAktif] = useState('Emerald Cyber (Hijau Hitam)');
 
   useEffect(() => {
-    if (!supabase) {
-      console.error("Konfigurasi ENV Supabase tidak ditemukan.");
-      return;
+    // Ambil tema yang disimpan oleh menu pengaturan di localStorage
+    const savedTheme = localStorage.getItem('gaya_tema_warna'); 
+    if (savedTheme && CONFIG_TEMA[savedTheme]) {
+      setTemaAktif(savedTheme);
     }
-    loadDashboardData();
+
+    if (supabase) loadDashboardData();
   }, []);
 
   async function loadDashboardData() {
     try {
-      // 1. Mengambil data transaksi keseluruhan
-      const { data: trans, error: transError } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('transaction_date', { ascending: false });
-      
-      if (transError) throw transError;
-
-      // 2. Mengambil data anggaran langsung dari tabel 'budgets'
-      const { data: budgetsData, error: budgetError } = await supabase
-        .from('budgets')
-        .select('*');
-      
-      if (budgetError) throw budgetError;
+      const { data: trans } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+      const { data: budgetsData } = await supabase.from('budgets').select('*');
 
       if (!trans) return;
 
       let m = 0, k = 0;
       let catIn = {}, catOut = {};
       
-      // Hitung transaksi masuk dan keluar
       trans.forEach(t => {
         const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
-
         if (isPemasukan) {
           m += Number(t.amount || 0);
           catIn[t.category] = (catIn[t.category] || 0) + Number(t.amount || 0);
@@ -60,15 +71,11 @@ export default function Dashboard() {
         }
       });
       
-      // 3. Hitung total anggaran dari kolom 'planned_amount'
       let totalTarget = 0;
       if (budgetsData && budgetsData.length > 0) {
-        totalTarget = budgetsData.reduce((sum, b) => {
-          return sum + Number(b.planned_amount || 0);
-        }, 0);
+        totalTarget = budgetsData.reduce((sum, b) => sum + Number(b.planned_amount || 0), 0);
       }
 
-      // Rumus progres: (Pemasukan / Target Anggaran) * 100%
       let persen = 0;
       if (totalTarget > 0) {
         persen = Math.round((m / totalTarget) * 100);
@@ -80,28 +87,33 @@ export default function Dashboard() {
       setTotalAnggaran(totalTarget);
       setProgressPersen(persen);
     } catch (err) {
-      console.error("Gagal memuat data dasbor:", err);
+      console.error(err);
     }
   }
 
+  // Ambil palet warna aktif berdasarkan state tema
+  const t = CONFIG_TEMA[temaAktif] || CONFIG_TEMA['Emerald Cyber (Hijau Hitam)'];
+
   return (
-    <div className="space-y-6 pb-24 px-4 pt-4 text-white">
+    // Membungkus seluruh halaman dengan background tema dinamis agar tidak belang
+    <div className={`min-h-screen ${t.bg} ${t.text} space-y-6 pb-24 px-4 pt-4 transition-colors duration-300`}>
+      
       {/* 1. HEADER */}
       <header className="flex justify-between items-center">
         <div>
-          <p className="text-slate-400 text-xs">Selamat Datang,</p>
+          <p className={`${t.textMuted} text-xs`}>Selamat Datang,</p>
           <h2 className="text-lg font-bold">Panitia Haul</h2>
         </div>
-        <Bell className="text-amber-500" size={20} />
+        <Bell className={t.primary} size={20} />
       </header>
 
       {/* 2. KARTU SALDO */}
-      <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
-        <p className="text-slate-400 text-sm">Total Kas Haul</p>
+      <div className={`p-6 ${t.card} border rounded-3xl shadow-2xl`}>
+        <p className={`${t.textMuted} text-sm`}>Total Kas Haul</p>
         <h1 className="text-3xl font-black mt-1">
           {stats.saldo < 0 ? `- Rp ${Math.abs(stats.saldo).toLocaleString('id-ID')}` : `Rp ${stats.saldo.toLocaleString('id-ID')}`}
         </h1>
-        <div className="mt-6 flex gap-4 border-t border-slate-800 pt-4">
+        <div className="mt-6 flex gap-4 border-t border-slate-800/60 pt-4">
           <div className="flex-1 flex items-center gap-2">
             <ArrowUpCircle className="text-emerald-400" size={18} />
             <div>
@@ -120,24 +132,23 @@ export default function Dashboard() {
       </div>
 
       {/* 3. PROGRES TARGET ANGGARAN */}
-      <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+      <div className={`p-4 ${t.card} border rounded-2xl`}>
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
-            <Target size={16} className="text-amber-500" />
+            <Target size={16} className={t.primary} />
             <p className="text-xs font-bold text-slate-300">Progres Target</p>
           </div>
-          <p className="text-xs font-mono text-amber-400 font-bold">{progressPersen}%</p>
+          <p className={`text-xs font-mono ${t.primary} font-bold`}>{progressPersen}%</p>
         </div>
         
-        {/* Progress Bar Line */}
-        <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
+        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-slate-800/40">
           <div 
-            className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-300"
+            className={`bg-gradient-to-r ${t.bar} h-full transition-all duration-300`}
             style={{ width: `${Math.min(progressPersen, 100)}%` }}
           ></div>
         </div>
         
-        <div className="flex justify-between items-center mt-2 text-[10px] text-slate-400">
+        <div className={`flex justify-between items-center mt-2 text-[10px] ${t.textMuted}`}>
           <p>Terkumpul: <span className="text-emerald-400 font-bold">Rp {stats.masuk.toLocaleString('id-ID')}</span></p>
           <p>Target Plafon: <span className="text-slate-200 font-bold">Rp {totalAnggaran.toLocaleString('id-ID')}</span></p>
         </div>
@@ -146,24 +157,25 @@ export default function Dashboard() {
       {/* 4. RINCIAN KATEGORI */}
       <div>
         <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-          <PieChart size={16} className="text-amber-500"/> Rincian
+          <PieChart size={16} className={t.primary}/> Rincian
         </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-            <p className="text-[10px] text-emerald-400 mb-2 uppercase">Masuk</p>
+        {/* Menggunakan grid-cols-1 di HP dan grid-cols-2 di laptop agar tidak sempit */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`p-4 ${t.card} border rounded-2xl`}>
+            <p className="text-[10px] text-emerald-400 mb-2 uppercase font-bold">Masuk</p>
             {Object.entries(categories.in).map(([k, v]) => (
-              <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
+              <div key={k} className="flex justify-between text-[11px] py-1 text-slate-300 border-b border-slate-900 last:border-0">
                 <span>{k}</span>
-                <span>Rp {v.toLocaleString('id-ID')}</span>
+                <span className="font-mono">Rp {v.toLocaleString('id-ID')}</span>
               </div>
             ))}
           </div>
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-            <p className="text-[10px] text-rose-400 mb-2 uppercase">Keluar</p>
+          <div className={`p-4 ${t.card} border rounded-2xl`}>
+            <p className="text-[10px] text-rose-400 mb-2 uppercase font-bold">Keluar</p>
             {Object.entries(categories.out).map(([k, v]) => (
-              <div key={k} className="flex justify-between text-[10px] py-1 text-slate-300">
+              <div key={k} className="flex justify-between text-[11px] py-1 text-slate-300 border-b border-slate-900 last:border-0">
                 <span>{k}</span>
-                <span>Rp {v.toLocaleString('id-ID')}</span>
+                <span className="font-mono">Rp {v.toLocaleString('id-ID')}</span>
               </div>
             ))}
           </div>
@@ -173,18 +185,18 @@ export default function Dashboard() {
       {/* 5. AKTIVITAS TERAKHIR */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold">Aktivitas Terakhir</h2>
-        {transactions.map((t, i) => {
-          const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
+        {transactions.map((tItem, i) => {
+          const isPemasukan = tItem.type === 'in' || (tItem.type && tItem.type.toLowerCase().includes('pemasukan'));
           return (
-            <div key={i} className="flex justify-between items-center p-3 bg-slate-900 border border-slate-800 rounded-xl">
-              <div>
-                <p className="text-xs font-bold">{t.note || t.category}</p>
+            <div key={i} className={`flex justify-between items-center p-3 ${t.card} border rounded-xl`}>
+              <div className="min-w-0 flex-1 pr-2">
+                <p className="text-xs font-bold truncate">{tItem.note || tItem.category}</p>
                 <p className="text-[9px] text-slate-500">
-                  {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString('id-ID') : ''}
+                  {tItem.transaction_date ? new Date(tItem.transaction_date).toLocaleDateString('id-ID') : ''}
                 </p>
               </div>
-              <p className={`text-xs font-bold ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isPemasukan ? '+' : '-'} Rp {(t.amount || 0).toLocaleString('id-ID')}
+              <p className={`text-xs font-bold shrink-0 ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {isPemasukan ? '+' : '-'} Rp {(tItem.amount || 0).toLocaleString('id-ID')}
               </p>
             </div>
           );
