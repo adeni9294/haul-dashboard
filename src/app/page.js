@@ -156,7 +156,7 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 flex items-center justify-center"><span className="text-[9px] font-black text-white font-mono">{progress.percent}%</span></div>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold text-slate-300 uppercase truncate">Bagan Plafon</p>
+                <p className="text-[10px] font-bold text-slate-300 uppercase truncate">Progres Target</p>
                 <p className="text-[9px] font-mono text-amber-400 truncate font-semibold">{formatRupiah(progress.target)}</p>
               </div>
             </div>
