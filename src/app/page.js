@@ -15,7 +15,7 @@ export default function Dashboard() {
   async function loadDashboardData() {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     
-    // Mengambil data berdasarkan nama kolom yang Anda berikan
+    // Mengambil data transaksi
     const { data: trans } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
     
     if (!trans) return;
@@ -24,8 +24,10 @@ export default function Dashboard() {
     let catIn = {}, catOut = {};
     
     trans.forEach(t => {
-      // Menggunakan kolom 'type', 'amount', 'category', dan 'note'
-      if (t.type === 'in') {
+      // PERBAIKAN LOGIKA: Cek apakah tipe data mengandung kata 'Pemasukan' atau 'in'
+      const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
+
+      if (isPemasukan) {
         m += t.amount;
         catIn[t.category] = (catIn[t.category] || 0) + t.amount;
       } else {
@@ -53,7 +55,10 @@ export default function Dashboard() {
       {/* 2. KARTU SALDO */}
       <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
         <p className="text-slate-400 text-sm">Total Kas Haul</p>
-        <h1 className="text-3xl font-black mt-1">Rp {stats.saldo.toLocaleString()}</h1>
+        {/* Menggunakan tanda minus jika saldo negatif dan otomatis memformat rupiah dengan benar */}
+        <h1 className="text-3xl font-black mt-1">
+          {stats.saldo < 0 ? `- Rp ${Math.abs(stats.saldo).toLocaleString()}` : `Rp ${stats.saldo.toLocaleString()}`}
+        </h1>
         <div className="mt-6 flex gap-4 border-t border-slate-800 pt-4">
           <div className="flex-1 flex items-center gap-2">
             <ArrowUpCircle className="text-emerald-400" size={18} />
@@ -94,17 +99,22 @@ export default function Dashboard() {
       {/* 4. AKTIVITAS */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold">Aktivitas Terakhir</h2>
-        {transactions.map((t, i) => (
-          <div key={i} className="flex justify-between items-center p-3 bg-slate-900 border border-slate-800 rounded-xl">
-            <div>
-              <p className="text-xs font-bold">{t.note}</p>
-              <p className="text-[9px] text-slate-500">{new Date(t.transaction_date).toLocaleDateString()}</p>
+        {transactions.map((t, i) => {
+          // Menggunakan logika pengkondisian warna yang sama dengan perhitungan data di atas
+          const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
+          
+          return (
+            <div key={i} className="flex justify-between items-center p-3 bg-slate-900 border border-slate-800 rounded-xl">
+              <div>
+                <p className="text-xs font-bold">{t.note || t.category}</p>
+                <p className="text-[9px] text-slate-500">{new Date(t.transaction_date).toLocaleDateString()}</p>
+              </div>
+              <p className={`text-xs font-bold ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {isPemasukan ? '+' : '-'} Rp {t.amount.toLocaleString()}
+              </p>
             </div>
-            <p className={`text-xs font-bold ${t.type === 'in' ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {t.type === 'in' ? '+' : '-'} Rp {t.amount.toLocaleString()}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
