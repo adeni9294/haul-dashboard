@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import '@/app/globals.css';
 
-// BERISI 15 TEMA MODERN TERBARU YANG BERGANTI TOTAL KETIKA DIPILIH
+// 1. DAFTAR PEMETAAN 15 TEMA MODERN + DEFAULT
 const THEME_STYLES = {
   'emerald-cyber': { body: 'bg-zinc-950 text-emerald-100', card: 'bg-zinc-900 border-zinc-800 text-emerald-100', navBg: 'bg-zinc-900/95 border-zinc-800/80', innerBg: 'bg-zinc-950', textMuted: 'text-zinc-500', accentText: 'text-emerald-400' },
   'velvet-rose': { body: 'bg-neutral-950 text-rose-100', card: 'bg-purple-950/20 border-purple-900/50 text-rose-100', navBg: 'bg-purple-950/90 border-purple-900/60', innerBg: 'bg-neutral-950', textMuted: 'text-purple-400', accentText: 'text-rose-400' },
   'neon-sunset': { body: 'bg-stone-950 text-orange-100', card: 'bg-stone-900 border-stone-800 text-orange-100', navBg: 'bg-stone-900/95 border-stone-800/80', innerBg: 'bg-stone-950', textMuted: 'text-stone-500', accentText: 'text-orange-400' },
   'amber-gold': { body: 'bg-gray-950 text-amber-100', card: 'bg-gray-900 border-gray-800 text-amber-100', navBg: 'bg-gray-900/95 border-gray-800/80', innerBg: 'bg-gray-950', textMuted: 'text-gray-500', accentText: 'text-amber-400' },
-  
-  // TAMBAHAN 15 TEMA MODERN BARU
   'midnight-blue': { body: 'bg-slate-950 text-blue-100', card: 'bg-blue-950/40 border-blue-900/60 text-blue-100', navBg: 'bg-blue-950/90 border-blue-900/50', innerBg: 'bg-slate-950', textMuted: 'text-blue-400', accentText: 'text-blue-400' },
   'nordic-frost': { body: 'bg-slate-900 text-slate-100', card: 'bg-slate-800/60 border-slate-700/60 text-slate-100', navBg: 'bg-slate-800/90 border-slate-700/50', innerBg: 'bg-slate-900', textMuted: 'text-slate-400', accentText: 'text-cyan-400' },
   'dracula-vamp': { body: 'bg-neutral-950 text-purple-200', card: 'bg-neutral-900 border-fuchsia-950 text-purple-200', navBg: 'bg-neutral-900/90 border-fuchsia-950', innerBg: 'bg-neutral-950', textMuted: 'text-neutral-500', accentText: 'text-fuchsia-400' },
@@ -25,7 +23,6 @@ const THEME_STYLES = {
   'toxic-lime': { body: 'bg-zinc-950 text-lime-400', card: 'bg-zinc-900 border-lime-900 text-lime-400', navBg: 'bg-zinc-900 border-lime-900', innerBg: 'bg-zinc-950', textMuted: 'text-zinc-600', accentText: 'text-lime-400' },
   'crimson-tide': { body: 'bg-neutral-950 text-red-200', card: 'bg-red-950/20 border-red-950 text-red-200', navBg: 'bg-red-950/80 border-red-950', innerBg: 'bg-neutral-950', textMuted: 'text-neutral-500', accentText: 'text-red-400' },
   'solarized-dark': { body: 'bg-slate-950 text-teal-200', card: 'bg-slate-900 border-teal-950 text-teal-200', navBg: 'bg-slate-900 border-teal-950', innerBg: 'bg-slate-950', textMuted: 'text-slate-500', accentText: 'text-teal-400' },
-  
   'default': { body: 'bg-slate-950 text-slate-100', card: 'bg-slate-900 border-slate-800 text-slate-100', navBg: 'bg-slate-900/95 border-slate-800/80', innerBg: 'bg-slate-950', textMuted: 'text-slate-400', accentText: 'text-amber-500' }
 };
 
@@ -42,9 +39,25 @@ export default function RootLayout({ children }) {
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
   useEffect(() => {
-    setIsAdmin(localStorage.getItem('is_admin_haul') === 'true');
+    checkAdminSession();
     loadHeaderSettings();
   }, [pathname]);
+
+  // 2. CEK SESI: Validasi sandi browser langsung mencocokkan ke RPC Supabase
+  async function checkAdminSession() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) {
+      setIsAdmin(false);
+      return;
+    }
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      setIsAdmin(false);
+    }
+  }
 
   async function loadHeaderSettings() {
     try {
@@ -64,27 +77,32 @@ export default function RootLayout({ children }) {
     }
   }
 
-  const handleLogin = (e) => {
+  // 3. FUNGSI LOGIN: Mengirim sandi input ke RPC Supabase untuk diverifikasi
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // PERBAIKAN: Membaca kata sandi dinamis dari localStorage (default: admin123)
-    const savedPassword = localStorage.getItem('admin_password_haul') || 'admin123';
-    
-    if (passwordInput === savedPassword) {
-      localStorage.setItem('is_admin_haul', 'true');
-      setIsAdmin(true);
-      setShowLoginModal(false);
-      setPasswordInput('');
-      alert('Login Berhasil sebagai Admin!');
-      window.location.reload();
-    } else {
-      alert('Password salah!');
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+      const { data: isValid, error } = await supabase.rpc('verify_admin_password', { p_password: passwordInput });
+
+      if (!error && isValid) {
+        localStorage.setItem('admin_password_haul', passwordInput);
+        setIsAdmin(true);
+        setShowLoginModal(false);
+        setPasswordInput('');
+        alert('🟢 Login Berhasil! Autentikasi diverifikasi oleh Supabase.');
+        window.location.reload();
+      } else {
+        alert('❌ Password salah atau ditolak oleh Supabase!');
+      }
+    } catch (err) {
+      alert('❌ Gagal terhubung ke server autentikasi.');
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('is_admin_haul');
+    localStorage.removeItem('admin_password_haul');
     setIsAdmin(false);
-    alert('Keluar dari mode Admin.');
+    alert('🚪 Keluar dari mode Admin.');
     window.location.reload();
   };
 
@@ -132,10 +150,9 @@ export default function RootLayout({ children }) {
         {/* KONTEN UTAMA */}
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">{children}</main>
 
-        {/* FOOTER */}
         <footer className={`py-4 mb-20 sm:mb-0 border-t border-slate-800/20 text-center text-[11px] ${currentStyle.textMuted} font-mono`}>Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}</footer>
 
-        {/* NAVIGASI MENU (DIBAWAH UNTUK HP, DIATAS UNTUK PC) */}
+        {/* BOTTOM NAVBAR UNTUK HP / FLAT DI ATAS UNTUK DESKTOP */}
         <div className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-0 sm:static sm:w-full sm:max-w-7xl sm:mx-auto sm:px-4 sm:mb-4">
           <nav className={`grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 ${currentStyle.navBg} border p-2 rounded-2xl text-[11px] sm:text-xs font-bold w-full sm:w-fit backdrop-blur-sm text-center shadow-2xl sm:shadow-none`}>
             {menus.map((m) => (
@@ -153,7 +170,7 @@ export default function RootLayout({ children }) {
                 <p className={`text-xs ${currentStyle.textMuted} mt-1`}>Masukkan kata sandi untuk masuk ke Mode Admin</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
-                <input type="password" placeholder="Password Admin" tyranny="true" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={`w-full px-3 py-2 ${currentStyle.innerBg} border border-slate-800 rounded-xl text-xs text-white focus:outline-none text-center font-mono tracking-widest`} />
+                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={`w-full px-3 py-2 ${currentStyle.innerBg} border border-slate-800 rounded-xl text-xs text-white focus:outline-none text-center font-mono tracking-widest`} />
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Batal</button>
                   <button type="submit" className="flex-1 py-2 bg-amber-500 text-slate-950 text-xs font-black uppercase rounded-xl">Masuk</button>
