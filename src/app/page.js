@@ -35,15 +35,24 @@ export default function Dashboard() {
       
       if (transError) throw transError;
 
-      // 2. Mengambil data anggaran (mencoba tabel 'budgets', jika tidak ada fallback ke 'anggaran')
+      // 2. MENCARI DATA TABEL ANGGARAN SECARA OTOMATIS
       let budgetsData = [];
-      const { data: bData, error: budgetError } = await supabase.from('budgets').select('*');
       
-      if (!budgetError && bData) {
-        budgetsData = bData;
+      // Coba kemungkinan ke-1: Nama tabel 'anggaran' (Sesuai dengan nama menu di URL web Anda)
+      const { data: dataAnggaran } = await supabase.from('anggaran').select('*');
+      
+      if (dataAnggaran && dataAnggaran.length > 0) {
+        budgetsData = dataAnggaran;
       } else {
-        const { data: altData } = await supabase.from('anggaran').select('*');
-        if (altData) budgetsData = altData;
+        // Coba kemungkinan ke-2: Nama tabel 'budgets'
+        const { data: dataBudgets } = await supabase.from('budgets').select('*');
+        if (dataBudgets && dataBudgets.length > 0) {
+          budgetsData = dataBudgets;
+        } else {
+          // Coba kemungkinan ke-3: Nama tabel 'budget'
+          const { data: dataBudget } = await supabase.from('budget').select('*');
+          if (dataBudget) budgetsData = dataBudget;
+        }
       }
 
       if (!trans) return;
@@ -64,7 +73,7 @@ export default function Dashboard() {
         }
       });
       
-      // Hitung total alokasi plafon anggaran (Rp 15.300.000)
+      // 3. HITUNG TOTAL PLAFON ANGGARAN (Mendukung kolom 'amount', 'nominal', atau 'nominal_alokasi')
       let totalTarget = 0;
       if (budgetsData && budgetsData.length > 0) {
         totalTarget = budgetsData.reduce((sum, b) => {
@@ -73,7 +82,7 @@ export default function Dashboard() {
         }, 0);
       }
 
-      // RUMUS UTAMA: (Pemasukan / Total Target Anggaran) * 100%
+      // RUMUS UTAMA: (Total Pemasukan / Total Target Anggaran) * 100%
       let persen = 0;
       if (totalTarget > 0) {
         persen = Math.round((m / totalTarget) * 100);
@@ -138,7 +147,6 @@ export default function Dashboard() {
         <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
           <div 
             className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-300"
-            // Batasi visual bar maksimal 100% lebar kontainer agar tidak meluap keluar box jika persentase > 100%
             style={{ width: `${Math.min(progressPersen, 100)}%` }}
           ></div>
         </div>
