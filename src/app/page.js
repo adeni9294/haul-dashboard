@@ -22,19 +22,13 @@ export default function DashboardPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
       );
 
-      // 1. Ambil Data Pengaturan / Banner
+      // 1. Ambil Data Pengaturan Banner
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
-        setAnnouncement(settingsData[0].announcement || '');
-        if (settingsData[0].target_notes) {
-          const parsingTarget = parseInt(settingsData[0].target_notes);
-          if (!isNaN(parsingTarget)) {
-            setProgress(prev => ({ ...prev, target: parsingTarget }));
-          }
-        }
+        setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
       }
 
-      // 2. Ambil Semua Transaksi untuk Kalkulasi Total
+      // 2. Ambil Data Transaksi (MENGGUNAKAN LOGIKA ASLI KODE LAMA ANDA)
       const { data: trans, error } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       
       if (!error && trans) {
@@ -43,13 +37,15 @@ export default function DashboardPage() {
         const listMasuk = [];
         const listKeluar = [];
 
+        // KEMBALI KE LOGIKA LAMA: Membaca kriteria jenis transaksi dari database Anda
         trans.forEach((item) => {
-          // Asumsi struktur field: type ('masuk' / 'keluar') dan amount (nominal angka)
           const nominal = parseFloat(item.amount) || 0;
-          if (item.type === 'masuk') {
+          
+          // Deteksi Kas Masuk vs Kas Keluar sesuai struktur lama
+          if (item.type === 'masuk' || item.jenis === 'masuk' || item.category_type === 'masuk') {
             calcMasuk += nominal;
             listMasuk.push(item);
-          } else if (item.type === 'keluar') {
+          } else {
             calcKeluar += nominal;
             listKeluar.push(item);
           }
@@ -57,11 +53,11 @@ export default function DashboardPage() {
 
         const sisaKas = calcMasuk - calcKeluar;
         setTotals({ total: sisaKas, masuk: calcMasuk, keluar: calcKeluar });
-        setRincianMasuk(listMasuk.slice(0, 5)); // Ambil 5 data terakhir untuk preview rincian
+        setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
 
-        // Hitung persentase target progres capaian dana
-        const targetDana = progress.target || 15300000;
+        // Kalkulasi Target Plafon
+        const targetDana = 15300000;
         const hitungPersen = Math.min(Math.round((calcMasuk / targetDana) * 100), 100);
         setProgress({ percent: hitungPersen, current: calcMasuk, target: targetDana });
       }
@@ -80,7 +76,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3 font-mono text-xs text-slate-400">
         <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        <p>Memuat Ringkasan Kas Panitia...</p>
+        <p>Sinkronisasi Database Supabase...</p>
       </div>
     );
   }
@@ -88,34 +84,32 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       
-      {/* 1. RUNNING TEXT / ANNOUNCEMENT BANNER */}
+      {/* 1. TEXT BANNER */}
       {announcement && (
         <div className="w-full bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 rounded-2xl overflow-hidden relative flex items-center">
           <div className="animate-marquee whitespace-nowrap text-amber-400 font-medium text-xs tracking-wide">
-            📢 {announcement} &nbsp;&bull;&nbsp; {announcement}
+            📢 {announcement}
           </div>
         </div>
       )}
 
-      {/* 2. KARTU UTAMA TOTAL KAS (YANG SUDAH DIPERBAIKI DARI DEAD SPACE) */}
+      {/* 2. KARTU UTAMA TOTAL KAS */}
       <div className="p-6 md:p-8 bg-slate-900 border border-slate-800/80 rounded-3xl shadow-xl space-y-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
         
         <div>
           <p className="text-slate-400 font-mono text-xs uppercase tracking-widest">Total Sisa Kas Haul</p>
-          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mt-1 font-sans">
+          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mt-1">
             {formatRupiah(totals.total)}
           </h2>
         </div>
 
-        {/* SUB-CARD BERDAMPINGAN: Menghilangkan kesan melongpong di tengah */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800/60">
-          
-          {/* Kotak Mini Masuk */}
-          <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center gap-4 transition-all hover:border-emerald-500/20">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
+          {/* Box Masuk */}
+          <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
               </svg>
             </div>
             <div>
@@ -124,11 +118,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Kotak Mini Keluar */}
-          <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center gap-4 transition-all hover:border-rose-500/20">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
+          {/* Box Keluar */}
+          <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
               </svg>
             </div>
             <div>
@@ -136,11 +130,10 @@ export default function DashboardPage() {
               <p className="text-base font-bold text-rose-400 mt-0.5">{formatRupiah(totals.keluar)}</p>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* 3. SEKSYEN KARTU PROGRES TARGET */}
+      {/* 3. PROGRES TARGET */}
       <div className="p-5 bg-slate-900 border border-slate-800/80 rounded-2xl shadow-lg space-y-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -152,12 +145,8 @@ export default function DashboardPage() {
           </span>
         </div>
 
-        {/* PROGRESS BAR STRIP KUNING */}
-        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800/60 p-0.5 shadow-inner">
-          <div 
-            className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000 shadow-lg"
-            style={{ width: `${progress.percent}%` }}
-          ></div>
+        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800/60 p-0.5">
+          <div className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000" style={{ width: `${progress.percent}%` }}></div>
         </div>
 
         <div className="flex justify-between text-[10px] font-mono text-slate-400 pt-1">
@@ -166,7 +155,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. SEKSYEN RINCIAN DENGAN AKSEN GARIS VERTIKAL ESTETIK */}
+      {/* 4. RINCIAN TRANSAKSI */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-amber-500 text-sm">🕒</span>
@@ -174,8 +163,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* BLOK CARD KAS MASUK (Aksen Hijau) */}
+          {/* KAS MASUK */}
           <div className="p-5 bg-slate-900 border-l-4 border-l-emerald-500 border-y border-r border-slate-800/80 rounded-2xl shadow-md space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
               <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">🟢 KAS MASUK</span>
@@ -186,10 +174,10 @@ export default function DashboardPage() {
               {rincianMasuk.length > 0 ? rincianMasuk.map((item, idx) => (
                 <div key={item.id || idx} className="flex justify-between items-start pt-2 first:pt-0">
                   <div className="space-y-0.5 max-w-[70%]">
-                    <p className="text-slate-200 font-medium text-xs truncate">{item.description || 'Iuran / Sumbangan Hamba Allah'}</p>
-                    <p className="text-[9px] font-mono text-slate-500">{item.transaction_date || '-'}</p>
+                    <p className="text-slate-200 font-medium text-xs truncate">{item.description || item.keterangan || item.notes || 'Transaksi Masuk'}</p>
+                    <p className="text-[9px] font-mono text-slate-500">{item.transaction_date || item.tanggal || '-'}</p>
                   </div>
-                  <p className="text-xs font-bold font-mono text-emerald-400 shrink-0">+{formatRupiah(item.amount)}</p>
+                  <p className="text-xs font-bold font-mono text-emerald-400 shrink-0">+{formatRupiah(item.amount || item.nominal)}</p>
                 </div>
               )) : (
                 <p className="text-[10px] text-slate-600 font-mono py-4 text-center">Belum ada data iuran masuk.</p>
@@ -197,7 +185,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* BLOK CARD KAS KELUAR (Aksen Merah) */}
+          {/* KAS KELUAR */}
           <div className="p-5 bg-slate-900 border-l-4 border-l-rose-500 border-y border-r border-slate-800/80 rounded-2xl shadow-md space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
               <span className="text-xs font-black uppercase text-rose-400 tracking-wider">🔴 KAS KELUAR</span>
@@ -208,17 +196,16 @@ export default function DashboardPage() {
               {rincianKeluar.length > 0 ? rincianKeluar.map((item, idx) => (
                 <div key={item.id || idx} className="flex justify-between items-start pt-2 first:pt-0">
                   <div className="space-y-0.5 max-w-[70%]">
-                    <p className="text-slate-200 font-medium text-xs truncate">{item.description || 'Pengeluaran Acara Lapangan'}</p>
-                    <p className="text-[9px] font-mono text-slate-500">{item.transaction_date || '-'}</p>
+                    <p className="text-slate-200 font-medium text-xs truncate">{item.description || item.keterangan || item.notes || 'Transaksi Keluar'}</p>
+                    <p className="text-[9px] font-mono text-slate-500">{item.transaction_date || item.tanggal || '-'}</p>
                   </div>
-                  <p className="text-xs font-bold font-mono text-rose-400 shrink-0">-{formatRupiah(item.amount)}</p>
+                  <p className="text-xs font-bold font-mono text-rose-400 shrink-0">-{formatRupiah(item.amount || item.nominal)}</p>
                 </div>
               )) : (
                 <p className="text-[10px] text-slate-600 font-mono py-4 text-center">Belum ada catatan belanja keluar.</p>
               )}
             </div>
           </div>
-
         </div>
       </div>
 
