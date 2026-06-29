@@ -13,72 +13,86 @@ export default function Dashboard() {
   const [progressPersen, setProgressPersen] = useState(0);
 
   useEffect(() => {
+    // Memastikan inisialisasi dilakukan dengan aman di dalam client runtime
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Supabase environment variables are missing.");
+      return;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    async function loadDashboardData() {
+      try {
+        // 1. Ambil data dari tabel transaksi
+        const { data: trans, error: transError } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('transaction_date', { ascending: false });
+        
+        if (transError) throw transError;
+
+        // 2. Ambil data dari tabel anggaran (mencoba 'budgets', jika gagal atau kosong gunakan fallback 'anggaran')
+        let budgetsData = [];
+        const { data: bData, error: budgetError } = await supabase
+          .from('budgets')
+          .select('*');
+        
+        if (!budgetError && bData) {
+          budgetsData = bData;
+        } else {
+          // Fallback ke nama tabel 'anggaran' jika tabel 'budgets' tidak ditemukan
+          const { data: altData } = await supabase.from('anggaran').select('*');
+          if (altData) budgetsData = altData;
+        }
+
+        if (!trans) return;
+
+        let m = 0, k = 0;
+        let catIn = {}, catOut = {};
+        
+        // Proses perhitungan data transaksi
+        trans.forEach(t => {
+          const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
+
+          if (isPemasukan) {
+            m += Number(t.amount || 0);
+            catIn[t.category] = (catIn[t.category] || 0) + Number(t.amount || 0);
+          } else {
+            k += Number(t.amount || 0);
+            catOut[t.category] = (catOut[t.category] || 0) + Number(t.amount || 0);
+          }
+        });
+        
+        // Proses perhitungan total target dari tabel anggaran
+        let totalTarget = 0;
+        if (budgetsData && budgetsData.length > 0) {
+          totalTarget = budgetsData.reduce((sum, b) => {
+            const nilaiNominal = b.amount || b.nominal || b.nominal_alokasi || 0;
+            return sum + Number(nilaiNominal);
+          }, 0);
+        }
+
+        // Hitung persentase progres kebutuhan dana
+        let persen = 0;
+        if (totalTarget > 0) {
+          persen = Math.min(Math.round((m / totalTarget) * 100), 100);
+        }
+        
+        setStats({ masuk: m, keluar: k, saldo: m - k });
+        setTransactions(trans.slice(0, 5)); 
+        setCategories({ in: catIn, out: catOut });
+        setTotalAnggaran(totalTarget);
+        setProgressPersen(persen);
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      }
+    }
+
     loadDashboardData();
   }, []);
-
-  async function loadDashboardData() {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL, 
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    
-    // 1. Ambil data dari tabel transaksi
-    const { data: trans } = await supabase
-      .from('transactions')
-      .select('*')
-      .order('transaction_date', { ascending: false });
-    
-    // 2. Ambil data dari tabel anggaran
-    // ⚠️ CATATAN: Jika nama tabel Anda di Supabase adalah 'anggaran', ganti 'budgets' menjadi 'anggaran'
-    const { data: budgetsData, error: budgetError } = await supabase
-      .from('budgets')
-      .select('*');
-    
-    if (budgetError) {
-      console.error("Gagal mengambil data anggaran:", budgetError);
-    }
-    
-    if (!trans) return;
-
-    let m = 0, k = 0;
-    let catIn = {}, catOut = {};
-    
-    // Proses perhitungan data transaksi
-    trans.forEach(t => {
-      // Menangani jika data di database berupa string 'in' atau mengandung kata 'pemasukan'
-      const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
-
-      if (isPemasukan) {
-        m += t.amount;
-        catIn[t.category] = (catIn[t.category] || 0) + t.amount;
-      } else {
-        k += t.amount;
-        catOut[t.category] = (catOut[t.category] || 0) + t.amount;
-      }
-    });
-    
-    // Proses perhitungan total target dari tabel anggaran
-    let totalTarget = 0;
-    if (budgetsData && budgetsData.length > 0) {
-      totalTarget = budgetsData.reduce((sum, b) => {
-        // Toleransi nama kolom nominal: mendeteksi 'amount', 'nominal', atau 'nominal_alokasi'
-        const nilaiNominal = b.amount || b.nominal || b.nominal_alokasi || 0;
-        return sum + Number(nilaiNominal);
-      }, 0);
-    }
-
-    // Hitung persentase progres kebutuhan dana (Pemasukan saat ini / Total Target Anggaran)
-    let persen = 0;
-    if (totalTarget > 0) {
-      persen = Math.min(Math.round((m / totalTarget) * 100), 100);
-    }
-    
-    setStats({ masuk: m, keluar: k, saldo: m - k });
-    setTransactions(trans.slice(0, 5)); 
-    setCategories({ in: catIn, out: catOut });
-    setTotalAnggaran(totalTarget);
-    setProgressPersen(persen);
-  }
 
   return (
     <div className="space-y-6 pb-24 px-4 pt-4 text-white">
@@ -171,3 +185,21 @@ export default function Dashboard() {
         <h2 className="text-sm font-bold">Aktivitas Terakhir</h2>
         {transactions.map((t, i) => {
           const isPemasukan = t.type === 'in' || (t.type && t.type.toLowerCase().includes('pemasukan'));
+          return (
+            <div key={i} className="flex justify-between items-center p-3 bg-slate-900 border border-slate-800 rounded-xl">
+              <div>
+                <p className="text-xs font-bold">{t.note || t.category}</p>
+                <p className="text-[9px] text-slate-500">
+                  {t.transaction_date ? new Date(t.transaction_date).toLocaleDateString() : ''}
+                </p>
+              </div>
+              <p className={`text-xs font-bold ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {isPemasukan ? '+' : '-'} Rp {(t.amount || 0).toLocaleString()}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
