@@ -17,36 +17,24 @@ export default function AnggaranPage() {
   };
 
   useEffect(() => {
-    const supabase = getSupabase();
+    // SINKRONISASI STATUS ADMIN DENGAN LOGIKA HEADER
+    const checkAdminStatus = () => {
+      const status1 = localStorage.getItem('is_admin') === 'true';
+      const status2 = localStorage.getItem('is_admin_haul') === 'true';
+      setIsAdmin(status1 || status2);
+    };
+
+    // Jalankan saat komponen dimuat
+    checkAdminStatus();
     loadBudgets();
 
-    async function fetchInitialAdminStatus() {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('is_admin_active')
-        .eq('id', 'main_config')
-        .single();
-      if (!error && data) {
-        setIsAdmin(data.is_admin_active);
-      }
-    }
-    fetchInitialAdminStatus();
-
-    const settingsChannel = supabase
-      .channel('public:settings-budget')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'settings', filter: 'id=eq.main_config' },
-        (payload) => {
-          if (payload.new && typeof payload.new.is_admin_active !== 'undefined') {
-            setIsAdmin(payload.new.is_admin_active);
-          }
-        }
-      )
-      .subscribe();
+    // Dengarkan perubahan status secara instan tanpa refresh halaman
+    window.addEventListener('storage', checkAdminStatus);
+    const interval = setInterval(checkAdminStatus, 400);
 
     return () => {
-      supabase.removeChannel(settingsChannel);
+      window.removeEventListener('storage', checkAdminStatus);
+      clearInterval(interval);
     };
   }, []);
 
@@ -57,7 +45,9 @@ export default function AnggaranPage() {
       .select('*')
       .order('id', { ascending: false });
 
-    if (!error && data) setBudgetList(data);
+    if (!error && data) {
+      setBudgetList(data);
+    }
   }
 
   async function verifikasiAksesAdmin() {
@@ -92,7 +82,13 @@ export default function AnggaranPage() {
     if (!lolosVerifikasi) return;
 
     const supabase = getSupabase();
-    const payload = { title: title.trim(), allocated_amount: parseFloat(amount), type: type };
+    
+    // Payload disesuaikan ke kolom planned_amount
+    const payload = { 
+      title: title.trim(), 
+      planned_amount: parseFloat(amount),
+      type: type 
+    };
 
     try {
       if (editingId) {
@@ -117,8 +113,13 @@ export default function AnggaranPage() {
     const lolosVerifikasi = await verifikasiAksesAdmin();
     if (!lolosVerifikasi) return;
 
+    // Membaca nominal dari planned_amount
+    const nilaiUang = b.planned_amount ?? 0;
+
     setEditingId(b.id);
-    setTitle(b.title || ''); setAmount(b.allocated_amount || ''); setType(b.type || 'pengeluaran');
+    setTitle(b.title || ''); 
+    setAmount(nilaiUang.toString()); 
+    setType(b.type || 'pengeluaran');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -138,8 +139,19 @@ export default function AnggaranPage() {
     }
   };
 
+  // Fungsi pemformat mata uang rupiah berbasis kolom planned_amount
+  const formatRupiah = (item) => {
+    const nilaiRaw = item.planned_amount ?? 0;
+    const nilaiAngka = parseFloat(nilaiRaw);
+    
+    if (isNaN(nilaiAngka)) return 'Rp 0';
+    return `Rp ${nilaiAngka.toLocaleString('id-ID')}`;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      {/* KONDISIONAL BAR FORM INPUT ANGGARAN */}
       {isAdmin ? (
         <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
           <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Anggaran'}</h3>
@@ -171,6 +183,7 @@ export default function AnggaranPage() {
         </div>
       )}
 
+      {/* TAMPILAN DATA RENCANA ANGGARAN */}
       <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md">
         <h3 className="text-xs font-bold text-slate-300 uppercase">📋 Rencana Anggaran ({budgetList.length})</h3>
         <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -180,10 +193,10 @@ export default function AnggaranPage() {
             budgetList.map(b => (
               <div key={b.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                 <div>
-                  <p className="font-bold text-white text-sm">{b.title}</p>
+                  <p className="font-bold text-white text-sm">{b.title || 'Tanpa Nama Kategori'}</p>
                   <p className={`text-[11px] font-mono font-bold mt-0.5 ${b.type === 'pemasukan' ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {b.type === 'pemasukan' ? '📥 Target: ' : '📤 Alokasi: '} 
-                    Rp {Number(b.allocated_amount).toLocaleString('id-ID')}
+                    {formatRupiah(b)}
                   </p>
                 </div>
                 {isAdmin && (
@@ -197,6 +210,7 @@ export default function AnggaranPage() {
           )}
         </div>
       </div>
+
     </div>
   );
 }
