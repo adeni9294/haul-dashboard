@@ -63,9 +63,9 @@ export default function AnggaranPage() {
 
     const supabase = getSupabase();
     
-    // MENEMBAK LANGSUNG KOLOM: name & planned_amount
+    // DISESUAIKAN: Menggunakan kolom 'category' & 'planned_amount'
     const payload = { 
-      name: category.trim(), 
+      category: category.trim(), 
       planned_amount: parseInt(amount, 10) || 0
     };
 
@@ -93,8 +93,8 @@ export default function AnggaranPage() {
   const handleEdit = (b) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(b.id);
-    setCategory(b.name || ''); 
-    setAmount((b.planned_amount || 0).toString()); // Membaca kolom planned_amount
+    setCategory(b.category || ''); // Membaca kolom category
+    setAmount((b.planned_amount || 0).toString()); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -173,9 +173,8 @@ export default function AnggaranPage() {
               budgetList.map(b => (
                 <div key={b.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
                   <div>
-                    {/* Membaca kolom b.name */}
-                    <p className="font-bold text-white text-sm">{b.name || 'Kategori Tanpa Nama'}</p>
-                    {/* Membaca kolom b.planned_amount */}
+                    {/* MEMBACA KOLOM b.category AGAR TIDAK TANPA NAMA */}
+                    <p className="font-bold text-white text-sm">{b.category || 'Kategori Tanpa Nama'}</p>
                     <p className="text-[11px] font-mono font-bold mt-0.5 text-amber-400">
                       💰 Nilai Anggaran: {formatRupiah(b.planned_amount || 0)}
                     </p>
