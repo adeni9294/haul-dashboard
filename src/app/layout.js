@@ -145,7 +145,7 @@ export default function RootLayout({ children }) {
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
             <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl w-full relative`}>
               
-              {/* SISI KIRI: LOGO & NAMA ORGANISASI (DIPERBAIKI AGAR WRAP DI HP) */}
+              {/* SISI KIRI: LOGO & NAMA ORGANISASI (WRAP OTOMATIS DI MOBILE) */}
               <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div className={`w-12 h-12 md:w-16 md:h-16 ${currentStyle.innerBg} rounded-2xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
                   {logoUrl ? (
@@ -157,7 +157,6 @@ export default function RootLayout({ children }) {
                 
                 <div className="text-left space-y-1 min-w-0 flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-                    {/* Hapus truncate & max-w agar teks bisa turun otomatis ke baris baru */}
                     <h1 className="text-[11px] sm:text-sm font-black text-white tracking-wide uppercase leading-tight break-words">
                       {orgName}
                     </h1>
@@ -165,7 +164,6 @@ export default function RootLayout({ children }) {
                       {isAdmin ? 'ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
-                  {/* Hapus truncate pada alamat agar memanjang ke bawah jika di layar mobile */}
                   <p className={`text-[9px] sm:text-[10px] ${currentStyle.textMuted} leading-normal break-words`}>
                     {address}
                   </p>
@@ -209,8 +207,12 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
             </Link>
 
+            {/* NAV TENGAH: MODIFIKASI ICON REKENING DONASI JEMAAH (TANGAN MEMBAWA HATI) */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                <path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08v0c.85.85 2.23.85 3.08 0L15 8"/>
+              </svg>
             </button>
 
             <Link href="/anggaran" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/anggaran' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
