@@ -6,7 +6,7 @@ export default function KepanitiaanPage() {
   const [committeeList, setCommitteeList] = useState([]);
   const [memberName, setMemberName] = useState(''); 
   const [positionName, setPositionName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // State baru untuk Nomor WA
+  const [phoneNumber, setPhoneNumber] = useState(''); // State form untuk nomor HP
   const [editingId, setEditingId] = useState(null);
 
   const getSupabase = () => {
@@ -28,7 +28,6 @@ export default function KepanitiaanPage() {
     if (!error && data) setCommitteeList(data);
   }
 
-  // GERBANG KEAMANAN: Memvalidasi sandi langsung ke tabel settings
   async function verifikasiAksesAdmin() {
     const passwordInput = prompt("Masukkan Password Admin untuk melakukan aksi ini:");
     if (!passwordInput) return false;
@@ -61,11 +60,11 @@ export default function KepanitiaanPage() {
     if (!lolosVerifikasi) return;
 
     const supabase = getSupabase();
-    // Payload disesuaikan dengan struktur kolom tabel committee Anda
+    // PERBAIKAN: Payload diarahkan ke kolom 'phone' sesuai isi tabel Supabase Anda
     const payload = { 
       name: memberName.trim(),
       position: positionName.trim(),
-      phone_number: phoneNumber.trim() // Menyimpan ke kolom phone_number
+      phone: phoneNumber.trim() 
     };
 
     try {
@@ -97,7 +96,7 @@ export default function KepanitiaanPage() {
     setEditingId(c.id);
     setMemberName(c.name || ''); 
     setPositionName(c.position || '');
-    setPhoneNumber(c.phone_number || ''); // Mengisi form edit nomor WA
+    setPhoneNumber(c.phone || ''); // PERBAIKAN: Membaca properti c.phone saat edit
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -180,12 +179,14 @@ export default function KepanitiaanPage() {
             committeeList.map(c => (
               <div key={c.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                 <div className="flex flex-col space-y-0.5">
+                  {/* Gunakan c.name sesuai kolom teks isi data nama panitia Anda */}
                   <span className="font-bold text-white text-sm">👤 {c.name}</span>
                   <div className="flex gap-3 text-[11px] text-slate-400 font-mono">
                     <span>💼 {c.position}</span>
-                    {c.phone_number && (
-                      <span className="text-emerald-400">
-                        📞 {c.phone_number}
+                    {/* PERBAIKAN: Menampilkan properti c.phone yang berisi data nomor WA */}
+                    {c.phone && (
+                      <span className="text-emerald-400 font-bold">
+                        📞 {c.phone}
                       </span>
                     )}
                   </div>
