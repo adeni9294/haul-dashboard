@@ -7,7 +7,7 @@ export default function DokumentasiPage() {
   const [photos, setPhotos] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // State Form Modal Tambah Dokumentasi (Sesuai Gaya Transaksi)
+  // State Form Modal Tambah Dokumentasi
   const [showModal, setShowModal] = useState(false);
   const [formTitle, setFormTitle] = useState('');
   const [formFile, setFormFile] = useState(null);
@@ -54,17 +54,13 @@ export default function DokumentasiPage() {
 
   const handleSavePhoto = async (e) => {
     e.preventDefault();
+    // DISESUAIKAN: Validasi status admin disamakan persis seperti halaman transaksi Anda
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (!formFile || !formTitle.trim()) return alert('Harap isi judul kegiatan dan pilih berkas foto!');
 
     try {
       setUploading(true);
       const supabase = getSupabase();
-
-      // Proteksi Tambahan: Validasi RPC Ulang Sesaat Sebelum Upload (Anti-bypass RLS)
-      const savedPassword = localStorage.getItem('admin_password_haul');
-      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
-      if (!isValid) throw new Error('Otorisasi admin tidak sah atau kadaluarsa!');
 
       // A. Upload file fisik gambar ke Storage Bucket 'dokumentasi'
       const fileExt = formFile.name.split('.').pop();
@@ -104,7 +100,7 @@ export default function DokumentasiPage() {
     try {
       const supabase = getSupabase();
 
-      // Hapus file fisik dari Supabase Storage jika jalur path sesuai
+      // Hapus file fisik dari Supabase Storage
       const urlParts = item.image_url.split('/storage/v1/object/public/dokumentasi/');
       const filePath = urlParts[1];
       if (filePath) {
@@ -130,7 +126,7 @@ export default function DokumentasiPage() {
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = `${filename.replace(/\s+/g, '_')}.jpg`;
-      document.body.appendChild(a)
+      document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
@@ -150,7 +146,7 @@ export default function DokumentasiPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* AREA UTAMA PANEL KONTROL (KONSISTEN DENGAN TRANSAKSI) */}
+      {/* AREA UTAMA PANEL KONTROL */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider">📸 Galeri Dokumentasi Kegiatan Haul</h2>
@@ -165,7 +161,7 @@ export default function DokumentasiPage() {
         )}
       </div>
 
-      {/* STRUKTUR GRID DAFTAR FOTO (ALBUM) */}
+      {/* STRUKTUR GRID DAFTAR FOTO */}
       {photos.length === 0 ? (
         <div className="p-12 text-center text-slate-500 font-mono border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
           Belum ada arsip foto dokumentasi kegiatan yang diunggah.
@@ -208,7 +204,7 @@ export default function DokumentasiPage() {
         </div>
       )}
 
-      {/* ================= MODAL DIALOG POP-UP INPUT FOTO DOKUMENTASI ================= */}
+      {/* MODAL DIALOG POP-UP INPUT FOTO */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <form onSubmit={handleSavePhoto} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
@@ -233,13 +229,13 @@ export default function DokumentasiPage() {
                 required
                 accept="image/*"
                 onChange={e => setFormFile(e.target.files[0])} 
-                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 file:font-bold hover:file:bg-slate-700 cursor-pointer focus:outline-none" 
+                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 file:font-bold hover:file:bg-zinc-700 cursor-pointer focus:outline-none" 
               />
             </div>
 
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={resetForm} disabled={uploading} className="flex-1 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl disabled:opacity-50">Batal</button>
-              <button type="submit" mercantile="true" disabled={uploading} className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black uppercase rounded-xl shadow-lg disabled:opacity-50">
+              <button type="submit" disabled={uploading} className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black uppercase rounded-xl shadow-lg disabled:opacity-50">
                 {uploading ? '⏳ Mengunggah...' : 'Simpan Foto'}
               </button>
             </div>
