@@ -106,11 +106,13 @@ export default function RootLayout({ children }) {
 
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
+  // MENAMBAHKAN MENU DOKUMENTASI KE DALAM ARRAY MENUS
   const menus = [
     { name: '📊 Dashboard', href: '/' },
     { name: '💰 Transaksi', href: '/transaksi' },
     { name: '📈 Anggaran', href: '/anggaran' },
     { name: '📅 Acara', href: '/acara' },
+    { name: '📸 Dokumentasi', href: '/dokumentasi' },
     { name: '👥 Panitia', href: '/kepanitiaan' },
     ...(isAdmin ? [{ name: '⚙️ Setelan', href: '/pengaturan' }] : [])
   ];
@@ -155,9 +157,9 @@ export default function RootLayout({ children }) {
           {/* FOOTER */}
           <footer className={`py-4 mb-20 sm:mb-0 border-t border-white/5 text-center text-[11px] ${currentStyle.textMuted} font-mono`}>Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}</footer>
 
-          {/* BOTTOM NAVBAR UNTUK HP */}
+          {/* BOTTOM NAVBAR UNTUK HP (MENGGUNAKAN GRID-COLS-4 AGAR SIMETRIS SEIMBANG) */}
           <div className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-0 sm:static sm:w-full sm:max-w-7xl sm:mx-auto sm:px-4 sm:mb-4">
-            <nav className={`grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 ${currentStyle.navBg} border p-2 rounded-2xl text-[11px] sm:text-xs font-bold w-full sm:w-fit text-center shadow-2xl sm:shadow-none`}>
+            <nav className={`grid grid-cols-4 sm:flex sm:flex-wrap items-center gap-1.5 ${currentStyle.navBg} border p-2 rounded-2xl text-[11px] sm:text-xs font-bold w-full sm:w-fit text-center shadow-2xl sm:shadow-none`}>
               {menus.map((m) => (
                 <Link key={m.href} href={m.href} className={`py-2 px-1 sm:px-4 rounded-xl transition-all truncate ${pathname === m.href ? 'bg-amber-500 text-slate-950 shadow-md font-black' : `${currentStyle.textMuted} hover:text-white`}`}>{m.name}</Link>
               ))}
