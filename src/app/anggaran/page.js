@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 export default function AnggaranPage() {
+  const [loading, setLoading] = useState(true);
   const [budgetList, setBudgetList] = useState([]);
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
@@ -11,91 +12,64 @@ export default function AnggaranPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const getSupabase = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    return createClient(url, key);
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '', 
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
   };
 
   useEffect(() => {
-    // SCANNER AGRESIF: Memeriksa semua key di localStorage yang mengandung kata 'admin'
-    const checkAdminStatus = () => {
-      let statusAdminDitemukan = false;
-      
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.toLowerCase().includes('admin') || key.toLowerCase().includes('login'))) {
-          const value = localStorage.getItem(key);
-          if (value === 'true' || value === 'admin' || value === 'authenticated') {
-            statusAdminDitemukan = true;
-            break;
-          }
-        }
-      }
-      
-      setIsAdmin(statusAdminDitemukan);
-    };
-
-    // Jalankan pemindaian awal
-    checkAdminStatus();
+    checkAdminSession();
     loadBudgets();
 
-    // Gunakan interval cepat (200ms) karena klik di tab yang sama tidak memicu event 'storage'
-    const interval = setInterval(checkAdminStatus, 200);
-
+    // Jalankan interval cek session agar jika user login/logout dari Header,
+    // halaman anggaran langsung merespons secara real-time.
+    const interval = setInterval(checkAdminSession, 500);
     return () => clearInterval(interval);
   }, []);
 
-  async function loadBudgets() {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('budgets') 
-      .select('*')
-      .order('id', { ascending: false });
-
-    if (!error && data) {
-      setBudgetList(data);
+  // DI-SYNCHRONIZE: Menggunakan RPC dan key localStorage yang persis sama dengan transaksi
+  async function checkAdminSession() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) return setIsAdmin(false);
+    try {
+      const supabase = getSupabase();
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      setIsAdmin(false);
     }
   }
 
-  async function verifikasiAksesAdmin() {
-    const passwordInput = prompt("Masukkan Password Admin untuk melakukan aksi ini:");
-    if (!passwordInput) return false;
+  async function loadBudgets() {
+    try {
+      setLoading(true);
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('budgets') 
+        .select('*')
+        .order('id', { ascending: false });
 
-    const supabase = getSupabase();
-    const { data: settingsData, error } = await supabase
-      .from('settings')
-      .select('admin_password')
-      .eq('id', 'main_config')
-      .single();
-
-    if (error || !settingsData) {
-      alert("❌ Gagal terhubung ke sistem keamanan database.");
-      return false;
+      if (!error && data) {
+        setBudgetList(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-
-    if (passwordInput !== settingsData.admin_password) {
-      alert("❌ Password Salah! Akses ditolak.");
-      return false;
-    }
-
-    return true;
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (!title.trim() || !amount) return;
-
-    const lolosVerifikasi = await verifikasiAksesAdmin();
-    if (!lolosVerifikasi) return;
 
     const supabase = getSupabase();
     
-    // Payload otomatis mengisi ke kolom title maupun name agar aman bagi database Anda
     const payload = { 
       title: title.trim(), 
-      name: title.trim(), // Cadangan jika nama kolomnya 'name'
-      category: title.trim(), // Cadangan jika nama kolomnya 'category'
-      planned_amount: parseFloat(amount),
+      planned_amount: parseFloat(amount) || 0,
       type: type 
     };
 
@@ -103,125 +77,132 @@ export default function AnggaranPage() {
       if (editingId) {
         const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert('🎯 Anggaran berhasil diperbarui!');
+        alert('🟢 Anggaran berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('budgets').insert([payload]);
         if (error) throw error;
-        alert('✅ Anggaran berhasil ditambahkan!');
+        alert('🟢 Anggaran baru berhasil ditambahkan!');
       }
 
-      setTitle(''); setAmount(''); setEditingId(null);
-      loadBudgets();
+      setTitle(''); 
+      setAmount(''); 
+      setEditingId(null);
+      await loadBudgets();
     } catch (err) {
       console.error(err);
-      alert('❌ Gagal menyimpan data anggaran.');
+      alert(`❌ Gagal menyimpan: ${err.message || err}`);
     }
   };
 
-  const handleEdit = async (b) => {
-    const lolosVerifikasi = await verifikasiAksesAdmin();
-    if (!lolosVerifikasi) return;
-
-    const nilaiUang = b.planned_amount ?? 0;
-    const namaKategori = b.title || b.name || b.category || b.kategori || '';
-
+  const handleEdit = (b) => {
+    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(b.id);
-    setTitle(namaKategori); 
-    setAmount(nilaiUang.toString()); 
+    setTitle(b.title || ''); 
+    setAmount((b.planned_amount || 0).toString()); 
     setType(b.type || 'pengeluaran');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Hapus rencana anggaran ini?')) {
-      const lolosVerifikasi = await verifikasiAksesAdmin();
-      if (!lolosVerifikasi) return;
-
+    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
+    if (!confirm('Apakah Anda yakin ingin menghapus rencana anggaran ini?')) return;
+    
+    try {
       const supabase = getSupabase();
       const { error } = await supabase.from('budgets').delete().eq('id', id);
-      if (!error) {
-        alert('🗑️ Anggaran berhasil dihapus!');
-        loadBudgets();
-      } else {
-        alert('❌ Gagal menghapus anggaran.');
-      }
+      if (error) throw error;
+      alert('🗑️ Anggaran berhasil dihapus.');
+      await loadBudgets();
+    } catch (err) {
+      alert(`❌ Gagal menghapus: ${err.message}`);
     }
   };
 
-  const formatRupiah = (item) => {
-    const nilaiRaw = item.planned_amount ?? 0;
-    const nilaiAngka = parseFloat(nilaiRaw);
-    if (isNaN(nilaiAngka)) return 'Rp 0';
-    return `Rp ${nilaiAngka.toLocaleString('id-ID')}`;
+  const formatRupiah = (num) => {
+    return new Intl.NumberFormat('id-ID', { 
+      style: 'currency', 
+      currency: 'IDR', 
+      minimumFractionDigits: 0 
+    }).format(num);
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      {/* FORM INPUT ANGGARAN KONDISIONAL */}
-      {isAdmin ? (
-        <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
-          <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Anggaran'}</h3>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Nama Alokasi / Kategori</label>
-            <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Konsumsi Utama" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Jumlah Anggaran (Rp)</label>
-            <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Contoh: 5000000" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Jenis</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
-              <option value="pengeluaran">Pengeluaran</option>
-              <option value="pemasukan">Pemasukan Target</option>
-            </select>
-          </div>
-          <button type="submit" className="w-full py-2.5 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400">
-            {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setTitle(''); setAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
-          )}
-        </form>
-      ) : (
-        <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
-          <p className="text-[10px] text-slate-500">Gunakan tombol login admin pada Header untuk membuka akses edit.</p>
-        </div>
-      )}
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat rencana anggaran...</div>;
 
-      {/* TAMPILAN DATA RENCANA ANGGARAN */}
-      <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md">
-        <h3 className="text-xs font-bold text-slate-300 uppercase">📋 Rencana Anggaran ({budgetList.length})</h3>
-        <div className="space-y-2 max-h-[500px] overflow-y-auto">
-          {budgetList.length === 0 ? (
-            <p className="text-xs text-slate-500 font-mono py-4 text-center">Belum ada rencana anggaran.</p>
-          ) : (
-            budgetList.map(b => (
-              <div key={b.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <div>
-                  {/* Solusi multi-kolom agar nama kategori otomatis terbaca dari database */}
-                  <p className="font-bold text-white text-sm">
-                    {b.title || b.name || b.category || b.kategori || 'Kategori Tanpa Nama'}
-                  </p>
-                  <p className={`text-[11px] font-mono font-bold mt-0.5 ${b.type === 'pemasukan' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {b.type === 'pemasukan' ? '📥 Target: ' : '📤 Alokasi: '} 
-                    {formatRupiah(b)}
-                  </p>
-                </div>
-                {isAdmin && (
-                  <div className="flex gap-3">
-                    <button onClick={() => handleEdit(b)} className="text-amber-500 font-bold hover:underline">Edit</button>
-                    <button onClick={() => handleDelete(b.id)} className="text-rose-400 font-bold hover:underline">Hapus</button>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+  return (
+    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
+      
+      {/* HEADER PAGE STATUS */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
+        <div>
+          <h2 className="text-xs font-black uppercase tracking-wider">📋 Rencana Anggaran & Alokasi Haul</h2>
+          <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* INTERFACE KONDISIONAL FORM INPUT */}
+        {isAdmin ? (
+          <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
+            <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Anggaran'}</h3>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Nama Alokasi / Kategori</label>
+              <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Tenda & Panggung" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Jumlah Anggaran (Rp)</label>
+              <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Contoh: 5000000" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono text-amber-400 font-bold" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Jenis Aliran</label>
+              <select value={type} onChange={(e) => setType(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
+                <option value="pengeluaran">Pengeluaran Alokasi</option>
+                <option value="pemasukan">Pemasukan Target</option>
+              </select>
+            </div>
+            <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs uppercase rounded-xl hover:from-amber-400 hover:to-amber-500 shadow-md">
+              {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={() => { setEditingId(null); setTitle(''); setAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+            )}
+          </form>
+        ) : (
+          <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
+            <p className="text-xs text-slate-400 font-medium font-sans">💡 Anda berada di Mode Publik (Read-Only).</p>
+            <p className="text-[10px] text-slate-500 font-mono">Gunakan tombol login admin pada Header utama untuk memunculkan panel input anggaran.</p>
+          </div>
+        )}
+
+        {/* LIST DAFTAR RENCANA ANGGARAN */}
+        <div className="lg:col-span-2 p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+          <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">📊 Rencana Anggaran Terdaftar ({budgetList.length})</h3>
+          <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
+            {budgetList.length === 0 ? (
+              <p className="text-xs text-slate-500 font-mono py-6 text-center">Belum ada data anggaran yang tersimpan.</p>
+            ) : (
+              budgetList.map(b => (
+                <div key={b.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
+                  <div>
+                    <p className="font-bold text-white text-sm">{b.title || 'Kategori Tanpa Nama'}</p>
+                    <p className={`text-[11px] font-mono font-bold mt-0.5 ${b.type === 'pemasukan' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {b.type === 'pemasukan' ? '📥 Target: ' : '📤 Alokasi: '} 
+                      {formatRupiah(b.planned_amount || 0)}
+                    </p>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-3 font-mono">
+                      <button onClick={() => handleEdit(b)} className="text-amber-400 hover:underline font-bold">Edit</button>
+                      <button onClick={() => handleDelete(b.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
