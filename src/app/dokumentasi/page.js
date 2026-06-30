@@ -1,236 +1,202 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+'use client';
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
 export default function DokumentasiPage() {
-  const [photos, setPhotos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
-  
-  // State untuk form upload admin
-  const [title, setTitle] = useState('')
-  const [file, setFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [photos, setPhotos] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Inisialisasi Supabase secara lokal dan aman di dalam komponen
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  )
+  // State Form Modal Tambah Dokumentasi (Sesuai Gaya Transaksi)
+  const [showModal, setShowModal] = useState(false);
+  const [formTitle, setFormTitle] = useState('');
+  const [formFile, setFormFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchPhotos()
-    checkAdminSession()
-  }, [])
+    checkAdminSession();
+    loadPhotos();
+  }, []);
 
-  // Sinkronisasi Sesi Admin menggunakan password di localStorage sesuai layout utama
+  const getSupabase = () => {
+    return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+  };
+
   async function checkAdminSession() {
-    const savedPassword = localStorage.getItem('admin_password_haul')
-    if (!savedPassword) {
-      setIsAdmin(false)
-      return
-    }
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) return setIsAdmin(false);
     try {
-      const { data: isValid } = await supabase.rpc('verify_admin_password', { 
-        p_password: savedPassword 
-      })
-      setIsAdmin(!!isValid)
+      const supabase = getSupabase();
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
     } catch (err) {
-      setIsAdmin(false)
+      setIsAdmin(false);
     }
   }
 
-  // Mengambil seluruh data dokumentasi dari tabel 'photos'
-  const fetchPhotos = async () => {
+  async function loadPhotos() {
     try {
-      setLoading(true)
+      setLoading(true);
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from('photos')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      setPhotos(data || [])
-    } catch (error) {
-      console.error('Gagal memuat foto:', error.message)
+      if (error) throw error;
+      setPhotos(data || []);
+    } catch (e) {
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  // Fungsi mengunduh file gambar langsung ke perangkat pengguna
-  const handleDownload = async (url, filename) => {
-    try {
-      const response = await fetch(url)
-      const blob = await response.blob()
-      const blobUrl = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = blobUrl
-      a.download = `${filename.replace(/\s+/g, '_')}.jpg`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      window.URL.revokeObjectURL(blobUrl)
-    } catch (error) {
-      alert('Gagal mengunduh foto')
-    }
-  }
-
-  // Fungsi Unggah Foto (Dilengkapi proteksi validasi RPC sebelum eksekusi Cloud Storage & DB)
-  const handleUpload = async (e) => {
-    e.preventDefault()
-    if (!file || !title) return alert('Harap isi judul dan pilih foto!')
+  const handleSavePhoto = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
+    if (!formFile || !formTitle.trim()) return alert('Harap isi judul kegiatan dan pilih berkas foto!');
 
     try {
-      setUploading(true)
+      setUploading(true);
+      const supabase = getSupabase();
 
-      // 1. PROTEKSI RAW: Cek ulang keabsahan password di localStorage sebelum proses dimulai
-      const savedPassword = localStorage.getItem('admin_password_haul')
-      if (!savedPassword) {
-        throw new Error('Akses ditolak. Sesi otorisasi admin tidak ditemukan!')
-      }
+      // Proteksi Tambahan: Validasi RPC Ulang Sesaat Sebelum Upload (Anti-bypass RLS)
+      const savedPassword = localStorage.getItem('admin_password_haul');
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      if (!isValid) throw new Error('Otorisasi admin tidak sah atau kadaluarsa!');
 
-      const { data: isValid, error: rpcError } = await supabase.rpc('verify_admin_password', { 
-        p_password: savedPassword 
-      })
-
-      if (rpcError || !isValid) {
-        throw new Error('Akses ilegal. Kata sandi admin tidak cocok!')
-      }
-
-      // 2. PROSES A: Unggah file biner foto ke Supabase Storage (Bucket: dokumentasi)
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `kegiatan/${fileName}`
+      // A. Upload file fisik gambar ke Storage Bucket 'dokumentasi'
+      const fileExt = formFile.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `kegiatan/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('dokumentasi')
-        .upload(filePath, file)
+        .upload(filePath, formFile);
 
-      if (uploadError) throw uploadError
+      if (uploadError) throw uploadError;
 
-      // 3. PROSES B: Ambil URL Publik dari file yang berhasil tersimpan di Storage
+      // B. Ambil URL Publik aset gambar
       const { data: { publicUrl } } = supabase.storage
         .from('dokumentasi')
-        .getPublicUrl(filePath)
+        .getPublicUrl(filePath);
 
-      // 4. PROSES C: Masukkan metadata judul dan link foto ke dalam tabel 'photos'
+      // C. Masukkan catatan baris ke tabel database 'photos'
       const { error: insertError } = await supabase
         .from('photos')
-        .insert([{ title, image_url: publicUrl }])
+        .insert([{ title: formTitle.trim(), image_url: publicUrl }]);
 
-      if (insertError) throw insertError
+      if (insertError) throw insertError;
 
-      alert('🟢 Foto dokumentasi berhasil ditambahkan!')
-      setTitle('')
-      setFile(null)
-      fetchPhotos()
-    } catch (error) {
-      alert(`❌ Gagal Mengunggah: ${error.message}`)
+      alert('🟢 Foto dokumentasi kegiatan berhasil disimpan!');
+      resetForm();
+      await loadPhotos();
+    } catch (err) {
+      alert(`❌ Gagal menyimpan dokumentasi:\n${err.message || err}`);
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
-  // Fungsi hapus data dokumentasi khusus admin
-  const handleDelete = async (id, imageUrl) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus foto kegiatan ini?')) return
-
+  const triggerHapus = async (item) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus foto "${item.title}" secara permanen?`)) return;
     try {
-      // Ekstrak path file asli dari URL Publik Storage
-      const urlParts = imageUrl.split('/storage/v1/object/public/dokumentasi/')
-      const filePath = urlParts[1]
+      const supabase = getSupabase();
 
+      // Hapus file fisik dari Supabase Storage jika jalur path sesuai
+      const urlParts = item.image_url.split('/storage/v1/object/public/dokumentasi/');
+      const filePath = urlParts[1];
       if (filePath) {
-        await supabase.storage.from('dokumentasi').remove([filePath])
+        await supabase.storage.from('dokumentasi').remove([filePath]);
       }
 
-      // Hapus baris data terikat dari Database
-      const { error } = await supabase.from('photos').delete().eq('id', id)
-      if (error) throw error
+      // Hapus baris metadata dari Tabel Database
+      const { error } = await supabase.from('photos').delete().eq('id', item.id);
+      if (error) throw error;
 
-      alert('🟢 Foto berhasil dihapus!')
-      fetchPhotos()
-    } catch (error) {
-      alert(error.message)
+      alert('🗑️ Foto dokumentasi berhasil dihapus.');
+      await loadPhotos();
+    } catch (err) {
+      alert(`❌ Gagal menghapus: ${err.message}`);
     }
-  }
+  };
+
+  const handleDownload = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `${filename.replace(/\s+/g, '_')}.jpg`;
+      document.body.appendChild(a)
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      alert('Gagal mengunduh berkas foto.');
+    }
+  };
+
+  const resetForm = () => {
+    setFormTitle('');
+    setFormFile(null);
+    setShowModal(false);
+  };
+
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Membuka album dokumentasi...</div>;
 
   return (
-    <div className="w-full text-zinc-100 p-2 sm:p-4">
-      {/* PANEL INPUT ADMIN: Otomatis tersinkronisasi jika masuk dalam Mode Admin */}
-      {isAdmin && (
-        <div className="mb-8 p-5 bg-zinc-900 border border-zinc-800 rounded-2xl max-w-xl shadow-xl">
-          <h2 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4">
-            🛠️ Panel Admin: Tambah Dokumentasi Kegiatan
-          </h2>
-          <form onSubmit={handleUpload} className="space-y-4">
-            <div>
-              <label className="block text-[11px] text-zinc-400 mb-1 font-mono">Nama / Judul Kegiatan</label>
-              <input 
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Pembelian Alat Drumband Baru"
-                className="w-full text-xs p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-amber-500 font-medium"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] text-zinc-400 mb-1 font-mono">Pilih File Gambar (Foto)</label>
-              <input 
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files[0])}
-                className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-200 file:font-bold hover:file:bg-zinc-700 cursor-pointer"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={uploading}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black p-2.5 rounded-xl transition-all disabled:opacity-50 uppercase tracking-wider shadow-md"
-            >
-              {uploading ? '⏳ Sedang Mengunggah...' : '🚀 Unggah Foto Kegiatan'}
-            </button>
-          </form>
+    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
+      
+      {/* AREA UTAMA PANEL KONTROL (KONSISTEN DENGAN TRANSAKSI) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
+        <div>
+          <h2 className="text-xs font-black uppercase tracking-wider">📸 Galeri Dokumentasi Kegiatan Haul</h2>
+          <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
-      )}
+        {isAdmin && (
+          <div className="w-full sm:w-auto">
+            <button onClick={() => setShowModal(true)} className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
+              ➕ Tambah Foto
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* STRUKTUR UTAMA GALERI DOKUMENTASI */}
-      {loading ? (
-        <div className="text-zinc-500 text-xs text-center font-mono py-12">Mengambil berkas foto dari cloud...</div>
-      ) : photos.length === 0 ? (
-        <div className="text-zinc-500 text-xs text-center font-mono py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
-          Belum ada foto dokumentasi kegiatan.
+      {/* STRUKTUR GRID DAFTAR FOTO (ALBUM) */}
+      {photos.length === 0 ? (
+        <div className="p-12 text-center text-slate-500 font-mono border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
+          Belum ada arsip foto dokumentasi kegiatan yang diunggah.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {photos.map((photo) => (
-            <div key={photo.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-lg">
-              <div className="relative">
+          {photos.map((p, idx) => (
+            <div key={idx} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-lg hover:border-slate-700 transition-all">
+              <div className="relative bg-slate-950 aspect-video w-full flex items-center justify-center overflow-hidden">
                 <img 
-                  src={photo.image_url} 
-                  alt={photo.title}
-                  className="w-full h-48 object-cover"
+                  src={p.image_url} 
+                  alt={p.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </div>
-              <div className="p-3.5 flex justify-between items-center bg-zinc-950/40 border-t border-zinc-900">
-                <span className="text-xs font-bold text-zinc-200 truncate max-w-[160px]">
-                  {photo.title}
+              <div className="p-3.5 flex justify-between items-center bg-slate-950/40 border-t border-slate-800/60">
+                <span className="text-xs font-bold text-slate-200 truncate max-w-[150px] sm:max-w-[180px]">
+                  {p.title}
                 </span>
-                
                 <div className="flex gap-2 shrink-0">
                   <button 
-                    onClick={() => handleDownload(photo.image_url, photo.title)}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-zinc-700 transition-all"
+                    onClick={() => handleDownload(p.image_url, p.title)}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-slate-700 transition-all"
                   >
                     Unduh
                   </button>
-
-                  {/* Tombol Hapus Otomatis Muncul Jika Terdeteksi Sesi Admin Aktif */}
                   {isAdmin && (
                     <button 
-                      onClick={() => handleDelete(photo.id, photo.image_url)}
-                      className="bg-rose-950/40 hover:bg-rose-900 border border-rose-900 text-rose-200 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                      onClick={() => triggerHapus(p)}
+                      className="bg-rose-950/40 hover:bg-rose-900 border border-rose-900/60 text-rose-300 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
                     >
                       Hapus
                     </button>
@@ -241,6 +207,46 @@ export default function DokumentasiPage() {
           ))}
         </div>
       )}
+
+      {/* ================= MODAL DIALOG POP-UP INPUT FOTO DOKUMENTASI ================= */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <form onSubmit={handleSavePhoto} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
+            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">➕ Unggah Dokumentasi Baru</h3>
+            
+            <div>
+              <label className="block text-slate-400 mb-1">Nama / Judul Dokumentasi Kegiatan</label>
+              <input 
+                type="text" 
+                required 
+                placeholder="Contoh: Pendirian Tenda Utama Maqbaroh"
+                value={formTitle} 
+                onChange={e => setFormTitle(e.target.value)} 
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-medium" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-400 mb-1">Pilih File Foto Gambar</label>
+              <input 
+                type="file" 
+                required
+                accept="image/*"
+                onChange={e => setFormFile(e.target.files[0])} 
+                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 file:font-bold hover:file:bg-slate-700 cursor-pointer focus:outline-none" 
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={resetForm} disabled={uploading} className="flex-1 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl disabled:opacity-50">Batal</button>
+              <button type="submit" mercantile="true" disabled={uploading} className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black uppercase rounded-xl shadow-lg disabled:opacity-50">
+                {uploading ? '⏳ Mengunggah...' : 'Simpan Foto'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
     </div>
-  )
+  );
 }
