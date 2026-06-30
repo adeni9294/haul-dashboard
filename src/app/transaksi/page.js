@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// SINGLETON PATTERN: Inisialisasi Supabase Client sekali saja di luar komponen
-// Ini mencegah error "Multiple GoTrueClient instances detected" dan menjaga koneksi tetap stabil
+// 🟢 SINGLETON PATTERN: Inisialisasi Klien Supabase sekali saja di luar komponen.
+// Ini mutlak diperlukan untuk menghentikan error "Multiple GoTrueClient instances detected" di konsol browser Anda.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -38,11 +38,17 @@ export default function TransaksiPage() {
 
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
-    if (!savedPassword) return setIsAdmin(false);
+    if (!savedPassword) {
+      setIsAdmin(false);
+      return;
+    }
     try {
-      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      // Memanggil fungsi RPC untuk verifikasi password admin
+      const { data: isValid, error } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      if (error) throw error;
       setIsAdmin(!!isValid);
     } catch (err) {
+      console.error('Gagal verifikasi session admin:', err);
       setIsAdmin(false);
     }
   }
@@ -51,22 +57,24 @@ export default function TransaksiPage() {
     try {
       setLoading(true);
       
+      // Ambil konfigurasi nama organisasi dari tabel settings
       const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (setDb && setDb.length > 0) {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
       }
 
-      // Memanggil tabel 'category' (tunggal) sesuai database Supabase Anda
+      // Memanggil daftar kategori dari tabel 'category'
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb) {
         setCategories(catDb);
         if (catDb.length > 0) setFormCategory(catDb[0].name);
       }
 
+      // Ambil seluruh data dari tabel 'transactions'
       const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       if (transDb) setAllTransactions(transDb);
     } catch (e) {
-      console.error(e);
+      console.error('Gagal memuat data dari database:', e);
     } finally {
       setLoading(false);
     }
@@ -74,9 +82,14 @@ export default function TransaksiPage() {
 
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
-    if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     
-    // Properti 'note' disesuaikan dengan kolom database Supabase Anda
+    // PENTING: Jika status login admin hilang/gagal terbaca, sistem akan langsung memperingatkan Anda di sini
+    if (!isAdmin) {
+      alert('❌ Aksi ditolak! Sistem mendeteksi Anda belum login sebagai admin atau session login Anda kedaluwarsa. Silakan refresh halaman dan login ulang.');
+      return;
+    }
+    
+    // Payload disesuaikan dengan nama kolom database Supabase: 'note'
     const payload = {
       transaction_date: formDate,
       type: formType,
@@ -93,12 +106,13 @@ export default function TransaksiPage() {
       } else {
         const { error } = await supabase.from('transactions').insert([payload]);
         if (error) throw error;
-        alert('🟢 Transaksi baru berhasil ditambahkan!');
+        alert('🟢 Transaksi baru berhasil disimpan ke database!');
       }
       resetForm();
       await loadData();
     } catch (err) {
-      alert(`❌ Gagal menyimpan data:\nPesan: ${err.message || err}`);
+      // Jika terjadi penolakan dari server (seperti CORS atau hak akses RLS), alert ini akan keluar secara eksplisit
+      alert(`❌ Gagal menyimpan data!\nPesan Error: ${err.message || err}`);
     }
   };
 
@@ -115,14 +129,16 @@ export default function TransaksiPage() {
   };
 
   const triggerHapus = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus data transaksi ini permanen?')) return;
+    if (!confirm('Apakah Anda yakin ingin menghapus data transaksi ini secara permanen?')) return;
+    if (!isAdmin) return alert('Aksi ditolak! Anda tidak memiliki akses admin.');
+    
     try {
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
-      alert('🗑️ Data berhasil dihapus.');
+      alert('🗑️ Data transaksi berhasil dihapus dari database.');
       await loadData();
     } catch (err) {
-      alert(`❌ Gagal menghapus: ${err.message}`);
+      alert(`❌ Gagal menghapus data: ${err.message}`);
     }
   };
 
@@ -137,7 +153,7 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // Pengelompokan Data LPJ untuk Format Cetak
+  // Pengelompokan Data Cetak Dokumen LPJ
   const lpjMasuk = {}; const lpjKeluar = {};
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
@@ -173,7 +189,7 @@ export default function TransaksiPage() {
     return matchSearch && matchType && matchCat;
   });
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Membuka lembar kendali kas...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Menghubungkan ke secure server database...</div>;
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
@@ -183,7 +199,7 @@ export default function TransaksiPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
             <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Sesi: {isAdmin ? '🟢 Terverifikasi Sebagai Admin' : '🔵 Mode Lihat (Read-Only)'}</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             {isAdmin && (
@@ -225,7 +241,7 @@ export default function TransaksiPage() {
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
               {filteredTrans.map((t, idx) => {
-                const currentType = (t.type || '').toLowerCase();
+                const currentType = (t.type || '').toString().toLowerCase();
                 const isPemasukan = currentType === 'masuk' || currentType === 'pemasukan';
                 
                 return (
