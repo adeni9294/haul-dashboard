@@ -2,6 +2,12 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// SINGLETON PATTERN: Inisialisasi Supabase Client sekali saja di luar komponen
+// Ini mencegah error "Multiple GoTrueClient instances detected" dan menjaga koneksi tetap stabil
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export default function TransaksiPage() {
   const [loading, setLoading] = useState(true);
   const [allTransactions, setAllTransactions] = useState([]);
@@ -30,15 +36,10 @@ export default function TransaksiPage() {
     loadData();
   }, []);
 
-  const getSupabase = () => {
-    return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
-  };
-
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
     if (!savedPassword) return setIsAdmin(false);
     try {
-      const supabase = getSupabase();
       const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
       setIsAdmin(!!isValid);
     } catch (err) {
@@ -49,7 +50,6 @@ export default function TransaksiPage() {
   async function loadData() {
     try {
       setLoading(true);
-      const supabase = getSupabase();
       
       const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (setDb && setDb.length > 0) {
@@ -75,10 +75,8 @@ export default function TransaksiPage() {
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
-
-    const supabase = getSupabase();
     
-    // FIX TOTAL: Menggunakan properti 'note' agar sesuai kolom database Supabase Anda
+    // Properti 'note' disesuaikan dengan kolom database Supabase Anda
     const payload = {
       transaction_date: formDate,
       type: formType,
@@ -119,7 +117,6 @@ export default function TransaksiPage() {
   const triggerHapus = async (id) => {
     if (!confirm('Apakah Anda yakin ingin menghapus data transaksi ini permanen?')) return;
     try {
-      const supabase = getSupabase();
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
       alert('🗑️ Data berhasil dihapus.');
