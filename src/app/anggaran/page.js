@@ -63,7 +63,6 @@ export default function AnggaranPage() {
 
     const supabase = getSupabase();
     
-    // Sinkronisasi penuh dengan struktur database Supabase Anda
     const payload = { 
       name: category.trim(), 
       amount: parseInt(amount, 10) || 0
@@ -174,8 +173,9 @@ export default function AnggaranPage() {
                 <div key={b.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
                   <div>
                     <p className="font-bold text-white text-sm">{b.name || 'Kategori Tanpa Nama'}</p>
+                    {/* Deskripsi disesuaikan murni menampilkan nilai Anggaran tabel budgets */}
                     <p className="text-[11px] font-mono font-bold mt-0.5 text-amber-400">
-                      Layout Alokasi: {formatRupiah(b.amount || 0)}
+                      💰 Nilai Anggaran: {formatRupiah(b.amount || 0)}
                     </p>
                   </div>
                   {isAdmin && (
