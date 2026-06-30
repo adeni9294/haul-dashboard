@@ -32,6 +32,7 @@ export default function RootLayout({ children }) {
   const [showDonationModal, setShowDonationModal] = useState(false); 
   const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
+  const [copiedIndex, setCopiedIndex] = useState(null);
   
   const [orgName, setOrgName] = useState('Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus');
   const [address, setAddress] = useState('Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon');
@@ -39,7 +40,6 @@ export default function RootLayout({ children }) {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
-  // State untuk Widget Waktu Real-time
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
@@ -92,6 +92,54 @@ export default function RootLayout({ children }) {
     }
   }
 
+  // Fungsi Parser Pintar untuk merapikan teks bankInfo dari DB
+  const parseBankInfo = (rawText) => {
+    if (!rawText) return [];
+    
+    // Deteksi jika string mengandung penanda khusus teks dari gambar_12.png
+    let cleanText = rawText.replace('Rekening Donasi -->', '').trim();
+    
+    // Potong string berdasarkan separator "---" atau "|"
+    const rawParts = cleanText.split(/---|\|/);
+    
+    return rawParts.map(part => {
+      const text = part.trim();
+      // Ekstrak Nama Bank/E-wallet sebelum tanda titik dua (:)
+      let bankName = 'BANK';
+      let accountNum = '';
+      let holderName = '-';
+
+      if (text.includes(':')) {
+        const splitColon = text.split(':');
+        bankName = splitColon[0].trim();
+        const rest = splitColon[1].trim();
+        
+        // Cari potongan nama pemilik (AN.)
+        if (rest.toUpperCase().includes('AN.')) {
+          const splitAN = rest.split(/AN\.|AN/i);
+          accountNum = splitAN[0].trim();
+          holderName = splitAN[1].replace(/^[.\s-]+|[.\s-]+$/g, '').trim();
+        } else {
+          accountNum = rest;
+        }
+      } else {
+        accountNum = text;
+      }
+
+      return {
+        bank: bankName,
+        number: accountNum,
+        name: holderName
+      };
+    }).filter(item => item.number.length > 0);
+  };
+
+  const handleCopy = (text, index) => {
+    navigator.clipboard.writeText(text.replace(/\s+/g, ''));
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -130,6 +178,8 @@ export default function RootLayout({ children }) {
     ...(isAdmin ? [{ name: '⚙️ Setelan Sistem', href: '/pengaturan' }] : [])
   ];
 
+  const listRekening = parseBankInfo(bankInfo);
+
   return (
     <html lang="id" className={`${currentStyle.body} min-h-screen`}>
       <head>
@@ -141,11 +191,10 @@ export default function RootLayout({ children }) {
         
         <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
           
-          {/* HEADER ATAS MODERN DENGAN FIX MOBILE TEXT */}
+          {/* HEADER ATAS MODERN */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
             <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl w-full relative`}>
               
-              {/* SISI KIRI: LOGO & NAMA ORGANISASI (WRAP OTOMATIS DI MOBILE) */}
               <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div className={`w-12 h-12 md:w-16 md:h-16 ${currentStyle.innerBg} rounded-2xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
                   {logoUrl ? (
@@ -170,7 +219,7 @@ export default function RootLayout({ children }) {
                 </div>
               </div>
 
-              {/* SISI KANAN ATAS: WIDGET TANGGAL & JAM DIGITAL LIVE */}
+              {/* LIVE CLOCK WIDGET */}
               {timeString && (
                 <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-zinc-800/60 pt-2 sm:pt-0 shrink-0">
                   <span className="text-sm font-black font-mono tracking-widest text-white">{timeString}</span>
@@ -207,7 +256,7 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
             </Link>
 
-            {/* NAV TENGAH: MODIFIKASI ICON REKENING DONASI JEMAAH (TANGAN MEMBAWA HATI) */}
+            {/* NAV TENGAH: BUTTON DONASI */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
@@ -228,49 +277,79 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* POP-UP MODAL: INFORMASI REKENING DONASI */}
+        {/* RE-DESIGNED POP-UP MODAL DONASI: JAUH LEBIH RAPI & PREMIUM */}
         {showDonationModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className={`border bg-[#12161A] border-zinc-800 p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl text-center`}>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">💳 Rekening Donasi Jemaah</h3>
-              <p className="text-xs text-slate-400">Salurkan infak & sedekah jariyah Anda untuk kesuksesan agenda Haul melalui rekening resmi:</p>
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in">
+            <div className="bg-[#12161A] border border-slate-800/80 p-5 rounded-[24px] w-full max-w-sm space-y-4 shadow-2xl relative">
               
-              <div className={`p-4 bg-black/40 border border-slate-800/40 rounded-xl font-mono text-xs text-left whitespace-pre-line leading-relaxed text-[#BFEC25]`}>
-                {bankInfo}
+              <div className="text-center space-y-1">
+                <div className="text-xl">💳</div>
+                <h3 className="text-xs font-black text-white uppercase tracking-wider">Rekening Donasi Jemaah</h3>
+                <p className="text-[10px] text-slate-400 max-w-[280px] mx-auto leading-normal">
+                  Salurkan infak & sedekah jariyah Anda untuk kesuksesan agenda Haul melalui opsi rekening resmi berikut:
+                </p>
+              </div>
+              
+              {/* LIST KARTU REKENING HASIL DETEKSI OTOMATIS */}
+              <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
+                {listRekening.length === 0 ? (
+                  <div className="p-4 bg-black/30 border border-slate-800/60 rounded-xl font-mono text-[10px] text-center text-amber-500">
+                    {bankInfo}
+                  </div>
+                ) : (
+                  listRekening.map((item, idx) => (
+                    <div key={idx} className="p-3 bg-black/30 border border-slate-800/60 rounded-xl flex items-center justify-between gap-3 group hover:border-slate-700 transition-all">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <span className="text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-[#BFEC25] border border-amber-500/20 uppercase tracking-wide">
+                          {item.bank}
+                        </span>
+                        <p className="text-xs font-black font-mono text-white tracking-wide pt-1 select-all">
+                          {item.number}
+                        </p>
+                        <p className="text-[9px] text-slate-500 font-sans truncate">
+                          AN. <span className="text-slate-300 font-medium">{item.name}</span>
+                        </p>
+                      </div>
+
+                      <button 
+                        onClick={() => handleCopy(item.number, idx)}
+                        className={`px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-bold tracking-wider uppercase transition-all shrink-0 ${copiedIndex === idx ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                      >
+                        {copiedIndex === idx ? 'Disalin' : 'Salin'}
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
 
-              <div className="pt-2">
-                <button onClick={() => setShowDonationModal(false)} className="w-full py-2 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-all">Tutup</button>
+              <div className="pt-1">
+                <button 
+                  onClick={() => setShowDonationModal(false)} 
+                  className="w-full py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700/40 shadow-md font-mono"
+                >
+                  TUTUP WINDOW
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* DRAWER TIRAI SLIDE-UP: MENU UTAMA (☰) */}
+        {/* DRAWER MENU UTAMA */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center transition-all" onClick={() => setShowMainMenuDrawer(false)}>
-            <div 
-              className={`w-full max-w-md bg-[#12161A] border-t border-zinc-800 rounded-t-3xl p-6 space-y-4 shadow-2xl transform transition-transform`}
-              onClick={(e) => e.stopPropagation()} 
-            >
+            <div className="w-full max-w-md bg-[#12161A] border-t border-zinc-800 rounded-t-3xl p-6 space-y-4 shadow-2xl transform transition-transform" onClick={(e) => e.stopPropagation()}>
               <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-2" />
               <div className="text-center">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Navigasi Halaman</h4>
               </div>
-
               <div className="grid grid-cols-1 gap-2 pt-2">
                 {drawerMenus.map((dm) => (
-                  <Link 
-                    key={dm.href} 
-                    href={dm.href} 
-                    className={`w-full py-3 px-4 rounded-xl font-medium text-xs text-left flex justify-between items-center ${pathname === dm.href ? 'bg-[#BFEC25]/10 text-[#BFEC25] border border-[#BFEC25]/20' : `bg-black/30 border border-slate-800/40 text-white hover:bg-zinc-800`}`}
-                  >
+                  <Link key={dm.href} href={dm.href} className={`w-full py-3 px-4 rounded-xl font-medium text-xs text-left flex justify-between items-center ${pathname === dm.href ? 'bg-[#BFEC25]/10 text-[#BFEC25] border border-[#BFEC25]/20' : `bg-black/30 border border-slate-800/40 text-white hover:bg-zinc-800`}`}>
                     <span>{dm.name}</span>
                     <span className="opacity-40">›</span>
                   </Link>
                 ))}
               </div>
-
               <div className="pt-4 border-t border-zinc-800">
                 {isAdmin ? (
                   <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950 text-rose-400 border border-rose-900 rounded-xl text-xs font-bold uppercase tracking-wide">
@@ -286,7 +365,7 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* MODAL LOGIN POPUP */}
+        {/* MODAL LOGIN */}
         {showLoginModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div className="bg-[#12161A] border border-zinc-800 p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl">
