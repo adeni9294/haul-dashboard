@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// SINGLETON: Menginisialisasi satu client Supabase agar tidak memicu error multiple instances
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -11,7 +10,7 @@ export default function TransaksiPage() {
   const [loading, setLoading] = useState(true);
   const [allTransactions, setAllTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(true); // Bypass login admin sementara untuk pengetesan langsung
+  const [isAdmin, setIsAdmin] = useState(true);
   const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
   // State Form Modal Utama
@@ -43,19 +42,17 @@ export default function TransaksiPage() {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
       }
 
-      // 1. Ambil Kategori dari tabel 'category'
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb && catDb.length > 0) {
         setCategories(catDb);
-        setFormCategory(catDb[0].name); // 🟢 Mencegah value category kosong saat form Tambah dibuka pertama kali
+        // Set default category jika kosong
+        if (!formCategory) setFormCategory(catDb[0].name);
       } else {
-        // Fallback jika tabel kategori kosong di database Anda
         const defaultCats = [{ name: 'Kas Umum' }, { name: 'Administrasi' }];
         setCategories(defaultCats);
-        setFormCategory(defaultCats[0].name);
+        if (!formCategory) setFormCategory(defaultCats[0].name);
       }
 
-      // 2. Ambil Transaksi dari tabel 'transactions'
       const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       if (transDb) setAllTransactions(transDb);
     } catch (e) {
@@ -68,33 +65,34 @@ export default function TransaksiPage() {
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     
-    // 🟢 VALIDASI DAN BERSIHKAN NOMINAL ANGKA (Mutlak untuk kolom numeric Supabase)
+    // Konversi string ke angka murni untuk kolom numeric
     const cleanAmount = parseFloat(formAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
     
     if (cleanAmount <= 0) {
-      alert('❌ Nominal angka bersih tidak boleh kosong atau 0!');
+      alert('❌ Nominal angka tidak boleh kosong atau 0!');
       return;
     }
 
-    // Pastikan kategori memiliki nilai dan tidak mengirim string kosong
     const finalCategory = formCategory || (categories.length > 0 ? categories[0].name : 'Lain-lain');
 
     const payload = {
       transaction_date: formDate,
       type: formType,
       category: finalCategory,
-      note: formDescription.trim(), // Mengarah ke kolom 'note' database
-      amount: cleanAmount          // Mengarah ke kolom 'amount' tipe numeric
+      note: formDescription.trim(), 
+      amount: cleanAmount          
     };
 
     try {
       if (isEditMode) {
-        // Mode Update
+        if (!selectedId) {
+          alert('❌ ID Transaksi tidak ditemukan untuk mode edit!');
+          return;
+        }
         const { error } = await supabase.from('transactions').update(payload).eq('id', selectedId);
         if (error) throw error;
         alert('🟢 Sukses: Perubahan data transaksi berhasil disimpan!');
       } else {
-        // Mode Insert Tambah Baru
         const { error } = await supabase.from('transactions').insert([payload]);
         if (error) throw error;
         alert('🟢 Sukses: Catatan transaksi baru berhasil ditambahkan!');
@@ -102,7 +100,8 @@ export default function TransaksiPage() {
       resetForm();
       await loadData();
     } catch (err) {
-      alert(`❌ Error Supabase:\n${err.message || JSON.stringify(err)}`);
+      console.error("Error saat menyimpan:", err);
+      alert(`❌ Gagal Menyimpan!\n\nJika tidak ada respon/terjadi error, pastikan domain URL Vercel Anda sudah dimasukkan ke Allowed Web Origins di Dashboard Supabase.\n\nPesan Error: ${err.message || JSON.stringify(err)}`);
     }
   };
 
@@ -116,7 +115,7 @@ export default function TransaksiPage() {
     
     setFormCategory(item.category || (categories.length > 0 ? categories[0].name : ''));
     setFormDescription(item.note || '');
-    setFormAmount(item.amount || ''); // Memuat angka mentah asli tanpa format rupiah agar bisa di-edit
+    setFormAmount(item.amount || ''); 
     setShowModal(true);
   };
 
