@@ -15,7 +15,7 @@ export default function TransaksiPage() {
   const [selectedId, setSelectedId] = useState(null);
   
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
-  const [formType, setFormType] = useState('Pemasukan'); // Disesuaikan ke Capital sesuai data DB asli
+  const [formType, setFormType] = useState('Pemasukan');
   const [formCategory, setFormCategory] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formAmount, setFormAmount] = useState('');
@@ -56,14 +56,13 @@ export default function TransaksiPage() {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
       }
 
-      // Load Kategori dari tabel categories
-      const { data: catDb } = await supabase.from('categories').select('*').order('name', { ascending: true });
+      // PERBAIKAN: Mengubah 'categories' menjadi 'category' sesuai database Supabase Anda
+      const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb) {
         setCategories(catDb);
         if (catDb.length > 0) setFormCategory(catDb[0].name);
       }
 
-      // Load data transaksi dari tabel transactions
       const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       if (transDb) setAllTransactions(transDb);
     } catch (e) {
@@ -73,17 +72,15 @@ export default function TransaksiPage() {
     }
   }
 
-  // Aksi submit tambah atau edit data secara absolut ke skema database asli
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
 
     const supabase = getSupabase();
     
-    // Sinkronisasi penuh dengan kolom asli database Supabase Anda
     const payload = {
       transaction_date: formDate,
-      type: formType, // Bernilai 'Pemasukan' atau 'Pengeluaran'
+      type: formType,
       category: formCategory,
       note: formDescription.trim(), 
       amount: parseFloat(formAmount) || 0
@@ -110,7 +107,6 @@ export default function TransaksiPage() {
     setIsEditMode(true);
     setSelectedId(item.id);
     setFormDate(item.transaction_date || new Date().toISOString().split('T')[0]);
-    // Normalisasi value type ke format Kapital pembacaan database
     const currentType = (item.type || '').toString().toLowerCase().trim();
     setFormType(currentType === 'masuk' || currentType === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran');
     setFormCategory(item.category || '');
@@ -169,7 +165,6 @@ export default function TransaksiPage() {
     const txt = (t.note || '').toLowerCase();
     const matchSearch = txt.includes(search.toLowerCase());
     
-    // Normalisasi filter aliran kas agar fleksibel membaca data lama & baru
     const currentType = (t.type || '').toLowerCase();
     let matchType = false;
     if (typeFilter === 'all') matchType = true;
