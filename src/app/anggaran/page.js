@@ -63,9 +63,10 @@ export default function AnggaranPage() {
 
     const supabase = getSupabase();
     
+    // MENEMBAK LANGSUNG KOLOM: name & planned_amount
     const payload = { 
       name: category.trim(), 
-      amount: parseInt(amount, 10) || 0
+      planned_amount: parseInt(amount, 10) || 0
     };
 
     try {
@@ -93,7 +94,7 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(b.id);
     setCategory(b.name || ''); 
-    setAmount((b.amount || 0).toString()); 
+    setAmount((b.planned_amount || 0).toString()); // Membaca kolom planned_amount
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -172,10 +173,11 @@ export default function AnggaranPage() {
               budgetList.map(b => (
                 <div key={b.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
                   <div>
+                    {/* Membaca kolom b.name */}
                     <p className="font-bold text-white text-sm">{b.name || 'Kategori Tanpa Nama'}</p>
-                    {/* Deskripsi disesuaikan murni menampilkan nilai Anggaran tabel budgets */}
+                    {/* Membaca kolom b.planned_amount */}
                     <p className="text-[11px] font-mono font-bold mt-0.5 text-amber-400">
-                      💰 Nilai Anggaran: {formatRupiah(b.amount || 0)}
+                      💰 Nilai Anggaran: {formatRupiah(b.planned_amount || 0)}
                     </p>
                   </div>
                   {isAdmin && (
