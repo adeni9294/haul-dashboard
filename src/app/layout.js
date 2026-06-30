@@ -22,15 +22,15 @@ const THEME_STYLES = {
   'toxic-lime': { body: 'bg-zinc-950 text-lime-400', card: 'bg-zinc-900 border-lime-950 text-lime-400', navBg: 'bg-zinc-900 border-lime-900', innerBg: 'bg-zinc-950 border border-lime-900/40', textMuted: 'text-zinc-600', accentText: 'text-lime-400' },
   'crimson-tide': { body: 'bg-neutral-950 text-red-200', card: 'bg-neutral-900 border-red-950 text-red-200', navBg: 'bg-red-950 border-red-900/50', innerBg: 'bg-red-950 border border-red-900/40', textMuted: 'text-neutral-500', accentText: 'text-red-400' },
   'solarized-dark': { body: 'bg-slate-950 text-teal-200', card: 'bg-slate-900 border-teal-950 text-teal-200', navBg: 'bg-slate-900 border-teal-950', innerBg: 'bg-slate-950 border border-teal-900/40', textMuted: 'text-slate-500', accentText: 'text-teal-400' },
-  'default': { body: 'bg-slate-950 text-slate-100', card: 'bg-slate-900 border-slate-800 text-slate-100', navBg: 'bg-slate-900 border-slate-800', innerBg: 'bg-slate-950 border border-slate-800/60', textMuted: 'text-slate-400', accentText: 'text-amber-500' }
+  'default': { body: 'bg-[#0B0E11] text-slate-100', card: 'bg-[#12161A] border-[#1E2329] text-slate-100', navBg: 'bg-[#12161A] border-[#1E2329]', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-amber-500' }
 };
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showDonationModal, setShowDonationModal] = useState(false); // Modal info rekening
-  const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); // Tirai menu utama
+  const [showDonationModal, setShowDonationModal] = useState(false); 
+  const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
   
   const [orgName, setOrgName] = useState('Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus');
@@ -42,7 +42,7 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
-    setShowMainMenuDrawer(false); // Tutup drawer otomatis setiap ganti halaman
+    setShowMainMenuDrawer(false); 
   }, [pathname]);
 
   async function checkAdminSession() {
@@ -108,7 +108,6 @@ export default function RootLayout({ children }) {
 
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
-  // STRUKTUR TERBENTUK: Menu sekunder yang dimasukkan ke tirai Menu Utama (☰)
   const drawerMenus = [
     { name: '💰 Transaksi Kas', href: '/transaksi' },
     { name: '📅 Jadwal Acara', href: '/acara' },
@@ -124,7 +123,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${currentStyle.body} font-['Poppins'] min-h-screen flex flex-col pb-24 sm:pb-6 transition-all duration-300 antialiased`}>
+      <body className={`${currentStyle.body} font-['Poppins'] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}>
         
         <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
           
@@ -152,61 +151,21 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* AREA KONTEN HALAMAN */}
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">{children}</main>
+          {/* AREA KONTEN HALAMAN UTAMA */}
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+            {children}
+          </main>
 
           {/* FOOTER DESKTOP */}
-          <footer className={`hidden sm:block py-4 border-t border-white/5 text-center text-[10px] ${currentStyle.textMuted} font-mono`}>
+          <footer className={`py-6 border-t border-white/5 text-center text-[9px] ${currentStyle.textMuted} font-mono uppercase tracking-widest`}>
             Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
           </footer>
 
-          {/* BAR NAVIGASI BAWAH MODERN (FIXED 5 TOMBOL) */}
-          <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-black/80 to-transparent sm:p-4 sm:static sm:bg-none sm:w-full sm:max-w-7xl sm:mx-auto">
-            <nav className={`grid grid-cols-5 items-center justify-between text-center ${currentStyle.navBg} border p-2 rounded-2xl text-[10px] font-bold w-full sm:w-max sm:mx-auto sm:gap-4 sm:px-6 shadow-2xl`}>
-              
-              {/* Menu 1: Dashboard */}
-              <Link href="/" className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-all ${pathname === '/' ? currentStyle.accentText : currentStyle.textMuted}`}>
-                <span className="text-lg">🏠</span>
-                <span className="text-[9px] sm:text-xs">Dashboard</span>
-              </Link>
-
-              {/* Menu 2: Statistik */}
-              <Link href="/stat" className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-all ${pathname === '/stat' ? currentStyle.accentText : currentStyle.textMuted}`}>
-                <span className="text-lg">📊</span>
-                <span className="text-[9px] sm:text-xs">Statistik</span>
-              </Link>
-
-              {/* Menu 3 (Tengah): Tombol (+) Hybrid */}
-              <button 
-                onClick={() => setShowDonationModal(true)}
-                className="flex items-center justify-center mx-auto w-11 h-11 bg-lime-500 text-black rounded-full shadow-lg transform -translate-y-2 hover:scale-105 active:scale-95 transition-all text-xl font-black"
-              >
-                +
-              </button>
-
-              {/* Menu 4: Anggaran */}
-              <Link href="/anggaran" className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-all ${pathname === '/anggaran' ? currentStyle.accentText : currentStyle.textMuted}`}>
-                <span className="text-lg">💰</span>
-                <span className="text-[9px] sm:text-xs">Anggaran</span>
-              </Link>
-
-              {/* Menu 5: Menu Utama Tirai */}
-              <button 
-                onClick={() => setShowMainMenuDrawer(true)} 
-                className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-all ${showMainMenuDrawer ? currentStyle.accentText : currentStyle.textMuted}`}
-              >
-                <span className="text-lg">☰</span>
-                <span className="text-[9px] sm:text-xs">Menu Utama</span>
-              </button>
-
-            </nav>
-          </div>
-
         </div>
 
-        {/* POP-UP MODAL: INFORMASI REKENING DONASI / TOMBOL (+) */}
+        {/* POP-UP MODAL: INFORMASI REKENING DONASI */}
         {showDonationModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className={`border ${currentStyle.navBg} p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl text-center`}>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">💳 Rekening Donasi Jemaah</h3>
               <p className={`text-xs ${currentStyle.textMuted}`}>Salurkan infak & sedekah jariyah Anda untuk kesuksesan agenda Haul melalui rekening resmi:</p>
@@ -227,14 +186,13 @@ export default function RootLayout({ children }) {
           <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center transition-all animate-fade-in" onClick={() => setShowMainMenuDrawer(false)}>
             <div 
               className={`w-full max-w-md ${currentStyle.card} border-t rounded-t-3xl p-6 space-y-4 shadow-2xl transform transition-transform animate-slide-up`}
-              onClick={(e) => e.stopPropagation()} // Mencegah tirai menutup saat area dalam diklik
+              onClick={(e) => e.stopPropagation()} 
             >
               <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-2" />
               <div className="text-center">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Navigasi Halaman</h4>
               </div>
 
-              {/* LIST MENU TRANSISI KE HALAMAN LAIN */}
               <div className="grid grid-cols-1 gap-2 pt-2">
                 {drawerMenus.map((dm) => (
                   <Link 
@@ -248,7 +206,6 @@ export default function RootLayout({ children }) {
                 ))}
               </div>
 
-              {/* TOMBOL MODAL LOGIN / LOGOUT ADMIN DI DALAM DRAWER MENU */}
               <div className="pt-4 border-t border-zinc-800">
                 {isAdmin ? (
                   <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950 text-rose-400 border border-rose-900 rounded-xl text-xs font-bold uppercase tracking-wide">
