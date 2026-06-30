@@ -15,7 +15,7 @@ export default function TransaksiPage() {
   const [selectedId, setSelectedId] = useState(null);
   
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
-  const [formType, setFormType] = useState('masuk');
+  const [formType, setFormType] = useState('Pemasukan'); // Disesuaikan ke Capital sesuai data DB asli
   const [formCategory, setFormCategory] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formAmount, setFormAmount] = useState('');
@@ -56,12 +56,14 @@ export default function TransaksiPage() {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
       }
 
+      // Load Kategori dari tabel categories
       const { data: catDb } = await supabase.from('categories').select('*').order('name', { ascending: true });
       if (catDb) {
         setCategories(catDb);
         if (catDb.length > 0) setFormCategory(catDb[0].name);
       }
 
+      // Load data transaksi dari tabel transactions
       const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       if (transDb) setAllTransactions(transDb);
     } catch (e) {
@@ -71,17 +73,17 @@ export default function TransaksiPage() {
     }
   }
 
-  // Aksi submit tambah atau edit data (Disesuaikan akurat ke kolom 'note')
+  // Aksi submit tambah atau edit data secara absolut ke skema database asli
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
 
     const supabase = getSupabase();
     
-    // PEMBARUAN DI SINI: Menyimpan uraian keterangan secara absolut ke kolom 'note' sesuai database Anda
+    // Sinkronisasi penuh dengan kolom asli database Supabase Anda
     const payload = {
       transaction_date: formDate,
-      type: formType,
+      type: formType, // Bernilai 'Pemasukan' atau 'Pengeluaran'
       category: formCategory,
       note: formDescription.trim(), 
       amount: parseFloat(formAmount) || 0
@@ -90,23 +92,11 @@ export default function TransaksiPage() {
     try {
       if (isEditMode) {
         const { error } = await supabase.from('transactions').update(payload).eq('id', selectedId);
-        if (error) {
-          // Fallback cadangan ke kolom alternatif jika skema cache beralih
-          const fallbackPayload = { ...payload, keterangan: formDescription.trim() };
-          delete fallbackPayload.note;
-          const { error: errFallback } = await supabase.from('transactions').update(fallbackPayload).eq('id', selectedId);
-          if (errFallback) throw errFallback;
-        }
+        if (error) throw error;
         alert('🟢 Transaksi berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('transactions').insert([payload]);
-        if (error) {
-          // Fallback cadangan ke kolom alternatif jika skema cache beralih
-          const fallbackPayload = { ...payload, keterangan: formDescription.trim() };
-          delete fallbackPayload.note;
-          const { error: errFallback } = await supabase.from('transactions').insert([fallbackPayload]);
-          if (errFallback) throw errFallback;
-        }
+        if (error) throw error;
         alert('🟢 Transaksi baru berhasil ditambahkan!');
       }
       resetForm();
@@ -119,11 +109,13 @@ export default function TransaksiPage() {
   const triggerEdit = (item) => {
     setIsEditMode(true);
     setSelectedId(item.id);
-    setFormDate(item.transaction_date || item.tanggal);
-    setFormType(item.type);
-    setFormCategory(item.category || item.kategori);
+    setFormDate(item.transaction_date || new Date().toISOString().split('T')[0]);
+    // Normalisasi value type ke format Kapital pembacaan database
+    const currentType = (item.type || '').toString().toLowerCase().trim();
+    setFormType(currentType === 'masuk' || currentType === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran');
+    setFormCategory(item.category || '');
     setFormDescription(item.note || item.keterangan || item.description || '');
-    setFormAmount(item.amount || item.nominal || '');
+    setFormAmount(item.amount || '');
     setShowModal(true);
   };
 
@@ -144,7 +136,7 @@ export default function TransaksiPage() {
     setIsEditMode(false);
     setSelectedId(null);
     setFormDate(new Date().toISOString().split('T')[0]);
-    setFormType('masuk');
+    setFormType('Pemasukan');
     if (categories.length > 0) setFormCategory(categories[0].name);
     setFormDescription('');
     setFormAmount('');
@@ -156,9 +148,9 @@ export default function TransaksiPage() {
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
   allTransactions.forEach(item => {
-    const nominal = parseFloat(item.amount || item.nominal) || 0;
-    const type = (item.type || item.jenis || item.category_type || '').toString().toLowerCase().trim();
-    const cat = item.category || item.kategori || 'Lain-lain';
+    const nominal = parseFloat(item.amount) || 0;
+    const type = (item.type || '').toString().toLowerCase().trim();
+    const cat = item.category || 'Lain-lain';
 
     if (type === 'masuk' || type === 'pemasukan') {
       totalLpjMasuk += nominal;
@@ -174,10 +166,17 @@ export default function TransaksiPage() {
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
   const filteredTrans = allTransactions.filter(t => {
-    const txt = (t.note || t.keterangan || t.description || '').toLowerCase();
+    const txt = (t.note || '').toLowerCase();
     const matchSearch = txt.includes(search.toLowerCase());
-    const matchType = typeFilter === 'all' || t.type === typeFilter;
-    const matchCat = catFilter === 'all' || t.category === catFilter || t.kategori === catFilter;
+    
+    // Normalisasi filter aliran kas agar fleksibel membaca data lama & baru
+    const currentType = (t.type || '').toLowerCase();
+    let matchType = false;
+    if (typeFilter === 'all') matchType = true;
+    else if (typeFilter === 'masuk') matchType = (currentType === 'masuk' || currentType === 'pemasukan');
+    else if (typeFilter === 'keluar') matchType = (currentType === 'keluar' || currentType === 'pengeluaran');
+
+    const matchCat = catFilter === 'all' || t.category === catFilter;
     return matchSearch && matchType && matchCat;
   });
 
@@ -232,26 +231,31 @@ export default function TransaksiPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
-              {filteredTrans.map((t, idx) => (
-                <tr key={idx} className="hover:bg-slate-950/20 transition-all">
-                  <td className="p-3 font-mono text-slate-500">{t.transaction_date || t.tanggal}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${t.type === 'masuk' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
-                      {t.category || t.kategori}
-                    </span>
-                  </td>
-                  <td className="p-3 truncate max-w-xs font-medium">{t.note || t.keterangan || t.description}</td>
-                  <td className={`p-3 text-right font-mono font-black ${t.type === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.amount || t.nominal)}
-                  </td>
-                  {isAdmin && (
-                    <td className="p-3 text-center space-x-2">
-                      <button onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                      <button onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+              {filteredTrans.map((t, idx) => {
+                const currentType = (t.type || '').toLowerCase();
+                const isPemasukan = currentType === 'masuk' || currentType === 'pemasukan';
+                
+                return (
+                  <tr key={idx} className="hover:bg-slate-950/20 transition-all">
+                    <td className="p-3 font-mono text-slate-500">{t.transaction_date}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${isPemasukan ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
+                        {t.category}
+                      </span>
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td className="p-3 truncate max-w-xs font-medium">{t.note}</td>
+                    <td className={`p-3 text-right font-mono font-black ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
+                    </td>
+                    {isAdmin && (
+                      <td className="p-3 text-center space-x-2">
+                        <button onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
+                        <button onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
               {filteredTrans.length === 0 && (
                 <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
               )}
@@ -274,8 +278,8 @@ export default function TransaksiPage() {
               <div>
                 <label className="block text-slate-400 mb-1">Aliran Jenis</label>
                 <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none">
-                  <option value="masuk">🟢 Pemasukan (Hijau)</option>
-                  <option value="keluar">🔴 Pengeluaran (Merah)</option>
+                  <option value="Pemasukan">🟢 Pemasukan (Hijau)</option>
+                  <option value="Pengeluaran">🔴 Pengeluaran (Merah)</option>
                 </select>
               </div>
             </div>
@@ -331,7 +335,7 @@ export default function TransaksiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjMasuk[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date || t.tanggal}</td><td className="py-1">{t.note || t.keterangan || t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount || t.nominal)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -351,7 +355,7 @@ export default function TransaksiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjKeluar[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date || t.tanggal}</td><td className="py-1">{t.note || t.keterangan || t.description}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount || t.nominal)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
                   ))}
                 </tbody>
               </table>
