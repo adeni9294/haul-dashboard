@@ -117,7 +117,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-28 -mt-1">
       
-      {/* 1. TEXT BANNER INFOMASI WEMARA */}
+      {/* 1. TEXT BANNER INFOMASI */}
       {announcement && (
         <div className="w-full bg-[#BFEC25]/10 border border-[#BFEC25]/20 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
@@ -129,29 +129,33 @@ export default function DashboardPage() {
       {/* 2. AREA UTAMA KARTU SALDO & CARD PEMASUKAN/PENGELUARAN */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KARTU SALDO UTAMA BERMOTIF MEGA MENDUNG ASLI TANPA LOGO KAKU */}
-        <div className="bg-[#BFEC25] text-black p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl shadow-[#BFEC25]/10 border border-[#BFEC25]/30 transition-transform duration-300 hover:scale-[1.01]">
+        {/* KARTU SALDO UTAMA BERMOTIF MEGA MENDUNG ASLI HIGHT-CONTRAST */}
+        <div className="bg-[#BFEC25] text-black p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl shadow-[#BFEC25]/20 border border-[#BFEC25]/40 transition-transform duration-300 hover:scale-[1.01]">
           
-          {/* VEKTOR PATTERN BATIK MEGA MENDUNG ASLI */}
-          <div className="absolute inset-y-0 right-0 w-[55%] opacity-[0.14] pointer-events-none mix-blend-multiply select-none">
+          {/* HIGH-CONTRAST MEGA MENDUNG PATTERN */}
+          <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.25] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
-              <g fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M120,40 C140,20 170,25 180,45 C190,65 170,85 140,80 C110,75 100,50 120,40 Z" />
-                <path d="M130,50 C145,35 165,38 172,52 C179,66 165,80 145,76 C125,72 118,58 130,50 Z" />
-                <path d="M140,60 C150,50 160,52 164,60 C168,68 160,76 150,74 C140,72 136,66 140,60 Z" />
-                <path d="M60,110 C80,95 110,100 120,120 C130,140 110,160 80,155 C50,150 40,125 60,110 Z" />
-                <path d="M70,120 C85,110 105,113 112,127 C119,141 105,155 85,151 C65,147 58,133 70,120 Z" />
-                <path d="M100,130 C120,110 150,115 160,135 C170,155 150,175 120,170 C90,165 80,140 100,130 Z" />
+              <g fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                {/* Awan Atas */}
+                <path d="M120,30 C145,10 175,15 185,35 C195,55 175,75 145,70 C115,65 105,40 120,30 Z" />
+                <path d="M130,40 C150,25 170,28 177,42 C184,56 170,70 150,66 C130,62 123,48 130,40 Z" />
+                <path d="M140,50 C152,40 162,42 166,50 C170,58 162,66 152,64 C142,62 138,56 140,50 Z" />
+                {/* Awan Tengah */}
+                <path d="M50,100 C75,80 105,85 115,105 C125,125 105,145 75,140 C45,135 35,110 50,100 Z" />
+                <path d="M60,110 C78,95 98,98 105,112 C112,126 98,140 78,136 C58,132 51,118 60,110 Z" />
+                {/* Awan Bawah */}
+                <path d="M110,120 C135,100 165,105 175,125 C185,145 165,165 135,160 C105,155 95,130 110,120 Z" />
+                <path d="M120,130 C140,115 160,118 167,132 C174,146 160,160 140,156 C120,152 113,138 120,130 Z" />
               </g>
             </svg>
           </div>
 
-          <div>
+          <div className="relative z-10">
             <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-60">KAS UTAMA HAUL</span>
             <p className="text-[11px] font-semibold opacity-70 mt-0.5">Sisa Saldo Kas Bersih</p>
           </div>
 
-          <div className="z-10">
+          <div className="relative z-10">
             <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none text-black">
               {formatRupiah(totals.total)}
             </h2>
@@ -274,34 +278,29 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 6. BOTTOM NAV DESIGN GLASSMORPHISM MODERN MINIMALIS */}
+      {/* 6. BOTTOM NAV GLASSMORPHISM FLOATING BAR */}
       <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
-        <div className="bg-zinc-900/70 backdrop-blur-xl border border-zinc-800/60 h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl shadow-black/80">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/80 h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl shadow-black/90">
           
-          {/* NAV HOME */}
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'home' ? 'text-[#BFEC25] bg-white/5 shadow-md shadow-black/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Home</span>
           </button>
 
-          {/* NAV STATISTIK */}
           <button onClick={() => { setActiveTab('stat'); window.location.href = '/stat'; }} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'stat' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
           </button>
 
-          {/* NAV UTAMA PLUS TOMBOL INPUT */}
           <button onClick={() => { setActiveTab('plus'); window.location.href = '/transaksi'; }} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
 
-          {/* NAV BUDGET */}
           <button onClick={() => { setActiveTab('budget'); window.location.href = '/anggaran'; }} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'budget' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
             <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Budget</span>
           </button>
 
-          {/* NAV SETTING MENU UTAMA */}
           <button onClick={() => { setActiveTab('menu'); window.location.href = '/pengaturan'; }} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'menu' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Menu</span>
