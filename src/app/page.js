@@ -93,11 +93,15 @@ export default function DashboardPage() {
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
 
+        // PERBAIKAN RUMUS: Mengubah calcKeluar menjadi calcMasuk (Pemasukan / Anggaran Plafon)
         let hitungPersen = 0;
         if (totalPlafonDinamis > 0) {
-          hitungPersen = Math.round((calcKeluar / totalPlafonDinamis) * 100);
+          // Menggunakan toFixed(1) atau Math.round sesuai kenyamanan UI Anda
+          hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
         }
-        setProgress({ percent: hitungPersen, current: calcKeluar, target: totalPlafonDinamis });
+        
+        // Mengubah label current menjadi calcMasuk agar deskripsi di bawah bar sinkron dengan target pencapaian pemasukan
+        setProgress({ percent: hitungPersen, current: calcMasuk, target: totalPlafonDinamis });
       }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
@@ -205,7 +209,8 @@ export default function DashboardPage() {
           <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
         <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-0.5">
-          <span>Terpakai: <strong className="text-slate-300">{formatRupiah(progress.current)}</strong></span>
+          {/* Label disesuaikan menjadi "Terkumpul" agar sinkron dengan fungsi target uang masuk */}
+          <span>Terkumpul: <strong className="text-slate-300">{formatRupiah(progress.current)}</strong></span>
           <span>Plafon Target: <strong className="text-slate-300">{formatRupiah(progress.target)}</strong></span>
         </div>
       </div>
