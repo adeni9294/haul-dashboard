@@ -6,7 +6,7 @@ export default function KepanitiaanPage() {
   const [committeeList, setCommitteeList] = useState([]);
   const [memberName, setMemberName] = useState(''); 
   const [positionName, setPositionName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // State form untuk nomor HP
+  const [phoneNumber, setPhoneNumber] = useState(''); 
   const [editingId, setEditingId] = useState(null);
 
   const getSupabase = () => {
@@ -21,11 +21,15 @@ export default function KepanitiaanPage() {
 
   async function loadCommittee() {
     const supabase = getSupabase();
+    // Gunakan select('*') dan urutkan berdasarkan data terbaru (id / created_at)
     const { data, error } = await supabase
       .from('committee')
       .select('*')
       .order('id', { ascending: false });
-    if (!error && data) setCommitteeList(data);
+    
+    if (!error && data) {
+      setCommitteeList(data);
+    }
   }
 
   async function verifikasiAksesAdmin() {
@@ -60,7 +64,6 @@ export default function KepanitiaanPage() {
     if (!lolosVerifikasi) return;
 
     const supabase = getSupabase();
-    // PERBAIKAN: Payload diarahkan ke kolom 'phone' sesuai isi tabel Supabase Anda
     const payload = { 
       name: memberName.trim(),
       position: positionName.trim(),
@@ -69,20 +72,31 @@ export default function KepanitiaanPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase.from('committee').update(payload).eq('id', editingId).select();
+        const { error } = await supabase
+          .from('committee')
+          .update(payload)
+          .eq('id', editingId);
+        
         if (error) throw error;
         alert('🎯 Data panitia berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('committee').insert([payload]).select();
+        const { error } = await supabase
+          .from('committee')
+          .insert([payload]);
+        
         if (error) throw error;
         alert('✅ Anggota panitia berhasil ditambahkan!');
       }
 
+      // Bersihkan Form Input
       setMemberName(''); 
       setPositionName('');
       setPhoneNumber('');
       setEditingId(null);
+      
+      // PAKSA REFRESH FRONTEND: Memanggil ulang database untuk memperbarui list di layar
       await loadCommittee();
+
     } catch (err) { 
       console.error(err);
       alert(`❌ Gagal menyimpan data panitia.`); 
@@ -96,7 +110,7 @@ export default function KepanitiaanPage() {
     setEditingId(c.id);
     setMemberName(c.name || ''); 
     setPositionName(c.position || '');
-    setPhoneNumber(c.phone || ''); // PERBAIKAN: Membaca properti c.phone saat edit
+    setPhoneNumber(c.phone || ''); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -107,9 +121,13 @@ export default function KepanitiaanPage() {
 
       const supabase = getSupabase();
       const { error } = await supabase.from('committee').delete().eq('id', id);
+      
       if (!error) {
         alert('🗑️ Anggota panitia berhasil dihapus!');
+        // PAKSA REFRESH FRONTEND: Memanggil ulang database setelah data dihapus
         await loadCommittee();
+      } else {
+        alert('❌ Gagal menghapus data dari database.');
       }
     }
   };
@@ -179,11 +197,9 @@ export default function KepanitiaanPage() {
             committeeList.map(c => (
               <div key={c.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                 <div className="flex flex-col space-y-0.5">
-                  {/* Gunakan c.name sesuai kolom teks isi data nama panitia Anda */}
                   <span className="font-bold text-white text-sm">👤 {c.name}</span>
                   <div className="flex gap-3 text-[11px] text-slate-400 font-mono">
                     <span>💼 {c.position}</span>
-                    {/* PERBAIKAN: Menampilkan properti c.phone yang berisi data nomor WA */}
                     {c.phone && (
                       <span className="text-emerald-400 font-bold">
                         📞 {c.phone}
