@@ -10,7 +10,9 @@ export default function TransaksiPage() {
   const [loading, setLoading] = useState(true);
   const [allTransactions, setAllTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(true);
+  
+  // Perubahan Utama 1: Ubah default value menjadi false demi keamanan
+  const [isAdmin, setIsAdmin] = useState(false);
   const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
   // State Form Modal Utama
@@ -30,7 +32,26 @@ export default function TransaksiPage() {
   const [catFilter, setCatFilter] = useState('all');
 
   useEffect(() => {
-    loadData();
+    // Perubahan Utama 2: Ambil & Pantau session login secara real-time
+    const checkAuthAndLoad = async () => {
+      // 1. Cek session saat ini
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAdmin(!!session);
+
+      // 2. Load data dari database
+      await loadData();
+    };
+
+    checkAuthAndLoad();
+
+    // 3. Pasang listener status auth jika admin melakukan login/logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function loadData() {
@@ -45,7 +66,6 @@ export default function TransaksiPage() {
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb && catDb.length > 0) {
         setCategories(catDb);
-        // Set default category jika kosong
         if (!formCategory) setFormCategory(catDb[0].name);
       } else {
         const defaultCats = [{ name: 'Kas Umum' }, { name: 'Administrasi' }];
@@ -65,7 +85,12 @@ export default function TransaksiPage() {
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     
-    // Konversi string ke angka murni untuk kolom numeric
+    // Keamanan Frontend tambahan: Blokir jika state ilegal mencoba melakukan aksi save
+    if (!isAdmin) {
+      alert('❌ Akses ditolak: Anda tidak terdeteksi sebagai administrator!');
+      return;
+    }
+    
     const cleanAmount = parseFloat(formAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
     
     if (cleanAmount <= 0) {
@@ -101,11 +126,12 @@ export default function TransaksiPage() {
       await loadData();
     } catch (err) {
       console.error("Error saat menyimpan:", err);
-      alert(`❌ Gagal Menyimpan!\n\nJika tidak ada respon/terjadi error, pastikan domain URL Vercel Anda sudah dimasukkan ke Allowed Web Origins di Dashboard Supabase.\n\nPesan Error: ${err.message || JSON.stringify(err)}`);
+      alert(`❌ Gagal Menyimpan!\n\nPesan Error: ${err.message || JSON.stringify(err)}`);
     }
   };
 
   const triggerEdit = (item) => {
+    if (!isAdmin) return;
     setIsEditMode(true);
     setSelectedId(item.id);
     setFormDate(item.transaction_date || new Date().toISOString().split('T')[0]);
@@ -120,6 +146,7 @@ export default function TransaksiPage() {
   };
 
   const triggerHapus = async (id) => {
+    if (!isAdmin) return;
     if (!confirm('Hapus permanen catatan transaksi ini?')) return;
     try {
       const { error } = await supabase.from('transactions').delete().eq('id', id);
@@ -191,13 +218,28 @@ export default function TransaksiPage() {
       <div className="print:hidden space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
-            <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
-            <p className="text-[10px] text-emerald-400 font-mono mt-0.5">● Sistem Terkoneksi (Mode Administrator)</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
+              
+              {/* Perubahan Utama 3: Tampilkan Status Badge yang SINKRON di Header Konten */}
+              {isAdmin ? (
+                <span className="bg-green-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">ADMIN</span>
+              ) : (
+                <span className="bg-red-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">PUBLIC</span>
+              )}
+            </div>
+            <p className={`text-[10px] font-mono mt-0.5 ${isAdmin ? 'text-emerald-400' : 'text-slate-400'}`}>
+              ● {isAdmin ? 'Sistem Terkoneksi (Mode Administrator)' : 'Mode Penonton (Hanya Lihat Data)'}
+            </p>
           </div>
+          
+          {/* Perubahan Utama 4: Sembunyikan tombol Tambah Kas jika bukan Admin autentik */}
           <div className="flex gap-2 w-full sm:w-auto">
-            <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
-              ➕ Tambah Kas
-            </button>
+            {isAdmin && (
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
+                ➕ Tambah Kas
+              </button>
+            )}
             <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all shadow-md">
               🖨️ Cetak LPJ
             </button>
@@ -227,7 +269,9 @@ export default function TransaksiPage() {
                 <th className="p-3">Pos Kategori</th>
                 <th className="p-3">Uraian Keterangan</th>
                 <th className="p-3 text-right">Nominal Angka</th>
-                <th className="p-3 text-center w-28">Aksi</th>
+                
+                {/* Perubahan Utama 5: Sembunyikan kolom Aksi jika bukan admin */}
+                {isAdmin && <th className="p-3 text-center w-28">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
@@ -247,15 +291,19 @@ export default function TransaksiPage() {
                     <td className={`p-3 text-right font-mono font-black ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
                     </td>
-                    <td className="p-3 text-center space-x-2">
-                      <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                      <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
-                    </td>
+                    
+                    {/* Perubahan Utama 6: Tampilkan tombol Edit & Hapus hanya jika admin sudah login */}
+                    {isAdmin && (
+                      <td className="p-3 text-center space-x-2">
+                        <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
+                        <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {filteredTrans.length === 0 && (
-                <tr><td colSpan={5} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
+                <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
               )}
             </tbody>
           </table>
@@ -263,7 +311,8 @@ export default function TransaksiPage() {
       </div>
 
       {/* DIALOG FORM MODAL: EDIT DAN TAMBAH KAS */}
-      {showModal && (
+      {/* Perubahan Utama 7: Amankan Modal secara berlapis agar tidak dirender jika bukan Admin */}
+      {showModal && isAdmin && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <form onSubmit={handleSaveTransaction} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
             <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">
