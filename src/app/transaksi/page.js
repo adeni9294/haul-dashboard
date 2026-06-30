@@ -56,7 +56,7 @@ export default function TransaksiPage() {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
       }
 
-      // PERBAIKAN: Mengubah 'categories' menjadi 'category' sesuai database Supabase Anda
+      // Memanggil tabel 'category' (tunggal) sesuai database Supabase Anda
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb) {
         setCategories(catDb);
@@ -78,6 +78,7 @@ export default function TransaksiPage() {
 
     const supabase = getSupabase();
     
+    // FIX TOTAL: Menggunakan properti 'note' agar sesuai kolom database Supabase Anda
     const payload = {
       transaction_date: formDate,
       type: formType,
