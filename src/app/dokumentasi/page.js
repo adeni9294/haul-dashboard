@@ -12,7 +12,7 @@ export default function DokumentasiPage() {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
 
-  // Inisialisasi Supabase di dalam komponen agar aman dari undefined env
+  // Inisialisasi Supabase secara lokal dan aman di dalam komponen
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -23,7 +23,7 @@ export default function DokumentasiPage() {
     checkAdminSession()
   }, [])
 
-  // DISESUAIKAN: Pengecekan Admin disamakan persis dengan layout.js Anda
+  // Sinkronisasi Sesi Admin menggunakan password di localStorage sesuai layout utama
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul')
     if (!savedPassword) {
@@ -40,7 +40,7 @@ export default function DokumentasiPage() {
     }
   }
 
-  // Mengambil data foto dari Supabase Database
+  // Mengambil seluruh data dokumentasi dari tabel 'photos'
   const fetchPhotos = async () => {
     try {
       setLoading(true)
@@ -58,7 +58,7 @@ export default function DokumentasiPage() {
     }
   }
 
-  // Fungsi mengunduh foto langsung ke perangkat
+  // Fungsi mengunduh file gambar langsung ke perangkat pengguna
   const handleDownload = async (url, filename) => {
     try {
       const response = await fetch(url)
@@ -76,7 +76,7 @@ export default function DokumentasiPage() {
     }
   }
 
-  // Fungsi proses upload file oleh Admin
+  // Fungsi Unggah Foto (Dilengkapi proteksi validasi RPC sebelum eksekusi Cloud Storage & DB)
   const handleUpload = async (e) => {
     e.preventDefault()
     if (!file || !title) return alert('Harap isi judul dan pilih foto!')
@@ -84,7 +84,21 @@ export default function DokumentasiPage() {
     try {
       setUploading(true)
 
-      // A. Upload file fisik ke Supabase Storage (Bucket: dokumentasi)
+      // 1. PROTEKSI RAW: Cek ulang keabsahan password di localStorage sebelum proses dimulai
+      const savedPassword = localStorage.getItem('admin_password_haul')
+      if (!savedPassword) {
+        throw new Error('Akses ditolak. Sesi otorisasi admin tidak ditemukan!')
+      }
+
+      const { data: isValid, error: rpcError } = await supabase.rpc('verify_admin_password', { 
+        p_password: savedPassword 
+      })
+
+      if (rpcError || !isValid) {
+        throw new Error('Akses ilegal. Kata sandi admin tidak cocok!')
+      }
+
+      // 2. PROSES A: Unggah file biner foto ke Supabase Storage (Bucket: dokumentasi)
       const fileExt = file.name.split('.').pop()
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
       const filePath = `kegiatan/${fileName}`
@@ -95,12 +109,12 @@ export default function DokumentasiPage() {
 
       if (uploadError) throw uploadError
 
-      // B. Ambil URL Publik dari file yang berhasil diupload
+      // 3. PROSES B: Ambil URL Publik dari file yang berhasil tersimpan di Storage
       const { data: { publicUrl } } = supabase.storage
         .from('dokumentasi')
         .getPublicUrl(filePath)
 
-      // C. Simpan metadata & URL ke tabel 'photos' di Database
+      // 4. PROSES C: Masukkan metadata judul dan link foto ke dalam tabel 'photos'
       const { error: insertError } = await supabase
         .from('photos')
         .insert([{ title, image_url: publicUrl }])
@@ -112,18 +126,18 @@ export default function DokumentasiPage() {
       setFile(null)
       fetchPhotos()
     } catch (error) {
-      alert(`❌ Error: ${error.message}`)
+      alert(`❌ Gagal Mengunggah: ${error.message}`)
     } finally {
       setUploading(false)
     }
   }
 
-  // Fungsi hapus foto khusus admin
+  // Fungsi hapus data dokumentasi khusus admin
   const handleDelete = async (id, imageUrl) => {
     if (!confirm('Apakah Anda yakin ingin menghapus foto kegiatan ini?')) return
 
     try {
-      // Ekstrak nama file dari URL untuk menghapusnya di Storage
+      // Ekstrak path file asli dari URL Publik Storage
       const urlParts = imageUrl.split('/storage/v1/object/public/dokumentasi/')
       const filePath = urlParts[1]
 
@@ -131,7 +145,7 @@ export default function DokumentasiPage() {
         await supabase.storage.from('dokumentasi').remove([filePath])
       }
 
-      // Hapus data dari Database
+      // Hapus baris data terikat dari Database
       const { error } = await supabase.from('photos').delete().eq('id', id)
       if (error) throw error
 
@@ -144,7 +158,7 @@ export default function DokumentasiPage() {
 
   return (
     <div className="w-full text-zinc-100 p-2 sm:p-4">
-      {/* PANEL ADMIN (Otomatis muncul karena deteksi localStorage tersinkronisasi) */}
+      {/* PANEL INPUT ADMIN: Otomatis tersinkronisasi jika masuk dalam Mode Admin */}
       {isAdmin && (
         <div className="mb-8 p-5 bg-zinc-900 border border-zinc-800 rounded-2xl max-w-xl shadow-xl">
           <h2 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4">
@@ -181,7 +195,7 @@ export default function DokumentasiPage() {
         </div>
       )}
 
-      {/* GALERI FOTO */}
+      {/* STRUKTUR UTAMA GALERI DOKUMENTASI */}
       {loading ? (
         <div className="text-zinc-500 text-xs text-center font-mono py-12">Mengambil berkas foto dari cloud...</div>
       ) : photos.length === 0 ? (
@@ -212,7 +226,7 @@ export default function DokumentasiPage() {
                     Unduh
                   </button>
 
-                  {/* Tombol Hapus otomatis sinkron jika Anda admin */}
+                  {/* Tombol Hapus Otomatis Muncul Jika Terdeteksi Sesi Admin Aktif */}
                   {isAdmin && (
                     <button 
                       onClick={() => handleDelete(photo.id, photo.image_url)}
