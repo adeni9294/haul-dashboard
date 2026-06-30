@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
-  // State baru untuk Widget Waktu Real-time
+  // State untuk Widget Waktu Real-time
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
@@ -48,18 +48,13 @@ export default function RootLayout({ children }) {
     loadHeaderSettings();
     setShowMainMenuDrawer(false); 
 
-    // Interval Live Clock (Setiap detik)
     const updateTime = () => {
       const sekarang = new Date();
-      
-      // Format Jam: HH:MM:SS
       setTimeString(sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
-      
-      // Format Tanggal: Hari, DD MMM YYYY
       setDateString(sekarang.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
     };
 
-    updateTime(); // Jalankan sekali di awal
+    updateTime();
     const timerId = setInterval(updateTime, 1000);
     return () => clearInterval(timerId);
   }, [pathname]);
@@ -146,12 +141,12 @@ export default function RootLayout({ children }) {
         
         <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
           
-          {/* HEADER ATAS MODERN DENGAN WIDGET JAM */}
+          {/* HEADER ATAS MODERN DENGAN FIX MOBILE TEXT */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
             <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl w-full relative`}>
               
-              {/* SISI KIRI: LOGO & NAMA ORGANISASI */}
-              <div className="flex flex-row items-center gap-4 flex-1 min-w-0">
+              {/* SISI KIRI: LOGO & NAMA ORGANISASI (DIPERBAIKI AGAR WRAP DI HP) */}
+              <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div className={`w-12 h-12 md:w-16 md:h-16 ${currentStyle.innerBg} rounded-2xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
                   {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
@@ -160,14 +155,20 @@ export default function RootLayout({ children }) {
                   )}
                 </div>
                 
-                <div className="text-left space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xs md:text-sm font-bold text-white tracking-wide uppercase truncate max-w-[180px] sm:max-w-none">{orgName}</h1>
-                    <span className={`px-1.5 py-0.5 text-[8px] rounded font-mono font-bold uppercase ${currentStyle.innerBg} ${currentStyle.accentText}`}>
+                <div className="text-left space-y-1 min-w-0 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                    {/* Hapus truncate & max-w agar teks bisa turun otomatis ke baris baru */}
+                    <h1 className="text-[11px] sm:text-sm font-black text-white tracking-wide uppercase leading-tight break-words">
+                      {orgName}
+                    </h1>
+                    <span className={`w-fit px-1.5 py-0.5 text-[8px] rounded font-mono font-bold uppercase ${currentStyle.innerBg} ${currentStyle.accentText}`}>
                       {isAdmin ? 'ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
-                  <p className={`text-[10px] ${currentStyle.textMuted} truncate max-w-[240px] sm:max-w-none`}>{address}</p>
+                  {/* Hapus truncate pada alamat agar memanjang ke bawah jika di layar mobile */}
+                  <p className={`text-[9px] sm:text-[10px] ${currentStyle.textMuted} leading-normal break-words`}>
+                    {address}
+                  </p>
                 </div>
               </div>
 
@@ -198,30 +199,25 @@ export default function RootLayout({ children }) {
         <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
           <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/80 h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl shadow-black/90">
             
-            {/* NAV HOME */}
             <Link href="/" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/' ? 'text-[#BFEC25] bg-white/5 shadow-md shadow-black/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Home</span>
             </Link>
 
-            {/* NAV STATISTIK */}
             <Link href="/stat" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/stat' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
             </Link>
 
-            {/* NAV TENGAH: TOMBOL (+) REKENING */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
 
-            {/* NAV BUDGET */}
             <Link href="/anggaran" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/anggaran' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/xl" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Budget</span>
             </Link>
 
-            {/* NAV MENU DRAWER */}
             <button onClick={() => setShowMainMenuDrawer(true)} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${showMainMenuDrawer ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Menu</span>
