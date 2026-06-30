@@ -2,15 +2,26 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// Definisikan Interface agar TypeScript tidak error saat kompilasi build
+interface ScheduleItem {
+  id: number;
+  created_at?: string;
+  time_start: string;
+  time_end: string;
+  agenda: string;
+  pic: string;
+  date_event: string;
+}
+
 export default function AcaraPage() {
   const [loading, setLoading] = useState(true);
-  const [scheduleList, setScheduleList] = useState([]);
+  const [scheduleList, setScheduleList] = useState<ScheduleItem[]>([]);
   const [agenda, setAgenda] = useState('');
   const [timeStart, setTimeStart] = useState('');
   const [timeEnd, setTimeEnd] = useState('');
   const [pic, setPic] = useState('');
   const [dateEvent, setDateEvent] = useState('');
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const getSupabase = () => {
@@ -51,7 +62,7 @@ export default function AcaraPage() {
         .order('time_start', { ascending: true });
 
       if (!error && data) {
-        setScheduleList(data);
+        setScheduleList(data as ScheduleItem[]);
       }
     } catch (e) {
       console.error(e);
@@ -60,7 +71,7 @@ export default function AcaraPage() {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (!agenda.trim() || !timeStart.trim() || !dateEvent) return;
@@ -89,15 +100,16 @@ export default function AcaraPage() {
       setTimeStart('');
       setTimeEnd('');
       setPic('');
+      setDateEvent('');
       setEditingId(null);
       await loadSchedules();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       alert(`❌ Gagal menyimpan: ${err.message || err}`);
     }
   };
 
-  const handleEdit = (s) => {
+  const handleEdit = (s: ScheduleItem) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(s.id);
     setAgenda(s.agenda || '');
@@ -108,7 +120,7 @@ export default function AcaraPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!confirm('Apakah Anda yakin ingin menghapus jadwal agenda ini?')) return;
     
@@ -118,15 +130,20 @@ export default function AcaraPage() {
       if (error) throw error;
       alert('🗑️ Acara berhasil dihapus.');
       await loadSchedules();
-    } catch (err) {
+    } catch (err: any) {
       alert(`❌ Gagal menghapus: ${err.message}`);
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
+  // AMAN DARI DEPLOY ERROR: Menambahkan anotasi tipe eksplisit string dan handling null-pointer
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return '-';
+    try {
+      const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+      return new Date(dateString).toLocaleDateString('id-ID', options);
+    } catch (e) {
+      return dateString;
+    }
   };
 
   if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat susunan acara...</div>;
@@ -174,7 +191,7 @@ export default function AcaraPage() {
               {editingId ? '💾 Simpan Perubahan' : 'Simpan Rundown'}
             </button>
             {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setAgenda(''); setTimeStart(''); setTimeEnd(''); setPic(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+              <button type="button" onClick={() => { setEditingId(null); setAgenda(''); setTimeStart(''); setTimeEnd(''); setPic(''); setDateEvent(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
             )}
           </form>
         ) : (
@@ -199,11 +216,11 @@ export default function AcaraPage() {
                         🗓️ {formatDate(s.date_event)}
                       </span>
                       <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] font-mono">
-                        ⏰ {s.time_start} - {s.time_end} WIB
+                        ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
                       </span>
                     </div>
-                    <p className="font-bold text-white text-sm mt-1.5">{s.agenda}</p>
-                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">PIC: {s.pic}</p>
+                    <p className="font-bold text-white text-sm mt-1.5">{s.agenda || 'Agenda Tanpa Nama'}</p>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">PIC: {s.pic || '-'}</p>
                   </div>
                   {isAdmin && (
                     <div className="flex gap-3 font-mono">
