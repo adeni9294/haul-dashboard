@@ -2,197 +2,190 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-export default function KepanitiaanPage() {
+export default function PanitiaPage() {
+  const [loading, setLoading] = useState(true);
   const [committeeList, setCommitteeList] = useState([]);
-  const [memberName, setMemberName] = useState(''); 
-  const [positionName, setPositionName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); 
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const getSupabase = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    return createClient(url, key);
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '', 
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
   };
 
   useEffect(() => {
-    const supabase = getSupabase();
+    checkAdminSession();
     loadCommittee();
 
-    async function fetchInitialAdminStatus() {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('is_admin_active')
-        .eq('id', 'main_config')
-        .single();
-      if (!error && data) {
-        setIsAdmin(data.is_admin_active);
-      }
-    }
-    fetchInitialAdminStatus();
-
-    const settingsChannel = supabase
-      .channel('public:settings-comm')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'settings', filter: 'id=eq.main_config' },
-        (payload) => {
-          if (payload.new && typeof payload.new.is_admin_active !== 'undefined') {
-            setIsAdmin(payload.new.is_admin_active);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(settingsChannel);
-    };
+    const interval = setInterval(checkAdminSession, 500);
+    return () => clearInterval(interval);
   }, []);
 
-  async function loadCommittee() {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('committee')
-      .select('*')
-      .order('id', { ascending: false });
-    
-    if (!error && data) setCommitteeList(data);
+  async function checkAdminSession() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) return setIsAdmin(false);
+    try {
+      const supabase = getSupabase();
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      setIsAdmin(false);
+    }
   }
 
-  async function verifikasiAksesAdmin() {
-    const passwordInput = prompt("Masukkan Password Admin untuk melakukan aksi ini:");
-    if (!passwordInput) return false;
+  async function loadCommittee() {
+    try {
+      setLoading(true);
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('committee') // sesuaikan dengan nama tabel di database Anda
+        .select('*')
+        .order('id', { ascending: true });
 
-    const supabase = getSupabase();
-    const { data: settingsData, error } = await supabase
-      .from('settings')
-      .select('admin_password')
-      .eq('id', 'main_config')
-      .single();
-
-    if (error || !settingsData) {
-      alert("❌ Gagal terhubung ke sistem keamanan database.");
-      return false;
+      if (!error && data) {
+        setCommitteeList(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-
-    if (passwordInput !== settingsData.admin_password) {
-      alert("❌ Password Salah! Akses ditolak.");
-      return false;
-    }
-
-    return true;
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!memberName.trim() || !positionName.trim() || !phoneNumber.trim()) return;
-
-    const lolosVerifikasi = await verifikasiAksesAdmin();
-    if (!lolosVerifikasi) return;
+    if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
+    if (!name.trim() || !role.trim()) return;
 
     const supabase = getSupabase();
-    const payload = { name: memberName.trim(), position: positionName.trim(), phone: phoneNumber.trim() };
+    const payload = { 
+      name: name.trim(), 
+      role: role.trim(),
+      whatsapp: whatsapp.trim() 
+    };
 
     try {
       if (editingId) {
         const { error } = await supabase.from('committee').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert('🎯 Data panitia berhasil diperbarui!');
+        alert('🟢 Data panitia berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('committee').insert([payload]);
         if (error) throw error;
-        alert('✅ Anggota panitia berhasil ditambahkan!');
+        alert('🟢 Panitia baru berhasil ditambahkan!');
       }
 
-      setMemberName(''); setPositionName(''); setPhoneNumber(''); setEditingId(null);
-      loadCommittee();
+      setName(''); 
+      setRole(''); 
+      setWhatsapp('');
+      setEditingId(null);
+      await loadCommittee();
     } catch (err) {
       console.error(err);
-      alert(`❌ Gagal menyimpan data panitia.`);
+      alert(`❌ Gagal menyimpan: ${err.message || err}`);
     }
   };
 
-  const handleEdit = async (c) => {
-    const lolosVerifikasi = await verifikasiAksesAdmin();
-    if (!lolosVerifikasi) return;
-
+  const handleEdit = (c) => {
+    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(c.id);
-    setMemberName(c.name || ''); setPositionName(c.position || ''); setPhoneNumber(c.phone || '');
+    setName(c.name || '');
+    setRole(c.role || '');
+    setWhatsapp(c.whatsapp || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Hapus anggota kepanitiaan ini?')) {
-      const lolosVerifikasi = await verifikasiAksesAdmin();
-      if (!lolosVerifikasi) return;
-
+    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
+    if (!confirm('Apakah Anda yakin ingin menghapus anggota panitia ini?')) return;
+    
+    try {
       const supabase = getSupabase();
       const { error } = await supabase.from('committee').delete().eq('id', id);
-      if (!error) {
-        alert('🗑️ Anggota panitia berhasil dihapus!');
-        loadCommittee();
-      } else {
-        alert('❌ Gagal menghapus data dari database.');
-      }
+      if (error) throw error;
+      alert('🗑️ Anggota panitia berhasil dihapus.');
+      await loadCommittee();
+    } catch (err) {
+      alert(`❌ Gagal menghapus: ${err.message}`);
     }
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {isAdmin ? (
-        <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
-          <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggota' : '➕ Tambah Panitia'}</h3>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Nama Anggota Panitia</label>
-            <input type="text" required value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="Contoh: Ahmad Deni" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Jabatan / Posisi</label>
-            <input type="text" required value={positionName} onChange={(e) => setPositionName(e.target.value)} placeholder="Contoh: Bendahara" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-[11px] text-slate-400 mb-1">Nomor WhatsApp</label>
-            <input type="text" required value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Contoh: 08123456789" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
-          </div>
-          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
-            {editingId ? '💾 Simpan Perubahan' : 'Simpan Panitia'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setMemberName(''); setPositionName(''); setPhoneNumber(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
-          )}
-        </form>
-      ) : (
-        <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
-          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
-        </div>
-      )}
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat data panitia...</div>;
 
-      <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md">
-        <h3 className="text-xs font-bold text-slate-300 uppercase">📋 Susunan Kepanitiaan ({committeeList.length})</h3>
-        <div className="space-y-2 max-h-[500px] overflow-y-auto">
-          {committeeList.length === 0 ? (
-            <p className="text-xs text-slate-500 font-mono py-4 text-center">Belum ada data susunan panitia.</p>
-          ) : (
-            committeeList.map(c => (
-              <div key={c.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <div className="flex flex-col space-y-0.5">
-                  <span className="font-bold text-white text-sm">👤 {c.name}</span>
-                  <div className="flex gap-3 text-[11px] text-slate-400 font-mono">
-                    <span>💼 {c.position}</span>
-                    {c.phone && <span className="text-emerald-400 font-bold">📞 {c.phone}</span>}
-                  </div>
-                </div>
-                {isAdmin && (
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit(c)} className="text-amber-500 font-bold hover:underline">Edit</button>
-                    <button onClick={() => handleDelete(c.id)} className="text-rose-400 font-bold hover:underline">Hapus</button>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+  return (
+    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
+      
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
+        <div>
+          <h2 className="text-xs font-black uppercase tracking-wider">👥 Susunan Kepanitiaan Haul</h2>
+          <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* PANEL INPUT ADMIN */}
+        {isAdmin ? (
+          <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
+            <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">{editingId ? '🔄 Perbarui Panitia' : '➕ Tambah Panitia'}</h3>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Nama Anggota Panitia</label>
+              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Contoh: Ahmad Deni" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Jabatan / Posisi</label>
+              <input type="text" required value={role} onChange={(e) => setRole(e.target.value)} placeholder="Contoh: Bendahara" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Nomor WhatsApp</label>
+              <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="Contoh: 08123456789" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
+            </div>
+            <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs uppercase rounded-xl hover:from-amber-400 hover:to-amber-500 shadow-md">
+              {editingId ? '💾 Simpan Perubahan' : 'Simpan Panitia'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={() => { setEditingId(null); setName(''); setRole(''); setWhatsapp(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+            )}
+          </form>
+        ) : (
+          <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
+            <p className="text-xs text-slate-400 font-medium font-sans">💡 Anda berada di Mode Publik (Read-Only).</p>
+            <p className="text-[10px] text-slate-500 font-mono">Gunakan login admin untuk memodifikasi struktur kepanitiaan.</p>
+          </div>
+        )}
+
+        {/* LIST DAFTAR PANITIA */}
+        <div className="lg:col-span-2 p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+          <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">📋 Susunan Kepanitiaan ({committeeList.length})</h3>
+          <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
+            {committeeList.length === 0 ? (
+              <p className="text-xs text-slate-500 font-mono py-6 text-center">Belum ada data kepanitiaan.</p>
+            ) : (
+              committeeList.map(c => (
+                <div key={c.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
+                  <div>
+                    <p className="font-bold text-white text-sm">{c.name}</p>
+                    <p className="text-[11px] text-amber-400 font-medium mt-0.5">🔹 {c.role}</p>
+                    {c.whatsapp && <p className="text-[10px] text-slate-500 font-mono mt-0.5">📞 {c.whatsapp}</p>}
+                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-3 font-mono">
+                      <button onClick={() => handleEdit(c)} className="text-amber-400 hover:underline font-bold">Edit</button>
+                      <button onClick={() => handleDelete(c.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
