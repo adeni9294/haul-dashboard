@@ -8,6 +8,7 @@ export default function KepanitiaanPage() {
   const [positionName, setPositionName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(''); 
   const [editingId, setEditingId] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const getSupabase = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -15,27 +16,50 @@ export default function KepanitiaanPage() {
     return createClient(url, key);
   };
 
-  useEffect(() => { 
-    loadCommittee(); 
+  useEffect(() => {
+    const supabase = getSupabase();
+    loadCommittee();
+
+    async function fetchInitialAdminStatus() {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('is_admin_active')
+        .eq('id', 'main_config')
+        .single();
+      if (!error && data) {
+        setIsAdmin(data.is_admin_active);
+      }
+    }
+    fetchInitialAdminStatus();
+
+    const settingsChannel = supabase
+      .channel('public:settings-comm')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'settings', filter: 'id=eq.main_config' },
+        (payload) => {
+          if (payload.new && typeof payload.new.is_admin_active !== 'undefined') {
+            setIsAdmin(payload.new.is_admin_active);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(settingsChannel);
+    };
   }, []);
 
   async function loadCommittee() {
     const supabase = getSupabase();
-    
-    // Kosongkan state sebelum fetch agar frontend dipaksa merender ulang
-    setCommitteeList([]);
-
     const { data, error } = await supabase
       .from('committee')
       .select('*')
       .order('id', { ascending: false });
     
-    if (!error && data) {
-      setCommitteeList(data);
-    }
+    if (!error && data) setCommitteeList(data);
   }
 
-  // GERBANG KEAMANAN: Memvalidasi sandi langsung ke tabel settings
   async function verifikasiAksesAdmin() {
     const passwordInput = prompt("Masukkan Password Admin untuk melakukan aksi ini:");
     if (!passwordInput) return false;
@@ -68,43 +92,24 @@ export default function KepanitiaanPage() {
     if (!lolosVerifikasi) return;
 
     const supabase = getSupabase();
-    // Payload disesuaikan dengan struktur kolom 'name', 'position', dan 'phone'
-    const payload = { 
-      name: memberName.trim(),
-      position: positionName.trim(),
-      phone: phoneNumber.trim() 
-    };
+    const payload = { name: memberName.trim(), position: positionName.trim(), phone: phoneNumber.trim() };
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('committee')
-          .update(payload)
-          .eq('id', editingId);
-        
+        const { error } = await supabase.from('committee').update(payload).eq('id', editingId);
         if (error) throw error;
         alert('🎯 Data panitia berhasil diperbarui!');
       } else {
-        const { error } = await supabase
-          .from('committee')
-          .insert([payload]);
-        
+        const { error } = await supabase.from('committee').insert([payload]);
         if (error) throw error;
         alert('✅ Anggota panitia berhasil ditambahkan!');
       }
 
-      // Bersihkan Form Input
-      setMemberName(''); 
-      setPositionName('');
-      setPhoneNumber('');
-      setEditingId(null);
-      
-      // Paksa halaman browser memuat ulang penuh dari database (menghindari cache Next.js)
-      window.location.reload();
-
-    } catch (err) { 
+      setMemberName(''); setPositionName(''); setPhoneNumber(''); setEditingId(null);
+      loadCommittee();
+    } catch (err) {
       console.error(err);
-      alert(`❌ Gagal menyimpan data panitia.`); 
+      alert(`❌ Gagal menyimpan data panitia.`);
     }
   };
 
@@ -113,9 +118,7 @@ export default function KepanitiaanPage() {
     if (!lolosVerifikasi) return;
 
     setEditingId(c.id);
-    setMemberName(c.name || ''); 
-    setPositionName(c.position || '');
-    setPhoneNumber(c.phone || ''); 
+    setMemberName(c.name || ''); setPositionName(c.position || ''); setPhoneNumber(c.phone || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -125,15 +128,10 @@ export default function KepanitiaanPage() {
       if (!lolosVerifikasi) return;
 
       const supabase = getSupabase();
-      const { error } = await supabase
-        .from('committee')
-        .delete()
-        .eq('id', id);
-      
+      const { error } = await supabase.from('committee').delete().eq('id', id);
       if (!error) {
         alert('🗑️ Anggota panitia berhasil dihapus!');
-        // Paksa halaman browser memuat ulang penuh dari database
-        window.location.reload();
+        loadCommittee();
       } else {
         alert('❌ Gagal menghapus data dari database.');
       }
@@ -142,60 +140,34 @@ export default function KepanitiaanPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      {/* FORM ENTRI DATA PANITIA */}
-      <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
-        <h3 className="text-xs font-bold text-amber-500 uppercase">
-          {editingId ? '🔄 Perbarui Anggota' : '➕ Tambah Panitia'}
-        </h3>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">Nama Anggota Panitia</label>
-          <input 
-            type="text" 
-            required 
-            value={memberName} 
-            onChange={(e) => setMemberName(e.target.value)} 
-            placeholder="Contoh: Ahmad Deni"
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" 
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">Jabatan / Posisi</label>
-          <input 
-            type="text" 
-            required 
-            value={positionName} 
-            onChange={(e) => setPositionName(e.target.value)} 
-            placeholder="Contoh: Bendahara"
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" 
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] text-slate-400 mb-1">Nomor WhatsApp</label>
-          <input 
-            type="text" 
-            required 
-            value={phoneNumber} 
-            onChange={(e) => setPhoneNumber(e.target.value)} 
-            placeholder="Contoh: 08123456789"
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" 
-          />
-        </div>
-        <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
-          {editingId ? '💾 Simpan Perubahan' : 'Simpan Panitia'}
-        </button>
-        {editingId && (
-          <button 
-            type="button" 
-            onClick={() => { setEditingId(null); setMemberName(''); setPositionName(''); setPhoneNumber(''); }} 
-            className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2"
-          >
-            Batal Edit
+      {isAdmin ? (
+        <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggota' : '➕ Tambah Panitia'}</h3>
+          <div>
+            <label className="block text-[11px] text-slate-400 mb-1">Nama Anggota Panitia</label>
+            <input type="text" required value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="Contoh: Ahmad Deni" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-[11px] text-slate-400 mb-1">Jabatan / Posisi</label>
+            <input type="text" required value={positionName} onChange={(e) => setPositionName(e.target.value)} placeholder="Contoh: Bendahara" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-[11px] text-slate-400 mb-1">Nomor WhatsApp</label>
+            <input type="text" required value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Contoh: 08123456789" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
+          </div>
+          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-xl hover:bg-amber-400 transition-all">
+            {editingId ? '💾 Simpan Perubahan' : 'Simpan Panitia'}
           </button>
-        )}
-      </form>
+          {editingId && (
+            <button type="button" onClick={() => { setEditingId(null); setMemberName(''); setPositionName(''); setPhoneNumber(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+          )}
+        </form>
+      ) : (
+        <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
+          <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
+        </div>
+      )}
 
-      {/* TABEL LIST PANITIA */}
       <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md">
         <h3 className="text-xs font-bold text-slate-300 uppercase">📋 Susunan Kepanitiaan ({committeeList.length})</h3>
         <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -208,25 +180,20 @@ export default function KepanitiaanPage() {
                   <span className="font-bold text-white text-sm">👤 {c.name}</span>
                   <div className="flex gap-3 text-[11px] text-slate-400 font-mono">
                     <span>💼 {c.position}</span>
-                    {c.phone && (
-                      <span className="text-emerald-400 font-bold">
-                        📞 {c.phone}
-                      </span>
-                    )}
+                    {c.phone && <span className="text-emerald-400 font-bold">📞 {c.phone}</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-2">
+                {isAdmin && (
+                  <div className="flex items-center gap-2">
                     <button onClick={() => handleEdit(c)} className="text-amber-500 font-bold hover:underline">Edit</button>
                     <button onClick={() => handleDelete(c.id)} className="text-rose-400 font-bold hover:underline">Hapus</button>
                   </div>
-                </div>
+                )}
               </div>
             ))
           )}
         </div>
       </div>
-
     </div>
   );
 }
