@@ -9,11 +9,8 @@ const THEME_STYLES = {
   'amber-gold': { card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', innerBg: 'bg-gray-950 border border-gray-850', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400' },
   'midnight-blue': { card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', innerBg: 'bg-blue-950 border border-blue-900/40', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500' },
   'nordic-frost': { card: 'bg-slate-800 border-slate-750 text-slate-50 shadow-2xl', innerBg: 'bg-slate-900 border border-slate-750', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400' },
-  'default': { card: 'bg-slate-900 border-slate-800 text-slate-100 shadow-2xl', innerBg: 'bg-slate-950 border border-slate-800/60', textMuted: 'text-slate-400', accentText: 'text-amber-500', progressBg: 'from-amber-600 to-amber-400' }
+  'default': { card: 'bg-[#12161A] border-[#1E2329] text-slate-100 shadow-2xl', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-amber-500', progressBg: 'from-[#BFEC25] to-[#A3CB1B]' }
 };
-
-const INCOME_COLORS = ['#bfec25', '#a3cb1b', '#86a714', '#6a840d', '#4d6108'];
-const EXPENSE_COLORS = ['#f43f5e', '#fb7185', '#e11d48', '#fda4af', '#fecdd3'];
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -24,7 +21,9 @@ export default function DashboardPage() {
   const [catSummaryMasuk, setCatSummaryMasuk] = useState([]);
   const [catSummaryKeluar, setCatSummaryKeluar] = useState([]);
   const [announcement, setAnnouncement] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
+  const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => { loadDashboardData(); }, []);
 
@@ -33,20 +32,22 @@ export default function DashboardPage() {
       setLoading(true);
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
+      // 1. Ambil Pengaturan Banner, Logo, dan Tema Utama
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
+        if (settingsData[0].logo_url) setLogoUrl(settingsData[0].logo_url);
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
       }
 
+      // 2. Ambil Data Target Anggaran Plafon
       const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
       let totalPlafonDinamis = 0;
       if (budgetsData) {
-        budgetsData.forEach(b => {
-          totalPlafonDinamis += parseFloat(b.planned_amount) || 0;
-        });
+        budgetsData.forEach(b => { totalPlafonDinamis += parseFloat(b.planned_amount) || 0; });
       }
 
+      // 3. Ambil Rincian Seluruh Transaksi
       const { data: trans, error } = await supabase
         .from('transactions')
         .select('*')
@@ -73,12 +74,10 @@ export default function DashboardPage() {
             catNameLower.includes('kas awal')
           ) {
             calcMasuk += nominal;
-            item.runtime_type = 'masuk'; 
             listMasuk.push(item);
             incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
           } else {
             calcKeluar += nominal;
-            item.runtime_type = 'keluar';
             listKeluar.push(item);
             expenseMap[catName] = (expenseMap[catName] || 0) + nominal;
           }
@@ -104,170 +103,210 @@ export default function DashboardPage() {
   }
 
   const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-
+  
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
-  const radius = 50; const circumference = 2 * Math.PI * radius;
 
   if (loading) {
     return (
       <div className="p-12 text-center text-slate-400 text-xs font-mono animate-pulse">
-        ⏳ Sinkronisasi data real-time dengan sistem database Supabase...
+        ⏳ Memuat antarmuka Cirebonan Premium...
       </div>
     );
   }
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto px-1 sm:px-0 pb-16">
+    <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-28 -mt-1">
       
-      {/* 1. RUNNING BANNER TEXT */}
+      {/* 1. TEXT BANNER INFOMASI WEMARA */}
       {announcement && (
-        <div className="w-full bg-[#BFEC25]/10 border border-[#BFEC25]/20 py-2 px-3 rounded-xl overflow-hidden flex items-center">
-          <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] tracking-widest uppercase font-mono">
+        <div className="w-full bg-[#BFEC25]/10 border border-[#BFEC25]/20 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
+          <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
             📢 {announcement}
           </div>
         </div>
       )}
 
-      {/* 2. AREA KARTU SALDO UTAMA NEON LIME */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* KARTU FISIK ELEGAN (Saldo Akhir Bersih) */}
-        <div className="bg-[#BFEC25] text-[#0E1012] p-6 rounded-3xl relative overflow-hidden flex flex-col justify-between h-52 shadow-xl shadow-[#BFEC25]/5 border border-[#BFEC25]">
-          {/* Ornamen Masjid Minimalis Melayang */}
-          <div className="absolute right-4 top-4 opacity-15 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 22h20"/><path d="M12 2v3"/><path d="M12 7a5 5 0 0 1 5 5v10H7V12a5 5 0 0 1 5-5z"/><path d="M17 14h3a2 2 0 0 1 2 2v6h-5v-8z"/><path d="M7 14H4a2 2 0 0 0-2 2v6h5v-8z"/></svg>
+      {/* 2. AREA UTAMA KARTU SALDO & CARD PEMASUKAN/PENGELUARAN */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* KARTU SALDO UTAMA BERMOTIF MEGA MENDUNG ASLI TANPA LOGO KAKU */}
+        <div className="bg-[#BFEC25] text-black p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl shadow-[#BFEC25]/10 border border-[#BFEC25]/30 transition-transform duration-300 hover:scale-[1.01]">
+          
+          {/* VEKTOR PATTERN BATIK MEGA MENDUNG ASLI */}
+          <div className="absolute inset-y-0 right-0 w-[55%] opacity-[0.14] pointer-events-none mix-blend-multiply select-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
+              <g fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M120,40 C140,20 170,25 180,45 C190,65 170,85 140,80 C110,75 100,50 120,40 Z" />
+                <path d="M130,50 C145,35 165,38 172,52 C179,66 165,80 145,76 C125,72 118,58 130,50 Z" />
+                <path d="M140,60 C150,50 160,52 164,60 C168,68 160,76 150,74 C140,72 136,66 140,60 Z" />
+                <path d="M60,110 C80,95 110,100 120,120 C130,140 110,160 80,155 C50,150 40,125 60,110 Z" />
+                <path d="M70,120 C85,110 105,113 112,127 C119,141 105,155 85,151 C65,147 58,133 70,120 Z" />
+                <path d="M100,130 C120,110 150,115 160,135 C170,155 150,175 120,170 C90,165 80,140 100,130 Z" />
+              </g>
+            </svg>
           </div>
+
           <div>
-            <span className="font-mono text-xs font-black uppercase tracking-widest opacity-60">KAS UTAMA HAUL</span>
-            <p className="text-xs font-medium opacity-70 mt-1">Sisa Saldo Kas Bersih</p>
+            <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-60">KAS UTAMA HAUL</span>
+            <p className="text-[11px] font-semibold opacity-70 mt-0.5">Sisa Saldo Kas Bersih</p>
           </div>
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none">
+
+          <div className="z-10">
+            <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none text-black">
               {formatRupiah(totals.total)}
             </h2>
             <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-60">
               <span>**** **** **** 2026</span>
-              <span>PANITIA HAUL</span>
+              <span className="font-bold uppercase tracking-wide">PANITIA HAUL</span>
             </div>
           </div>
         </div>
 
-        {/* INTEGRASI KOTAK NOMINAL PEMASUKAN DAN PENGELUARAN */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-4 h-full">
-          <div className={`p-5 ${style.card} border rounded-3xl flex flex-col justify-between shadow-xl`}>
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm">🟢</div>
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mt-4">Total Uang Masuk</p>
+        {/* REKAP KOTAK NOMINAL MASUK & KELUAR */}
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/30`}>
+            <div className="flex justify-between items-start">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm shadow-sm">🟢</div>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Total Uang Masuk</p>
             </div>
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{formatRupiah(totals.masuk)}</h3>
-              <p className="text-[9px] text-emerald-400 font-medium mt-1">+{catSummaryMasuk.length} Kategori Kontribusi</p>
+            <div className="mt-4">
+              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.masuk)}</h3>
+              <p className="text-[10px] text-emerald-400 font-medium mt-1">✓ {catSummaryMasuk.length} Kategori Kontribusi</p>
             </div>
           </div>
 
-          <div className={`p-5 ${style.card} border rounded-3xl flex flex-col justify-between shadow-xl`}>
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm">🔴</div>
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mt-4">Total Uang Belanja</p>
+          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-rose-500/30`}>
+            <div className="flex justify-between items-start">
+              <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm shadow-sm">🔴</div>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Total Uang Belanja</p>
             </div>
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{formatRupiah(totals.keluar)}</h3>
-              <p className="text-[9px] text-rose-400 font-medium mt-1">-{catSummaryKeluar.length} Pos Alokasi Terpakai</p>
+            <div className="mt-4">
+              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.keluar)}</h3>
+              <p className="text-[10px] text-rose-400 font-medium mt-1">⚡ {catSummaryKeluar.length} Pos Alokasi Terpakai</p>
             </div>
           </div>
         </div>
+
       </div>
 
-      {/* 3. PROGRESS TARGET BAR */}
-      <div className={`p-4 sm:p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
+      {/* 3. PROGRESS TARGET ANGGERAN BAR */}
+      <div className={`p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
         <div className="flex justify-between items-center">
-          <div className="space-y-0.5">
-            <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider">🎯 Progres Capaian Target Plafon Anggaran</h3>
-            <p className="text-[9px] text-slate-500">Batas maksimal anggaran belanja yang direncanakan</p>
-          </div>
-          <span className="text-[#BFEC25] font-mono text-xs font-black">{progress.percent}%</span>
+          <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+            <span>🎯</span> Progres Capaian Target Plafon Anggaran
+          </h3>
+          <span className="text-[#BFEC25] font-mono text-xs font-black bg-[#BFEC25]/10 px-2 py-0.5 rounded-md">{progress.percent}%</span>
         </div>
-        <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden p-0.5 border border-slate-800">
-          <div className={`h-full bg-gradient-to-r ${style.progressBg}`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
+        <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden p-0.5 border border-slate-800/80">
+          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
-          <span>Terpakai: {formatRupiah(progress.current)}</span>
-          <span>Plafon: {formatRupiah(progress.target)}</span>
+        <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-0.5">
+          <span>Terpakai: <strong className="text-slate-300">{formatRupiah(progress.current)}</strong></span>
+          <span>Plafon Target: <strong className="text-slate-300">{formatRupiah(progress.target)}</strong></span>
         </div>
       </div>
 
-      {/* 4. REKAP NOMINAL PER KATEGORI */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className={`p-5 ${style.card} border rounded-2xl space-y-4 shadow-xl`}>
-          <h4 className="text-[10px] font-black text-[#BFEC25] uppercase tracking-widest border-b border-white/5 pb-2">📊 Rincian Per Kategori Pemasukan</h4>
-          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+      {/* 4. REKAP NOMINAL TOTAL PER KATEGORI */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
+          <h4 className="text-[10px] font-black text-[#BFEC25] uppercase tracking-widest border-b border-white/5 pb-2">📊 Rekap Kategori Uang Masuk</h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0">
-                <span className="text-slate-300 font-medium">🏷️ {c.label}</span>
-                <div className="text-right">
-                  <p className="font-mono font-bold text-[#BFEC25]">{formatRupiah(c.value)}</p>
-                  <p className="text-[8px] text-slate-500 font-mono">{c.percentage}%</p>
-                </div>
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-slate-800/40 last:border-0 last:pb-0">
+                <span className="text-slate-300 flex items-center gap-1">🔹 {c.label}</span>
+                <span className="font-mono font-bold text-[#BFEC25]">{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className={`p-5 ${style.card} border rounded-2xl space-y-4 shadow-xl`}>
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">📊 Rincian Per Kategori Pengeluaran</h4>
-          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+        <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">📊 Rekap Alokasi Anggaran Belanja</h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0">
-                <span className="text-slate-300 font-medium">📦 {c.label}</span>
-                <div className="text-right">
-                  <p className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</p>
-                  <p className="text-[8px] text-slate-500 font-mono">{c.percentage}%</p>
-                </div>
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-slate-800/40 last:border-0 last:pb-0">
+                <span className="text-slate-300 flex items-center gap-1">🔸 {c.label}</span>
+                <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* 5. DATA RINCIAN TRANSAKSI TERAKHIR (RECENT TRANSACTIONS) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* MUTASI MASUK */}
-        <div className={`p-5 ${style.card} border-l-4 border-l-[#BFEC25] rounded-2xl space-y-4 shadow-xl`}>
-          <h5 className="text-[10px] font-black text-[#BFEC25] uppercase tracking-wider">Recent Deposits (Pemasukan Terakhir)</h5>
+      {/* 5. DATA RINCIAN MUTASI TERAKHIR */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className={`p-5 ${style.card} border-l-4 border-l-[#BFEC25] rounded-2xl space-y-3.5 shadow-xl`}>
+          <h5 className="text-[10px] font-black text-[#BFEC25] uppercase tracking-wider">Pemasukan Terakhir (Deposits)</h5>
           <div className="space-y-3">
             {rincianMasuk.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-2">Belum ada mutasi dana masuk.</p>
+              <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi masuk.</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs group">
+                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-slate-800/20 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
-                    <p className="text-slate-100 font-bold truncate group-hover:text-[#BFEC25] transition-colors">{t.note || t.keterangan || t.description}</p>
+                    <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className="font-mono font-black text-[#BFEC25] shrink-0 ml-3">+{formatRupiah(t.amount)}</p>
+                  <p className="font-mono font-black text-[#BFEC25] shrink-0 ml-3 text-sm">+{formatRupiah(t.amount)}</p>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* MUTASI KELUAR */}
-        <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-4 shadow-xl`}>
-          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Recent Withdrawals (Pengeluaran Terakhir)</h5>
+        <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-3.5 shadow-xl`}>
+          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Pengeluaran Terakhir (Withdrawals)</h5>
           <div className="space-y-3">
             {rincianKeluar.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-2">Belum ada mutasi belanja logistik.</p>
+              <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi belanja.</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs group">
+                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-slate-800/20 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
-                    <p className="text-slate-100 font-bold truncate group-hover:text-rose-400 transition-colors">{t.note || t.keterangan || t.description}</p>
+                    <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className="font-mono font-black text-rose-400 shrink-0 ml-3">-{formatRupiah(t.amount)}</p>
+                  <p className="font-mono font-black text-rose-400 shrink-0 ml-3 text-sm">-{formatRupiah(t.amount)}</p>
                 </div>
               ))
             )}
           </div>
+        </div>
+      </div>
+
+      {/* 6. BOTTOM NAV DESIGN GLASSMORPHISM MODERN MINIMALIS */}
+      <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
+        <div className="bg-zinc-900/70 backdrop-blur-xl border border-zinc-800/60 h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl shadow-black/80">
+          
+          {/* NAV HOME */}
+          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'home' ? 'text-[#BFEC25] bg-white/5 shadow-md shadow-black/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Home</span>
+          </button>
+
+          {/* NAV STATISTIK */}
+          <button onClick={() => { setActiveTab('stat'); window.location.href = '/stat'; }} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'stat' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
+          </button>
+
+          {/* NAV UTAMA PLUS TOMBOL INPUT */}
+          <button onClick={() => { setActiveTab('plus'); window.location.href = '/transaksi'; }} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+
+          {/* NAV BUDGET */}
+          <button onClick={() => { setActiveTab('budget'); window.location.href = '/anggaran'; }} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'budget' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+            <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Budget</span>
+          </button>
+
+          {/* NAV SETTING MENU UTAMA */}
+          <button onClick={() => { setActiveTab('menu'); window.location.href = '/pengaturan'; }} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${activeTab === 'menu' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Menu</span>
+          </button>
+
         </div>
       </div>
 
