@@ -11,7 +11,7 @@ export default function AcaraPage() {
   const [pic, setPic] = useState('');                 
   const [editingId, setEditingId] = useState(null);
   
-  // State untuk melacak status login admin di browser
+  // State sinkronisasi status login lewat database Supabase
   const [isAdmin, setIsAdmin] = useState(false);
 
   const getSupabase = () => {
@@ -20,20 +20,47 @@ export default function AcaraPage() {
     return createClient(url, key);
   };
 
-  useEffect(() => { 
-    // Sinkronkan status admin dengan localStorage sistem
-    const adminStatus = localStorage.getItem('is_admin_haul') === 'true';
-    setIsAdmin(adminStatus);
-
+  useEffect(() => {
+    const supabase = getSupabase();
+    
     // Set default tanggal input ke hari ini
     setDateEvent(new Date().toISOString().split('T')[0]);
-    loadSchedules(); 
+    loadSchedules();
+
+    // 1. Ambil status admin awal dari database saat halaman dibuka
+    async function fetchInitialAdminStatus() {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('is_admin_active')
+        .eq('id', 'main_config')
+        .single();
+      if (!error && data) {
+        setIsAdmin(data.is_admin_active);
+      }
+    }
+    fetchInitialAdminStatus();
+
+    // 2. Dengarkan perubahan status admin secara REALTIME dari DB Supabase
+    const settingsChannel = supabase
+      .channel('public:settings')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'settings', filter: 'id=eq.main_config' },
+        (payload) => {
+          if (payload.new && typeof payload.new.is_admin_active !== 'undefined') {
+            setIsAdmin(payload.new.is_admin_active);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(settingsChannel);
+    };
   }, []);
 
   async function loadSchedules() {
     const supabase = getSupabase();
-    setSchedules([]);
-
     const { data, error } = await supabase.from('schedules')
       .select('*')
       .order('date_event', { ascending: true })
@@ -42,7 +69,6 @@ export default function AcaraPage() {
     if (!error && data) setSchedules(data);
   }
 
-  // GERBANG VALIDASI DB: Verifikasi keamanan sekunder lewat database
   async function verifikasiAksesAdmin() {
     const passwordInput = prompt("Masukkan Password Admin untuk melakukan aksi ini:");
     if (!passwordInput) return false;
@@ -97,7 +123,7 @@ export default function AcaraPage() {
       setAgenda(''); 
       setPic(''); 
       setEditingId(null);
-      window.location.reload();
+      loadSchedules();
 
     } catch (err) { 
       console.error(err);
@@ -128,7 +154,7 @@ export default function AcaraPage() {
       
       if (!error) {
         alert('🗑️ Jadwal rundown berhasil dihapus!');
-        window.location.reload();
+        loadSchedules();
       } else {
         alert('❌ Gagal menghapus jadwal dari database.');
       }
@@ -137,8 +163,6 @@ export default function AcaraPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      {/* KONDISIONAL FORM: Sembunyikan form / Tampilkan info mode publik */}
       {isAdmin ? (
         <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
           <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Acara' : '➕ Tambah Rundown Acara'}</h3>
@@ -177,8 +201,7 @@ export default function AcaraPage() {
         </div>
       )}
 
-      {/* DAFTAR AGENDA RUNDOWN */}
-      <div className={isAdmin ? "lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md" : "lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md"}>
+      <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2 shadow-md">
         <h3 className="text-xs font-bold text-slate-300 uppercase">📋 Susunan Agenda Rundown ({schedules.length})</h3>
         <div className="space-y-2 max-h-[550px] overflow-y-auto">
           {schedules.length === 0 ? (
@@ -194,8 +217,6 @@ export default function AcaraPage() {
                   <p className="text-slate-200 mt-0.5 font-medium">{s.agenda}</p>
                   <p className="text-[10px] text-slate-500">PIC: {s.pic || '-'}</p>
                 </div>
-                
-                {/* KONDISIONAL TOMBOL: Aksi hanya dirender jika masuk mode Admin */}
                 {isAdmin && (
                   <div className="flex gap-3">
                     <button onClick={() => handleEdit(s)} className="text-amber-500 font-bold hover:underline">Edit</button>
@@ -207,7 +228,6 @@ export default function AcaraPage() {
           )}
         </div>
       </div>
-
     </div>
   );
 }
