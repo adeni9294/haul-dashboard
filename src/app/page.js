@@ -24,7 +24,6 @@ export default function DashboardPage() {
   const [catSummaryMasuk, setCatSummaryMasuk] = useState([]);
   const [catSummaryKeluar, setCatSummaryKeluar] = useState([]);
   const [announcement, setAnnouncement] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
   useEffect(() => { loadDashboardData(); }, []);
@@ -34,15 +33,12 @@ export default function DashboardPage() {
       setLoading(true);
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
-      // 1. AMBIL CONFIG BANNER, LOGO DAN TEMA
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
-        if (settingsData[0].logo_url) setLogoUrl(settingsData[0].logo_url);
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
       }
 
-      // 2. AMBIL BUDGET TARGET
       const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
       let totalPlafonDinamis = 0;
       if (budgetsData) {
@@ -51,7 +47,6 @@ export default function DashboardPage() {
         });
       }
 
-      // 3. AMBIL DATA TRANSAKSI
       const { data: trans, error } = await supabase
         .from('transactions')
         .select('*')
@@ -111,19 +106,20 @@ export default function DashboardPage() {
   const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
+  const radius = 50; const circumference = 2 * Math.PI * radius;
 
   if (loading) {
     return (
       <div className="p-12 text-center text-slate-400 text-xs font-mono animate-pulse">
-        ⏳ Mensinkronkan data kartu & logo dengan server...
+        ⏳ Sinkronisasi data real-time dengan sistem database Supabase...
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-16 -mt-1">
+    <div className="space-y-5 max-w-7xl mx-auto px-1 sm:px-0 pb-16">
       
-      {/* 1. TEXT BANNER - DIPERSINGKAT AGAR HEMAT RUANG */}
+      {/* 1. RUNNING BANNER TEXT */}
       {announcement && (
         <div className="w-full bg-[#BFEC25]/10 border border-[#BFEC25]/20 py-2 px-3 rounded-xl overflow-hidden flex items-center">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] tracking-widest uppercase font-mono">
@@ -132,142 +128,142 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2. AREA KARTU SALDO UTAMA + DETAIL BOX */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
-        
-        {/* KARTU EMONEY PREMIUM (LOGO DI SISI KANAN SESUAI CORETAN MERAH ANDA) */}
-        <div className="bg-[#BFEC25] text-[#0E1012] p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between h-48 shadow-lg shadow-[#BFEC25]/5 border border-[#BFEC25]">
-          
-          {/* TEMPAT LOGO ORGANISASI OTOMATIS DI KANAN ATAS */}
-          <div className="absolute right-5 top-5 w-12 h-12 rounded-xl bg-black/5 border border-black/5 flex items-center justify-center overflow-hidden">
-            {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 22h20"/><path d="M12 2v3"/><path d="M12 7a5 5 0 0 1 5 5v10H7V12a5 5 0 0 1 5-5z"/></svg>
-            )}
+      {/* 2. AREA KARTU SALDO UTAMA NEON LIME */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* KARTU FISIK ELEGAN (Saldo Akhir Bersih) */}
+        <div className="bg-[#BFEC25] text-[#0E1012] p-6 rounded-3xl relative overflow-hidden flex flex-col justify-between h-52 shadow-xl shadow-[#BFEC25]/5 border border-[#BFEC25]">
+          {/* Ornamen Masjid Minimalis Melayang */}
+          <div className="absolute right-4 top-4 opacity-15 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 22h20"/><path d="M12 2v3"/><path d="M12 7a5 5 0 0 1 5 5v10H7V12a5 5 0 0 1 5-5z"/><path d="M17 14h3a2 2 0 0 1 2 2v6h-5v-8z"/><path d="M7 14H4a2 2 0 0 0-2 2v6h5v-8z"/></svg>
           </div>
-
           <div>
-            <span className="font-mono text-[9px] font-black uppercase tracking-widest opacity-60">KAS UTAMA HAUL</span>
-            <p className="text-[10px] font-semibold opacity-70 mt-0.5">Sisa Saldo Kas Bersih</p>
+            <span className="font-mono text-xs font-black uppercase tracking-widest opacity-60">KAS UTAMA HAUL</span>
+            <p className="text-xs font-medium opacity-70 mt-1">Sisa Saldo Kas Bersih</p>
           </div>
-
           <div>
-            <h2 className="text-3xl font-['Space_Grotesk'] font-black tracking-tight leading-none">
+            <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none">
               {formatRupiah(totals.total)}
             </h2>
-            <div className="flex justify-between items-center mt-4 font-mono text-[9px] tracking-wider opacity-50">
+            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-60">
               <span>**** **** **** 2026</span>
-              <span className="font-bold">PANITIA HAUL</span>
+              <span>PANITIA HAUL</span>
             </div>
           </div>
         </div>
 
-        {/* BOX NOMINAL MASUK & KELUAR */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-3.5 h-full">
-          <div className={`p-4.5 ${style.card} border rounded-3xl flex flex-col justify-between shadow-xl`}>
+        {/* INTEGRASI KOTAK NOMINAL PEMASUKAN DAN PENGELUARAN */}
+        <div className="lg:col-span-2 grid grid-cols-2 gap-4 h-full">
+          <div className={`p-5 ${style.card} border rounded-3xl flex flex-col justify-between shadow-xl`}>
             <div>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs">🟢</div>
-              <p className="text-[9px] font-mono text-slate-500 uppercase tracking-wider mt-3">Total Uang Masuk</p>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm">🟢</div>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mt-4">Total Uang Masuk</p>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">{formatRupiah(totals.masuk)}</h3>
-              <p className="text-[9px] text-emerald-400 font-medium mt-0.5">+{catSummaryMasuk.length} Kategori Kontribusi</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{formatRupiah(totals.masuk)}</h3>
+              <p className="text-[9px] text-emerald-400 font-medium mt-1">+{catSummaryMasuk.length} Kategori Kontribusi</p>
             </div>
           </div>
 
-          <div className={`p-4.5 ${style.card} border rounded-3xl flex flex-col justify-between shadow-xl`}>
+          <div className={`p-5 ${style.card} border rounded-3xl flex flex-col justify-between shadow-xl`}>
             <div>
-              <div className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-xs">🔴</div>
-              <p className="text-[9px] font-mono text-slate-500 uppercase tracking-wider mt-3">Total Uang Belanja</p>
+              <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm">🔴</div>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mt-4">Total Uang Belanja</p>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">{formatRupiah(totals.keluar)}</h3>
-              <p className="text-[9px] text-rose-400 font-medium mt-0.5">-{catSummaryKeluar.length} Pos Alokasi Terpakai</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{formatRupiah(totals.keluar)}</h3>
+              <p className="text-[9px] text-rose-400 font-medium mt-1">-{catSummaryKeluar.length} Pos Alokasi Terpakai</p>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* 3. PROGRESS TARGET BAR */}
-      <div className={`p-4 ${style.card} border rounded-2xl space-y-2.5 shadow-xl`}>
+      <div className={`p-4 sm:p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
         <div className="flex justify-between items-center">
           <div className="space-y-0.5">
-            <h3 className="text-[9px] font-black text-slate-200 uppercase tracking-wider">🎯 Progres Capaian Target Plafon Anggaran</h3>
+            <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider">🎯 Progres Capaian Target Plafon Anggaran</h3>
+            <p className="text-[9px] text-slate-500">Batas maksimal anggaran belanja yang direncanakan</p>
           </div>
-          <span className="text-[#BFEC25] font-mono text-[11px] font-black">{progress.percent}%</span>
+          <span className="text-[#BFEC25] font-mono text-xs font-black">{progress.percent}%</span>
         </div>
-        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden p-0.5 border border-slate-800">
+        <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden p-0.5 border border-slate-800">
           <div className={`h-full bg-gradient-to-r ${style.progressBg}`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
-        <div className="flex justify-between items-center text-[9px] font-mono text-slate-500">
+        <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
           <span>Terpakai: {formatRupiah(progress.current)}</span>
-          <span>Plafon Target: {formatRupiah(progress.target)}</span>
+          <span>Plafon: {formatRupiah(progress.target)}</span>
         </div>
       </div>
 
       {/* 4. REKAP NOMINAL PER KATEGORI */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <div className={`p-4.5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
-          <h4 className="text-[9px] font-black text-[#BFEC25] uppercase tracking-widest border-b border-white/5 pb-1.5">📊 Rekap Kategori Uang Masuk</h4>
-          <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`p-5 ${style.card} border rounded-2xl space-y-4 shadow-xl`}>
+          <h4 className="text-[10px] font-black text-[#BFEC25] uppercase tracking-widest border-b border-white/5 pb-2">📊 Rincian Per Kategori Pemasukan</h4>
+          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0">
-                <span className="text-slate-300">🏷️ {c.label}</span>
-                <span className="font-mono font-bold text-[#BFEC25]">{formatRupiah(c.value)}</span>
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0">
+                <span className="text-slate-300 font-medium">🏷️ {c.label}</span>
+                <div className="text-right">
+                  <p className="font-mono font-bold text-[#BFEC25]">{formatRupiah(c.value)}</p>
+                  <p className="text-[8px] text-slate-500 font-mono">{c.percentage}%</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className={`p-4.5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
-          <h4 className="text-[9px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-1.5">📊 Rekap Alokasi Anggaran Belanja</h4>
-          <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+        <div className={`p-5 ${style.card} border rounded-2xl space-y-4 shadow-xl`}>
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">📊 Rincian Per Kategori Pengeluaran</h4>
+          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0">
-                <span className="text-slate-300">📦 {c.label}</span>
-                <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0">
+                <span className="text-slate-300 font-medium">📦 {c.label}</span>
+                <div className="text-right">
+                  <p className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</p>
+                  <p className="text-[8px] text-slate-500 font-mono">{c.percentage}%</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* 5. DATA RINCIAN MUTASI TRANSAKSI TERAKHIR */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <div className={`p-4.5 ${style.card} border-l-4 border-l-[#BFEC25] rounded-2xl space-y-3 shadow-xl`}>
-          <h5 className="text-[9px] font-black text-[#BFEC25] uppercase tracking-wider">Pemasukan Terakhir (Deposits)</h5>
-          <div className="space-y-2.5">
+      {/* 5. DATA RINCIAN TRANSAKSI TERAKHIR (RECENT TRANSACTIONS) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* MUTASI MASUK */}
+        <div className={`p-5 ${style.card} border-l-4 border-l-[#BFEC25] rounded-2xl space-y-4 shadow-xl`}>
+          <h5 className="text-[10px] font-black text-[#BFEC25] uppercase tracking-wider">Recent Deposits (Pemasukan Terakhir)</h5>
+          <div className="space-y-3">
             {rincianMasuk.length === 0 ? (
-              <p className="text-[11px] text-slate-500 font-mono py-1">Belum ada mutasi masuk.</p>
+              <p className="text-xs text-slate-500 font-mono py-2">Belum ada mutasi dana masuk.</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs">
+                <div key={i} className="flex justify-between items-center text-xs group">
                   <div className="min-w-0 flex-1">
-                    <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
-                    <p className="text-[9px] text-slate-500 font-mono">{t.transaction_date}</p>
+                    <p className="text-slate-100 font-bold truncate group-hover:text-[#BFEC25] transition-colors">{t.note || t.keterangan || t.description}</p>
+                    <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className="font-mono font-black text-[#BFEC25] shrink-0 ml-2">+{formatRupiah(t.amount)}</p>
+                  <p className="font-mono font-black text-[#BFEC25] shrink-0 ml-3">+{formatRupiah(t.amount)}</p>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        <div className={`p-4.5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-3 shadow-xl`}>
-          <h5 className="text-[9px] font-black text-rose-400 uppercase tracking-wider">Pengeluaran Terakhir (Withdrawals)</h5>
-          <div className="space-y-2.5">
+        {/* MUTASI KELUAR */}
+        <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-4 shadow-xl`}>
+          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Recent Withdrawals (Pengeluaran Terakhir)</h5>
+          <div className="space-y-3">
             {rincianKeluar.length === 0 ? (
-              <p className="text-[11px] text-slate-500 font-mono py-1">Belum ada mutasi belanja.</p>
+              <p className="text-xs text-slate-500 font-mono py-2">Belum ada mutasi belanja logistik.</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs">
+                <div key={i} className="flex justify-between items-center text-xs group">
                   <div className="min-w-0 flex-1">
-                    <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
-                    <p className="text-[9px] text-slate-500 font-mono">{t.transaction_date}</p>
+                    <p className="text-slate-100 font-bold truncate group-hover:text-rose-400 transition-colors">{t.note || t.keterangan || t.description}</p>
+                    <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className="font-mono font-black text-rose-400 shrink-0 ml-2">-{formatRupiah(t.amount)}</p>
+                  <p className="font-mono font-black text-rose-400 shrink-0 ml-3">-{formatRupiah(t.amount)}</p>
                 </div>
               ))
             )}
