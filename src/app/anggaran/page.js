@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
   const [budgetList, setBudgetList] = useState([]);
-  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState(''); // Menggunakan category sesuai kolom DB
   const [amount, setAmount] = useState('');
   const [type, setType] = useState('pengeluaran'); 
   const [editingId, setEditingId] = useState(null);
@@ -22,13 +22,10 @@ export default function AnggaranPage() {
     checkAdminSession();
     loadBudgets();
 
-    // Jalankan interval cek session agar jika user login/logout dari Header,
-    // halaman anggaran langsung merespons secara real-time.
     const interval = setInterval(checkAdminSession, 500);
     return () => clearInterval(interval);
   }, []);
 
-  // DI-SYNCHRONIZE: Menggunakan RPC dan key localStorage yang persis sama dengan transaksi
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
     if (!savedPassword) return setIsAdmin(false);
@@ -63,12 +60,13 @@ export default function AnggaranPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
-    if (!title.trim() || !amount) return;
+    if (!category.trim() || !amount) return;
 
     const supabase = getSupabase();
     
+    // Payload disesuaikan ke kolom 'category'
     const payload = { 
-      title: title.trim(), 
+      category: category.trim(), 
       planned_amount: parseFloat(amount) || 0,
       type: type 
     };
@@ -84,7 +82,7 @@ export default function AnggaranPage() {
         alert('🟢 Anggaran baru berhasil ditambahkan!');
       }
 
-      setTitle(''); 
+      setCategory(''); 
       setAmount(''); 
       setEditingId(null);
       await loadBudgets();
@@ -97,7 +95,7 @@ export default function AnggaranPage() {
   const handleEdit = (b) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(b.id);
-    setTitle(b.title || ''); 
+    setCategory(b.category || ''); // Membaca kolom category
     setAmount((b.planned_amount || 0).toString()); 
     setType(b.type || 'pengeluaran');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -147,7 +145,7 @@ export default function AnggaranPage() {
             <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Anggaran'}</h3>
             <div>
               <label className="block text-[11px] text-slate-400 mb-1">Nama Alokasi / Kategori</label>
-              <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Tenda & Panggung" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+              <input type="text" required value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Contoh: Tenda & Panggung" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
             </div>
             <div>
               <label className="block text-[11px] text-slate-400 mb-1">Jumlah Anggaran (Rp)</label>
@@ -164,7 +162,7 @@ export default function AnggaranPage() {
               {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
             </button>
             {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setTitle(''); setAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+              <button type="button" onClick={() => { setEditingId(null); setCategory(''); setAmount(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
             )}
           </form>
         ) : (
@@ -184,7 +182,8 @@ export default function AnggaranPage() {
               budgetList.map(b => (
                 <div key={b.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
                   <div>
-                    <p className="font-bold text-white text-sm">{b.title || 'Kategori Tanpa Nama'}</p>
+                    {/* Membaca dari b.category */}
+                    <p className="font-bold text-white text-sm">{b.category || 'Kategori Tanpa Nama'}</p>
                     <p className={`text-[11px] font-mono font-bold mt-0.5 ${b.type === 'pemasukan' ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {b.type === 'pemasukan' ? '📥 Target: ' : '📤 Alokasi: '} 
                       {formatRupiah(b.planned_amount || 0)}
