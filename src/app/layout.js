@@ -22,7 +22,7 @@ const THEME_STYLES = {
   'toxic-lime': { body: 'bg-zinc-950 text-lime-400', card: 'bg-zinc-900 border-lime-950 text-lime-400', navBg: 'bg-zinc-900 border-lime-900', innerBg: 'bg-zinc-950 border border-lime-900/40', textMuted: 'text-zinc-600', accentText: 'text-lime-400' },
   'crimson-tide': { body: 'bg-neutral-950 text-red-200', card: 'bg-neutral-900 border-red-950 text-red-200', navBg: 'bg-red-950 border-red-900/50', innerBg: 'bg-red-950 border border-red-900/40', textMuted: 'text-neutral-500', accentText: 'text-red-400' },
   'solarized-dark': { body: 'bg-slate-950 text-teal-200', card: 'bg-slate-900 border-teal-950 text-teal-200', navBg: 'bg-slate-900 border-teal-950', innerBg: 'bg-slate-950 border border-teal-900/40', textMuted: 'text-slate-500', accentText: 'text-teal-400' },
-  'default': { body: 'bg-[#0B0E11] text-slate-100', card: 'bg-[#12161A] border-[#1E2329] text-slate-100', navBg: 'bg-[#12161A] border-[#1E2329]', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-amber-500' }
+  'default': { body: 'bg-[#0B0E11] text-slate-100', card: 'bg-[#12161A] border-[#1E2329] text-slate-100', navBg: 'bg-[#12161A]/70 border-zinc-800/60', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]' }
 };
 
 export default function RootLayout({ children }) {
@@ -152,25 +152,61 @@ export default function RootLayout({ children }) {
           </div>
 
           {/* AREA KONTEN HALAMAN UTAMA */}
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 mb-12">
             {children}
           </main>
 
           {/* FOOTER DESKTOP */}
-          <footer className={`py-6 border-t border-white/5 text-center text-[9px] ${currentStyle.textMuted} font-mono uppercase tracking-widest`}>
+          <footer className={`py-6 border-t border-white/5 text-center text-[9px] ${currentStyle.textMuted} font-mono uppercase tracking-widest mb-20 sm:mb-4`}>
             Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
           </footer>
 
         </div>
 
+        {/* 6. BOTTOM NAV DESIGN GLASSMORPHISM MODERN MINIMALIS (FIXED FLOATING) */}
+        <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
+          <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/80 h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl shadow-black/90">
+            
+            {/* NAV HOME */}
+            <Link href="/" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/' ? 'text-[#BFEC25] bg-white/5 shadow-md shadow-black/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Home</span>
+            </Link>
+
+            {/* NAV STATISTIK */}
+            <Link href="/stat" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/stat' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
+            </Link>
+
+            {/* NAV TENGAH: TOMBOL (+) DIUBAH MENAMPILKAN REKENING DONASI */}
+            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+
+            {/* NAV BUDGET */}
+            <Link href="/anggaran" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${pathname === '/anggaran' ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+              <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Budget</span>
+            </Link>
+
+            {/* NAV MENU UTAMA DRAWER */}
+            <button onClick={() => setShowMainMenuDrawer(true)} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${showMainMenuDrawer ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Menu</span>
+            </button>
+
+          </div>
+        </div>
+
         {/* POP-UP MODAL: INFORMASI REKENING DONASI */}
         {showDonationModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className={`border ${currentStyle.navBg} p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl text-center`}>
+            <div className={`border bg-[#12161A] border-zinc-800 p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl text-center`}>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">💳 Rekening Donasi Jemaah</h3>
-              <p className={`text-xs ${currentStyle.textMuted}`}>Salurkan infak & sedekah jariyah Anda untuk kesuksesan agenda Haul melalui rekening resmi:</p>
+              <p className="text-xs text-slate-400">Salurkan infak & sedekah jariyah Anda untuk kesuksesan agenda Haul melalui rekening resmi:</p>
               
-              <div className={`p-4 ${currentStyle.innerBg} rounded-xl font-mono text-xs text-left whitespace-pre-line leading-relaxed text-lime-400`}>
+              <div className={`p-4 bg-black/40 border border-slate-800/40 rounded-xl font-mono text-xs text-left whitespace-pre-line leading-relaxed text-[#BFEC25]`}>
                 {bankInfo}
               </div>
 
@@ -183,9 +219,9 @@ export default function RootLayout({ children }) {
 
         {/* DRAWER TIRAI SLIDE-UP: MENU UTAMA (☰) */}
         {showMainMenuDrawer && (
-          <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center transition-all animate-fade-in" onClick={() => setShowMainMenuDrawer(false)}>
+          <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center transition-all" onClick={() => setShowMainMenuDrawer(false)}>
             <div 
-              className={`w-full max-w-md ${currentStyle.card} border-t rounded-t-3xl p-6 space-y-4 shadow-2xl transform transition-transform animate-slide-up`}
+              className={`w-full max-w-md bg-[#12161A] border-t border-zinc-800 rounded-t-3xl p-6 space-y-4 shadow-2xl transform transition-transform`}
               onClick={(e) => e.stopPropagation()} 
             >
               <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-2" />
@@ -198,7 +234,7 @@ export default function RootLayout({ children }) {
                   <Link 
                     key={dm.href} 
                     href={dm.href} 
-                    className={`w-full py-3 px-4 rounded-xl font-medium text-xs text-left flex justify-between items-center ${pathname === dm.href ? 'bg-lime-500/10 text-lime-400 border border-lime-500/20' : `${currentStyle.innerBg} text-white hover:bg-zinc-800`}`}
+                    className={`w-full py-3 px-4 rounded-xl font-medium text-xs text-left flex justify-between items-center ${pathname === dm.href ? 'bg-[#BFEC25]/10 text-[#BFEC25] border border-[#BFEC25]/20' : `bg-black/30 border border-slate-800/40 text-white hover:bg-zinc-800`}`}
                   >
                     <span>{dm.name}</span>
                     <span className="opacity-40">›</span>
@@ -212,7 +248,7 @@ export default function RootLayout({ children }) {
                     🚪 Keluar Mode Admin
                   </button>
                 ) : (
-                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-lime-500 text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md">
+                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-[#BFEC25] text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md">
                     🔑 Otorisasi Login Admin
                   </button>
                 )}
@@ -224,16 +260,16 @@ export default function RootLayout({ children }) {
         {/* MODAL LOGIN POPUP */}
         {showLoginModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-            <div className={`border ${currentStyle.navBg} p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl`}>
+            <div className="bg-[#12161A] border border-zinc-800 p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl">
               <div className="text-center">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">🔒 Otorisasi Sistem</h3>
-                <p className={`text-xs ${currentStyle.textMuted} mt-1`}>Masukkan kata sandi untuk masuk ke Mode Admin</p>
+                <p className="text-xs text-slate-400 mt-1">Masukkan kata sandi untuk masuk ke Mode Admin</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
-                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={`w-full px-3 py-2 ${currentStyle.innerBg} rounded-xl text-xs text-white focus:outline-none text-center font-mono tracking-widest`} />
+                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-slate-800/40 rounded-xl text-xs text-white focus:outline-none text-center font-mono tracking-widest" />
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Batal</button>
-                  <button type="submit" className="flex-1 py-2 bg-lime-500 text-black text-xs font-black uppercase rounded-xl">Masuk</button>
+                  <button type="submit" className="flex-1 py-2 bg-[#BFEC25] text-black text-xs font-black uppercase rounded-xl">Masuk</button>
                 </div>
               </form>
             </div>
