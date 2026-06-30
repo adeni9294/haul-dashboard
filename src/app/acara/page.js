@@ -2,26 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-interface ScheduleItem {
-  id: number;
-  created_at?: string;
-  time_start: string;
-  time_end: string;
-  agenda: string;
-  pic: string;
-  date_event: string;
-}
-
 export default function AcaraPage() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [scheduleList, setScheduleList] = useState<ScheduleItem[]>([]);
-  const [agenda, setAgenda] = useState<string>('');
-  const [timeStart, setTimeStart] = useState<string>('');
-  const [timeEnd, setTimeEnd] = useState<string>('');
-  const [pic, setPic] = useState<string>('');
-  const [dateEvent, setDateEvent] = useState<string>('');
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [scheduleList, setScheduleList] = useState([]);
+  const [agenda, setAgenda] = useState('');
+  const [timeStart, setTimeStart] = useState('');
+  const [timeEnd, setTimeEnd] = useState('');
+  const [pic, setPic] = useState('');
+  const [dateEvent, setDateEvent] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const getSupabase = () => {
     return createClient(
@@ -61,7 +51,7 @@ export default function AcaraPage() {
         .order('time_start', { ascending: true });
 
       if (!error && data) {
-        setScheduleList(data as ScheduleItem[]);
+        setScheduleList(data);
       }
     } catch (e) {
       console.error(e);
@@ -70,7 +60,7 @@ export default function AcaraPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (!agenda.trim() || !timeStart.trim() || !dateEvent) return;
@@ -102,14 +92,13 @@ export default function AcaraPage() {
       setDateEvent('');
       setEditingId(null);
       await loadSchedules();
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
-      const msg = err instanceof Error ? err.message : String(err);
-      alert(`❌ Gagal menyimpan: ${msg}`);
+      alert(`❌ Gagal menyimpan: ${err?.message || err}`);
     }
   };
 
-  const handleEdit = (s: ScheduleItem) => {
+  const handleEdit = (s) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(s.id);
     setAgenda(s.agenda || '');
@@ -120,7 +109,7 @@ export default function AcaraPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!confirm('Apakah Anda yakin ingin menghapus jadwal agenda ini?')) return;
     
@@ -130,16 +119,15 @@ export default function AcaraPage() {
       if (error) throw error;
       alert('🗑️ Acara berhasil dihapus.');
       await loadSchedules();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      alert(`❌ Gagal menghapus: ${msg}`);
+    } catch (err) {
+      alert(`❌ Gagal menghapus: ${err?.message || err}`);
     }
   };
 
-  const formatDate = (dateString: string | null | undefined): string => {
+  const formatDate = (dateString) => {
     if (!dateString) return '-';
     try {
-      const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+      const options = { day: 'numeric', month: 'short', year: 'numeric' };
       return new Date(dateString).toLocaleDateString('id-ID', options);
     } catch (e) {
       return String(dateString);
@@ -205,7 +193,7 @@ export default function AcaraPage() {
             {scheduleList.length === 0 ? (
               <p className="text-xs text-slate-500 font-mono py-6 text-center">Belum ada jadwal rundown acara.</p>
             ) : (
-              scheduleList.map(s => (
+              scheduleList.map((s) => (
                 <div key={s.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
