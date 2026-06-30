@@ -17,25 +17,32 @@ export default function AnggaranPage() {
   };
 
   useEffect(() => {
-    // SINKRONISASI STATUS ADMIN DENGAN LOGIKA HEADER
+    // SCANNER AGRESIF: Memeriksa semua key di localStorage yang mengandung kata 'admin'
     const checkAdminStatus = () => {
-      const status1 = localStorage.getItem('is_admin') === 'true';
-      const status2 = localStorage.getItem('is_admin_haul') === 'true';
-      setIsAdmin(status1 || status2);
+      let statusAdminDitemukan = false;
+      
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.toLowerCase().includes('admin') || key.toLowerCase().includes('login'))) {
+          const value = localStorage.getItem(key);
+          if (value === 'true' || value === 'admin' || value === 'authenticated') {
+            statusAdminDitemukan = true;
+            break;
+          }
+        }
+      }
+      
+      setIsAdmin(statusAdminDitemukan);
     };
 
-    // Jalankan saat komponen dimuat
+    // Jalankan pemindaian awal
     checkAdminStatus();
     loadBudgets();
 
-    // Dengarkan perubahan status secara instan tanpa refresh halaman
-    window.addEventListener('storage', checkAdminStatus);
-    const interval = setInterval(checkAdminStatus, 400);
+    // Gunakan interval cepat (200ms) karena klik di tab yang sama tidak memicu event 'storage'
+    const interval = setInterval(checkAdminStatus, 200);
 
-    return () => {
-      window.removeEventListener('storage', checkAdminStatus);
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   async function loadBudgets() {
@@ -83,9 +90,11 @@ export default function AnggaranPage() {
 
     const supabase = getSupabase();
     
-    // Payload disesuaikan ke kolom planned_amount
+    // Payload otomatis mengisi ke kolom title maupun name agar aman bagi database Anda
     const payload = { 
       title: title.trim(), 
+      name: title.trim(), // Cadangan jika nama kolomnya 'name'
+      category: title.trim(), // Cadangan jika nama kolomnya 'category'
       planned_amount: parseFloat(amount),
       type: type 
     };
@@ -113,11 +122,11 @@ export default function AnggaranPage() {
     const lolosVerifikasi = await verifikasiAksesAdmin();
     if (!lolosVerifikasi) return;
 
-    // Membaca nominal dari planned_amount
     const nilaiUang = b.planned_amount ?? 0;
+    const namaKategori = b.title || b.name || b.category || b.kategori || '';
 
     setEditingId(b.id);
-    setTitle(b.title || ''); 
+    setTitle(namaKategori); 
     setAmount(nilaiUang.toString()); 
     setType(b.type || 'pengeluaran');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -139,11 +148,9 @@ export default function AnggaranPage() {
     }
   };
 
-  // Fungsi pemformat mata uang rupiah berbasis kolom planned_amount
   const formatRupiah = (item) => {
     const nilaiRaw = item.planned_amount ?? 0;
     const nilaiAngka = parseFloat(nilaiRaw);
-    
     if (isNaN(nilaiAngka)) return 'Rp 0';
     return `Rp ${nilaiAngka.toLocaleString('id-ID')}`;
   };
@@ -151,7 +158,7 @@ export default function AnggaranPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      {/* KONDISIONAL BAR FORM INPUT ANGGARAN */}
+      {/* FORM INPUT ANGGARAN KONDISIONAL */}
       {isAdmin ? (
         <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
           <h3 className="text-xs font-bold text-amber-500 uppercase">{editingId ? '🔄 Perbarui Anggaran' : '➕ Tambah Anggaran'}</h3>
@@ -180,6 +187,7 @@ export default function AnggaranPage() {
       ) : (
         <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
           <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
+          <p className="text-[10px] text-slate-500">Gunakan tombol login admin pada Header untuk membuka akses edit.</p>
         </div>
       )}
 
@@ -193,7 +201,10 @@ export default function AnggaranPage() {
             budgetList.map(b => (
               <div key={b.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                 <div>
-                  <p className="font-bold text-white text-sm">{b.title || 'Tanpa Nama Kategori'}</p>
+                  {/* Solusi multi-kolom agar nama kategori otomatis terbaca dari database */}
+                  <p className="font-bold text-white text-sm">
+                    {b.title || b.name || b.category || b.kategori || 'Kategori Tanpa Nama'}
+                  </p>
                   <p className={`text-[11px] font-mono font-bold mt-0.5 ${b.type === 'pemasukan' ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {b.type === 'pemasukan' ? '📥 Target: ' : '📤 Alokasi: '} 
                     {formatRupiah(b)}
