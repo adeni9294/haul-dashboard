@@ -11,7 +11,7 @@ export default function TransaksiPage() {
   const [allTransactions, setAllTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  // Perubahan Utama 1: Ubah default value menjadi false demi keamanan
+  // PERBAIKAN UTAMA: Ubah default ke false, status akan disinkronkan dari localStorage & RPC
   const [isAdmin, setIsAdmin] = useState(false);
   const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
@@ -32,27 +32,28 @@ export default function TransaksiPage() {
   const [catFilter, setCatFilter] = useState('all');
 
   useEffect(() => {
-    // Perubahan Utama 2: Ambil & Pantau session login secara real-time
-    const checkAuthAndLoad = async () => {
-      // 1. Cek session saat ini
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAdmin(!!session);
-
-      // 2. Load data dari database
-      await loadData();
-    };
-
-    checkAuthAndLoad();
-
-    // 3. Pasang listener status auth jika admin melakukan login/logout
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAdmin(!!session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkAdminSessionAndLoad();
   }, []);
+
+  // SINKRONISASI OTORISASI DENGAN LAYOUT
+  async function checkAdminSessionAndLoad() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) {
+      setIsAdmin(false);
+      await loadData();
+      return;
+    }
+    try {
+      // Verifikasi password yang tersimpan ke RPC Supabase agar sama dengan Layout
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      console.error("Gagal verifikasi auth di page:", err);
+      setIsAdmin(false);
+    } finally {
+      await loadData();
+    }
+  }
 
   async function loadData() {
     try {
@@ -85,9 +86,8 @@ export default function TransaksiPage() {
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     
-    // Keamanan Frontend tambahan: Blokir jika state ilegal mencoba melakukan aksi save
     if (!isAdmin) {
-      alert('❌ Akses ditolak: Anda tidak terdeteksi sebagai administrator!');
+      alert('❌ Akses ditolak: Anda tidak memiliki otoritas admin!');
       return;
     }
     
@@ -214,14 +214,14 @@ export default function TransaksiPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* HEADER PANEL KONTROL */}
+      {/* HEADER PANEL KONTROL KONTEN */}
       <div className="print:hidden space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
               
-              {/* Perubahan Utama 3: Tampilkan Status Badge yang SINKRON di Header Konten */}
+              {/* Badge Konten yang sekarang sinkron dengan Layout */}
               {isAdmin ? (
                 <span className="bg-green-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">ADMIN</span>
               ) : (
@@ -233,8 +233,8 @@ export default function TransaksiPage() {
             </p>
           </div>
           
-          {/* Perubahan Utama 4: Sembunyikan tombol Tambah Kas jika bukan Admin autentik */}
           <div className="flex gap-2 w-full sm:w-auto">
+            {/* Tombol Tambah Kas akan otomatis muncul karena isAdmin telah tersinkronisasi */}
             {isAdmin && (
               <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
                 ➕ Tambah Kas
@@ -269,8 +269,6 @@ export default function TransaksiPage() {
                 <th className="p-3">Pos Kategori</th>
                 <th className="p-3">Uraian Keterangan</th>
                 <th className="p-3 text-right">Nominal Angka</th>
-                
-                {/* Perubahan Utama 5: Sembunyikan kolom Aksi jika bukan admin */}
                 {isAdmin && <th className="p-3 text-center w-28">Aksi</th>}
               </tr>
             </thead>
@@ -291,8 +289,6 @@ export default function TransaksiPage() {
                     <td className={`p-3 text-right font-mono font-black ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
                     </td>
-                    
-                    {/* Perubahan Utama 6: Tampilkan tombol Edit & Hapus hanya jika admin sudah login */}
                     {isAdmin && (
                       <td className="p-3 text-center space-x-2">
                         <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
@@ -310,8 +306,7 @@ export default function TransaksiPage() {
         </div>
       </div>
 
-      {/* DIALOG FORM MODAL: EDIT DAN TAMBAH KAS */}
-      {/* Perubahan Utama 7: Amankan Modal secara berlapis agar tidak dirender jika bukan Admin */}
+      {/* DIALOG FORM MODAL */}
       {showModal && isAdmin && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <form onSubmit={handleSaveTransaction} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
