@@ -39,10 +39,29 @@ export default function RootLayout({ children }) {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
+  // State baru untuk Widget Waktu Real-time
+  const [timeString, setTimeString] = useState('');
+  const [dateString, setDateString] = useState('');
+
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
     setShowMainMenuDrawer(false); 
+
+    // Interval Live Clock (Setiap detik)
+    const updateTime = () => {
+      const sekarang = new Date();
+      
+      // Format Jam: HH:MM:SS
+      setTimeString(sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+      
+      // Format Tanggal: Hari, DD MMM YYYY
+      setDateString(sekarang.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
+    };
+
+    updateTime(); // Jalankan sekali di awal
+    const timerId = setInterval(updateTime, 1000);
+    return () => clearInterval(timerId);
   }, [pathname]);
 
   async function checkAdminSession() {
@@ -127,27 +146,39 @@ export default function RootLayout({ children }) {
         
         <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
           
-          {/* HEADER ATAS MODERN */}
+          {/* HEADER ATAS MODERN DENGAN WIDGET JAM */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
-            <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-row items-center gap-4 shadow-xl w-full relative`}>
+            <div className={`p-4 md:p-6 ${currentStyle.card} border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl w-full relative`}>
               
-              <div className={`w-12 h-12 md:w-16 md:h-16 ${currentStyle.innerBg} rounded-2xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
-                {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={currentStyle.accentText}><path d="M2 22h20"/><path d="M12 2v3"/><path d="M12 7a5 5 0 0 1 5 5v10H7V12a5 5 0 0 1 5-5z"/></svg>
-                )}
-              </div>
-              
-              <div className="text-left space-y-0.5 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xs md:text-sm font-bold text-white tracking-wide uppercase truncate max-w-[180px] sm:max-w-none">{orgName}</h1>
-                  <span className={`px-1.5 py-0.5 text-[8px] rounded font-mono font-bold uppercase ${currentStyle.innerBg} ${currentStyle.accentText}`}>
-                    {isAdmin ? 'ADMIN' : 'PUBLIC'}
-                  </span>
+              {/* SISI KIRI: LOGO & NAMA ORGANISASI */}
+              <div className="flex flex-row items-center gap-4 flex-1 min-w-0">
+                <div className={`w-12 h-12 md:w-16 md:h-16 ${currentStyle.innerBg} rounded-2xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={currentStyle.accentText}><path d="M2 22h20"/><path d="M12 2v3"/><path d="M12 7a5 5 0 0 1 5 5v10H7V12a5 5 0 0 1 5-5z"/></svg>
+                  )}
                 </div>
-                <p className={`text-[10px] ${currentStyle.textMuted} truncate max-w-[240px] sm:max-w-none`}>{address}</p>
+                
+                <div className="text-left space-y-0.5 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xs md:text-sm font-bold text-white tracking-wide uppercase truncate max-w-[180px] sm:max-w-none">{orgName}</h1>
+                    <span className={`px-1.5 py-0.5 text-[8px] rounded font-mono font-bold uppercase ${currentStyle.innerBg} ${currentStyle.accentText}`}>
+                      {isAdmin ? 'ADMIN' : 'PUBLIC'}
+                    </span>
+                  </div>
+                  <p className={`text-[10px] ${currentStyle.textMuted} truncate max-w-[240px] sm:max-w-none`}>{address}</p>
+                </div>
               </div>
+
+              {/* SISI KANAN ATAS: WIDGET TANGGAL & JAM DIGITAL LIVE */}
+              {timeString && (
+                <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-zinc-800/60 pt-2 sm:pt-0 shrink-0">
+                  <span className="text-sm font-black font-mono tracking-widest text-white">{timeString}</span>
+                  <span className="text-[10px] font-medium text-zinc-400 font-mono tracking-wide">{dateString}</span>
+                </div>
+              )}
+
             </div>
           </div>
 
@@ -163,7 +194,7 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* 6. BOTTOM NAV DESIGN GLASSMORPHISM MODERN MINIMALIS (FIXED FLOATING) */}
+        {/* BOTTOM NAV DESIGN FLOATING */}
         <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
           <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/80 h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl shadow-black/90">
             
@@ -179,7 +210,7 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Stat</span>
             </Link>
 
-            {/* NAV TENGAH: TOMBOL (+) DIUBAH MENAMPILKAN REKENING DONASI */}
+            {/* NAV TENGAH: TOMBOL (+) REKENING */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg shadow-[#BFEC25]/20 transform active:scale-95 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
@@ -190,7 +221,7 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Budget</span>
             </Link>
 
-            {/* NAV MENU UTAMA DRAWER */}
+            {/* NAV MENU DRAWER */}
             <button onClick={() => setShowMainMenuDrawer(true)} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${showMainMenuDrawer ? 'text-[#BFEC25] bg-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
               <span className="text-[8px] font-bold font-mono mt-0.5 tracking-tighter">Menu</span>
