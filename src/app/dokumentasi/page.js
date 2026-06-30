@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export default function DokumentasiPage() {
   const [photos, setPhotos] = useState([])
@@ -12,16 +12,31 @@ export default function DokumentasiPage() {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
 
+  // Inisialisasi Supabase di dalam komponen agar aman dari undefined env
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  )
+
   useEffect(() => {
     fetchPhotos()
-    checkUserSession()
+    checkAdminSession()
   }, [])
 
-  // Cek apakah ada session admin yang aktif
-  const checkUserSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      setIsAdmin(true)
+  // DISESUAIKAN: Pengecekan Admin disamakan persis dengan layout.js Anda
+  async function checkAdminSession() {
+    const savedPassword = localStorage.getItem('admin_password_haul')
+    if (!savedPassword) {
+      setIsAdmin(false)
+      return
+    }
+    try {
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { 
+        p_password: savedPassword 
+      })
+      setIsAdmin(!!isValid)
+    } catch (err) {
+      setIsAdmin(false)
     }
   }
 
@@ -43,7 +58,7 @@ export default function DokumentasiPage() {
     }
   }
 
-  // Fungsi mengunduh foto langsung ke perangkat publik
+  // Fungsi mengunduh foto langsung ke perangkat
   const handleDownload = async (url, filename) => {
     try {
       const response = await fetch(url)
@@ -69,7 +84,7 @@ export default function DokumentasiPage() {
     try {
       setUploading(true)
 
-      // A. Upload file fisik ke Supabase Storage
+      // A. Upload file fisik ke Supabase Storage (Bucket: dokumentasi)
       const fileExt = file.name.split('.').pop()
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
       const filePath = `kegiatan/${fileName}`
@@ -92,13 +107,12 @@ export default function DokumentasiPage() {
 
       if (insertError) throw insertError
 
-      alert('Foto dokumentasi berhasil ditambahkan!')
+      alert('🟢 Foto dokumentasi berhasil ditambahkan!')
       setTitle('')
       setFile(null)
-      // Refresh list galeri foto
       fetchPhotos()
     } catch (error) {
-      alert(`Error: ${error.message}`)
+      alert(`❌ Error: ${error.message}`)
     } finally {
       setUploading(false)
     }
@@ -121,7 +135,7 @@ export default function DokumentasiPage() {
       const { error } = await supabase.from('photos').delete().eq('id', id)
       if (error) throw error
 
-      alert('Foto berhasil dihapus!')
+      alert('🟢 Foto berhasil dihapus!')
       fetchPhotos()
     } catch (error) {
       alert(error.message)
@@ -129,82 +143,80 @@ export default function DokumentasiPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-zinc-100 p-6 pb-24">
-      {/* Header Halaman */}
-      <div className="border-b border-zinc-800 pb-4 mb-6">
-        <h1 className="text-xl font-bold text-[#1fa57a]">MENU DOKUMENTASI</h1>
-        <p className="text-xs text-zinc-400 mt-1">Daftar dokumentasi dan foto kegiatan lapangan</p>
-      </div>
-
-      {/* PANEL ADMIN (Hanya muncul jika user terautentikasi/login sebagai admin) */}
+    <div className="w-full text-zinc-100 p-2 sm:p-4">
+      {/* PANEL ADMIN (Otomatis muncul karena deteksi localStorage tersinkronisasi) */}
       {isAdmin && (
-        <div className="mb-8 p-5 bg-[#18181c] border border-zinc-800 rounded-lg max-w-xl">
-          <h2 className="text-sm font-semibold text-[#1fa57a] mb-4">PANEL ADMIN: TAMBAH DOKUMENTASI</h2>
+        <div className="mb-8 p-5 bg-zinc-900 border border-zinc-800 rounded-2xl max-w-xl shadow-xl">
+          <h2 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4">
+            🛠️ Panel Admin: Tambah Dokumentasi Kegiatan
+          </h2>
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
-              <label className="block text-xs text-zinc-400 mb-1">Nama / Judul Kegiatan</label>
+              <label className="block text-[11px] text-zinc-400 mb-1 font-mono">Nama / Judul Kegiatan</label>
               <input 
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Pembelian Alat Drumband"
-                className="w-full text-xs p-2.5 bg-[#0f0f11] border border-zinc-800 rounded text-white focus:outline-none focus:border-[#1fa57a]"
+                placeholder="Contoh: Pembelian Alat Drumband Baru"
+                className="w-full text-xs p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-amber-500 font-medium"
               />
             </div>
             <div>
-              <label className="block text-xs text-zinc-400 mb-1">Pilih File Foto</label>
+              <label className="block text-[11px] text-zinc-400 mb-1 font-mono">Pilih File Gambar (Foto)</label>
               <input 
                 type="file"
                 accept="image/*"
                 onChange={(e) => setFile(e.target.files[0])}
-                className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700 cursor-pointer"
+                className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-200 file:font-bold hover:file:bg-zinc-700 cursor-pointer"
               />
             </div>
             <button
               type="submit"
               disabled={uploading}
-              className="w-full bg-[#1fa57a] hover:bg-[#167d5c] text-white text-xs font-medium p-2.5 rounded transition-all disabled:opacity-50"
+              className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black p-2.5 rounded-xl transition-all disabled:opacity-50 uppercase tracking-wider shadow-md"
             >
-              {uploading ? 'Sedang Mengunggah...' : 'UNGGUH FOTO KE CLOUD'}
+              {uploading ? '⏳ Sedang Mengunggah...' : '🚀 Unggah Foto Kegiatan'}
             </button>
           </form>
         </div>
       )}
 
-      {/* GALERI FOTO (Bisa dilihat oleh Publik & Admin) */}
+      {/* GALERI FOTO */}
       {loading ? (
-        <div className="text-zinc-400 text-xs text-center py-10">Memuat berkas foto...</div>
+        <div className="text-zinc-500 text-xs text-center font-mono py-12">Mengambil berkas foto dari cloud...</div>
       ) : photos.length === 0 ? (
-        <div className="text-zinc-500 text-xs text-center py-10">Belum ada foto dokumentasi kegiatan.</div>
+        <div className="text-zinc-500 text-xs text-center font-mono py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
+          Belum ada foto dokumentasi kegiatan.
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {photos.map((photo) => (
-            <div key={photo.id} className="bg-[#18181c] border border-zinc-800 rounded-lg overflow-hidden flex flex-col justify-between shadow-md">
-              <div className="relative group">
+            <div key={photo.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-lg">
+              <div className="relative">
                 <img 
                   src={photo.image_url} 
                   alt={photo.title}
-                  className="w-full h-44 object-cover"
+                  className="w-full h-48 object-cover"
                 />
               </div>
-              <div className="p-3 flex justify-between items-center bg-[#141417]">
-                <span className="text-xs font-medium text-zinc-300 truncate max-w-[150px]">
+              <div className="p-3.5 flex justify-between items-center bg-zinc-950/40 border-t border-zinc-900">
+                <span className="text-xs font-bold text-zinc-200 truncate max-w-[160px]">
                   {photo.title}
                 </span>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <button 
                     onClick={() => handleDownload(photo.image_url, photo.title)}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] px-2.5 py-1 rounded border border-zinc-700 transition-all"
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-zinc-700 transition-all"
                   >
                     Unduh
                   </button>
 
-                  {/* Tombol Hapus khusus Admin */}
+                  {/* Tombol Hapus otomatis sinkron jika Anda admin */}
                   {isAdmin && (
                     <button 
                       onClick={() => handleDelete(photo.id, photo.image_url)}
-                      className="bg-red-950/40 hover:bg-red-900 border border-red-900 text-red-200 text-[11px] px-2.5 py-1 rounded transition-all"
+                      className="bg-rose-950/40 hover:bg-rose-900 border border-rose-900 text-rose-200 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
                     >
                       Hapus
                     </button>
