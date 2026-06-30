@@ -21,7 +21,10 @@ export default function KepanitiaanPage() {
 
   async function loadCommittee() {
     const supabase = getSupabase();
-    // Gunakan select('*') dan urutkan berdasarkan data terbaru (id / created_at)
+    
+    // Kosongkan state sebelum fetch agar frontend dipaksa merender ulang
+    setCommitteeList([]);
+
     const { data, error } = await supabase
       .from('committee')
       .select('*')
@@ -32,6 +35,7 @@ export default function KepanitiaanPage() {
     }
   }
 
+  // GERBANG KEAMANAN: Memvalidasi sandi langsung ke tabel settings
   async function verifikasiAksesAdmin() {
     const passwordInput = prompt("Masukkan Password Admin untuk melakukan aksi ini:");
     if (!passwordInput) return false;
@@ -64,6 +68,7 @@ export default function KepanitiaanPage() {
     if (!lolosVerifikasi) return;
 
     const supabase = getSupabase();
+    // Payload disesuaikan dengan struktur kolom 'name', 'position', dan 'phone'
     const payload = { 
       name: memberName.trim(),
       position: positionName.trim(),
@@ -94,8 +99,8 @@ export default function KepanitiaanPage() {
       setPhoneNumber('');
       setEditingId(null);
       
-      // PAKSA REFRESH FRONTEND: Memanggil ulang database untuk memperbarui list di layar
-      await loadCommittee();
+      // Paksa halaman browser memuat ulang penuh dari database (menghindari cache Next.js)
+      window.location.reload();
 
     } catch (err) { 
       console.error(err);
@@ -120,12 +125,15 @@ export default function KepanitiaanPage() {
       if (!lolosVerifikasi) return;
 
       const supabase = getSupabase();
-      const { error } = await supabase.from('committee').delete().eq('id', id);
+      const { error } = await supabase
+        .from('committee')
+        .delete()
+        .eq('id', id);
       
       if (!error) {
         alert('🗑️ Anggota panitia berhasil dihapus!');
-        // PAKSA REFRESH FRONTEND: Memanggil ulang database setelah data dihapus
-        await loadCommittee();
+        // Paksa halaman browser memuat ulang penuh dari database
+        window.location.reload();
       } else {
         alert('❌ Gagal menghapus data dari database.');
       }
