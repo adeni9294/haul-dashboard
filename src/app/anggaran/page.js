@@ -5,8 +5,6 @@ import { createClient } from '@supabase/supabase-js';
 export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
   const [budgetList, setBudgetList] = useState([]);
-  
-  // State form internal tetap menggunakan nama pembantu agar UI tidak bingung
   const [category, setCategory] = useState(''); 
   const [amount, setAmount] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -65,11 +63,10 @@ export default function AnggaranPage() {
 
     const supabase = getSupabase();
     
-    // PERBAIKAN UTAMA: Payload disesuaikan ke struktur asli Supabase Anda (name & amount)
-    // Hapus parameter 'type' agar tidak memicu error skema cache
+    // Sinkronisasi penuh dengan struktur database Supabase Anda
     const payload = { 
       name: category.trim(), 
-      amount: parseFloat(amount) || 0
+      amount: parseInt(amount, 10) || 0
     };
 
     try {
@@ -96,8 +93,8 @@ export default function AnggaranPage() {
   const handleEdit = (b) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     setEditingId(b.id);
-    setCategory(b.name || ''); // Membaca dari kolom 'name' database
-    setAmount((b.amount || 0).toString()); // Membaca dari kolom 'amount' database
+    setCategory(b.name || ''); 
+    setAmount((b.amount || 0).toString()); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -152,7 +149,6 @@ export default function AnggaranPage() {
               <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Contoh: 5000000" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono text-amber-400 font-bold" />
             </div>
             
-            {/* Input Jenis Aliran dinonaktifkan sementara karena tidak ada kolom 'type' di DB */}
             <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs uppercase rounded-xl hover:from-amber-400 hover:to-amber-500 shadow-md">
               {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
             </button>
@@ -177,10 +173,9 @@ export default function AnggaranPage() {
               budgetList.map(b => (
                 <div key={b.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
                   <div>
-                    {/* Membaca dari b.name */}
                     <p className="font-bold text-white text-sm">{b.name || 'Kategori Tanpa Nama'}</p>
-                    <p className="text-[11px] font-mono font-bold mt-0.5 text-rose-400">
-                      📤 Alokasi: {formatRupiah(b.amount || 0)}
+                    <p className="text-[11px] font-mono font-bold mt-0.5 text-amber-400">
+                      Layout Alokasi: {formatRupiah(b.amount || 0)}
                     </p>
                   </div>
                   {isAdmin && (
