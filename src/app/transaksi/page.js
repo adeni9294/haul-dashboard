@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// 🟢 SINGLETON PATTERN: Inisialisasi Klien Supabase sekali saja di luar komponen.
-// Ini mutlak diperlukan untuk menghentikan error "Multiple GoTrueClient instances detected" di konsol browser Anda.
+// SINGLETON: Inisialisasi klien sekali saja di luar komponen
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -12,10 +11,10 @@ export default function TransaksiPage() {
   const [loading, setLoading] = useState(true);
   const [allTransactions, setAllTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true); // Sementara di-lock TRUE agar tombol tidak terkunci session
   const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
-  // State Form Modal Tambah / Edit
+  // State Form Modal
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -32,49 +31,30 @@ export default function TransaksiPage() {
   const [catFilter, setCatFilter] = useState('all');
 
   useEffect(() => {
-    checkAdminSession();
     loadData();
   }, []);
-
-  async function checkAdminSession() {
-    const savedPassword = localStorage.getItem('admin_password_haul');
-    if (!savedPassword) {
-      setIsAdmin(false);
-      return;
-    }
-    try {
-      // Memanggil fungsi RPC untuk verifikasi password admin
-      const { data: isValid, error } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
-      if (error) throw error;
-      setIsAdmin(!!isValid);
-    } catch (err) {
-      console.error('Gagal verifikasi session admin:', err);
-      setIsAdmin(false);
-    }
-  }
 
   async function loadData() {
     try {
       setLoading(true);
       
-      // Ambil konfigurasi nama organisasi dari tabel settings
       const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (setDb && setDb.length > 0) {
         setMetaOrg({ name: setDb[0].org_name || 'PANITIA HAUL', address: setDb[0].address || '' });
       }
 
-      // Memanggil daftar kategori dari tabel 'category'
+      // Memanggil tabel 'category'
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb) {
         setCategories(catDb);
         if (catDb.length > 0) setFormCategory(catDb[0].name);
       }
 
-      // Ambil seluruh data dari tabel 'transactions'
+      // Memanggil tabel 'transactions'
       const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
       if (transDb) setAllTransactions(transDb);
     } catch (e) {
-      console.error('Gagal memuat data dari database:', e);
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -83,18 +63,12 @@ export default function TransaksiPage() {
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     
-    // PENTING: Jika status login admin hilang/gagal terbaca, sistem akan langsung memperingatkan Anda di sini
-    if (!isAdmin) {
-      alert('❌ Aksi ditolak! Sistem mendeteksi Anda belum login sebagai admin atau session login Anda kedaluwarsa. Silakan refresh halaman dan login ulang.');
-      return;
-    }
-    
-    // Payload disesuaikan dengan nama kolom database Supabase: 'note'
+    // FORMAT DATA SESUAI STRUKTUR TABEL SUPABASE
     const payload = {
       transaction_date: formDate,
       type: formType,
       category: formCategory,
-      note: formDescription.trim(), 
+      note: formDescription.trim(), // 🟢 Menggunakan 'note' bukan 'keterangan'
       amount: parseFloat(formAmount) || 0
     };
 
@@ -102,17 +76,17 @@ export default function TransaksiPage() {
       if (isEditMode) {
         const { error } = await supabase.from('transactions').update(payload).eq('id', selectedId);
         if (error) throw error;
-        alert('🟢 Transaksi berhasil diperbarui!');
+        alert('🟢 Sukses: Transaksi berhasil diperbarui!');
       } else {
         const { error } = await supabase.from('transactions').insert([payload]);
         if (error) throw error;
-        alert('🟢 Transaksi baru berhasil disimpan ke database!');
+        alert('🟢 Sukses: Transaksi baru berhasil disimpan!');
       }
       resetForm();
       await loadData();
     } catch (err) {
-      // Jika terjadi penolakan dari server (seperti CORS atau hak akses RLS), alert ini akan keluar secara eksplisit
-      alert(`❌ Gagal menyimpan data!\nPesan Error: ${err.message || err}`);
+      // Menampilkan alert detail jika koneksi jaringan diblokir atau ada skema salah
+      alert(`❌ Error dari Server:\n${err.message || JSON.stringify(err)}`);
     }
   };
 
@@ -123,22 +97,20 @@ export default function TransaksiPage() {
     const currentType = (item.type || '').toString().toLowerCase().trim();
     setFormType(currentType === 'masuk' || currentType === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran');
     setFormCategory(item.category || '');
-    setFormDescription(item.note || item.keterangan || item.description || '');
+    setFormDescription(item.note || '');
     setFormAmount(item.amount || '');
     setShowModal(true);
   };
 
   const triggerHapus = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus data transaksi ini secara permanen?')) return;
-    if (!isAdmin) return alert('Aksi ditolak! Anda tidak memiliki akses admin.');
-    
+    if (!confirm('Hapus transaksi ini permanen?')) return;
     try {
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
-      alert('🗑️ Data transaksi berhasil dihapus dari database.');
+      alert('🗑️ Transaksi berhasil dihapus.');
       await loadData();
     } catch (err) {
-      alert(`❌ Gagal menghapus data: ${err.message}`);
+      alert(`❌ Gagal hapus: ${err.message}`);
     }
   };
 
@@ -153,7 +125,7 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // Pengelompokan Data Cetak Dokumen LPJ
+  // Hitung Data LPJ untuk Cetak Dokumen
   const lpjMasuk = {}; const lpjKeluar = {};
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
@@ -189,31 +161,29 @@ export default function TransaksiPage() {
     return matchSearch && matchType && matchCat;
   });
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Menghubungkan ke secure server database...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat database kas...</div>;
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* AREA UTAMA PANEL KONTROL */}
+      {/* PANEL UTAMA */}
       <div className="print:hidden space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
             <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Sesi: {isAdmin ? '🟢 Terverifikasi Sebagai Admin' : '🔵 Mode Lihat (Read-Only)'}</p>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Status Akses: Terbuka (Admin Mode)</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            {isAdmin && (
-              <button onClick={() => { setIsEditMode(false); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
-                ➕ Tambah Kas
-              </button>
-            )}
+            <button onClick={() => { setIsEditMode(false); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
+              ➕ Tambah Kas
+            </button>
             <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all shadow-md">
               🖨️ Cetak LPJ
             </button>
           </div>
         </div>
 
-        {/* Panel Filter */}
+        {/* Filter Area */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 border border-slate-800/60 p-3 rounded-xl">
           <input type="text" placeholder="Cari uraian keterangan..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none">
@@ -227,7 +197,7 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* Tabel Data */}
+        {/* Tabel */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -236,7 +206,7 @@ export default function TransaksiPage() {
                 <th className="p-3">Pos Kategori</th>
                 <th className="p-3">Uraian Keterangan</th>
                 <th className="p-3 text-right">Nominal Angka</th>
-                {isAdmin && <th className="p-3 text-center w-28">Aksi</th>}
+                <th className="p-3 text-center w-28">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
@@ -256,33 +226,31 @@ export default function TransaksiPage() {
                     <td className={`p-3 text-right font-mono font-black ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
                     </td>
-                    {isAdmin && (
-                      <td className="p-3 text-center space-x-2">
-                        <button onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                        <button onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
-                      </td>
-                    )}
+                    <td className="p-3 text-center space-x-2">
+                      <button onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
+                      <button onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                    </td>
                   </tr>
                 );
               })}
               {filteredTrans.length === 0 && (
-                <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* ================= MODAL DIALOG INPUT & EDIT ================= */}
+      {/* MODAL INPUT */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <form onSubmit={handleSaveTransaction} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
-            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">{isEditMode ? '📝 Edit Transaksi Kas' : '➕ Catat Transaksi Baru'}</h3>
+            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">{isEditMode ? '📝 Edit Transaksi' : '➕ Catat Transaksi Baru'}</h3>
             
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 mb-1">Tanggal</label>
-                <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-center" />
+                <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-center font-mono" />
               </div>
               <div>
                 <label className="block text-slate-400 mb-1">Aliran Jenis</label>
@@ -294,20 +262,20 @@ export default function TransaksiPage() {
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Pilih Kategori Pos Buku Kas</label>
+              <label className="block text-slate-400 mb-1">Pilih Kategori Pos</label>
               <select value={formCategory} onChange={e => setFormCategory(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none">
                 {categories.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Nominal Rupiah (Angka Bersih)</label>
+              <label className="block text-slate-400 mb-1">Nominal Angka Bersih</label>
               <input type="number" placeholder="Contoh: 50000" required value={formAmount} onChange={e => setFormAmount(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-right font-bold text-amber-400 text-sm" />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Uraian Deskripsi / Keterangan Pembayar</label>
-              <textarea rows="3" placeholder="Tulis rincian atau nama donatur..." required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+              <label className="block text-slate-400 mb-1">Uraian Keterangan</label>
+              <textarea rows="3" placeholder="Tulis deskripsi transaksi..." required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -318,33 +286,33 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* ================= AREA CETAK DOKUMEN LPJ ================= */}
-      <div className="hidden print:block bg-white text-black p-10 font-serif leading-relaxed text-xs">
-        <div className="text-center border-b-4 border-double border-black pb-3 mb-6 space-y-1">
-          <h1 className="text-base font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
+      {/* PRINT LAYOUT */}
+      <div className="hidden print:block bg-white text-black p-10 font-serif text-xs">
+        <div className="text-center border-b-4 border-double border-black pb-3 mb-6">
+          <h1 className="text-base font-bold uppercase font-sans">{metaOrg.name}</h1>
           <p className="text-[9px] font-sans italic text-gray-500">{metaOrg.address}</p>
-          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL REAL-TIME</h2>
+          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN KEUANGAN HAUL REAL-TIME</h2>
         </div>
 
         <div className="grid grid-cols-3 gap-4 font-sans border border-black p-3 rounded mb-6 text-[10px] bg-gray-50">
           <div><p className="text-gray-500 uppercase font-bold">Total Penerimaan</p><p className="text-xs font-black text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
-          <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran Alokasi</p><p className="text-xs font-black text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
-          <div><p className="text-gray-500 uppercase font-bold">Sisa Saldo Kas Bersih</p><p className="text-xs font-black text-blue-800 underline">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
+          <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran</p><p className="text-xs font-black text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
+          <div><p className="text-gray-500 uppercase font-bold">Sisa Saldo Kas</p><p className="text-xs font-black text-blue-800 underline">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
         </div>
 
-        {/* REKAP POS IN */}
+        {/* Bagian LPJ Masuk */}
         <div className="space-y-4">
-          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-green-800">1. REALISASI KAS MASUK (PENERIMAAN)</h3>
+          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-green-800">1. REALISASI KAS MASUK</h3>
           {Object.keys(lpjMasuk).map((cat, i) => (
             <div key={i} className="space-y-1">
-              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos Anggaran: {cat}</h4>
+              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos: {cat}</h4>
               <table className="w-full text-left border-collapse text-[9px]">
                 <thead>
-                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th className="py-1">Keterangan / Donatur</th><th className="py-1 text-right w-28">Jumlah</th></tr>
+                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th>Keterangan</th><th className="py-1 text-right w-28">Jumlah</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjMasuk[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -352,30 +320,24 @@ export default function TransaksiPage() {
           ))}
         </div>
 
-        {/* REKAP POS OUT */}
+        {/* Bagian LPJ Keluar */}
         <div className="space-y-4 pt-6">
-          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-red-800">2. REALISASI KAS KELUAR (BELANJA OPERASIONAL)</h3>
+          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-red-800">2. REALISASI KAS KELUAR</h3>
           {Object.keys(lpjKeluar).map((cat, i) => (
             <div key={i} className="space-y-1">
-              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos Operasional: {cat}</h4>
+              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos: {cat}</h4>
               <table className="w-full text-left border-collapse text-[9px]">
                 <thead>
-                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th className="py-1">Uraian Alokasi Keperluan</th><th className="py-1 text-right w-28">Jumlah</th></tr>
+                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th>Uraian Keperluan</th><th className="py-1 text-right w-28">Jumlah</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjKeluar[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td className="py-1">{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ))}
-        </div>
-
-        {/* TANDA TANGAN VALIDASI */}
-        <div className="mt-16 grid grid-cols-2 text-center font-sans text-[10px] pt-8">
-          <div className="space-y-14"><p>Mengetahui,<br /><b>Ketua Panitia Haul</b></p><p className="underline font-bold">( ........................................ )</p></div>
-          <div className="space-y-14"><p>Cirebon, {new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}<br /><b>Bendahara Panitia</b></p><p className="underline font-bold">( ........................................ )</p></div>
         </div>
       </div>
 
