@@ -47,7 +47,7 @@ export default function AcaraPage() {
       const { data, error } = await supabase
         .from('schedules')
         .select('*')
-        .order('date_event', { ascending: true })
+        .order('event_date', { ascending: true }) // Diubah menggunakan event_date
         .order('time_start', { ascending: true });
 
       if (!error && data) {
@@ -66,12 +66,14 @@ export default function AcaraPage() {
     if (!agenda.trim() || !timeStart.trim() || !dateEvent) return;
 
     const supabase = getSupabase();
+    
+    // PERBAIKAN: Payload diubah dari date_event menjadi event_date sesuai DB
     const payload = { 
       agenda: agenda.trim(),
       time_start: timeStart.trim(),
       time_end: timeEnd.trim() || 'S.D Selesai',
       pic: pic.trim() || '-',
-      date_event: dateEvent
+      event_date: dateEvent 
     };
 
     try {
@@ -105,14 +107,14 @@ export default function AcaraPage() {
     setTimeStart(s.time_start || '');
     setTimeEnd(s.time_end || '');
     setPic(s.pic || '');
-    setDateEvent(s.date_event || '');
+    setDateEvent(s.event_date || ''); // Diubah membaca dari event_date
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (!confirm('Apakah Anda yakin ingin menghapus jadwal agenda ini?')) return;
-    
+     
     try {
       const supabase = getSupabase();
       const { error } = await supabase.from('schedules').delete().eq('id', id);
@@ -138,7 +140,7 @@ export default function AcaraPage() {
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
-      
+       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider">📅 Susunan Agenda & Rundown Acara</h2>
@@ -147,7 +149,7 @@ export default function AcaraPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+         
         {isAdmin ? (
           <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
             <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">{editingId ? '🔄 Perbarui Acara' : '➕ Tambah Rundown Acara'}</h3>
@@ -198,7 +200,8 @@ export default function AcaraPage() {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                        🗓️ {formatDate(s.date_event)}
+                        {/* Diubah membaca dari s.event_date */}
+                        🗓️ {formatDate(s.event_date)}
                       </span>
                       <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] font-mono">
                         ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
