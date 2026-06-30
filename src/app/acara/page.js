@@ -1,8 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Definisikan Interface agar TypeScript tidak error saat kompilasi build
 interface ScheduleItem {
   id: number;
   created_at?: string;
@@ -14,15 +13,15 @@ interface ScheduleItem {
 }
 
 export default function AcaraPage() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [scheduleList, setScheduleList] = useState<ScheduleItem[]>([]);
-  const [agenda, setAgenda] = useState('');
-  const [timeStart, setTimeStart] = useState('');
-  const [timeEnd, setTimeEnd] = useState('');
-  const [pic, setPic] = useState('');
-  const [dateEvent, setDateEvent] = useState('');
+  const [agenda, setAgenda] = useState<string>('');
+  const [timeStart, setTimeStart] = useState<string>('');
+  const [timeEnd, setTimeEnd] = useState<string>('');
+  const [pic, setPic] = useState<string>('');
+  const [dateEvent, setDateEvent] = useState<string>('');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const getSupabase = () => {
     return createClient(
@@ -71,7 +70,7 @@ export default function AcaraPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (!agenda.trim() || !timeStart.trim() || !dateEvent) return;
@@ -103,9 +102,10 @@ export default function AcaraPage() {
       setDateEvent('');
       setEditingId(null);
       await loadSchedules();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(`❌ Gagal menyimpan: ${err.message || err}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`❌ Gagal menyimpan: ${msg}`);
     }
   };
 
@@ -130,19 +130,19 @@ export default function AcaraPage() {
       if (error) throw error;
       alert('🗑️ Acara berhasil dihapus.');
       await loadSchedules();
-    } catch (err: any) {
-      alert(`❌ Gagal menghapus: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`❌ Gagal menghapus: ${msg}`);
     }
   };
 
-  // AMAN DARI DEPLOY ERROR: Menambahkan anotasi tipe eksplisit string dan handling null-pointer
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return '-';
     try {
       const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
       return new Date(dateString).toLocaleDateString('id-ID', options);
     } catch (e) {
-      return dateString;
+      return String(dateString);
     }
   };
 
@@ -151,7 +151,6 @@ export default function AcaraPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider">📅 Susunan Agenda & Rundown Acara</h2>
@@ -161,7 +160,6 @@ export default function AcaraPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* PANEL INPUT ADMIN */}
         {isAdmin ? (
           <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
             <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">{editingId ? '🔄 Perbarui Acara' : '➕ Tambah Rundown Acara'}</h3>
@@ -201,7 +199,6 @@ export default function AcaraPage() {
           </div>
         )}
 
-        {/* LIST DAFTAR ACARA */}
         <div className="lg:col-span-2 p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 shadow-md">
           <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">📋 Susunan Agenda Rundown ({scheduleList.length})</h3>
           <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
