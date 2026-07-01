@@ -31,7 +31,7 @@ export default function TransaksiPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
 
-  // PERBAIKAN UTAMA: Menggunakan fungsi interval berkala agar status admin tidak hilang di HP
+  // Pelacakan interval berkala agar status admin tidak hilang di HP
   useEffect(() => {
     checkAdminSessionAndLoad();
     loadData();
@@ -271,15 +271,15 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* Tabel Utama */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-          <table className="w-full text-left border-collapse">
+        {/* Tabel Utama Modern & Responsif Layar HP */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto shadow-lg">
+          <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
               <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[9px] tracking-wider">
-                <th className="p-3">Tanggal</th>
-                <th className="p-3">Pos Kategori</th>
+                <th className="p-3 w-24">Tanggal</th>
+                <th className="p-3 w-28">Pos Kategori</th>
                 <th className="p-3">Uraian Keterangan</th>
-                <th className="p-3 text-right">Nominal Angka</th>
+                <th className="p-3 text-right w-32">Nominal Angka</th>
                 {isAdmin && <th className="p-3 text-center w-28">Aksi</th>}
               </tr>
             </thead>
@@ -290,20 +290,20 @@ export default function TransaksiPage() {
                 
                 return (
                   <tr key={idx} className="hover:bg-slate-950/20 transition-all">
-                    <td className="p-3 font-mono text-slate-500">{t.transaction_date}</td>
-                    <td className="p-3">
+                    <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
+                    <td className="p-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${isPemasukan ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
                         {t.category}
                       </span>
                     </td>
-                    <td className="p-3 truncate max-w-xs font-medium">{t.note}</td>
-                    <td className={`p-3 text-right font-mono font-black ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs">{t.note}</td>
+                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
                     </td>
                     {isAdmin && (
-                      <td className="p-3 text-center space-x-2 font-mono">
-                        <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                        <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                      <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap bg-slate-900/90 sm:bg-transparent sticky right-0 sm:static shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.5)] sm:shadow-none">
+                        <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold px-1 py-0.5">Edit</button>
+                        <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
                       </td>
                     )}
                   </tr>
