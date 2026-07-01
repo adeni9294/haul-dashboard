@@ -151,13 +151,16 @@ export default function DashboardPage() {
         setTotals({ total: calcMasuk - calcKeluar, masuk: calcMasuk, keluar: calcKeluar });
         setRincianMasuk(listMasuk.slice(0, 5));
         setRincianKeluar(listKeluar.slice(0, 5));
-
+       // --- BAGIAN YANG DIPERBAIKI ---
         let hitungPersen = 0;
         if (totalPlafonDinamis > 0) {
+          // Memastikan menggunakan nama variabel yang sama: hitungPersen
           hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
         }
         
-        setProgress({ percent: hitungPercent, current: calcMasuk, target: totalPlafonDinamis });
+        // Pastikan di sini memanggil hitungPersen
+        setProgress({ percent: hitungPersen, current: calcMasuk, target: totalPlafonDinamis });
+        // --- SELESAI PERBAIKAN ---
       }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
