@@ -25,6 +25,17 @@ const THEME_STYLES = {
   'default': { body: 'bg-[#0B0E11] text-slate-100', card: 'bg-[#12161A] border-[#1E2329] text-slate-100', navBg: 'bg-[#12161A]/70 border-zinc-800/60', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]' }
 };
 
+// Fungsi helper penarik class Tailwind murni untuk diekspor menjadi CSS Variable murni
+const extractColorClass = (classes, type) => {
+  if (!classes) return '';
+  const part = classes.split(' ').find(c => c.startsWith(type));
+  if (!part) return '';
+  if (part.includes('[') && part.includes(']')) {
+    return part.substring(part.indexOf('[') + 1, part.indexOf(']'));
+  }
+  return '';
+};
+
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -92,19 +103,13 @@ export default function RootLayout({ children }) {
     }
   }
 
-  // Fungsi Parser Pintar untuk merapikan teks bankInfo dari DB
   const parseBankInfo = (rawText) => {
     if (!rawText) return [];
-    
-    // Deteksi jika string mengandung penanda khusus teks dari gambar_12.png
     let cleanText = rawText.replace('Rekening Donasi -->', '').trim();
-    
-    // Potong string berdasarkan separator "---" atau "|"
     const rawParts = cleanText.split(/---|\|/);
     
     return rawParts.map(part => {
       const text = part.trim();
-      // Ekstrak Nama Bank/E-wallet sebelum tanda titik dua (:)
       let bankName = 'BANK';
       let accountNum = '';
       let holderName = '-';
@@ -114,7 +119,6 @@ export default function RootLayout({ children }) {
         bankName = splitColon[0].trim();
         const rest = splitColon[1].trim();
         
-        // Cari potongan nama pemilik (AN.)
         if (rest.toUpperCase().includes('AN.')) {
           const splitAN = rest.split(/AN\.|AN/i);
           accountNum = splitAN[0].trim();
@@ -126,11 +130,7 @@ export default function RootLayout({ children }) {
         accountNum = text;
       }
 
-      return {
-        bank: bankName,
-        number: accountNum,
-        name: holderName
-      };
+      return { bank: bankName, number: accountNum, name: holderName };
     }).filter(item => item.number.length > 0);
   };
 
@@ -180,6 +180,12 @@ export default function RootLayout({ children }) {
 
   const listRekening = parseBankInfo(bankInfo);
 
+  // Parsing warna HEX custom untuk diinjeksi ke level root document variable CSS
+  const customHexBg = extractColorClass(currentStyle.body, 'bg-[');
+  const customHexCard = extractColorClass(currentStyle.card, 'bg-[');
+  const customHexBorder = extractColorClass(currentStyle.card, 'border-[');
+  const customHexAccent = extractColorClass(currentStyle.accentText, 'text-[');
+
   return (
     <html lang="id" className={`${currentStyle.body} min-h-screen`}>
       <head>
@@ -187,7 +193,16 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${currentStyle.body} font-['Poppins'] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}>
+      {/* PERBAIKAN UTAMA: Menginjeksikan style dinamis global token ke body agar halaman anak ikut berubah warnanya */}
+      <body 
+        className={`${currentStyle.body} font-['Poppins'] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}
+        style={{
+          '--bg-body-custom': customHexBg || '',
+          '--bg-card-custom': customHexCard || '',
+          '--border-custom': customHexBorder || '',
+          '--text-accent': customHexAccent || ''
+        }}
+      >
         
         <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
           
@@ -277,11 +292,10 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* RE-DESIGNED POP-UP MODAL DONASI: JAUH LEBIH RAPI & PREMIUM */}
+        {/* POP-UP MODAL DONASI */}
         {showDonationModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in">
             <div className="bg-[#12161A] border border-slate-800/80 p-5 rounded-[24px] w-full max-w-sm space-y-4 shadow-2xl relative">
-              
               <div className="text-center space-y-1">
                 <div className="text-xl">💳</div>
                 <h3 className="text-xs font-black text-white uppercase tracking-wider">Rekening Donasi Jemaah</h3>
@@ -290,7 +304,6 @@ export default function RootLayout({ children }) {
                 </p>
               </div>
               
-              {/* LIST KARTU REKENING HASIL DETEKSI OTOMATIS */}
               <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
                 {listRekening.length === 0 ? (
                   <div className="p-4 bg-black/30 border border-slate-800/60 rounded-xl font-mono text-[10px] text-center text-amber-500">
@@ -310,7 +323,6 @@ export default function RootLayout({ children }) {
                           AN. <span className="text-slate-300 font-medium">{item.name}</span>
                         </p>
                       </div>
-
                       <button 
                         onClick={() => handleCopy(item.number, idx)}
                         className={`px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-bold tracking-wider uppercase transition-all shrink-0 ${copiedIndex === idx ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
@@ -323,10 +335,7 @@ export default function RootLayout({ children }) {
               </div>
 
               <div className="pt-1">
-                <button 
-                  onClick={() => setShowDonationModal(false)} 
-                  className="w-full py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700/40 shadow-md font-mono"
-                >
+                <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700/40 shadow-md font-mono">
                   TUTUP WINDOW
                 </button>
               </div>
