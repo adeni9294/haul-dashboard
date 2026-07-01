@@ -11,7 +11,7 @@ export default function TransaksiPage() {
   const [allTransactions, setAllTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  // PERBAIKAN UTAMA: Ubah default ke false, status akan disinkronkan dari localStorage & RPC
+  // Status sinkronisasi dari localStorage & RPC berkala
   const [isAdmin, setIsAdmin] = useState(false);
   const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
 
@@ -31,27 +31,40 @@ export default function TransaksiPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
 
+  // PERBAIKAN UTAMA: Menggunakan fungsi interval berkala agar status admin tidak hilang di HP
   useEffect(() => {
     checkAdminSessionAndLoad();
+    loadData();
+
+    const interval = setInterval(checkAdminSessionOnly, 500);
+    return () => clearInterval(interval);
   }, []);
 
-  // SINKRONISASI OTORISASI DENGAN LAYOUT
+  // Sinkronisasi data di awal sekaligus verifikasi auth pertama
   async function checkAdminSessionAndLoad() {
     const savedPassword = localStorage.getItem('admin_password_haul');
     if (!savedPassword) {
       setIsAdmin(false);
-      await loadData();
       return;
     }
     try {
-      // Verifikasi password yang tersimpan ke RPC Supabase agar sama dengan Layout
       const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
       setIsAdmin(!!isValid);
     } catch (err) {
       console.error("Gagal verifikasi auth di page:", err);
       setIsAdmin(false);
-    } finally {
-      await loadData();
+    }
+  }
+
+  // Fungsi khusus interval khusus mendeteksi perubahan state password tanpa mengganggu data fetch
+  async function checkAdminSessionOnly() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) return setIsAdmin(false);
+    try {
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      setIsAdmin(false);
     }
   }
 
@@ -173,7 +186,7 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // Kalkulasi Cetak LPJ Dokumentasi
+  // Kalkulasi LPJ Dokumentasi Cetak
   const lpjMasuk = {}; const lpjKeluar = {};
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
@@ -221,7 +234,6 @@ export default function TransaksiPage() {
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
               
-              {/* Badge Konten yang sekarang sinkron dengan Layout */}
               {isAdmin ? (
                 <span className="bg-green-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">ADMIN</span>
               ) : (
@@ -234,7 +246,6 @@ export default function TransaksiPage() {
           </div>
           
           <div className="flex gap-2 w-full sm:w-auto">
-            {/* Tombol Tambah Kas akan otomatis muncul karena isAdmin telah tersinkronisasi */}
             {isAdmin && (
               <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
                 ➕ Tambah Kas
@@ -290,7 +301,7 @@ export default function TransaksiPage() {
                       {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
                     </td>
                     {isAdmin && (
-                      <td className="p-3 text-center space-x-2">
+                      <td className="p-3 text-center space-x-2 font-mono">
                         <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold">Edit</button>
                         <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
                       </td>
