@@ -46,11 +46,11 @@ const THEME_STYLES = {
     balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/10' 
   },
   'crimson-tide': { 
-    card: 'bg-zinc-900/90 border-red-950/80 text-red-100 shadow-2xl', 
-    textMuted: 'text-neutral-400', 
-    accentText: 'text-red-500', 
-    progressBg: 'from-red-700 to-red-500', 
-    balanceCard: 'bg-red-700 text-white shadow-red-700/20' 
+    card: 'bg-[#1A0B0B] border-[#3D1414] text-red-100 shadow-2xl', 
+    textMuted: 'text-zinc-400', 
+    accentText: 'text-[#E63946]', 
+    progressBg: 'from-[#E63946] to-[#9B2226]', 
+    balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' 
   },
   'dracula-vamp': { 
     card: 'bg-zinc-900 border-fuchsia-950 text-purple-200 shadow-2xl', 
@@ -149,18 +149,15 @@ export default function DashboardPage() {
         setCatSummaryMasuk(parseChart(incomeMap, calcMasuk));
         setCatSummaryKeluar(parseChart(expenseMap, calcKeluar));
         setTotals({ total: calcMasuk - calcKeluar, masuk: calcMasuk, keluar: calcKeluar });
-        setRincianMasuk(listMasuk.slice(0, 5));
-        setRincianKeluar(listKeluar.slice(0, 5));
-       // --- BAGIAN YANG DIPERBAIKI ---
+        setRincianMasuk(listMasuk.slice(0, 10)); // Mengambil data sedikit lebih banyak untuk scrollable list
+        setRincianKeluar(listKeluar.slice(0, 10));
+
         let hitungPersen = 0;
         if (totalPlafonDinamis > 0) {
-          // Memastikan menggunakan nama variabel yang sama: hitungPersen
           hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
         }
         
-        // Pastikan di sini memanggil hitungPersen
         setProgress({ percent: hitungPersen, current: calcMasuk, target: totalPlafonDinamis });
-        // --- SELESAI PERBAIKAN ---
       }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
@@ -214,7 +211,8 @@ export default function DashboardPage() {
             <p className="text-[11px] font-semibold opacity-70 mt-0.5">Sisa Saldo Kas Bersih</p>
           </div>
 
-          <div className="relative z-10">
+          {/* DIBERIKAN SEKAT SPACEmt-3 AGAR LEBIH LUXURY & MODERN */}
+          <div className="relative z-10 mt-3">
             <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none">
               {formatRupiah(totals.total)}
             </h2>
@@ -276,7 +274,7 @@ export default function DashboardPage() {
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
-                <span className="text-slate-300 flex items-center gap-1">🔹 {c.label}</span>
+                <span className="text-zinc-100 flex items-center gap-1">🔹 {c.label}</span>
                 <span className={`font-mono font-bold ${style.accentText}`}>{formatRupiah(c.value)}</span>
               </div>
             ))}
@@ -288,7 +286,8 @@ export default function DashboardPage() {
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
-                <span className="text-slate-300 flex items-center gap-1">🔸 {c.label}</span>
+                {/* DIUBAH MENJADI text-zinc-100 AGAR LEBIH KONTRAS DAN LAYAK BACA */}
+                <span className="text-zinc-100 flex items-center gap-1">🔸 {c.label}</span>
                 <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
             ))}
@@ -296,16 +295,16 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 5. DATA RINCIAN MUTASI TERAKHIR */}
+      {/* 5. DATA RINCIAN MUTASI TERAKHIR (DIBUAT SCROLLABLE & SIMETRIS) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border-l-4 border-l-emerald-500 rounded-2xl space-y-3.5 shadow-xl`}>
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>Pemasukan Terakhir (Deposits)</h5>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
               <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi masuk.</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
@@ -319,12 +318,12 @@ export default function DashboardPage() {
 
         <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-3.5 shadow-xl`}>
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Pengeluaran Terakhir (Withdrawals)</h5>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
               <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi belanja.</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
