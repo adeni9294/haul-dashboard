@@ -3,13 +3,76 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const THEME_STYLES = {
-  'emerald-cyber': { card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', innerBg: 'bg-zinc-950 border border-zinc-850', textMuted: 'text-zinc-500', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-emerald-500 text-black shadow-emerald-500/10' },
-  'velvet-rose': { card: 'bg-neutral-900 border-purple-900/60 text-rose-50 shadow-2xl', innerBg: 'bg-purple-950 border border-purple-900/40', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/10' },
-  'neon-sunset': { card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', innerBg: 'bg-stone-950 border border-stone-850', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/10' },
-  'amber-gold': { card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', innerBg: 'bg-gray-950 border border-gray-850', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/10' },
-  'midnight-blue': { card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', innerBg: 'bg-blue-950 border border-blue-900/40', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/10' },
-  'nordic-frost': { card: 'bg-slate-800 border-slate-750 text-slate-50 shadow-2xl', innerBg: 'bg-slate-900 border border-slate-750', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/10' },
-  'default': { card: 'bg-[#12161A] border-[#1E2329] text-slate-100 shadow-2xl', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' }
+  'emerald-cyber': { 
+    card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', 
+    textMuted: 'text-zinc-500', 
+    accentText: 'text-emerald-400', 
+    progressBg: 'from-emerald-600 to-emerald-400', 
+    balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/10' 
+  },
+  'velvet-rose': { 
+    card: 'bg-neutral-900 border-purple-900/40 text-rose-50 shadow-2xl', 
+    textMuted: 'text-purple-300', 
+    accentText: 'text-rose-400', 
+    progressBg: 'from-rose-600 to-fuchsia-500', 
+    balanceCard: 'bg-rose-500 text-black shadow-rose-500/10' 
+  },
+  'neon-sunset': { 
+    card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', 
+    textMuted: 'text-stone-400', 
+    accentText: 'text-orange-400', 
+    progressBg: 'from-orange-600 to-orange-400', 
+    balanceCard: 'bg-orange-500 text-black shadow-orange-500/10' 
+  },
+  'amber-gold': { 
+    card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', 
+    textMuted: 'text-gray-400', 
+    accentText: 'text-amber-400', 
+    progressBg: 'from-amber-600 to-amber-400', 
+    balanceCard: 'bg-amber-500 text-black shadow-amber-500/10' 
+  },
+  'midnight-blue': { 
+    card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', 
+    textMuted: 'text-blue-400', 
+    accentText: 'text-blue-400', 
+    progressBg: 'from-blue-600 to-cyan-500', 
+    balanceCard: 'bg-blue-500 text-black shadow-blue-500/10' 
+  },
+  'nordic-frost': { 
+    card: 'bg-slate-800 border-slate-750 text-slate-50 shadow-2xl', 
+    textMuted: 'text-slate-400', 
+    accentText: 'text-cyan-400', 
+    progressBg: 'from-cyan-600 to-teal-400', 
+    balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/10' 
+  },
+  'crimson-tide': { 
+    card: 'bg-zinc-900/90 border-red-950/80 text-red-100 shadow-2xl', 
+    textMuted: 'text-neutral-400', 
+    accentText: 'text-red-500', 
+    progressBg: 'from-red-700 to-red-500', 
+    balanceCard: 'bg-red-700 text-white shadow-red-700/20' 
+  },
+  'dracula-vamp': { 
+    card: 'bg-zinc-900 border-fuchsia-950 text-purple-200 shadow-2xl', 
+    textMuted: 'text-neutral-500', 
+    accentText: 'text-fuchsia-400', 
+    progressBg: 'from-purple-600 to-fuchsia-500', 
+    balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' 
+  },
+  'forest-moss': { 
+    card: 'bg-stone-900 border-emerald-950 text-stone-100 shadow-2xl', 
+    textMuted: 'text-stone-400', 
+    accentText: 'text-green-400', 
+    progressBg: 'from-emerald-700 to-green-500', 
+    balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' 
+  },
+  'default': { 
+    card: 'bg-[#12161A] border-[#1E2329] text-slate-100 shadow-2xl', 
+    textMuted: 'text-slate-400', 
+    accentText: 'text-[#BFEC25]', 
+    progressBg: 'from-[#BFEC25] to-[#A3CB1B]', 
+    balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' 
+  }
 };
 
 export default function DashboardPage() {
@@ -94,7 +157,7 @@ export default function DashboardPage() {
           hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
         }
         
-        setProgress({ percent: hitungPersen, current: calcMasuk, target: totalPlafonDinamis });
+        setProgress({ percent: hitungPercent, current: calcMasuk, target: totalPlafonDinamis });
       }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
@@ -116,7 +179,7 @@ export default function DashboardPage() {
       
       {/* 1. TEXT BANNER INFORMASI DENGAN WARNA AKSEN DINAMIS */}
       {announcement && (
-        <div className={`w-full bg-black/20 border border-zinc-800/60 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner`}>
+        <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
           <div className={`animate-marquee inline-block ${style.accentText} font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono`}>
             📢 {announcement}
           </div>
@@ -126,13 +189,12 @@ export default function DashboardPage() {
       {/* 2. AREA UTAMA KARTU SALDO & CARD PEMASUKAN/PENGELUARAN */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KARTU SALDO UTAMA: SEKARANG BERUBAH WARNA MENGIKUTI TEMA */}
-        <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl border border-white/10 transition-transform duration-300 hover:scale-[1.01]`}>
+        {/* KARTU SALDO UTAMA */}
+        <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl border border-white/5 transition-transform duration-300 hover:scale-[1.01]`}>
           
-          {/* HIGH-CONTRAST MEGA MENDUNG PATTERN */}
-          <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.20] pointer-events-none select-none z-0">
+          <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
-              <g fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M120,30 C145,10 175,15 185,35 C195,55 175,75 145,70 C115,65 105,40 120,30 Z" />
                 <path d="M130,40 C150,25 170,28 177,42 C184,56 170,70 150,66 C130,62 123,48 130,40 Z" />
                 <path d="M140,50 C152,40 162,42 166,50 C170,58 162,66 152,64 C142,62 138,56 140,50 Z" />
@@ -162,7 +224,7 @@ export default function DashboardPage() {
 
         {/* REKAP NOMINAL MASUK & KELUAR */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/30`}>
+          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/40`}>
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm shadow-sm">🟢</div>
               <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>Total Uang Masuk</p>
@@ -173,7 +235,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-rose-500/30`}>
+          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-rose-500/40`}>
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm shadow-sm">🔴</div>
               <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>Total Uang Belanja</p>
@@ -187,7 +249,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* 3. PROGRESS TARGET ANGGARAN BAR DENGAN WARNA GRADASI DINAMIS */}
+      {/* 3. PROGRESS TARGET ANGGARAN BAR */}
       <div className={`p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -195,7 +257,7 @@ export default function DashboardPage() {
           </h3>
           <span className={`${style.accentText} font-mono text-xs font-black bg-white/5 px-2 py-0.5 rounded-md`}>{progress.percent}%</span>
         </div>
-        <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden p-0.5 border border-slate-800/80">
+        <div className="w-full h-2.5 bg-black/60 rounded-full overflow-hidden p-0.5 border border-zinc-800/50">
           <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
         <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-0.5">
@@ -210,7 +272,7 @@ export default function DashboardPage() {
           <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>📊 Rekap Kategori Uang Masuk</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-slate-800/40 last:border-0 last:pb-0">
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
                 <span className="text-slate-300 flex items-center gap-1">🔹 {c.label}</span>
                 <span className={`font-mono font-bold ${style.accentText}`}>{formatRupiah(c.value)}</span>
               </div>
@@ -222,7 +284,7 @@ export default function DashboardPage() {
           <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">📊 Rekap Alokasi Anggaran Belanja</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-slate-800/40 last:border-0 last:pb-0">
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
                 <span className="text-slate-300 flex items-center gap-1">🔸 {c.label}</span>
                 <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
@@ -240,7 +302,7 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi masuk.</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-slate-800/20 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
@@ -259,7 +321,7 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi belanja.</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-slate-800/20 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-100 font-bold truncate">{t.note || t.keterangan || t.description}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
