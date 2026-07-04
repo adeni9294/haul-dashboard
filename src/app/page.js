@@ -123,48 +123,55 @@ export default function DashboardPage() {
       if (donationsDb) {
         donationsDb.forEach((item) => {
           const rawAmount = parseFloat(item.amount) || 0;
-          const nominal = Math.abs(rawAmount);
           const catName = (item.category || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date;
           const isAdminFee = item.donor_name === '__ADMIN_FEE__';
           const isSaldoMengendap = item.donor_name === '__SALDO_MENGENDAP__';
 
-          // Periksa apakah nilai dari database merupakan pengeluaran (minus) atau pemasukan
-          if (rawAmount < 0 || isAdminFee) {
-            calcKeluar += nominal;
-            expenseMap['Administrasi'] = (expenseMap['Administrasi'] || 0) + nominal;
+          if (isAdminFee) {
+            // 🌟 POTONGAN SEBAGAI PENGURANG PEMASUKAN: Tetap masukkan ke Kas Masuk (tapi minus nilainya)
+            const nominalMinus = -Math.abs(rawAmount);
+            calcMasuk += nominalMinus; // Mengurangi global uang masuk
+            incomeMap['Donatur Khitanan Massal'] = (incomeMap['Donatur Khitanan Massal'] || 0) + nominalMinus; // Mengurangi langsung kategori terkait
             
-            listPengeluaranGrup.push({
+            const keyFee = `${tgl}_FEE_SYSTEM_${item.id}`;
+            listPemasukanGrup[keyFee] = {
               note: `POTONGAN ADMIN FEE KOLEKTIF BULAN ${tgl?.substring(0, 7)}`,
               transaction_date: tgl,
-              amount: nominal
-            });
+              amount: nominalMinus, // Nilai minus
+              isReduction: true
+            };
+          } else if (isSaldoMengendap) {
+            const nominalPositif = Math.abs(rawAmount);
+            calcMasuk += nominalPositif;
+            incomeMap['Donatur Khitanan Massal'] = (incomeMap['Donatur Khitanan Massal'] || 0) + nominalPositif;
+            
+            const keySaldo = `${tgl}_SALDO_SYSTEM_${item.id}`;
+            listPemasukanGrup[keySaldo] = {
+              note: `SALDO MENGENDAP BULAN ${tgl?.substring(0, 7)}`,
+              transaction_date: tgl,
+              amount: nominalPositif,
+              isReduction: false
+            };
           } else {
-            calcMasuk += nominal;
-            incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
+            const nominalPositif = Math.abs(rawAmount);
+            calcMasuk += nominalPositif;
+            incomeMap[catName] = (incomeMap[catName] || 0) + nominalPositif;
 
-            if (isSaldoMengendap) {
-              const keySaldo = `${tgl}_SALDO_SYSTEM`;
-              listPemasukanGrup[keySaldo] = {
-                note: `SALDO MENGENDAP BULAN ${tgl?.substring(0, 7)}`,
+            const grupKey = `${tgl}_${catName}_Donatur`;
+            if (!listPemasukanGrup[grupKey]) {
+              listPemasukanGrup[grupKey] = {
+                note: `GABUNGAN DARI 0 DONATUR ${catName.toUpperCase()}`,
                 transaction_date: tgl,
-                amount: nominal
+                amount: 0,
+                count: 0,
+                cat: catName,
+                isReduction: false
               };
-            } else {
-              const grupKey = `${tgl}_${catName}_Donatur`;
-              if (!listPemasukanGrup[grupKey]) {
-                listPemasukanGrup[grupKey] = {
-                  note: `GABUNGAN DARI 0 DONATUR ${catName.toUpperCase()}`,
-                  transaction_date: tgl,
-                  amount: 0,
-                  count: 0,
-                  cat: catName
-                };
-              }
-              listPemasukanGrup[grupKey].amount += nominal;
-              listPemasukanGrup[grupKey].count += 1;
-              listPemasukanGrup[grupKey].note = `GABUNGAN DARI ${listPemasukanGrup[grupKey].count} DONATUR ${catName.toUpperCase()}`;
             }
+            listPemasukanGrup[grupKey].amount += nominalPositif;
+            listPemasukanGrup[grupKey].count += 1;
+            listPemasukanGrup[grupKey].note = `GABUNGAN DARI ${listPemasukanGrup[grupKey].count} DONATUR ${catName.toUpperCase()}`;
           }
         });
       }
@@ -172,13 +179,12 @@ export default function DashboardPage() {
       // 2. Olah tabel data manual operasional dari Buku Kas Transaksi Utama
       if (transactionsDb) {
         transactionsDb.forEach((item) => {
-          const rawAmount = parseFloat(item.amount || item.nominal) || 0;
-          const nominal = Math.abs(rawAmount);
+          const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
           const rawType = (item.type || item.jenis || '').toString().toLowerCase().trim();
           const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date;
 
-          if (rawType === 'keluar' || rawType === 'pengeluaran' || rawAmount < 0) {
+          if (rawType === 'keluar' || rawType === 'pengeluaran') {
             calcKeluar += nominal;
             expenseMap[catName] = (expenseMap[catName] || 0) + nominal;
             listPengeluaranGrup.push({
@@ -194,7 +200,8 @@ export default function DashboardPage() {
             listPemasukanGrup[keyManual] = {
               note: item.note || 'Pemasukan Tambahan',
               transaction_date: tgl,
-              amount: nominal
+              amount: nominal,
+              isReduction: false
             };
           }
         });
@@ -212,8 +219,8 @@ export default function DashboardPage() {
       setCatSummaryKeluar(parseChart(expenseMap, calcKeluar));
       setTotals({ total: calcMasuk - calcKeluar, masuk: calcMasuk, keluar: calcKeluar });
       
-      setRincianMasuk(arrayMasukFinal.slice(0, 10)); 
-      setRincianKeluar(arrayKeluarFinal.slice(0, 10));
+      setRincianMasuk(arrayMasukFinal.slice(0, 15)); 
+      setRincianKeluar(arrayKeluarFinal.slice(0, 15));
 
       let hitungPersen = 0;
       if (totalPlafonDinamis > 0) {
@@ -228,7 +235,13 @@ export default function DashboardPage() {
     }
   }
 
-  const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+  const formatRupiah = (angka) => {
+    const isMinus = angka < 0;
+    const absValue = Math.abs(angka);
+    const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(absValue);
+    return isMinus ? `-${formatted}` : formatted;
+  };
+  
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
   if (loading) {
@@ -336,7 +349,7 @@ export default function DashboardPage() {
             {catSummaryMasuk.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
                 <span className="text-zinc-100 flex items-center gap-1">🔹 {c.label}</span>
-                <span className={`font-mono font-bold ${style.accentText}`}>{formatRupiah(c.value)}</span>
+                <span className={`font-mono font-bold ${c.value < 0 ? 'text-red-400' : style.accentText}`}>{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
@@ -369,7 +382,10 @@ export default function DashboardPage() {
                     <p className="text-slate-100 font-bold truncate uppercase tracking-wide">{t.note}</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className={`font-mono font-black ${style.accentText} shrink-0 ml-3 text-sm`}>+{formatRupiah(t.amount)}</p>
+                  {/* 🌟 Berikan warna merah cerah jika statusnya sebagai item pengurangan di sisi Pemasukan */}
+                  <p className={`font-mono font-black shrink-0 ml-3 text-sm ${t.amount < 0 ? 'text-red-400' : style.accentText}`}>
+                    {t.amount < 0 ? formatRupiah(t.amount) : `+${formatRupiah(t.amount)}`}
+                  </p>
                 </div>
               ))
             )}
