@@ -68,8 +68,8 @@ export default function TransaksiPage() {
       return { nama: fullDonorName, alamat: '' };
     }
     const parts = fullDonorName.split(' - ');
-    const nama = parts[0] ? parts[0].trim() : '';
-    const alamat = parts[1] ? parts[1].trim() : 'Warga';
+    const nama = parts[0] ? parts[0].trim() : fullDonorName;
+    const alamat = parts[1] ? parts[1].trim() : '';
     return { nama, alamat };
   };
 
@@ -156,7 +156,7 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // 🔄 FUNGSI UTAMA: Mengelompokkan data berdasarkan tanggal & menyamarkan nama donatur
+  // 🔄 PERBAIKAN LOGIKA GABUNGAN: Memastikan deteksi kas masuk/keluar operasional murni tidak hilang
   const dapatkanDataGabunganDinamis = () => {
     const petaGabungan = {};
 
@@ -165,26 +165,31 @@ export default function TransaksiPage() {
       const kat = item.category;
       const isAdminFee = item.donor_name === '__ADMIN_FEE__';
       const isSaldoMengendap = item.donor_name === '__SALDO_MENGENDAP__';
-      const { alamat } = pisahNamaDanAlamat(item.donor_name);
+      
+      // Deteksi apakah data bawaan bertanda minus (Kas Keluar manual dari database)
+      const isBawaanKeluar = item.amount < 0;
 
-      // Jika data sistem (Fee / Saldo), jangan digabungkan dengan donatur biasa
-      if (isAdminFee || isSaldoMengendap) {
-        const keySistem = `${tgl}_${kat}_${item.donor_name}_${item.id}`;
+      // Jika data sistem atau kas pengeluaran operasional murni, biarkan berdiri sendiri
+      if (isAdminFee || isSaldoMengendap || isBawaanKeluar) {
+        const keySistem = `${tgl}_${kat}_${item.donor_name || 'out'}_${item.id}`;
         petaGabungan[keySistem] = {
           id: item.id,
           transaction_date: tgl,
           category: kat,
           amount: item.amount,
           isSystem: true,
+          isPengeluaran: true, // Tag mutlak kas keluar
           uraian: isAdminFee 
             ? `Potongan Admin Fee Kolektif Bulan ${tgl?.substring(0, 7)}` 
-            : `Saldo Mengendap Bulan ${tgl?.substring(0, 7)}`,
+            : isSaldoMengendap 
+              ? `Saldo Mengendap Bulan ${tgl?.substring(0, 7)}`
+              : item.donor_name || 'Pengeluaran Operasional',
           rawItems: [item]
         };
         return;
       }
 
-      // Gabungkan berdasarkan Kunci: Tanggal + Kategori + Wilayah Alamat
+      const { alamat } = pisahNamaDanAlamat(item.donor_name);
       const grupKey = `${tgl}_${kat}_${alamat || 'Warga'}`;
 
       if (!petaGabungan[grupKey]) {
@@ -194,6 +199,7 @@ export default function TransaksiPage() {
           category: kat,
           amount: 0,
           isSystem: false,
+          isPengeluaran: false, // Tag mutlak kas masuk
           alamatWilayah: alamat,
           jumlahDonatur: 0,
           rawItems: []
@@ -205,11 +211,8 @@ export default function TransaksiPage() {
       petaGabungan[grupKey].rawItems.push(item);
     });
 
-    // Konversi hasil pemetaan ke bentuk Array dan susun keterangannya
     return Object.values(petaGabungan).map(grup => {
       if (grup.isSystem) return grup;
-
-      // Samarkan nama donatur demi menjaga privasi
       const teksWilayah = grup.alamatWilayah ? ` (${grup.alamatWilayah})` : '';
       grup.uraian = `Gabungan dari ${grup.jumlahDonatur} donatur detail (Hamba Allah${teksWilayah})`;
       return grup;
@@ -218,23 +221,19 @@ export default function TransaksiPage() {
 
   const dataTransaksiFinal = dapatkanDataGabunganDinamis();
 
-  // Hitung total nilai penerimaan & pengeluaran untuk LPJ Cetak
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
   const lpjMasuk = {}; const lpjKeluar = {};
 
   dataTransaksiFinal.forEach(item => {
     const nominal = Math.abs(item.amount) || 0;
-    const isPengeluaran = item.amount < 0 || item.uraian.includes('Admin Fee');
-    const cat = item.category || 'Lain-lain';
-
-    if (!isPengeluaran) {
+    if (!item.isPengeluaran) {
       totalLpjMasuk += nominal;
-      if (!lpjMasuk[cat]) lpjMasuk[cat] = [];
-      lpjMasuk[cat].push(item);
+      if (!lpjMasuk[item.category]) lpjMasuk[item.category] = [];
+      lpjMasuk[item.category].push(item);
     } else {
       totalLpjKeluar += nominal;
-      if (!lpjKeluar[cat]) lpjKeluar[cat] = [];
-      lpjKeluar[cat].push(item);
+      if (!lpjKeluar[item.category]) lpjKeluar[item.category] = [];
+      lpjKeluar[item.category].push(item);
     }
   });
 
@@ -242,12 +241,11 @@ export default function TransaksiPage() {
 
   const filteredTrans = dataTransaksiFinal.filter(t => {
     const matchSearch = t.uraian.toLowerCase().includes(search.toLowerCase());
-    const isPengeluaran = t.amount < 0 || t.uraian.includes('Admin Fee');
-
+    
     let matchType = false;
     if (typeFilter === 'all') matchType = true;
-    else if (typeFilter === 'masuk') matchType = !isPengeluaran;
-    else if (typeFilter === 'keluar') matchType = isPengeluaran;
+    else if (typeFilter === 'masuk') matchType = !t.isPengeluaran;
+    else if (typeFilter === 'keluar') matchType = t.isPengeluaran;
 
     const matchCat = catFilter === 'all' || t.category === catFilter;
     return matchSearch && matchType && matchCat;
@@ -285,47 +283,45 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto shadow-lg">
+        {/* 🔄 PERBAIKAN TAMPILAN: Penambahan max-h-[500px] dan scroll-freeze ala Excel */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto shadow-lg relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
-              <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[9px] tracking-wider">
-                <th className="p-3 w-24">Tanggal</th>
-                <th className="p-3 w-28">Pos Kategori</th>
-                <th className="p-3">Uraian Keterangan</th>
-                <th className="p-3 text-right w-32">Nominal Angka</th>
-                {isAdmin && <th className="p-3 text-center w-28">Aksi</th>}
+              {/* 🔄 FREEZE COLUMN HEADERS USING STICKY */}
+              <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[9px] tracking-wider sticky top-0 z-20 shadow-[0_2px_5px_rgba(0,0,0,0.3)]">
+                <th className="p-3 w-24 bg-slate-950">Tanggal</th>
+                <th className="p-3 w-28 bg-slate-950">Pos Kategori</th>
+                <th className="p-3 bg-slate-950">Uraian Keterangan</th>
+                <th className="p-3 text-right w-32 bg-slate-950">Nominal Angka</th>
+                {isAdmin && <th className="p-3 text-center w-28 bg-slate-950">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
-              {filteredTrans.map((t, idx) => {
-                const isPengeluaran = t.amount < 0 || t.uraian.includes('Admin Fee');
-                
-                return (
-                  <tr key={idx} className="hover:bg-slate-950/20 transition-all">
-                    <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!isPengeluaran ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
-                        {t.category}
-                      </span>
+              {filteredTrans.map((t, idx) => (
+                <tr key={idx} className="hover:bg-slate-950/20 transition-all">
+                  <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!t.isPengeluaran ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
+                      {t.category}
+                    </span>
+                  </td>
+                  <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs text-neutral-300">
+                    {t.uraian}
+                  </td>
+                  <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!t.isPengeluaran ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {!t.isPengeluaran ? '+' : '-'}{formatRupiah(Math.abs(t.amount))}
+                  </td>
+                  {isAdmin && (
+                    <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
+                      {t.isSystem ? (
+                        <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
+                      ) : (
+                        <span className="text-slate-600 italic text-[10px]">Aksi Terkunci (Grup)</span>
+                      )}
                     </td>
-                    <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs text-neutral-300">
-                      {t.uraian}
-                    </td>
-                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isPengeluaran ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {!isPengeluaran ? '+' : '-'}{formatRupiah(Math.abs(t.amount))}
-                    </td>
-                    {isAdmin && (
-                      <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
-                        {t.isSystem ? (
-                          <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
-                        ) : (
-                          <span className="text-slate-600 italic text-[10px]">Aksi Terkunci (Grup)</span>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
+                  )}
+                </tr>
+              ))}
               {filteredTrans.length === 0 && (
                 <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
               )}
