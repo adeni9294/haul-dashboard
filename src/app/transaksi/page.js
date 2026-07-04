@@ -68,6 +68,18 @@ export default function TransaksiPage() {
     }
   }
 
+  // 🔄 HELPER: Memisahkan donor_name dari tabel detail menjadi Nama dan Alamat murni
+  const pisahNamaDanAlamat = (fullDonorName) => {
+    if (!fullDonorName) return { nama: '', alamat: '' };
+    if (fullDonorName === '__ADMIN_FEE__' || fullDonorName === '__SALDO_MENGENDAP__') {
+      return { nama: fullDonorName, alamat: '' };
+    }
+    const parts = fullDonorName.split(' - ');
+    const nama = parts[0] ? parts[0].trim() : '';
+    const alamat = parts[1] ? parts[1].trim() : '';
+    return { nama, alamat };
+  };
+
   async function loadData() {
     try {
       setLoading(true);
@@ -87,7 +99,12 @@ export default function TransaksiPage() {
         if (!formCategory) setFormCategory(defaultCats[0].name);
       }
 
-      const { data: transDb } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+      // 🔄 DI-UBAH: Mengambil data langsung dari tabel donation_details agar sinkron real-time
+      const { data: transDb } = await supabase
+        .from('donation_details')
+        .select('*')
+        .order('transaction_date', { ascending: false });
+        
       if (transDb) setAllTransactions(transDb);
     } catch (e) {
       console.error("Gagal load data: ", e);
@@ -115,10 +132,10 @@ export default function TransaksiPage() {
 
     const payload = {
       transaction_date: formDate,
-      type: formType,
+      // Menyesuaikan penyimpanan jika melakukan input manual dari dasbor ini ke donation_details
+      donor_name: formDescription.trim(), 
       category: finalCategory,
-      note: formDescription.trim(), 
-      amount: cleanAmount          
+      amount: formType === 'Pengeluaran' ? -Math.abs(cleanAmount) : Math.abs(cleanAmount)
     };
 
     try {
@@ -127,19 +144,17 @@ export default function TransaksiPage() {
           alert('❌ ID Transaksi tidak ditemukan untuk mode edit!');
           return;
         }
-        const { error } = await supabase.from('transactions').update(payload).eq('id', selectedId);
-        if (error) throw error;
+        await supabase.from('donation_details').update(payload).eq('id', selectedId);
         alert('🟢 Sukses: Perubahan data transaksi berhasil disimpan!');
       } else {
-        const { error } = await supabase.from('transactions').insert([payload]);
-        if (error) throw error;
+        await supabase.from('donation_details').insert([payload]);
         alert('🟢 Sukses: Catatan transaksi baru berhasil ditambahkan!');
       }
       resetForm();
       await loadData();
     } catch (err) {
       console.error("Error saat menyimpan:", err);
-      alert(`❌ Gagal Menyimpan!\n\nPesan Error: ${err.message || JSON.stringify(err)}`);
+      alert(`❌ Gagal Menyimpan!`);
     }
   };
 
@@ -149,12 +164,12 @@ export default function TransaksiPage() {
     setSelectedId(item.id);
     setFormDate(item.transaction_date || new Date().toISOString().split('T')[0]);
     
-    const currentType = (item.type || '').toString().toLowerCase().trim();
-    setFormType(currentType === 'masuk' || currentType === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran');
+    const isMinus = item.amount < 0 || item.donor_name === '__ADMIN_FEE__';
+    setFormType(isMinus ? 'Pengeluaran' : 'Pemasukan');
     
     setFormCategory(item.category || (categories.length > 0 ? categories[0].name : ''));
-    setFormDescription(item.note || '');
-    setFormAmount(item.amount || ''); 
+    setFormDescription(item.donor_name || '');
+    setFormAmount(Math.abs(item.amount) || ''); 
     setShowModal(true);
   };
 
@@ -162,11 +177,11 @@ export default function TransaksiPage() {
     if (!isAdmin) return;
     if (!confirm('Hapus permanen catatan transaksi ini?')) return;
     try {
-      const { error } = await supabase.from('transactions').delete().eq('id', id);
+      const { error } = await supabase.from('donation_details').delete().eq('id', id);
       if (error) throw error;
       alert('🗑️ Catatan berhasil dihapus dari database.');
       await loadData();
-    } catch (err) {
+    } catch (err) err {
       alert(`❌ Gagal hapus: ${err.message}`);
     }
   };
@@ -186,16 +201,17 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // Kalkulasi LPJ Dokumentasi Cetak
+  // Kalkulasi LPJ Dokumentasi Cetak Terbaca Otomatis
   const lpjMasuk = {}; const lpjKeluar = {};
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
 
   allTransactions.forEach(item => {
-    const nominal = parseFloat(item.amount) || 0;
-    const type = (item.type || '').toString().toLowerCase().trim();
+    const nominal = Math.abs(item.amount) || 0;
+    const isAdminFee = item.donor_name === '__ADMIN_FEE__';
+    const isPengeluaran = item.amount < 0 || isAdminFee;
     const cat = item.category || 'Lain-lain';
 
-    if (type === 'masuk' || type === 'pemasukan') {
+    if (!isPengeluaran) {
       totalLpjMasuk += nominal;
       if (!lpjMasuk[cat]) lpjMasuk[cat] = [];
       lpjMasuk[cat].push(item);
@@ -208,15 +224,32 @@ export default function TransaksiPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
+  // 🔄 KUSTOMISASI DESKRIPSI KETERANGAN OTOMATIS BERDASARKAN HASIL BAGI
+  const dapatkanUraianTampilan = (item) => {
+    if (item.donor_name === '__ADMIN_FEE__') {
+      return `Potongan Admin Fee Kolektif Bulan ${item.transaction_date?.substring(0, 7)}`;
+    }
+    if (item.donor_name === '__SALDO_MENGENDAP__') {
+      return `Saldo Mengendap Bulan ${item.transaction_date?.substring(0, 7)}`;
+    }
+    const { nama, alamat } = pisahNamaDanAlamat(item.donor_name);
+    if (alamat) {
+      return `Setoran Donasi: ${nama} (${alamat})`;
+    }
+    return item.donor_name || 'Tanpa Keterangan';
+  };
+
   const filteredTrans = allTransactions.filter(t => {
-    const txt = (t.note || '').toLowerCase();
+    const txt = dapatkanUraianTampilan(t).toLowerCase();
     const matchSearch = txt.includes(search.toLowerCase());
     
-    const currentType = (t.type || '').toLowerCase();
+    const isAdminFee = t.donor_name === '__ADMIN_FEE__';
+    const isPengeluaran = t.amount < 0 || isAdminFee;
+
     let matchType = false;
     if (typeFilter === 'all') matchType = true;
-    else if (typeFilter === 'masuk') matchType = (currentType === 'masuk' || currentType === 'pemasukan');
-    else if (typeFilter === 'keluar') matchType = (currentType === 'keluar' || currentType === 'pengeluaran');
+    else if (typeFilter === 'masuk') matchType = !isPengeluaran;
+    else if (typeFilter === 'keluar') matchType = isPengeluaran;
 
     const matchCat = catFilter === 'all' || t.category === catFilter;
     return matchSearch && matchType && matchCat;
@@ -271,7 +304,7 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* Tabel Utama Modern & Responsif Layar HP */}
+        {/* Tabel Utama Modern */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto shadow-lg">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
@@ -285,20 +318,22 @@ export default function TransaksiPage() {
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
               {filteredTrans.map((t, idx) => {
-                const currentType = (t.type || '').toString().toLowerCase();
-                const isPemasukan = currentType === 'masuk' || currentType === 'pemasukan';
+                const isAdminFee = t.donor_name === '__ADMIN_FEE__';
+                const isPengeluaran = t.amount < 0 || isAdminFee;
                 
                 return (
                   <tr key={idx} className="hover:bg-slate-950/20 transition-all">
                     <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
                     <td className="p-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${isPemasukan ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
+                      <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!isPengeluaran ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
                         {t.category}
                       </span>
                     </td>
-                    <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs">{t.note}</td>
-                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${isPemasukan ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isPemasukan ? '+' : '-'}{formatRupiah(t.amount)}
+                    <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs">
+                      {dapatkanUraianTampilan(t)}
+                    </td>
+                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isPengeluaran ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {!isPengeluaran ? '+' : '-'}{formatRupiah(Math.abs(t.amount))}
                     </td>
                     {isAdmin && (
                       <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap bg-slate-900/90 sm:bg-transparent sticky right-0 sm:static shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.5)] sm:shadow-none">
@@ -352,8 +387,8 @@ export default function TransaksiPage() {
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Uraian Deskripsi / Keterangan Pembayar</label>
-              <textarea rows="3" placeholder="Tulis deskripsi detail..." required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+              <label className="block text-slate-400 mb-1">Nama Pembayar / Pengisi Deskripsi</label>
+              <input type="text" placeholder="Masukkan nama warga atau item pengeluaran..." required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-xs" />
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -390,7 +425,7 @@ export default function TransaksiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjMasuk[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{dapatkanUraianTampilan(t)}</td><td className="py-1 text-right font-mono">{formatRupiah(Math.abs(t.amount))}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -410,7 +445,7 @@ export default function TransaksiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {lpjKeluar[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{t.note}</td><td className="py-1 text-right font-mono">{formatRupiah(t.amount)}</td></tr>
+                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{dapatkanUraianTampilan(t)}</td><td className="py-1 text-right font-mono">{formatRupiah(Math.abs(t.amount))}</td></tr>
                   ))}
                 </tbody>
               </table>
