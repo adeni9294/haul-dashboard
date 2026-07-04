@@ -173,7 +173,7 @@ export default function TransaksiPage() {
     setShowModal(true);
   };
 
-  const triggerHapus = async (id) => {
+const triggerHapus = async (id) => {
     if (!isAdmin) return;
     if (!confirm('Hapus permanen catatan transaksi ini?')) return;
     try {
@@ -181,7 +181,7 @@ export default function TransaksiPage() {
       if (error) throw error;
       alert('🗑️ Catatan berhasil dihapus dari database.');
       await loadData();
-    } catch (err) err {
+    } catch (err) { // <--- 🔄 DIPERBAIKI DI SINI (kata 'err' ganda setelah kurung sudah dihapus)
       alert(`❌ Gagal hapus: ${err.message}`);
     }
   };
