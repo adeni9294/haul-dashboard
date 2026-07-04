@@ -22,7 +22,7 @@ const THEME_STYLES = {
     textMuted: 'text-stone-400', 
     accentText: 'text-orange-400', 
     progressBg: 'from-orange-600 to-orange-400', 
-    balanceCard: 'bg-stone-500 text-black shadow-stone-500/10' 
+    balanceCard: 'bg-orange-500 text-black shadow-orange-500/10' 
   },
   'amber-gold': { 
     card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', 
@@ -122,51 +122,49 @@ export default function DashboardPage() {
       // 1. Olah tabel data inputan dari Aplikasi Pemasukan Matriks
       if (donationsDb) {
         donationsDb.forEach((item) => {
-          const nominal = Math.abs(parseFloat(item.amount) || 0);
+          const rawAmount = parseFloat(item.amount) || 0;
+          const nominal = Math.abs(rawAmount);
           const catName = (item.category || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date;
           const isAdminFee = item.donor_name === '__ADMIN_FEE__';
           const isSaldoMengendap = item.donor_name === '__SALDO_MENGENDAP__';
 
-          if (isAdminFee) {
-            // 🌟 LOGIKA BARU: Admin Fee dipaksa masuk sebagai PEMASUKAN (Deposits) & Kategori Donatur Khitanan Massal
-            calcMasuk += nominal;
-            incomeMap['Donatur Khitanan Massal'] = (incomeMap['Donatur Khitanan Massal'] || 0) + nominal;
+          // Periksa apakah nilai dari database merupakan pengeluaran (minus) atau pemasukan
+          if (rawAmount < 0 || isAdminFee) {
+            calcKeluar += nominal;
+            expenseMap['Administrasi'] = (expenseMap['Administrasi'] || 0) + nominal;
             
-            const keyFee = `${tgl}_FEE_SYSTEM`;
-            listPemasukanGrup[keyFee] = {
-              note: `Gabungan Dari 1 Donatur Detail (Aplikasi Pemasukan)`,
+            listPengeluaranGrup.push({
+              note: `POTONGAN ADMIN FEE KOLEKTIF BULAN ${tgl?.substring(0, 7)}`,
               transaction_date: tgl,
               amount: nominal
-            };
-          } else if (isSaldoMengendap) {
-            // 🌟 LOGIKA BARU: Saldo Mengendap dipaksa masuk sebagai PEMASUKAN (Deposits) & Kategori Donatur Khitanan Massal
-            calcMasuk += nominal;
-            incomeMap['Donatur Khitanan Massal'] = (incomeMap['Donatur Khitanan Massal'] || 0) + nominal;
-            
-            const keySaldo = `${tgl}_SALDO_SYSTEM`;
-            listPemasukanGrup[keySaldo] = {
-              note: `Saldo Mengendap Bulan ${tgl?.substring(0, 7)}`,
-              transaction_date: tgl,
-              amount: nominal
-            };
+            });
           } else {
             calcMasuk += nominal;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
 
-            const grupKey = `${tgl}_${catName}_Donatur`;
-            if (!listPemasukanGrup[grupKey]) {
-              listPemasukanGrup[grupKey] = {
-                note: `Gabungan dari 0 donatur ${catName.toLowerCase()}`,
+            if (isSaldoMengendap) {
+              const keySaldo = `${tgl}_SALDO_SYSTEM`;
+              listPemasukanGrup[keySaldo] = {
+                note: `SALDO MENGENDAP BULAN ${tgl?.substring(0, 7)}`,
                 transaction_date: tgl,
-                amount: 0,
-                count: 0,
-                cat: catName
+                amount: nominal
               };
+            } else {
+              const grupKey = `${tgl}_${catName}_Donatur`;
+              if (!listPemasukanGrup[grupKey]) {
+                listPemasukanGrup[grupKey] = {
+                  note: `GABUNGAN DARI 0 DONATUR ${catName.toUpperCase()}`,
+                  transaction_date: tgl,
+                  amount: 0,
+                  count: 0,
+                  cat: catName
+                };
+              }
+              listPemasukanGrup[grupKey].amount += nominal;
+              listPemasukanGrup[grupKey].count += 1;
+              listPemasukanGrup[grupKey].note = `GABUNGAN DARI ${listPemasukanGrup[grupKey].count} DONATUR ${catName.toUpperCase()}`;
             }
-            listPemasukanGrup[grupKey].amount += nominal;
-            listPemasukanGrup[grupKey].count += 1;
-            listPemasukanGrup[grupKey].note = `Gabungan dari ${listPemasukanGrup[grupKey].count} Donatur Donatur Khitanan Massal`;
           }
         });
       }
@@ -174,12 +172,13 @@ export default function DashboardPage() {
       // 2. Olah tabel data manual operasional dari Buku Kas Transaksi Utama
       if (transactionsDb) {
         transactionsDb.forEach((item) => {
-          const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
+          const rawAmount = parseFloat(item.amount || item.nominal) || 0;
+          const nominal = Math.abs(rawAmount);
           const rawType = (item.type || item.jenis || '').toString().toLowerCase().trim();
           const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date;
 
-          if (rawType === 'keluar' || rawType === 'pengeluaran') {
+          if (rawType === 'keluar' || rawType === 'pengeluaran' || rawAmount < 0) {
             calcKeluar += nominal;
             expenseMap[catName] = (expenseMap[catName] || 0) + nominal;
             listPengeluaranGrup.push({
@@ -213,7 +212,6 @@ export default function DashboardPage() {
       setCatSummaryKeluar(parseChart(expenseMap, calcKeluar));
       setTotals({ total: calcMasuk - calcKeluar, masuk: calcMasuk, keluar: calcKeluar });
       
-      // Ambil riwayat dengan pemotongan slice yang simetris agar rapi
       setRincianMasuk(arrayMasukFinal.slice(0, 10)); 
       setRincianKeluar(arrayKeluarFinal.slice(0, 10));
 
