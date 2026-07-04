@@ -8,7 +8,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function TransaksiPage() {
   const [loading, setLoading] = useState(true);
-  const [allTransactions, setAllTransactions] = useState([]);
+  const [allDonations, setAllDonations] = useState([]);
+  const [allExpenses, setAllExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   
   const [isAdmin, setIsAdmin] = useState(false);
@@ -46,7 +47,7 @@ export default function TransaksiPage() {
       const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
       setIsAdmin(!!isValid);
     } catch (err) {
-      console.error("Gagal verifikasi auth di page:", err);
+      console.error("Gagal verifikasi auth:", err);
       setIsAdmin(false);
     }
   }
@@ -61,17 +62,6 @@ export default function TransaksiPage() {
       setIsAdmin(false);
     }
   }
-
-  const pisahNamaDanAlamat = (fullDonorName) => {
-    if (!fullDonorName) return { nama: '', alamat: '' };
-    if (fullDonorName === '__ADMIN_FEE__' || fullDonorName === '__SALDO_MENGENDAP__') {
-      return { nama: fullDonorName, alamat: '' };
-    }
-    const parts = fullDonorName.split(' - ');
-    const nama = parts[0] ? parts[0].trim() : fullDonorName;
-    const alamat = parts[1] ? parts[1].trim() : '';
-    return { nama, alamat };
-  };
 
   async function loadData() {
     try {
@@ -88,13 +78,12 @@ export default function TransaksiPage() {
         if (!formCategory) setFormCategory(catDb[0].name);
       }
 
-      // 🔄 Mengambil langsung dari donation_details secara real-time
-      const { data: transDb } = await supabase
-        .from('donation_details')
-        .select('*')
-        .order('transaction_date', { ascending: false });
+      // 🔄 AMBIL KEDUA TABEL UTAMA UNTUK SINKRONISASI TOTAL KAS KELUAR & MASUK
+      const { data: donationsDb } = await supabase.from('donation_details').select('*');
+      const { data: expensesDb } = await supabase.from('transactions').select('*');
         
-      if (transDb) setAllTransactions(transDb);
+      if (donationsDb) setAllDonations(donationsDb);
+      if (expensesDb) setAllExpenses(expensesDb);
     } catch (e) {
       console.error("Gagal load data: ", e);
     } finally {
@@ -110,18 +99,21 @@ export default function TransaksiPage() {
     if (cleanAmount <= 0) return;
 
     const finalCategory = formCategory || (categories.length > 0 ? categories[0].name : 'Lain-lain');
+    
+    // Simpan data operasional manual (Pengeluaran/Pemasukan Non-Matriks) ke tabel transactions agar tidak merusak rumus matriks
     const payload = {
       transaction_date: formDate,
-      donor_name: formDescription.trim(), 
+      type: formType === 'Pengeluaran' ? 'keluar' : 'masuk',
       category: finalCategory,
-      amount: formType === 'Pengeluaran' ? -Math.abs(cleanAmount) : Math.abs(cleanAmount)
+      note: formDescription.trim(),
+      amount: cleanAmount
     };
 
     try {
       if (isEditMode) {
-        await supabase.from('donation_details').update(payload).eq('id', selectedId);
+        await supabase.from('transactions').update(payload).eq('id', selectedId);
       } else {
-        await supabase.from('donation_details').insert([payload]);
+        await supabase.from('transactions').insert([payload]);
       }
       resetForm();
       await loadData();
@@ -130,11 +122,12 @@ export default function TransaksiPage() {
     }
   };
 
-  const triggerHapus = async (id) => {
+  const triggerHapus = async (id, isFromExpenses) => {
     if (!isAdmin) return;
     if (!confirm('Hapus permanen catatan transaksi ini?')) return;
     try {
-      const { error } = await supabase.from('donation_details').delete().eq('id', id);
+      const targetTable = isFromExpenses ? 'transactions' : 'donation_details';
+      const { error } = await supabase.from(targetTable).delete().eq('id', id);
       if (error) throw error;
       alert('🗑️ Catatan berhasil dihapus dari database.');
       await loadData();
@@ -153,42 +146,37 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // 🔄 PERBAIKAN FILTER KAS KELUAR & STRUKTUR PENGELOMPOKAN
-  const dapatkanDataGabunganDinamis = () => {
+  // 🔄 FUNGSI UTAMA: GABUNGAN TOTAL MURNI PER TANGGAL & KATEGORI (SINKRON KAS MASUK + KELUAR)
+  const prosesDataGabunganMurni = () => {
     const petaGabungan = {};
 
-    allTransactions.forEach((item) => {
+    // 1. Proses data Donatur dari donation_details
+    allDonations.forEach((item) => {
       const tgl = item.transaction_date;
       const kat = item.category;
       const isAdminFee = item.donor_name === '__ADMIN_FEE__';
       const isSaldoMengendap = item.donor_name === '__SALDO_MENGENDAP__';
-      
-      // Deteksi pengeluaran operasional (angka minus dari DB)
-      const isBawaanKeluar = item.amount < 0 || isAdminFee;
 
-      // Jika data adalah Admin Fee, Saldo Mengendap, atau Kas Keluar operasional murni, jangan digabungkan
-      if (isAdminFee || isSaldoMengendap || isBawaanKeluar) {
-        const keySistem = `${tgl}_${kat}_${item.donor_name || 'out'}_${item.id}`;
+      // Admin Fee / Saldo Mengendap langsung dijadikan kas pengeluaran/penambah sistem tersendiri
+      if (isAdminFee || isSaldoMengendap) {
+        const keySistem = `${tgl}_${kat}_${item.donor_name}_${item.id}`;
         petaGabungan[keySistem] = {
           id: item.id,
           transaction_date: tgl,
           category: kat,
-          amount: item.amount,
+          amount: Math.abs(item.amount),
+          aliranJenis: isAdminFee ? 'Keluar' : 'Masuk', 
           isSystem: true,
-          aliranJenis: 'Keluar', // Penanda eksplisit kas keluar
+          isFromExpenses: false,
           uraian: isAdminFee 
             ? `Potongan Admin Fee Kolektif Bulan ${tgl?.substring(0, 7)}` 
-            : isSaldoMengendap 
-              ? `Saldo Mengendap Bulan ${tgl?.substring(0, 7)}`
-              : item.donor_name || 'Pengeluaran Operasional',
-          rawItems: [item]
+            : `Saldo Mengendap Bulan ${tgl?.substring(0, 7)}`
         };
         return;
       }
 
-      // Untuk donatur biasa, satukan berdasarkan Tanggal + Kategori + Alamat Wilayah
-      const { alamat } = pisahNamaDanAlamat(item.donor_name);
-      const grupKey = `${tgl}_${kat}_${alamat || 'Warga'}`;
+      // KUNCI UTAMA: Gabungkan TOTAL murni hanya berdasarkan Tanggal + Kategori saja
+      const grupKey = `${tgl}_${kat}_Donatur`;
 
       if (!petaGabungan[grupKey]) {
         petaGabungan[grupKey] = {
@@ -197,42 +185,52 @@ export default function TransaksiPage() {
           category: kat,
           amount: 0,
           isSystem: false,
-          aliranJenis: 'Masuk', // Penanda eksplisit kas masuk
-          alamatWilayah: alamat,
-          jumlahDonatur: 0,
-          rawItems: []
+          isFromExpenses: false,
+          aliranJenis: 'Masuk',
+          jumlahDonatur: 0
         };
       }
 
-      petaGabungan[grupKey].amount += item.amount;
+      petaGabungan[grupKey].amount += Math.abs(item.amount);
       petaGabungan[grupKey].jumlahDonatur += 1;
-      petaGabungan[grupKey].rawItems.push(item);
     });
 
+    // 2. Proses data Pengeluaran Operasional & Logistik dari tabel transactions
+    allExpenses.forEach((item) => {
+      const tgl = item.transaction_date;
+      const kat = item.category;
+      const type = (item.type || '').toLowerCase().trim();
+      const isKeluar = type === 'keluar' || type === 'pengeluaran';
+
+      const expKey = `EXP_${item.id}`;
+      petaGabungan[expKey] = {
+        id: item.id,
+        transaction_date: tgl,
+        category: kat,
+        amount: Math.abs(item.amount),
+        aliranJenis: isKeluar ? 'Keluar' : 'Masuk',
+        isSystem: true,
+        isFromExpenses: true,
+        uraian: item.note || 'Pengeluaran Tanpa Keterangan'
+      };
+    });
+
+    // Susun string deskripsi gabungan hamba allah untuk donatur murni
     return Object.values(petaGabungan).map(grup => {
-      if (grup.isSystem) return grup;
-      const teksWilayah = grup.alamatWilayah ? ` (${grup.alamatWilayah})` : '';
-      grup.uraian = `Gabungan dari ${grup.jumlahDonatur} donatur detail (Hamba Allah${teksWilayah})`;
+      if (!grup.isSystem) {
+        grup.uraian = `Gabungan dari ${grup.jumlahDonatur} donatur ${grup.category.toLowerCase()}`;
+      }
       return grup;
     }).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
   };
 
-  const dataTransaksiFinal = dapatkanDataGabunganDinamis();
+  const dataTransaksiFinal = prosesDataGabunganMurni();
 
+  // Hitung akumulasi nominal kas LPJ
   let totalLpjMasuk = 0; let totalLpjKeluar = 0;
-  const lpjMasuk = {}; const lpjKeluar = {};
-
   dataTransaksiFinal.forEach(item => {
-    const nominal = Math.abs(item.amount) || 0;
-    if (item.aliranJenis === 'Masuk') {
-      totalLpjMasuk += nominal;
-      if (!lpjMasuk[item.category]) lpjMasuk[item.category] = [];
-      lpjMasuk[item.category].push(item);
-    } else {
-      totalLpjKeluar += nominal;
-      if (!lpjKeluar[item.category]) lpjKeluar[item.category] = [];
-      lpjKeluar[item.category].push(item);
-    }
+    if (item.aliranJenis === 'Masuk') totalLpjMasuk += item.amount;
+    else totalLpjKeluar += item.amount;
   });
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
@@ -249,7 +247,7 @@ export default function TransaksiPage() {
     return matchSearch && matchType && matchCat;
   });
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Sinkronisasi database kas pertanggungjawaban...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Sinkronisasi integrasi pembukuan kas...</div>;
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
@@ -261,10 +259,13 @@ export default function TransaksiPage() {
               <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
               {isAdmin ? <span className="bg-green-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">ADMIN</span> : <span className="bg-red-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">PUBLIC</span>}
             </div>
-            <p className="text-[10px] font-mono mt-0.5 text-slate-400">● Real-time Grouping & Privacy Mode Enabled</p>
+            <p className="text-[10px] font-mono mt-0.5 text-slate-400">● Murni Grouping pertanggal & Integrasi Kas Keluar Aktif</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all shadow-md">🖨️ Cetak LPJ</button>
+            {isAdmin && (
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl shadow-md">➕ Tambah Kas</button>
+            )}
+            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl shadow-md">🖨️ Cetak LPJ</button>
           </div>
         </div>
 
@@ -281,7 +282,7 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* ❄️ FREEZE ROW SCROLL SEPERTI EXCEL */}
+        {/* ❄️ TABLE CONTROLLER: Freeze Column & Scroll Excel Effect */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto shadow-lg relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
@@ -304,16 +305,16 @@ export default function TransaksiPage() {
                         {t.category}
                       </span>
                     </td>
-                    <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs text-neutral-300">
+                    <td className="p-3 font-medium text-[11px] sm:text-xs text-neutral-200 uppercase tracking-wide">
                       {t.uraian}
                     </td>
                     <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isKeluar ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {!isKeluar ? '+' : '-'}{formatRupiah(Math.abs(t.amount))}
+                      {!isKeluar ? '+' : '-'}{formatRupiah(t.amount)}
                     </td>
                     {isAdmin && (
                       <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
                         {t.isSystem ? (
-                          <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
+                          <button type="button" onClick={() => triggerHapus(t.id, t.isFromExpenses)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
                         ) : (
                           <span className="text-slate-600 italic text-[10px]">Aksi Terkunci (Grup)</span>
                         )}
@@ -330,14 +331,53 @@ export default function TransaksiPage() {
         </div>
       </div>
 
+      {/* DIALOG FORM MODAL */}
+      {showModal && isAdmin && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <form onSubmit={handleSaveTransaction} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
+            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">➕ Registrasi Catatan Pengeluaran Baru</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-400 mb-1">Tanggal</label>
+                <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-center font-mono" />
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1">Aliran Jenis</label>
+                <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none">
+                  <option value="Pengeluaran">🔴 Pengeluaran (Merah)</option>
+                  <option value="Pemasukan">🟢 Pemasukan (Hijau)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-400 mb-1">Kategori Pos Buku Kas</label>
+              <select required value={formCategory} onChange={e => setFormCategory(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none">
+                {categories.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-slate-400 mb-1">Nominal Rupiah</label>
+              <input type="number" placeholder="Contoh: 500000" required value={formAmount} onChange={e => setFormAmount(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-right font-bold text-amber-400 text-sm" />
+            </div>
+            <div>
+              <label className="block text-slate-400 mb-1">Uraian Keterangan Pengeluaran</label>
+              <input type="text" placeholder="Misal: DP Sound System" required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={resetForm} className="flex-1 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">Batal</button>
+              <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black uppercase rounded-xl shadow-lg">Simpan Kas</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* PRINT AREA LAYOUT */}
       <div className="hidden print:block bg-white text-black p-10 font-serif text-xs">
         <div className="text-center border-b-4 border-double border-black pb-3 mb-6">
           <h1 className="text-base font-bold uppercase font-sans">{metaOrg.name}</h1>
           <p className="text-[9px] font-sans italic text-gray-500">{metaOrg.address}</p>
-          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN KEUANGAN HAUL REAL-TIME (PRIVACY ASSURED)</h2>
+          <h2 className="text-xs font-bold uppercase pt-3 font-sans underline tracking-widest">LAPORAN KEUANGAN HAUL REAL-TIME</h2>
         </div>
-
         <div className="grid grid-cols-3 gap-4 font-sans border border-black p-3 rounded mb-6 text-[10px] bg-gray-50">
           <div><p className="text-gray-500 uppercase font-bold">Total Penerimaan</p><p className="text-xs font-black text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
           <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran</p><p className="text-xs font-black text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
