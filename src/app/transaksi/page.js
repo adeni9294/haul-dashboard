@@ -86,12 +86,9 @@ export default function TransaksiPage() {
       if (catDb && catDb.length > 0) {
         setCategories(catDb);
         if (!formCategory) setFormCategory(catDb[0].name);
-      } else {
-        const defaultCats = [{ name: 'Kas Umum' }, { name: 'Administrasi' }];
-        setCategories(defaultCats);
-        if (!formCategory) setFormCategory(defaultCats[0].name);
       }
 
+      // 🔄 Mengambil langsung dari donation_details secara real-time
       const { data: transDb } = await supabase
         .from('donation_details')
         .select('*')
@@ -156,7 +153,7 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // 🔄 PERBAIKAN LOGIKA GABUNGAN: Memastikan deteksi kas masuk/keluar operasional murni tidak hilang
+  // 🔄 PERBAIKAN FILTER KAS KELUAR & STRUKTUR PENGELOMPOKAN
   const dapatkanDataGabunganDinamis = () => {
     const petaGabungan = {};
 
@@ -166,10 +163,10 @@ export default function TransaksiPage() {
       const isAdminFee = item.donor_name === '__ADMIN_FEE__';
       const isSaldoMengendap = item.donor_name === '__SALDO_MENGENDAP__';
       
-      // Deteksi apakah data bawaan bertanda minus (Kas Keluar manual dari database)
-      const isBawaanKeluar = item.amount < 0;
+      // Deteksi pengeluaran operasional (angka minus dari DB)
+      const isBawaanKeluar = item.amount < 0 || isAdminFee;
 
-      // Jika data sistem atau kas pengeluaran operasional murni, biarkan berdiri sendiri
+      // Jika data adalah Admin Fee, Saldo Mengendap, atau Kas Keluar operasional murni, jangan digabungkan
       if (isAdminFee || isSaldoMengendap || isBawaanKeluar) {
         const keySistem = `${tgl}_${kat}_${item.donor_name || 'out'}_${item.id}`;
         petaGabungan[keySistem] = {
@@ -178,7 +175,7 @@ export default function TransaksiPage() {
           category: kat,
           amount: item.amount,
           isSystem: true,
-          isPengeluaran: true, // Tag mutlak kas keluar
+          aliranJenis: 'Keluar', // Penanda eksplisit kas keluar
           uraian: isAdminFee 
             ? `Potongan Admin Fee Kolektif Bulan ${tgl?.substring(0, 7)}` 
             : isSaldoMengendap 
@@ -189,6 +186,7 @@ export default function TransaksiPage() {
         return;
       }
 
+      // Untuk donatur biasa, satukan berdasarkan Tanggal + Kategori + Alamat Wilayah
       const { alamat } = pisahNamaDanAlamat(item.donor_name);
       const grupKey = `${tgl}_${kat}_${alamat || 'Warga'}`;
 
@@ -199,7 +197,7 @@ export default function TransaksiPage() {
           category: kat,
           amount: 0,
           isSystem: false,
-          isPengeluaran: false, // Tag mutlak kas masuk
+          aliranJenis: 'Masuk', // Penanda eksplisit kas masuk
           alamatWilayah: alamat,
           jumlahDonatur: 0,
           rawItems: []
@@ -226,7 +224,7 @@ export default function TransaksiPage() {
 
   dataTransaksiFinal.forEach(item => {
     const nominal = Math.abs(item.amount) || 0;
-    if (!item.isPengeluaran) {
+    if (item.aliranJenis === 'Masuk') {
       totalLpjMasuk += nominal;
       if (!lpjMasuk[item.category]) lpjMasuk[item.category] = [];
       lpjMasuk[item.category].push(item);
@@ -244,8 +242,8 @@ export default function TransaksiPage() {
     
     let matchType = false;
     if (typeFilter === 'all') matchType = true;
-    else if (typeFilter === 'masuk') matchType = !t.isPengeluaran;
-    else if (typeFilter === 'keluar') matchType = t.isPengeluaran;
+    else if (typeFilter === 'masuk') matchType = t.aliranJenis === 'Masuk';
+    else if (typeFilter === 'keluar') matchType = t.aliranJenis === 'Keluar';
 
     const matchCat = catFilter === 'all' || t.category === catFilter;
     return matchSearch && matchType && matchCat;
@@ -283,11 +281,10 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* 🔄 PERBAIKAN TAMPILAN: Penambahan max-h-[500px] dan scroll-freeze ala Excel */}
+        {/* ❄️ FREEZE ROW SCROLL SEPERTI EXCEL */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto shadow-lg relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
-              {/* 🔄 FREEZE COLUMN HEADERS USING STICKY */}
               <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[9px] tracking-wider sticky top-0 z-20 shadow-[0_2px_5px_rgba(0,0,0,0.3)]">
                 <th className="p-3 w-24 bg-slate-950">Tanggal</th>
                 <th className="p-3 w-28 bg-slate-950">Pos Kategori</th>
@@ -297,31 +294,34 @@ export default function TransaksiPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
-              {filteredTrans.map((t, idx) => (
-                <tr key={idx} className="hover:bg-slate-950/20 transition-all">
-                  <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
-                  <td className="p-3 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!t.isPengeluaran ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
-                      {t.category}
-                    </span>
-                  </td>
-                  <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs text-neutral-300">
-                    {t.uraian}
-                  </td>
-                  <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!t.isPengeluaran ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {!t.isPengeluaran ? '+' : '-'}{formatRupiah(Math.abs(t.amount))}
-                  </td>
-                  {isAdmin && (
-                    <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
-                      {t.isSystem ? (
-                        <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
-                      ) : (
-                        <span className="text-slate-600 italic text-[10px]">Aksi Terkunci (Grup)</span>
-                      )}
+              {filteredTrans.map((t, idx) => {
+                const isKeluar = t.aliranJenis === 'Keluar';
+                return (
+                  <tr key={idx} className="hover:bg-slate-950/20 transition-all">
+                    <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
+                    <td className="p-3 whitespace-nowrap">
+                      <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!isKeluar ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
+                        {t.category}
+                      </span>
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td className="p-3 font-medium break-words max-w-[150px] sm:max-w-none text-[11px] sm:text-xs text-neutral-300">
+                      {t.uraian}
+                    </td>
+                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isKeluar ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {!isKeluar ? '+' : '-'}{formatRupiah(Math.abs(t.amount))}
+                    </td>
+                    {isAdmin && (
+                      <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
+                        {t.isSystem ? (
+                          <button type="button" onClick={() => triggerHapus(t.id)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
+                        ) : (
+                          <span className="text-slate-600 italic text-[10px]">Aksi Terkunci (Grup)</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
               {filteredTrans.length === 0 && (
                 <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
               )}
@@ -342,44 +342,6 @@ export default function TransaksiPage() {
           <div><p className="text-gray-500 uppercase font-bold">Total Penerimaan</p><p className="text-xs font-black text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
           <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran</p><p className="text-xs font-black text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
           <div><p className="text-gray-500 uppercase font-bold">Sisa Saldo Kas</p><p className="text-xs font-black text-blue-800 underline">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-green-800">1. REALISASI KAS MASUK</h3>
-          {Object.keys(lpjMasuk).map((cat, i) => (
-            <div key={i} className="space-y-1">
-              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos: {cat}</h4>
-              <table className="w-full text-left border-collapse text-[9px]">
-                <thead>
-                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th>Keterangan</th><th className="py-1 text-right w-28">Jumlah</th></tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {lpjMasuk[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{t.uraian}</td><td className="py-1 text-right font-mono">{formatRupiah(Math.abs(t.amount))}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-4 pt-6">
-          <h3 className="font-sans font-bold uppercase text-[10px] border-b border-black pb-0.5 text-red-800">2. REALISASI KAS KELUAR</h3>
-          {Object.keys(lpjKeluar).map((cat, i) => (
-            <div key={i} className="space-y-1">
-              <h4 className="font-sans font-bold text-[10px] text-gray-700 bg-gray-100 pl-1 uppercase">Pos: {cat}</h4>
-              <table className="w-full text-left border-collapse text-[9px]">
-                <thead>
-                  <tr className="border-b border-gray-400 italic text-gray-500"><th className="py-1 w-20">Tanggal</th><th>Uraian Keperluan</th><th className="py-1 text-right w-28">Jumlah</th></tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {lpjKeluar[cat].map((t, idx) => (
-                    <tr key={idx}><td className="py-1 font-mono">{t.transaction_date}</td><td>{t.uraian}</td><td className="py-1 text-right font-mono">{formatRupiah(Math.abs(t.amount))}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
         </div>
       </div>
 
