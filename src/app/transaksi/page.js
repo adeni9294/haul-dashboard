@@ -146,7 +146,7 @@ export default function TransaksiPage() {
     setShowModal(false);
   };
 
-  // 🔄 FUNGSI UTAMA: GABUNGAN TOTAL MURNI PER TANGGAL & KATEGORI (SINKRON KAS MASUK + KELUAR)
+  // 🔄 FUNGSI UTAMA: GABUNGAN TOTAL MURNI PER TANGGAL & KATEGORI (ANTI DUPLIKASI DOUBLE)
   const prosesDataGabunganMurni = () => {
     const petaGabungan = {};
 
@@ -195,12 +195,18 @@ export default function TransaksiPage() {
       petaGabungan[grupKey].jumlahDonatur += 1;
     });
 
-    // 2. Proses data Pengeluaran Operasional & Logistik dari tabel transactions
+    // 2. Proses data Pengeluaran Operasional & Logistik murni dari tabel transactions
     allExpenses.forEach((item) => {
       const tgl = item.transaction_date;
       const kat = item.category;
       const type = (item.type || '').toLowerCase().trim();
       const isKeluar = type === 'keluar' || type === 'pengeluaran';
+      const noteText = item.note || '';
+
+      // ⚡ PROTECTION KEY: Saring data log pemasukan agar tidak merusak kalkulasi data donatur murni
+      if (!isKeluar && noteText.toLowerCase().includes('aplikasi pemasukan')) {
+        return; 
+      }
 
       const expKey = `EXP_${item.id}`;
       petaGabungan[expKey] = {
@@ -211,7 +217,7 @@ export default function TransaksiPage() {
         aliranJenis: isKeluar ? 'Keluar' : 'Masuk',
         isSystem: true,
         isFromExpenses: true,
-        uraian: item.note || 'Pengeluaran Tanpa Keterangan'
+        uraian: noteText || 'Pengeluaran Tanpa Keterangan'
       };
     });
 
@@ -282,7 +288,7 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* ❄️ TABLE CONTROLLER: Freeze Column & Scroll Excel Effect */}
+        {/* ❄️ TABLE CONTROLLER */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto shadow-lg relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
@@ -303,7 +309,7 @@ export default function TransaksiPage() {
                     <td className="p-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!isKeluar ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
                         {t.category}
-                      </span>
+                      </span> 
                     </td>
                     <td className="p-3 font-medium text-[11px] sm:text-xs text-neutral-200 uppercase tracking-wide">
                       {t.uraian}
