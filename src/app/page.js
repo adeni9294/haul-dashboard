@@ -125,7 +125,6 @@ export default function DashboardPage() {
           const catName = (item.category || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date || '';
           
-          // Lewati data jika tanggal kosong atau aneh
           if (!tgl) return;
 
           const donorNameClean = (item.donor_name || '').toString().trim();
@@ -173,21 +172,30 @@ export default function DashboardPage() {
             }
             listPemasukanGrup[grupKey].amount += nominalPositif;
             listPemasukanGrup[grupKey].count += 1;
-            // Format catatan rekap rapi sesuai keinginan privasi Anda
             listPemasukanGrup[grupKey].note = `GABUNGAN DARI ${listPemasukanGrup[grupKey].count} DONATUR ${catName.toUpperCase()}`;
           }
         });
       }
 
-      // 2. Olah tabel data transaksi pembukuan kas internal (jika ada input manual tambahan)
+      // 2. Olah tabel data transaksi pembukuan kas internal (Pembersihan data ganda)
       if (transactionsDb) {
         transactionsDb.forEach((item) => {
           const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
           const rawType = (item.type || item.jenis || '').toString().toLowerCase().trim();
           const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date || '';
+          const noteText = (item.note || '').toString().toUpperCase();
 
           if (!tgl) return;
+
+          // 🛡️ SATPAM FILTER: Blokir total data kotor "DETAIL (APLIKASI PEMASUKAN)" agar tidak double
+          if (
+            noteText.includes('APLIKASI PEMASUKAN') || 
+            noteText.includes('DETAIL') || 
+            catName.toUpperCase().includes('DETAIL')
+          ) {
+            return; 
+          }
 
           if (rawType === 'keluar' || rawType === 'pengeluaran') {
             calcKeluar += nominal;
@@ -198,7 +206,6 @@ export default function DashboardPage() {
               amount: nominal
             });
           } else {
-            // Mencegah duplikasi data jika di input via transaksi manual dengan note kosong
             if (!item.note || item.note.trim() === '') return;
 
             calcMasuk += nominal;
@@ -214,7 +221,6 @@ export default function DashboardPage() {
         });
       }
 
-      // Urutkan mutasi berdasarkan tanggal terbaru
       const arrayMasukFinal = Object.values(listPemasukanGrup).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
       const arrayKeluarFinal = listPengeluaranGrup.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
 
@@ -262,7 +268,6 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-white">
       
-      {/* 1. TEXT BANNER INFORMASI */}
       {announcement && (
         <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
           <div className={`animate-marquee inline-block ${style.accentText} font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono`}>
@@ -271,10 +276,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 2. AREA UTAMA KARTU SALDO & CARD PEMASUKAN/PENGELUARAN */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KARTU SALDO UTAMA */}
         <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl border border-white/5 transition-transform duration-300 hover:scale-[1.01]`}>
           <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
@@ -304,7 +307,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* REKAP NOMINAL MASUK & KELUAR */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/40`}>
             <div className="flex justify-between items-start">
@@ -331,7 +333,6 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* 3. PROGRESS TARGET ANGGARAN BAR */}
       <div className={`p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -348,7 +349,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. REKAP NOMINAL TOTAL PER KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
           <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>📊 Rekap Kategori Uang Masuk</h4>
@@ -375,7 +375,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 5. DATA RINCIAN MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border-l-4 border-l-emerald-500 rounded-2xl space-y-3.5 shadow-xl`}>
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>Pemasukan Terakhir (Deposits)</h5>
