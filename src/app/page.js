@@ -118,12 +118,16 @@ export default function DashboardPage() {
       const listPemasukanGrup = {};
       const listPengeluaranGrup = [];
 
-      // 1. Olah data tabel inputan dari Aplikasi Pemasukan
+      // 1. Olah tabel data inputan dari Aplikasi Pemasukan Utama (Dibuat Rekap Privasi per Tanggal)
       if (donationsDb) {
         donationsDb.forEach((item) => {
           const rawAmount = parseFloat(item.amount) || 0;
           const catName = (item.category || 'Lain-lain').toString().trim();
-          const tgl = item.transaction_date;
+          const tgl = item.transaction_date || '';
+          
+          // Lewati data jika tanggal kosong atau aneh
+          if (!tgl) return;
+
           const donorNameClean = (item.donor_name || '').toString().trim();
           const isAdminFee = donorNameClean === '__ADMIN_FEE__';
           const isSaldoMengendap = donorNameClean === '__SALDO_MENGENDAP__';
@@ -133,49 +137,57 @@ export default function DashboardPage() {
             calcMasuk += nominalMinus;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalMinus;
             
-            const keyFee = `FEE_${item.id}`;
+            const keyFee = `${tgl}_FEE_SYSTEM_${item.id}`;
             listPemasukanGrup[keyFee] = {
               note: `POTONGAN ADMIN FEE KOLEKTIF BULAN ${tgl?.substring(0, 7)}`,
               transaction_date: tgl,
-              amount: nominalMinus,
-              isReduction: true
+              amount: nominalMinus
             };
           } else if (isSaldoMengendap) {
             const nominalPositif = Math.abs(rawAmount);
             calcMasuk += nominalPositif;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalPositif;
             
-            const keySaldo = `SALDO_${item.id}`;
+            const keySaldo = `${tgl}_SALDO_SYSTEM_${item.id}`;
             listPemasukanGrup[keySaldo] = {
               note: `SALDO MENGENDAP BULAN ${tgl?.substring(0, 7)}`,
               transaction_date: tgl,
-              amount: nominalPositif,
-              isReduction: false
+              amount: nominalPositif
             };
           } else {
-            // 🟢 PERBAIKAN UTAMA: Tampilkan nama donatur riil murni tanpa dibungkus teks "GABUNGAN DARI"
             const nominalPositif = Math.abs(rawAmount);
             calcMasuk += nominalPositif;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalPositif;
 
-            const keyRil = `DONASI_${item.id}`;
-            listPemasukanGrup[keyRil] = {
-              note: donorNameClean.split(' - ')[0].toUpperCase(), // Mengambil nama depan donatur bersangkutan
-              transaction_date: tgl,
-              amount: nominalPositif,
-              isReduction: false
-            };
+            // 🔒 KUNCI PRIVASI: Gabungkan mutlak berdasarkan Tanggal + Nama Kategori
+            const grupKey = `${tgl}_${catName.toLowerCase().replace(/\s+/g, '_')}_Donatur`;
+            
+            if (!listPemasukanGrup[grupKey]) {
+              listPemasukanGrup[grupKey] = {
+                note: '',
+                transaction_date: tgl,
+                amount: 0,
+                count: 0,
+                cat: catName
+              };
+            }
+            listPemasukanGrup[grupKey].amount += nominalPositif;
+            listPemasukanGrup[grupKey].count += 1;
+            // Format catatan rekap rapi sesuai keinginan privasi Anda
+            listPemasukanGrup[grupKey].note = `GABUNGAN DARI ${listPemasukanGrup[grupKey].count} DONATUR ${catName.toUpperCase()}`;
           }
         });
       }
 
-      // 2. Olah tabel data manual operasional dari Buku Kas Transaksi Utama
+      // 2. Olah tabel data transaksi pembukuan kas internal (jika ada input manual tambahan)
       if (transactionsDb) {
         transactionsDb.forEach((item) => {
           const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
           const rawType = (item.type || item.jenis || '').toString().toLowerCase().trim();
           const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
-          const tgl = item.transaction_date;
+          const tgl = item.transaction_date || '';
+
+          if (!tgl) return;
 
           if (rawType === 'keluar' || rawType === 'pengeluaran') {
             calcKeluar += nominal;
@@ -186,20 +198,23 @@ export default function DashboardPage() {
               amount: nominal
             });
           } else {
+            // Mencegah duplikasi data jika di input via transaksi manual dengan note kosong
+            if (!item.note || item.note.trim() === '') return;
+
             calcMasuk += nominal;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
             
             const keyManual = `MANUAL_${item.id}`;
             listPemasukanGrup[keyManual] = {
-              note: item.note || 'Pemasukan Tambahan',
+              note: item.note,
               transaction_date: tgl,
-              amount: nominal,
-              isReduction: false
+              amount: nominal
             };
           }
         });
       }
 
+      // Urutkan mutasi berdasarkan tanggal terbaru
       const arrayMasukFinal = Object.values(listPemasukanGrup).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
       const arrayKeluarFinal = listPengeluaranGrup.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
 
