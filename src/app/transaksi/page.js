@@ -41,7 +41,10 @@ const translations = {
     signMade: "Dibuat Oleh,",
     signTreasurer: "Bendahara Panitia",
     signGroup: "PANITIA HAUL 2026",
-    city: "Cirebon"
+    city: "Cirebon",
+    summarySect: "IKHTISAR REKAP TOTAL PER KATEGORI POS KAS",
+    summaryCat: "Kategori Pos Anggaran",
+    summaryTotal: "Total Realisasi Dana"
   },
   jv: { 
     title: "💰 Buku Kas & Transaksi Haul",
@@ -76,7 +79,10 @@ const translations = {
     signMade: "Sing Gawe,",
     signTreasurer: "Bendahara Panitia",
     signGroup: "PANITIA HAUL 2026",
-    city: "Cirebon"
+    city: "Cirebon",
+    summarySect: "IKHTISAR REKAP TOTAL PER KATEGORI POS KAS",
+    summaryCat: "Kategori Pos Anggaran",
+    summaryTotal: "Total Realisasi Dana"
   },
   en: {
     title: "💰 Cash Book & Haul Transactions",
@@ -111,7 +117,10 @@ const translations = {
     signMade: "Prepared By,",
     signTreasurer: "Committee Treasurer",
     signGroup: "2026 HAUL COMMITTEE",
-    city: "Cirebon"
+    city: "Cirebon",
+    summarySect: "SUMMARY OF TOTALS BY CASH POSITION CATEGORY",
+    summaryCat: "Budget Position Category",
+    summaryTotal: "Total Realized Funds"
   }
 };
 
@@ -379,11 +388,20 @@ export default function TransaksiPage() {
 
   const dataTransaksiFinal = prosesDataGabunganMurni();
 
+  // 🏛️ HITUNG REKAP TOTAL PER KATEGORI UNTUK HALAMAN DEPAN
+  const rekapKategoriMasuk = {};
+  const rekapKategoriKeluar = {};
   let totalLpjMasuk = 0; 
   let totalLpjKeluar = 0;
+
   dataTransaksiFinal.forEach(item => {
-    if (item.aliranJenis === 'Masuk') totalLpjMasuk += item.amount;
-    else totalLpjKeluar += item.amount;
+    if (item.aliranJenis === 'Masuk') {
+      totalLpjMasuk += item.amount;
+      rekapKategoriMasuk[item.category] = (rekapKategoriMasuk[item.category] || 0) + item.amount;
+    } else {
+      totalLpjKeluar += item.amount;
+      rekapKategoriKeluar[item.category] = (rekapKategoriKeluar[item.category] || 0) + item.amount;
+    }
   });
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
@@ -430,7 +448,6 @@ export default function TransaksiPage() {
       {/* 🛠️ TARGET INJECTOR CSS: Menyembunyikan paksa Navbar luar dan komponen layout luar saat print */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Menyembunyikan navigasi atas (berisi logo, status, jam) dan navigasi bawah */
           body > div:first-child,
           div[class*="fixed"],
           div[class*="sticky"],
@@ -441,11 +458,14 @@ export default function TransaksiPage() {
             height: 0 !important;
             visibility: hidden !important;
           }
-          
-          /* Menghilangkan background gelap monitor dan bayangan */
           body, main, html {
             background: white !important;
             color: black !important;
+          }
+          /* Perintah pemisahan halaman cetak otomatis Next-Page */
+          .page-break {
+            page-break-before: always;
+            break-before: page;
           }
         }
       `}} />
@@ -585,128 +605,185 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL */}
       <div className="hidden print:block bg-white text-black p-6 font-serif text-[11px] leading-relaxed w-full">
         
-        {/* Kop Laporan Resmi */}
-        <div className="flex items-center justify-center border-b-4 border-double border-black pb-4 mb-6 gap-4">
-          <div className="w-16 h-16 flex-shrink-0">
-            <img 
-              src="https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75" 
-              alt="Logo Haul" 
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                e.target.src = "/logo.png";
-              }}
-            />
+        {/* ==================== HALAMAN 1: SUMMARY / REKAP UTAMA ==================== */}
+        <div className="min-h-screen">
+          {/* Kop Laporan Resmi */}
+          <div className="flex items-center justify-center border-b-4 border-double border-black pb-4 mb-6 gap-4">
+            <div className="w-16 h-16 flex-shrink-0">
+              <img 
+                src="https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75" 
+                alt="Logo Haul" 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.src = "/logo.png"; }}
+              />
+            </div>
+            <div className="text-center">
+              <h1 className="text-xl font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
+              <p className="text-[10px] font-sans italic text-gray-700 mt-1">{metaOrg.address}</p>
+            </div>
           </div>
-          <div className="text-center">
-            <h1 className="text-xl font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
-            <p className="text-[10px] font-sans italic text-gray-700 mt-1">{metaOrg.address}</p>
-          </div>
-        </div>
-        
-        {/* Judul Laporan */}
-        <div className="text-center mb-6">
-          <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">{t.lpjTitle}</h2>
-          <p className="text-[9px] text-gray-500 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-        </div>
-
-        {/* Neraca Laporan */}
-        <table className="w-full border-collapse border border-black text-[11px] mb-6 font-sans">
-          <thead>
-            <tr className="bg-gray-100 uppercase text-[9px] tracking-wider text-center">
-              <th className="border border-black py-2 px-3 text-left w-2/3">{t.tblHeaderDesc}</th>
-              <th className="border border-black py-2 px-3 text-right w-1/3">{t.tblHeaderAmount}</th>
-            </tr>
-          </thead>
-          <tbody className="font-medium">
-            <tr>
-              <td className="border border-black py-2 px-3 text-left">{t.totalIn}</td>
-              <td className="border border-black py-2 px-3 text-right text-emerald-700 font-bold">{formatRupiah(totalLpjMasuk)}</td>
-            </tr>
-            <tr>
-              <td className="border border-black py-2 px-3 text-left">{t.totalOut}</td>
-              <td className="border border-black py-2 px-3 text-right text-rose-700 font-bold">({formatRupiah(totalLpjKeluar)})</td>
-            </tr>
-            <tr className="bg-gray-50 font-bold text-sm">
-              <td className="border border-black py-2 px-3 text-left uppercase">{t.netBalance}</td>
-              <td className="border border-black py-2 px-3 text-right text-blue-900 border-b-4 border-double border-black">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Rincian Transaksi */}
-        <div className="space-y-6">
-          {/* TABEL MASUK */}
-          <div>
-            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectIn}</h3>
-            <table className="w-full text-left border-collapse border border-black text-[10px]">
-              <thead>
-                <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
-                  <th className="border border-black py-1.5 px-2 w-24 text-center">{t.thDate}</th>
-                  <th className="border border-black py-1.5 px-2 w-32">{t.thCat}</th>
-                  <th className="border border-black py-1.5 px-2">{t.thLpjDesc}</th>
-                  <th className="border border-black py-1.5 px-2 text-right w-32">{t.thAmount}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dataTransaksiFinal.filter(x => x.aliranJenis === 'Masuk').map((t, idx) => (
-                  <tr key={idx} className="border-b border-gray-300">
-                    <td className="border border-black py-1.5 px-2 font-mono text-center text-gray-700">{t.transaction_date}</td>
-                    <td className="border border-black py-1.5 px-2 uppercase text-gray-700 font-sans">{t.category}</td>
-                    <td className="border border-black py-1.5 px-2 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
-                    <td className="border border-black py-1.5 px-2 text-right font-mono font-bold text-emerald-700">{formatRupiah(t.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          
+          {/* Judul Laporan */}
+          <div className="text-center mb-6">
+            <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">{t.lpjTitle}</h2>
+            <p className="text-[9px] text-gray-500 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
 
-          {/* TABEL KELUAR */}
-          <div className="pt-2">
-            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectOut}</h3>
-            <table className="w-full text-left border-collapse border border-black text-[10px]">
-              <thead>
-                <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
-                  <th className="border border-black py-1.5 px-2 w-24 text-center">{t.thDate}</th>
-                  <th className="border border-black py-1.5 px-2 w-32">{t.thCat}</th>
-                  <th className="border border-black py-1.5 px-2">{t.thLpjDesc}</th>
-                  <th className="border border-black py-1.5 px-2 text-right w-32">{t.thAmount}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((t, idx) => (
-                  <tr key={idx} className="border-b border-gray-300">
-                    <td className="border border-black py-1.5 px-2 font-mono text-center text-gray-700">{t.transaction_date}</td>
-                    <td className="border border-black py-1.5 px-2 uppercase text-gray-700 font-sans">{t.category}</td>
-                    <td className="border border-black py-1.5 px-2 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
-                    <td className="border border-black py-1.5 px-2 text-right font-mono font-bold text-rose-700">{formatRupiah(t.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          {/* Neraca Laporan Utama */}
+          <table className="w-full border-collapse border border-black text-[11px] mb-8 font-sans">
+            <thead>
+              <tr className="bg-gray-100 uppercase text-[9px] tracking-wider text-center">
+                <th className="border border-black py-2.5 px-3 text-left w-2/3">{t.tblHeaderDesc}</th>
+                <th className="border border-black py-2.5 px-3 text-right w-1/3">{t.tblHeaderAmount}</th>
+              </tr>
+            </thead>
+            <tbody className="font-medium">
+              <tr>
+                <td className="border border-black py-2.5 px-3 text-left">{t.totalIn}</td>
+                <td className="border border-black py-2.5 px-3 text-right text-emerald-700 font-bold">{formatRupiah(totalLpjMasuk)}</td>
+              </tr>
+              <tr>
+                <td className="border border-black py-2.5 px-3 text-left">{t.totalOut}</td>
+                <td className="border border-black py-2.5 px-3 text-right text-rose-700 font-bold">({formatRupiah(totalLpjKeluar)})</td>
+              </tr>
+              <tr className="bg-gray-50 font-bold text-sm">
+                <td className="border border-black py-2.5 px-3 text-left uppercase">{t.netBalance}</td>
+                <td className="border border-black py-2.5 px-3 text-right text-blue-900 border-b-4 border-double border-black">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</td>
+              </tr>
+            </tbody>
+          </table>
 
-        {/* Validasi Tanda Tangan */}
-        <div className="mt-14 break-inside-avoid">
-          <p className="text-right text-[10px] text-gray-700 italic mb-12 font-sans">
-            {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+          {/* 📊 TABEL IKHTISAR REKAP TOTAL PER KATEGORI (Baru di Halaman Depan) */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-xs uppercase border-b border-black pb-1 font-sans">{t.summarySect}</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Rekap Pemasukan */}
+              <div>
+                <table className="w-full text-left border-collapse border border-black text-[10px] font-sans">
+                  <thead>
+                    <tr className="bg-gray-50 font-bold uppercase text-[8px] border-b border-black">
+                      <th className="py-2 px-2 border-r border-black">🟢 {t.summaryCat} (In)</th>
+                      <th className="py-2 px-2 text-right">{t.summaryTotal}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(rekapKategoriMasuk).map((key, idx) => (
+                      <tr key={idx} className="border-b border-gray-200">
+                        <td className="py-2 px-2 uppercase border-r border-black font-medium">{key}</td>
+                        <td className="py-2 px-2 text-right font-mono text-emerald-700 font-bold">{formatRupiah(rekapKategoriMasuk[key])}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Rekap Pengeluaran */}
+              <div>
+                <table className="w-full text-left border-collapse border border-black text-[10px] font-sans">
+                  <thead>
+                    <tr className="bg-gray-50 font-bold uppercase text-[8px] border-b border-black">
+                      <th className="py-2 px-2 border-r border-black">🔴 {t.summaryCat} (Out)</th>
+                      <th className="py-2 px-2 text-right">{t.summaryTotal}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(rekapKategoriKeluar).map((key, idx) => (
+                      <tr key={idx} className="border-b border-gray-200">
+                        <td className="py-2 px-2 uppercase border-r border-black font-medium">{key}</td>
+                        <td className="py-2 px-2 text-right font-mono text-rose-700 font-bold">{formatRupiah(rekapKategoriKeluar[key])}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-[9px] text-gray-400 font-sans italic mt-12 text-center">
+            * Detail rincian mutasi buku kas per tanggal dilampirkan pada halaman berikutnya.
           </p>
-          <div className="grid grid-cols-2 gap-8 text-center text-[11px] font-sans">
+        </div>
+
+
+        {/* ==================== HALAMAN 2 & SETERUSNYA: LAMPIRAN RINCIAN DATA ==================== */}
+        <div className="page-break pt-4">
+          <h2 className="text-center font-sans font-bold text-sm uppercase underline tracking-wider mb-6">LAMPIRAN RINCIAN MUTASI PEMBUKUAN JURNAL KAS</h2>
+          
+          <div className="space-y-6">
+            {/* TABEL RINCIAN MASUK */}
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">{t.signKnow}<br />{t.signChair}</p>
-              <p className="font-bold underline uppercase text-black">{metaOrg.ketua}</p>
-              <p className="text-[9px] text-gray-500 font-medium mt-0.5">{t.signGroup}</p>
+              <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectIn}</h3>
+              <table className="w-full text-left border-collapse border border-black text-[10px]">
+                <thead>
+                  <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
+                    <th className="border border-black py-1.5 px-2 w-24 text-center">{t.thDate}</th>
+                    <th className="border border-black py-1.5 px-2 w-32">{t.thCat}</th>
+                    <th className="border border-black py-1.5 px-2">{t.thLpjDesc}</th>
+                    <th className="border border-black py-1.5 px-2 text-right w-32">{t.thAmount}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataTransaksiFinal.filter(x => x.aliranJenis === 'Masuk').map((t, idx) => (
+                    <tr key={idx} className="border-b border-gray-300">
+                      <td className="border border-black py-1.5 px-2 font-mono text-center text-gray-700">{t.transaction_date}</td>
+                      <td className="border border-black py-1.5 px-2 uppercase text-gray-700 font-sans">{t.category}</td>
+                      <td className="border border-black py-1.5 px-2 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
+                      <td className="border border-black py-1.5 px-2 text-right font-mono font-bold text-emerald-700">{formatRupiah(t.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div>
-              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">{t.signMade}<br />{t.signTreasurer}</p>
-              <p className="font-bold underline uppercase text-black">{metaOrg.bendahara}</p>
-              <p className="text-[9px] text-gray-500 font-medium mt-0.5">{t.signGroup}</p>
+
+            {/* TABEL RINCIAN KELUAR */}
+            <div className="pt-2">
+              <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectOut}</h3>
+              <table className="w-full text-left border-collapse border border-black text-[10px]">
+                <thead>
+                  <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
+                    <th className="border border-black py-1.5 px-2 w-24 text-center">{t.thDate}</th>
+                    <th className="border border-black py-1.5 px-2 w-32">{t.thCat}</th>
+                    <th className="border border-black py-1.5 px-2">{t.thLpjDesc}</th>
+                    <th className="border border-black py-1.5 px-2 text-right w-32">{t.thAmount}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((t, idx) => (
+                    <tr key={idx} className="border-b border-gray-300">
+                      <td className="border border-black py-1.5 px-2 font-mono text-center text-gray-700">{t.transaction_date}</td>
+                      <td className="border border-black py-1.5 px-2 uppercase text-gray-700 font-sans">{t.category}</td>
+                      <td className="border border-black py-1.5 px-2 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
+                      <td className="border border-black py-1.5 px-2 text-right font-mono font-bold text-rose-700">{formatRupiah(t.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Validasi Tanda Tangan */}
+          <div className="mt-14 break-inside-avoid">
+            <p className="text-right text-[10px] text-gray-700 italic mb-12 font-sans">
+              {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <div className="grid grid-cols-2 gap-8 text-center text-[11px] font-sans">
+              <div>
+                <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">{t.signKnow}<br />{t.signChair}</p>
+                <p className="font-bold underline uppercase text-black">{metaOrg.ketua}</p>
+                <p className="text-[9px] text-gray-500 font-medium mt-0.5">{t.signGroup}</p>
+              </div>
+              <div>
+                <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">{t.signMade}<br />{t.signTreasurer}</p>
+                <p className="font-bold underline uppercase text-black">{metaOrg.bendahara}</p>
+                <p className="text-[9px] text-gray-500 font-medium mt-0.5">{t.signGroup}</p>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
 
     </div>
