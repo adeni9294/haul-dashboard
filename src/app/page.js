@@ -377,7 +377,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border-l-4 border-l-emerald-500 rounded-2xl space-y-3.5 shadow-xl`}>
-          <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>Pemasukan Terakhir (Deposits)</h5>
+          <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>Pemasukan Terakhir (Cash In)</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
               <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi masuk.</p>
@@ -398,7 +398,7 @@ export default function DashboardPage() {
         </div>
 
         <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-3.5 shadow-xl`}>
-          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Pengeluaran Terakhir (Withdrawals)</h5>
+          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Pengeluaran Terakhir (Cash Out)</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
               <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi belanja.</p>
