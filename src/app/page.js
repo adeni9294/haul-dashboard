@@ -152,7 +152,7 @@ const THEME_STYLES = {
 };
 
 export default function DashboardPage() {
-  const [lang, setLang] = useState('id'); // Default Bahasa Indonesia ('id', 'jv', 'en')
+  const [lang, setLang] = useState('id'); 
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0 });
   const [progress, setProgress] = useState({ percent: 0, current: 0, target: 0 });
@@ -166,7 +166,6 @@ export default function DashboardPage() {
 
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
-  // 🔄 Masukkan [lang] ke dependency array agar UI merespons perubahan bahasa secara real-time
   useEffect(() => { 
     loadDashboardData(); 
   }, [lang]);
@@ -327,7 +326,6 @@ export default function DashboardPage() {
   }
 
   const formatRupiah = (angka) => {
-    const isMinus = className => angka < 0;
     const absValue = Math.abs(angka);
     const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(absValue);
     return angka < 0 ? `-${formatted}` : formatted;
@@ -346,8 +344,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-white">
       
-      {/* 🌐 SELEKTOR PILIHAN 3 BAHASA */}
-      <div className="flex justify-end items-center gap-2 mb-2">
+      {/* 🌐 SELEKTOR PILIHAN 3 BAHASA (Hilang saat dicetak) */}
+      <div className="flex justify-end items-center gap-2 mb-2 print:hidden">
         <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Select Language:</span>
         <select 
           value={lang} 
@@ -360,8 +358,9 @@ export default function DashboardPage() {
         </select>
       </div>
       
+      {/* 📢 ANNOUNCEMENT BANNER (Hilang saat dicetak) */}
       {announcement && (
-        <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
+        <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner print:hidden">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
             📢 {announcement}
           </div>
