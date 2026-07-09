@@ -440,18 +440,20 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
+     {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
       <div className="hidden print:block bg-white text-black p-6 font-serif text-[11px] leading-relaxed w-full">
         
-        {/* Kop Surat Resmi dengan Logo Resmi Haul */}
+        {/* Kop Surat Resmi dengan Logo Haul */}
         <div className="flex items-center justify-center border-b-4 border-double border-black pb-4 mb-6 gap-4">
+          {/* Logo Bulat Resmi Haul (Sesuaikan src jika letak file gambar Anda berbeda, misal: /logo.png atau /assets/logo.png) */}
           <div className="w-16 h-16 flex-shrink-0">
             <img 
-              src="/logo.png" 
+              src="https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75" 
               alt="Logo Haul" 
               className="w-full h-full object-contain"
               onError={(e) => {
-                e.target.src = "https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75";
+                // Fallback jika URL vercel berubah, menggunakan lokal path
+                e.target.src = "/logo.png";
               }}
             />
           </div>
@@ -462,7 +464,7 @@ export default function TransaksiPage() {
           </div>
         </div>
         
-        {/* Judul Dokumen Keuangan */}
+        {/* Judul Laporan */}
         <div className="text-center mb-6">
           <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL</h2>
           <p className="text-[9px] text-gray-500 mt-0.5">Periode: Real-Time s/d {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -552,12 +554,12 @@ export default function TransaksiPage() {
           </p>
           <div className="grid grid-cols-2 gap-8 text-center text-[11px] font-sans">
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Mengetahui,<br />Ketua Panitia</p>
+              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Mengetahui,<br />Ketua Panitia Haul</p>
               <p className="font-bold underline uppercase text-black">{metaOrg.ketua}</p>
               <p className="text-[9px] text-gray-500 font-medium mt-0.5">PANITIA HAUL 2026</p>
             </div>
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Dibuat Oleh,<br />Bendahara</p>
+              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Dibuat Oleh,<br />Bendahara Panitia</p>
               <p className="font-bold underline uppercase text-black">{metaOrg.bendahara}</p>
               <p className="text-[9px] text-gray-500 font-medium mt-0.5">PANITIA HAUL 2026</p>
             </div>
