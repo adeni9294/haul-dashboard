@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Kamus Multi-Bahasa untuk Antarmuka Utama
+// 🌐 KAMUS 3 BAHASA (INDONESIA, REANG/CIREBON, ENGLISH)
 const DICTIONARY = {
   id: {
     loading: '⏳ Memuat antarmuka Cirebonan Premium...',
@@ -20,14 +20,15 @@ const DICTIONARY = {
     rekapExpense: '📊 Rekap Alokasi Anggaran Belanja',
     lastIncome: 'Pemasukan Terakhir (Cash In)',
     lastExpense: 'Pengeluaran Terakhir (Cash Out)',
-    emptyMutation: 'Belum ada mutasi.',
+    emptyMutationIn: 'Belum ada mutasi masuk.',
+    emptyMutationOut: 'Belum ada mutasi belanja.',
     systemFee: 'POTONGAN ADMIN FEE KOLEKTIF BULAN',
     settledBalance: 'SALDO MENGENDAP BULAN',
     combinedDonor: 'GABUNGAN DARI',
     donorUpper: 'DONATUR',
     operasionalExpense: 'Pengeluaran Operasional'
   },
-  jv: { // Bahasa Jawa Cirebonan / Pengaruh Lokal
+  jv: { 
     loading: '⏳ Nembe ngebuka antarmuka Cirebonan Premium...',
     mainCash: 'KAS UTAMA HAUL',
     netBalance: 'Sisa Saldo Kas Bersih',
@@ -43,12 +44,37 @@ const DICTIONARY = {
     rekapExpense: '📊 Rekap Alokasi Anggaran Blonjo',
     lastIncome: 'Mutasi Mlebu Keri Jelas (Cash In)',
     lastExpense: 'Mutasi Blonjo Keri Jelas (Cash Out)',
-    emptyMutation: 'Durung ana mutasi belonjo.',
-    systemFee: 'POTONGAN ADMIN FEE KOLEKTIF BULAN',
-    settledBalance: 'SALDO MENGENDAP BULAN',
+    emptyMutationIn: 'Durung ana mutasi mlebu.',
+    emptyMutationOut: 'Durung ana mutasi blonjo.',
+    systemFee: 'POTONGAN ADMIN FEE KOLEKTIF WULAN',
+    settledBalance: 'SALDO MENGENDAP WULAN',
     combinedDonor: 'GABUNGAN SAKING',
     donorUpper: 'DONATUR',
     operasionalExpense: 'Pragat Blonjo Operasional'
+  },
+  en: {
+    loading: '⏳ Loading Premium Interface...',
+    mainCash: 'HAUL MAIN CASH',
+    netBalance: 'Net Cash Balance Remaining',
+    committee: 'HAUL COMMITTEE',
+    totalIncome: 'Total Cash Inflow',
+    totalExpense: 'Total Expenditures',
+    categories: 'Contribution Categories',
+    allocation: 'Used Allocation Posts',
+    progressTitle: 'Budget Ceiling Target Achievement Progress',
+    collected: 'Collected',
+    target: 'Target Ceiling',
+    rekapIncome: '📊 Cash Inflow Category Summary',
+    rekapExpense: '📊 Budgetary Allocation Summary',
+    lastIncome: 'Latest Cash Inflows (Cash In)',
+    lastExpense: 'Latest Expenditures (Cash Out)',
+    emptyMutationIn: 'No incoming mutations yet.',
+    emptyMutationOut: 'No expenditure mutations yet.',
+    systemFee: 'COLLECTIVE ADMIN FEE DEDUCTION FOR MONTH',
+    settledBalance: 'RETAINED BALANCE FOR MONTH',
+    combinedDonor: 'COMBINED OF',
+    donorUpper: 'DONORS',
+    operasionalExpense: 'Operational Expenditure'
   }
 };
 
@@ -126,7 +152,7 @@ const THEME_STYLES = {
 };
 
 export default function DashboardPage() {
-  const [lang, setLang] = useState('id'); // 'id' atau 'jv'
+  const [lang, setLang] = useState('id'); // Default Bahasa Indonesia ('id', 'jv', 'en')
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0 });
   const [progress, setProgress] = useState({ percent: 0, current: 0, target: 0 });
@@ -140,7 +166,10 @@ export default function DashboardPage() {
 
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
-  useEffect(() => { loadDashboardData(); }, [lang]); // Memuat ulang teks dinamis jika bahasa berubah
+  // 🔄 Masukkan [lang] ke dependency array agar UI merespons perubahan bahasa secara real-time
+  useEffect(() => { 
+    loadDashboardData(); 
+  }, [lang]);
 
   async function loadDashboardData() {
     try {
@@ -298,10 +327,10 @@ export default function DashboardPage() {
   }
 
   const formatRupiah = (angka) => {
-    const isMinus = angka < 0;
+    const isMinus = className => angka < 0;
     const absValue = Math.abs(angka);
     const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(absValue);
-    return isMinus ? `-${formatted}` : formatted;
+    return angka < 0 ? `-${formatted}` : formatted;
   };
   
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
@@ -317,22 +346,23 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-white">
       
-      {/* Menu Tombol Ganti Bahasa Langsung */}
+      {/* 🌐 SELEKTOR PILIHAN 3 BAHASA */}
       <div className="flex justify-end items-center gap-2 mb-2">
-        <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase">Language:</span>
+        <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Select Language:</span>
         <select 
           value={lang} 
           onChange={(e) => setLang(e.target.value)}
-          className="bg-zinc-900 border border-zinc-800 text-xs text-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-zinc-700 font-mono"
+          className="bg-zinc-950 border border-zinc-800 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
         >
           <option value="id">🇮🇩 Indonesia</option>
           <option value="jv">🎯 Cirebonan</option>
+          <option value="en">🇬🇧 English</option>
         </select>
       </div>
       
       {announcement && (
         <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
-          <div className={`animate-marquee inline-block ${style.accentText} font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono`}>
+          <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
             📢 {announcement}
           </div>
         </div>
@@ -442,7 +472,7 @@ export default function DashboardPage() {
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-1">{dict.emptyMutation}</p>
+              <p className="text-xs text-slate-500 font-mono py-1">{dict.emptyMutationIn}</p>
             ) : (
               rincianMasuk.map((t, i) => (
                 <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
@@ -463,7 +493,7 @@ export default function DashboardPage() {
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-1">{dict.emptyMutation}</p>
+              <p className="text-xs text-slate-500 font-mono py-1">{dict.emptyMutationOut}</p>
             ) : (
               rincianKeluar.map((t, i) => (
                 <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
