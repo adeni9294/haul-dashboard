@@ -444,17 +444,16 @@ export default function TransaksiPage() {
   return (
     <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white relative">
       
-      {/* 🛠️ ULTRA TOTAL KILLER PRINT STYLES: Menyembunyikan APAPUN di luar area cetak ini */}
+      {/* 🛠️ ULTRA TOTAL KILLER PRINT STYLES */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Menyembunyikan seluruh elemen DOM di aplikasi kecuali kontainer ini */
+          /* Menyembunyikan seluruh elemen luar sistem layout pembungkus */
           body * {
             visibility: hidden !important;
           }
           #root-transaksi-container, #root-transaksi-container * {
             visibility: visible !important;
           }
-          /* Posisikan kontainer cetak mutlak di kiri-atas kertas */
           #root-transaksi-container {
             position: absolute !important;
             left: 0 !important;
@@ -464,7 +463,6 @@ export default function TransaksiPage() {
             padding: 0 !important;
             color: black !important;
           }
-          /* Sembunyikan bagian antarmuka aplikasi interaktif */
           .print\\:hidden, .print\\:hidden * {
             display: none !important;
             height: 0 !important;
@@ -473,7 +471,16 @@ export default function TransaksiPage() {
             background: white !important;
             color: black !important;
           }
-          /* Manajemen Halaman & Mencegah blank page */
+          
+          /* 🔥 FIX FORCE LOGO: Memaksa browser merender dan memunculkan gambar/logo saat print */
+          img, .print-logo {
+            display: block !important;
+            visibility: visible !important;
+            content: url("https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75") !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
           .print-page-wrapper {
             background: white !important;
             color: black !important;
@@ -482,7 +489,7 @@ export default function TransaksiPage() {
           .page-break {
             page-break-before: always !important;
             break-before: page !important;
-            margin-top: 20px !important;
+            margin-top: 10px !important;
           }
         }
       `}} />
@@ -626,20 +633,26 @@ export default function TransaksiPage() {
         
         {/* ==================== HALAMAN 1: REKAP / SUMMARY UTAMA ==================== */}
         <div className="print-page-wrapper">
-          {/* Kop Laporan Resmi */}
-          <div className="flex items-center justify-center border-b-4 border-double border-black pb-4 mb-6 gap-4">
-            <div className="w-16 h-16 flex-shrink-0">
+          {/* Kop Laporan Resmi dengan Aliansi Logo */}
+          <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6">
+            {/* Sisi Kiri: Tempat Logo Cetak Bawaan System */}
+            <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
                 src="https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75" 
                 alt="Logo Haul" 
-                className="w-full h-full object-contain"
+                className="print-logo w-16 h-16 object-contain"
                 onError={(e) => { e.target.src = "/logo.png"; }}
               />
             </div>
-            <div className="text-center">
-              <h1 className="text-xl font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
-              <p className="text-[10px] font-sans italic text-gray-700 mt-1">{metaOrg.address}</p>
+            
+            {/* Sisi Tengah: Detail Text Organisasi */}
+            <div className="text-center flex-1 px-2">
+              <h1 className="text-lg font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
+              <p className="text-[9px] font-sans italic text-gray-700 mt-0.5">{metaOrg.address}</p>
             </div>
+
+            {/* Sisi Kanan: Ruang Kosong Penyeimbang Grid Kop */}
+            <div className="w-16 h-16 flex-shrink-0 print:hidden sm:block"></div>
           </div>
           
           {/* Judul Laporan */}
@@ -681,7 +694,7 @@ export default function TransaksiPage() {
                 <table className="w-full text-left border-collapse border border-black text-[10px] font-sans">
                   <thead>
                     <tr className="bg-gray-50 font-bold uppercase text-[8px] border-b border-black">
-                      <th className="py-1.5 px-2 border-r border-black">官 {t.summaryCat} (In)</th>
+                      <th className="py-1.5 px-2 border-r border-black">🟢 {t.summaryCat} (In)</th>
                       <th className="py-1.5 px-2 text-right">{t.summaryTotal}</th>
                     </tr>
                   </thead>
@@ -701,7 +714,7 @@ export default function TransaksiPage() {
                 <table className="w-full text-left border-collapse border border-black text-[10px] font-sans">
                   <thead>
                     <tr className="bg-gray-50 font-bold uppercase text-[8px] border-b border-black">
-                      <th className="py-1.5 px-2 border-r border-black">奉 {t.summaryCat} (Out)</th>
+                      <th className="py-1.5 px-2 border-r border-black">🔴 {t.summaryCat} (Out)</th>
                       <th className="py-1.5 px-2 text-right">{t.summaryTotal}</th>
                     </tr>
                   </thead>
@@ -769,8 +782,8 @@ export default function TransaksiPage() {
                 <tbody>
                   {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((t, idx) => (
                     <tr key={idx} className="border-b border-gray-200">
-                      <td className="border border-black py-1 px-1.5 font-mono text-center text-gray-700">{t.transaction_date}</td>
-                      <td className="border border-black py-1 px-1.5 uppercase text-gray-700 font-sans">{t.category}</td>
+                      <td className="border border-black py-1.5 px-1.5 font-mono text-center text-gray-700">{t.transaction_date}</td>
+                      <td className="border border-black py-1.5 px-1.5 uppercase text-gray-700 font-sans">{t.category}</td>
                       <td className="border border-black py-1.5 px-1.5 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
                       <td className="border border-black py-1.5 px-1.5 text-right font-mono font-bold text-rose-700">{formatRupiah(t.amount)}</td>
                     </tr>
