@@ -638,7 +638,7 @@ export default function TransaksiPage() {
             {/* 🌐 CLOUD STORAGE INTEGRATION: Memanggil asset mentah langsung dari Supabase Public Bucket */}
             <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
-                src={`${supabaseUrl}/storage/v1/object/public/logo/logo.png`}
+                src={`${supabaseUrl}/storage/v1/object/public/logos/logo_system.png`}
                 alt="Logo Resmi" 
                 className="w-16 h-16 object-contain"
                 crossOrigin="anonymous"
