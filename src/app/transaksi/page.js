@@ -116,7 +116,7 @@ const translations = {
 };
 
 export default function TransaksiPage() {
-  const [lang, setLang] = useState('id'); // Pilihan: 'id', 'jv', 'en'
+  const [lang, setLang] = useState('id');
   const t = translations[lang] || translations['id'];
 
   const [loading, setLoading] = useState(true);
@@ -427,20 +427,16 @@ export default function TransaksiPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* ⚠️ FORCE CSS INJECTOR: Memaksa menghapus komponen global layout di luar halaman ini ketika dicetak */}
+      {/* 🛠️ FILTER CETAK YANG AMAN: Menyembunyikan header navigasi aplikasi luar secara mutlak */}
       <style>{`
         @media print {
-          /* Sembunyikan semua elemen selain container utama LPJ ini */
-          body > *:not(main), 
-          header, 
-          nav, 
-          footer, 
-          .global-navbar, 
-          [class*="navbar"], 
-          [class*="header"] {
+          /* Menyembunyikan komponen navigasi global di atas layout */
+          nav, header, footer, .print\\:hidden, [class*="navbar"] {
             display: none !important;
-            height: 0 !important;
-            opacity: 0 !important;
+          }
+          /* Memastikan container utama tidak ikut tersembunyi */
+          body, main, #__next, div {
+            visibility: visible;
           }
         }
       `}</style>
@@ -580,7 +576,7 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL */}
       <div className="hidden print:block bg-white text-black p-6 font-serif text-[11px] leading-relaxed w-full">
         
         {/* Kop Laporan Resmi */}
