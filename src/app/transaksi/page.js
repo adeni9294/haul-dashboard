@@ -6,7 +6,119 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// 🌐 KAMUS MULTI-BAHASA (INDONESIA, REANG/CIREBON, ENGLISH)
+const translations = {
+  id: {
+    title: "💰 Buku Kas & Transaksi Haul",
+    subtitle: "● Murni Grouping pertanggal & Integrasi Kas Keluar Aktif",
+    btnTambah: "➕ Tambah Kas",
+    btnExcel: "📊 Excel Data",
+    btnCetak: "🖨️ Cetak LPJ",
+    searchPlaceholder: "Cari uraian keterangan...",
+    allCash: "Semua Aliran Kas",
+    onlyIn: "🟢 Hanya Kas Masuk",
+    onlyOut: "🔴 Hanya Kas Keluar",
+    allCat: "Semua Kategori Pos",
+    thDate: "Tanggal",
+    thCat: "Pos Kategori",
+    thDesc: "Uraian Keterangan",
+    thAmount: "Nominal Angka",
+    thAction: "Aksi",
+    noData: "Tidak ada catatan transaksi ditemukan.",
+    syncData: "Sinkronisasi integrasi pembukuan kas...",
+    lpjTitle: "LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL",
+    lpjPeriod: "Periode: Real-Time s/d",
+    tblHeaderDesc: "Deskripsi / Ikhtisar Akun",
+    tblHeaderAmount: "Jumlah Kas (IDR)",
+    totalIn: "Total Penerimaan Arus Kas Masuk (A)",
+    totalOut: "Total Pengeluaran Belanja Operasional (B)",
+    netBalance: "Sisa Saldo Buku Kas Bersih (A - B)",
+    sectIn: "A. Buku Rincian Aliran Arus Kas Masuk",
+    sectOut: "B. Buku Rincian Aliran Arus Kas Keluar (Belanja)",
+    thLpjDesc: "Uraian Keterangan Transaksi",
+    signKnow: "Mengetahui,",
+    signChair: "Ketua Panitia Haul",
+    signMade: "Dibuat Oleh,",
+    signTreasurer: "Bendahara Panitia",
+    signGroup: "PANITIA HAUL 2026",
+    city: "Cirebon"
+  },
+  jv: { 
+    title: "💰 Buku Kas & Transaksi Haul",
+    subtitle: "● Murni Grouping pertanggal & Integrasi Kas Keluar Aktif",
+    btnTambah: "➕ Tambah Kas",
+    btnExcel: "📊 Pragat Excel",
+    btnCetak: "🖨️ Cetak LPJ",
+    searchPlaceholder: "Goleki keterangan...",
+    allCash: "Kabeh Aliran Kas",
+    onlyIn: "🟢 Pragat Mlebu Tok",
+    onlyOut: "🔴 Pragat Blonjo Tok",
+    allCat: "Kabeh Werna Pos",
+    thDate: "Tanggal",
+    thCat: "Pos Kategori",
+    thDesc: "Keterangan",
+    thAmount: "Nominal Angka",
+    thAction: "Aksi",
+    noData: "Durung ana catatan transaksi.",
+    syncData: "Nembe ngebuka integrasi pembukuan kas...",
+    lpjTitle: "LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL",
+    lpjPeriod: "Periode: Real-Time s/d",
+    tblHeaderDesc: "Keterangan / Ikhtisar Akun",
+    tblHeaderAmount: "Jumlah Kas (IDR)",
+    totalIn: "Total Pragat Kas Mlebu (A)",
+    totalOut: "Total Pragat Blonjo Operasional (B)",
+    netBalance: "Sisa Saldo Buku Kas Bersih (A - B)",
+    sectIn: "A. Buku Rincian Aliran Arus Kas Mlebu",
+    sectOut: "B. Buku Rincian Aliran Arus Kas Metu (Blonjo)",
+    thLpjDesc: "Keterangan Transaksi",
+    signKnow: "Weruh,",
+    signChair: "Ketua Panitia Haul",
+    signMade: "Sing Gawe,",
+    signTreasurer: "Bendahara Panitia",
+    signGroup: "PANITIA HAUL 2026",
+    city: "Cirebon"
+  },
+  en: {
+    title: "💰 Cash Book & Haul Transactions",
+    subtitle: "● Pure daily grouping & Active cash outflow integration",
+    btnTambah: "➕ Add Cash",
+    btnExcel: "📊 Export Excel",
+    btnCetak: "🖨️ Print Report",
+    searchPlaceholder: "Search description...",
+    allCash: "All Cash Flows",
+    onlyIn: "🟢 Cash Inflow Only",
+    onlyOut: "🔴 Cash Outflow Only",
+    allCat: "All Categories",
+    thDate: "Date",
+    thCat: "Category Pos",
+    thDesc: "Description Note",
+    thAmount: "Amount",
+    thAction: "Action",
+    noData: "No transaction records found.",
+    syncData: "Synchronizing cash book integration...",
+    lpjTitle: "FINANCIAL ACCOUNTABILITY REPORT (LPJ) OF HAUL",
+    lpjPeriod: "Period: Real-Time as of",
+    tblHeaderDesc: "Description / Account Overview",
+    tblHeaderAmount: "Cash Amount (IDR)",
+    totalIn: "Total Cash Inflows (A)",
+    totalOut: "Total Operational Expenditures (B)",
+    netBalance: "Net Cash Balance (A - B)",
+    sectIn: "A. Detailed Cash Inflow Ledger",
+    sectOut: "B. Detailed Cash Outflow Ledger (Expenditure)",
+    thLpjDesc: "Transaction Description Details",
+    signKnow: "Approved By,",
+    signChair: "Haul Committee Chairman",
+    signMade: "Prepared By,",
+    signTreasurer: "Committee Treasurer",
+    signGroup: "2026 HAUL COMMITTEE",
+    city: "Cirebon"
+  }
+};
+
 export default function TransaksiPage() {
+  const [lang, setLang] = useState('id'); // Pilihan: 'id', 'jv', 'en'
+  const t = translations[lang] || translations['id'];
+
   const [loading, setLoading] = useState(true);
   const [allDonations, setAllDonations] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
@@ -81,7 +193,6 @@ export default function TransaksiPage() {
         currentAddress = setDb[0].address || currentAddress;
       }
 
-      // 🔄 Menarik data kepanitiaan dari tabel 'committee' secara otomatis
       const { data: committeeDb } = await supabase.from('committee').select('*');
       let currentKetua = '....................';
       let currentBendahara = '....................';
@@ -256,7 +367,11 @@ export default function TransaksiPage() {
 
     return Object.values(petaGabungan).map(grup => {
       if (!grup.isSystem) {
-        grup.uraian = `GABUNGAN DARI ${grup.jumlahDonatur} DONATUR ${grup.category.toUpperCase()}`;
+        grup.uraian = lang === 'id' 
+          ? `GABUNGAN DARI ${grup.jumlahDonatur} DONATUR ${grup.category.toUpperCase()}`
+          : lang === 'jv'
+          ? `GABUNGAN SAKING ${grup.jumlahDonatur} DONATUR ${grup.category.toUpperCase()}`
+          : `COMBINED OF ${grup.jumlahDonatur} DONORS ${grup.category.toUpperCase()}`;
       }
       return grup;
     }).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
@@ -307,39 +422,64 @@ export default function TransaksiPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Sinkronisasi integrasi pembukuan kas...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">{t.syncData}</div>;
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
+      {/* ⚠️ FORCE CSS INJECTOR: Memaksa menghapus komponen global layout di luar halaman ini ketika dicetak */}
+      <style>{`
+        @media print {
+          /* Sembunyikan semua elemen selain container utama LPJ ini */
+          body > *:not(main), 
+          header, 
+          nav, 
+          footer, 
+          .global-navbar, 
+          [class*="navbar"], 
+          [class*="header"] {
+            display: none !important;
+            height: 0 !important;
+            opacity: 0 !important;
+          }
+        }
+      `}</style>
+
       {/* AREA UTAMA INTERFACES - HIDDEN KETIKA CETAK */}
       <div className="print:hidden space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xs font-black uppercase tracking-wider">💰 Buku Kas & Transaksi Haul</h2>
+              <h2 className="text-xs font-black uppercase tracking-wider">{t.title}</h2>
               {isAdmin ? <span className="bg-green-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">ADMIN</span> : <span className="bg-red-600 text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase font-mono">PUBLIC</span>}
             </div>
-            <p className="text-[10px] font-mono mt-0.5 text-slate-400">● Murni Grouping pertanggal & Integrasi Kas Keluar Aktif</p>
+            <p className="text-[10px] font-mono mt-0.5 text-slate-400">{t.subtitle}</p>
           </div>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            {/* 🌐 SELEKTOR PILIHAN 3 BAHASA */}
+            <div className="flex bg-slate-950 p-1 border border-slate-800 rounded-xl mr-1">
+              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'id' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>ID 🇮🇩</button>
+              <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'jv' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>JV 🎯</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>EN 🇬🇧</button>
+            </div>
+
             {isAdmin && (
-              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl shadow-md">➕ Tambah Kas</button>
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl shadow-md">{t.btnTambah}</button>
             )}
-            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 text-white font-bold uppercase rounded-xl shadow-md">📊 Excel Data</button>
-            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl shadow-md">🖨️ Cetak LPJ</button>
+            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 text-white font-bold uppercase rounded-xl shadow-md">{t.btnExcel}</button>
+            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl shadow-md">{t.btnCetak}</button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 border border-slate-800/60 p-3 rounded-xl">
-          <input type="text" placeholder="Cari uraian keterangan..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none" />
+          <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none">
-            <option value="all">Semua Aliran Kas</option>
-            <option value="masuk">🟢 Hanya Kas Masuk</option>
-            <option value="keluar">🔴 Hanya Kas Keluar</option>
+            <option value="all">{t.allCash}</option>
+            <option value="masuk">{t.onlyIn}</option>
+            <option value="keluar">{t.onlyOut}</option>
           </select>
           <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none">
-            <option value="all">Semua Kategori Pos</option>
+            <option value="all">{t.allCat}</option>
             {categories.map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
           </select>
         </div>
@@ -349,11 +489,11 @@ export default function TransaksiPage() {
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
               <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[9px] tracking-wider sticky top-0 z-20 shadow-[0_2px_5px_rgba(0,0,0,0.3)]">
-                <th className="p-3 w-24 bg-slate-950">Tanggal</th>
-                <th className="p-3 w-28 bg-slate-950">Pos Kategori</th>
-                <th className="p-3 bg-slate-950">Uraian Keterangan</th>
-                <th className="p-3 text-right w-32 bg-slate-950">Nominal Angka</th>
-                {isAdmin && <th className="p-3 text-center w-36 bg-slate-950">Aksi</th>}
+                <th className="p-3 w-24 bg-slate-950">{t.thDate}</th>
+                <th className="p-3 w-28 bg-slate-950">{t.thCat}</th>
+                <th className="p-3 bg-slate-950">{t.thDesc}</th>
+                <th className="p-3 text-right w-32 bg-slate-950">{t.thAmount}</th>
+                {isAdmin && <th className="p-3 text-center w-36 bg-slate-950">{t.thAction}</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
@@ -391,7 +531,7 @@ export default function TransaksiPage() {
                 );
               })}
               {filteredTrans.length === 0 && (
-                <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">Tidak ada catatan transaksi ditemukan.</td></tr>
+                <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center text-slate-500 font-mono">{t.noData}</td></tr>
               )}
             </tbody>
           </table>
@@ -440,24 +580,21 @@ export default function TransaksiPage() {
         </div>
       )}
 
-     {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
       <div className="hidden print:block bg-white text-black p-6 font-serif text-[11px] leading-relaxed w-full">
         
-        {/* Kop Surat Resmi dengan Logo Haul */}
+        {/* Kop Laporan Resmi */}
         <div className="flex items-center justify-center border-b-4 border-double border-black pb-4 mb-6 gap-4">
-          {/* Logo Bulat Resmi Haul (Sesuaikan src jika letak file gambar Anda berbeda, misal: /logo.png atau /assets/logo.png) */}
           <div className="w-16 h-16 flex-shrink-0">
             <img 
               src="https://haul-dashboard-4v7n.vercel.app/_next/image?url=%2Flogo.png&w=128&q=75" 
               alt="Logo Haul" 
               className="w-full h-full object-contain"
               onError={(e) => {
-                // Fallback jika URL vercel berubah, menggunakan lokal path
                 e.target.src = "/logo.png";
               }}
             />
           </div>
-          
           <div className="text-center">
             <h1 className="text-xl font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
             <p className="text-[10px] font-sans italic text-gray-700 mt-1">{metaOrg.address}</p>
@@ -466,46 +603,46 @@ export default function TransaksiPage() {
         
         {/* Judul Laporan */}
         <div className="text-center mb-6">
-          <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL</h2>
-          <p className="text-[9px] text-gray-500 mt-0.5">Periode: Real-Time s/d {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">{t.lpjTitle}</h2>
+          <p className="text-[9px] text-gray-500 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
 
-        {/* Neraca Saldo / Tabel Ringkasan Kas */}
+        {/* Neraca Laporan */}
         <table className="w-full border-collapse border border-black text-[11px] mb-6 font-sans">
           <thead>
             <tr className="bg-gray-100 uppercase text-[9px] tracking-wider text-center">
-              <th className="border border-black py-2 px-3 text-left w-2/3">Deskripsi / Ikhtisar Akun</th>
-              <th className="border border-black py-2 px-3 text-right w-1/3">Jumlah Kas (IDR)</th>
+              <th className="border border-black py-2 px-3 text-left w-2/3">{t.tblHeaderDesc}</th>
+              <th className="border border-black py-2 px-3 text-right w-1/3">{t.tblHeaderAmount}</th>
             </tr>
           </thead>
           <tbody className="font-medium">
             <tr>
-              <td className="border border-black py-2 px-3 text-left">Total Penerimaan Arus Kas Masuk (A)</td>
+              <td className="border border-black py-2 px-3 text-left">{t.totalIn}</td>
               <td className="border border-black py-2 px-3 text-right text-emerald-700 font-bold">{formatRupiah(totalLpjMasuk)}</td>
             </tr>
             <tr>
-              <td className="border border-black py-2 px-3 text-left">Total Pengeluaran Belanja Operasional (B)</td>
+              <td className="border border-black py-2 px-3 text-left">{t.totalOut}</td>
               <td className="border border-black py-2 px-3 text-right text-rose-700 font-bold">({formatRupiah(totalLpjKeluar)})</td>
             </tr>
             <tr className="bg-gray-50 font-bold text-sm">
-              <td className="border border-black py-2 px-3 text-left uppercase">Sisa Saldo Buku Kas Bersih (A - B)</td>
+              <td className="border border-black py-2 px-3 text-left uppercase">{t.netBalance}</td>
               <td className="border border-black py-2 px-3 text-right text-blue-900 border-b-4 border-double border-black">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</td>
             </tr>
           </tbody>
         </table>
 
-        {/* Rincian Arus Transaksi Buku Besar */}
+        {/* Rincian Transaksi */}
         <div className="space-y-6">
-          {/* TABEL ARUS KAS MASUK */}
+          {/* TABEL MASUK */}
           <div>
-            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">A. Buku Rincian Aliran Arus Kas Masuk</h3>
+            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectIn}</h3>
             <table className="w-full text-left border-collapse border border-black text-[10px]">
               <thead>
                 <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
-                  <th className="border border-black py-1.5 px-2 w-24 text-center">Tanggal</th>
-                  <th className="border border-black py-1.5 px-2 w-32">Kategori Pos</th>
-                  <th className="border border-black py-1.5 px-2">Uraian Keterangan Transaksi</th>
-                  <th className="border border-black py-1.5 px-2 text-right w-32">Nominal (IDR)</th>
+                  <th className="border border-black py-1.5 px-2 w-24 text-center">{t.thDate}</th>
+                  <th className="border border-black py-1.5 px-2 w-32">{t.thCat}</th>
+                  <th className="border border-black py-1.5 px-2">{t.thLpjDesc}</th>
+                  <th className="border border-black py-1.5 px-2 text-right w-32">{t.thAmount}</th>
                 </tr>
               </thead>
               <tbody>
@@ -521,16 +658,16 @@ export default function TransaksiPage() {
             </table>
           </div>
 
-          {/* TABEL ARUS KAS KELUAR */}
+          {/* TABEL KELUAR */}
           <div className="pt-2">
-            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">B. Buku Rincian Aliran Arus Kas Keluar (Belanja)</h3>
+            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectOut}</h3>
             <table className="w-full text-left border-collapse border border-black text-[10px]">
               <thead>
                 <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
-                  <th className="border border-black py-1.5 px-2 w-24 text-center">Tanggal</th>
-                  <th className="border border-black py-1.5 px-2 w-32">Kategori Pos</th>
-                  <th className="border border-black py-1.5 px-2">Uraian Keterangan Transaksi</th>
-                  <th className="border border-black py-1.5 px-2 text-right w-32">Nominal (IDR)</th>
+                  <th className="border border-black py-1.5 px-2 w-24 text-center">{t.thDate}</th>
+                  <th className="border border-black py-1.5 px-2 w-32">{t.thCat}</th>
+                  <th className="border border-black py-1.5 px-2">{t.thLpjDesc}</th>
+                  <th className="border border-black py-1.5 px-2 text-right w-32">{t.thAmount}</th>
                 </tr>
               </thead>
               <tbody>
@@ -547,21 +684,21 @@ export default function TransaksiPage() {
           </div>
         </div>
 
-        {/* VALIDASI KEPANITIAAN OTOMATIS DARI SUPABASE */}
+        {/* Validasi Tanda Tangan */}
         <div className="mt-14 break-inside-avoid">
           <p className="text-right text-[10px] text-gray-700 italic mb-12 font-sans">
-            Cirebon, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
           <div className="grid grid-cols-2 gap-8 text-center text-[11px] font-sans">
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Mengetahui,<br />Ketua Panitia Haul</p>
+              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">{t.signKnow}<br />{t.signChair}</p>
               <p className="font-bold underline uppercase text-black">{metaOrg.ketua}</p>
-              <p className="text-[9px] text-gray-500 font-medium mt-0.5">PANITIA HAUL 2026</p>
+              <p className="text-[9px] text-gray-500 font-medium mt-0.5">{t.signGroup}</p>
             </div>
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Dibuat Oleh,<br />Bendahara Panitia</p>
+              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">{t.signMade}<br />{t.signTreasurer}</p>
               <p className="font-bold underline uppercase text-black">{metaOrg.bendahara}</p>
-              <p className="text-[9px] text-gray-500 font-medium mt-0.5">PANITIA HAUL 2026</p>
+              <p className="text-[9px] text-gray-500 font-medium mt-0.5">{t.signGroup}</p>
             </div>
           </div>
         </div>
