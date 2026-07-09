@@ -37,9 +37,9 @@ const translations = {
     sectOut: "B. Buku Rincian Aliran Arus Kas Keluar (Belanja)",
     thLpjDesc: "Uraian Keterangan Transaksi",
     signKnow: "Mengetahui,",
-    signChair: "Ketua",
+    signChair: "Ketua Panitia Haul",
     signMade: "Dibuat Oleh,",
-    signTreasurer: "Bendahara",
+    signTreasurer: "Bendahara Panitia",
     signGroup: "PANITIA HAUL 2026",
     city: "Cirebon",
     summarySect: "IKHTISAR REKAP TOTAL PER KATEGORI POS KAS",
@@ -75,9 +75,9 @@ const translations = {
     sectOut: "B. Buku Rincian Aliran Arus Kas Metu (Blonjo)",
     thLpjDesc: "Keterangan Transaksi",
     signKnow: "Weruh,",
-    signChair: "ketua",
+    signChair: "Ketua Panitia Haul",
     signMade: "Sing Gawe,",
-    signTreasurer: "bendahara",
+    signTreasurer: "Bendahara Panitia",
     signGroup: "PANITIA HAUL 2026",
     city: "Cirebon",
     summarySect: "IKHTISAR REKAP TOTAL PER KATEGORI POS KAS",
@@ -471,11 +471,13 @@ export default function TransaksiPage() {
             color: black !important;
           }
           
-          /* 🔥 FORCE CONTAINER LOGO PRINT: Memaksa elemen penampung logo muncul */
-          .logo-box-print {
+          /* 🔥 MEMAKSA KONTAINER DAN ASSET LOGO CLOUD RENDERING SAAT PRINT */
+          .cetak-wrapper-logo, .cetak-wrapper-logo img {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           .print-page-wrapper {
@@ -633,12 +635,13 @@ export default function TransaksiPage() {
           {/* Kop Laporan Resmi dengan Aliansi Logo */}
           <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6">
             
-            {/* 🛡️ FORCE RENDERING LOGO MENGGUNAKAN EMBED BASE64 DATA URL */}
-            <div className="logo-box-print w-16 h-16 flex-shrink-0 flex items-center justify-center">
+            {/* 🌐 CLOUD STORAGE INTEGRATION: Memanggil asset mentah langsung dari Supabase Public Bucket */}
+            <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
-                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVR4nO2bXWgcVRTHT9wPiaLgh6KChb4UfCg+9E0fSgX7UPRBiqAofbN9KILiR/vSgL62wUor2vSlbTZpU9u0SVPbtEnbZpM0SZu0SZu0Tf0nUfcnUhR8eGZubmbyM9mZnZndmZ0PDoWZ3Lnn3v89c++559wz69WvX6MclwAsB7gEwFvHxwAsA7Do993qPAnAXoCzALp+XwWwCOAkgNkA287uAHAZQDfAM8H7GwC6ziwAmM7un7f3R/x+Is96KMBXwXsb8qyHA/zAn/V+gD8G72/Lsx4O8Bv6fEeedS7AaYDP0Oc78qxHAX6j76wlz7oYwPveqiz7fBOfb/b3WjXk+fD5Hn+/VsWcj/Iu8Tke53fXqshXebf4HI7zu2tVkeYbeVfyOfxX8nmUd5M89wDAtXwOf5R8LuLdFvXgZgA38Xf3Obyb5NmIesBtY36E/7GqGf67eFfFM3W4G/iZ4F11E5+v8W6M/1p1vBv42eBdc36Efwv5Fz/S1/P09bxW7fL/fT/P8+E29S1Xn/Lp0r41z0f1KVdF3mZgIsA+Xf8E7wN9vkv9BwG2A+xRP76X8mK9w0X6eZ6+ntfquL5WwLsl6gWfFwDsAfiKv98BcD7AUYAd6scPAnwFfbyw3OFi/TxPX8/rdWjP+wXf7qS/A+wVvOtsw/6/79f5fXb7A8F7G3FhR573S8F7G/H8XvXbCH9bV6MizwFw66Fw25gG7wMAdgXv6gD8AsD6w+fPBNuI3LwI4ALATp0b8fk2f9a7+Hyb3+v9fL6dz9sK6luePuXpG1WbFwPcpnPl6N+gO9SOnGq0v0p/69Ge9Q/pI996vBqfA6D7m8+f4m9/wK98S/r6m8/786vYor7p65u+vlkN/z3ALuG+S9d36O6U7m7pLteXAfYI/yR/+736u7/1q8izX+emwreFvC7mdaWqF6s6A7hH/HshN/U9wT2S+5vU69S9L+X9Cvd/9K5G1e5zAK6Z50O++p6g/876fLd6b9Cef8Nvh68Ld0wA+N6YFwH+XvBeU9X7vF8AODwK8I3+Y/9eT8S/Pcr7Vf8e/Y9bMeeX6e91fX3T1zf9b87FALuXAVwDcF6Yp9XvVwCenVUDfBfg8H71v8ef/SOfv8Sf6UuX+M9lFftR8G9v99vA5wf9We+Oeb/s9ynv5/3O6WNV2/T3vL6+6ZfLw2XmXgXgC8Hz+R99u6z6W7/6jepvV/+D+vfov8Gv3o/D65xXg997AOCYMCfpf9D/sHqHAQ7p66D+97Xv0K08O3XfobtfXwbvD/vP9U3//7YIvg+wX/AnAByU57/gN6q+vunrm37Vb3+fIu+E7/Y9wfsC72O8b1MvAByWd78EbyPAn+BvL/Bnj6s/f8qf/f3MvRrAt3ReALAN4HPBtwnvM7yvAnxOf496p0cBXqB/mXreF16g/yN5f9KfZ679b32u6L8F3AnfVnBnyvst74u886Gq5V0g/N39NujvBv0vAnxaT9w1APfR/4/w6gT9T+uJu8b1p9pOfv0a9bM1/AsIlgw8uW6fDwAAAABJRU5ErkJggg==" 
-                alt="Logo Haul" 
+                src={`${supabaseUrl}/storage/v1/object/public/logo/logo.png`}
+                alt="Logo Resmi" 
                 className="w-16 h-16 object-contain"
+                crossOrigin="anonymous"
               />
             </div>
             
