@@ -2,6 +2,56 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// Kamus Multi-Bahasa untuk Antarmuka Utama
+const DICTIONARY = {
+  id: {
+    loading: '⏳ Memuat antarmuka Cirebonan Premium...',
+    mainCash: 'KAS UTAMA HAUL',
+    netBalance: 'Sisa Saldo Kas Bersih',
+    committee: 'PANITIA HAUL',
+    totalIncome: 'Total Uang Masuk',
+    totalExpense: 'Total Uang Belanja',
+    categories: 'Kategori Kontribusi',
+    allocation: 'Pos Alokasi Terpakai',
+    progressTitle: 'Progres Capaian Target Plafon Anggaran',
+    collected: 'Terkumpul',
+    target: 'Plafon Target',
+    rekapIncome: '📊 Rekap Kategori Uang Masuk',
+    rekapExpense: '📊 Rekap Alokasi Anggaran Belanja',
+    lastIncome: 'Pemasukan Terakhir (Cash In)',
+    lastExpense: 'Pengeluaran Terakhir (Cash Out)',
+    emptyMutation: 'Belum ada mutasi.',
+    systemFee: 'POTONGAN ADMIN FEE KOLEKTIF BULAN',
+    settledBalance: 'SALDO MENGENDAP BULAN',
+    combinedDonor: 'GABUNGAN DARI',
+    donorUpper: 'DONATUR',
+    operasionalExpense: 'Pengeluaran Operasional'
+  },
+  jv: { // Bahasa Jawa Cirebonan / Pengaruh Lokal
+    loading: '⏳ Nembe ngebuka antarmuka Cirebonan Premium...',
+    mainCash: 'KAS UTAMA HAUL',
+    netBalance: 'Sisa Saldo Kas Bersih',
+    committee: 'PANITIA HAUL',
+    totalIncome: 'Total Pragat Mlebu',
+    totalExpense: 'Total Pragat Blonjo',
+    categories: 'Werna Sumbangan',
+    allocation: 'Pos Alokasi Sing Dinggo',
+    progressTitle: 'Progres Capaian Target Plafon Anggaran',
+    collected: 'Kekumpul',
+    target: 'Plafon Target',
+    rekapIncome: '📊 Rekap Kategori Pragat Mlebu',
+    rekapExpense: '📊 Rekap Alokasi Anggaran Blonjo',
+    lastIncome: 'Mutasi Mlebu Keri Jelas (Cash In)',
+    lastExpense: 'Mutasi Blonjo Keri Jelas (Cash Out)',
+    emptyMutation: 'Durung ana mutasi belonjo.',
+    systemFee: 'POTONGAN ADMIN FEE KOLEKTIF BULAN',
+    settledBalance: 'SALDO MENGENDAP BULAN',
+    combinedDonor: 'GABUNGAN SAKING',
+    donorUpper: 'DONATUR',
+    operasionalExpense: 'Pragat Blonjo Operasional'
+  }
+};
+
 const THEME_STYLES = {
   'emerald-cyber': { 
     card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', 
@@ -76,6 +126,7 @@ const THEME_STYLES = {
 };
 
 export default function DashboardPage() {
+  const [lang, setLang] = useState('id'); // 'id' atau 'jv'
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0 });
   const [progress, setProgress] = useState({ percent: 0, current: 0, target: 0 });
@@ -87,7 +138,9 @@ export default function DashboardPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
-  useEffect(() => { loadDashboardData(); }, []);
+  const dict = DICTIONARY[lang] || DICTIONARY['id'];
+
+  useEffect(() => { loadDashboardData(); }, [lang]); // Memuat ulang teks dinamis jika bahasa berubah
 
   async function loadDashboardData() {
     try {
@@ -109,7 +162,7 @@ export default function DashboardPage() {
 
       const { data: donationsDb } = await supabase.from('donation_details').select('*');
       const { data: transactionsDb } = await supabase.from('transactions').select('*');
-      
+        
       let calcMasuk = 0; 
       let calcKeluar = 0;
       const incomeMap = {}; 
@@ -118,7 +171,6 @@ export default function DashboardPage() {
       const listPemasukanGrup = {};
       const listPengeluaranGrup = [];
 
-      // 1. Olah tabel data inputan dari Aplikasi Pemasukan Utama (Dibuat Rekap Privasi per Tanggal)
       if (donationsDb) {
         donationsDb.forEach((item) => {
           const rawAmount = parseFloat(item.amount) || 0;
@@ -138,7 +190,7 @@ export default function DashboardPage() {
             
             const keyFee = `${tgl}_FEE_SYSTEM_${item.id}`;
             listPemasukanGrup[keyFee] = {
-              note: `POTONGAN ADMIN FEE KOLEKTIF BULAN ${tgl?.substring(0, 7)}`,
+              note: `${dict.systemFee} ${tgl?.substring(0, 7)}`,
               transaction_date: tgl,
               amount: nominalMinus
             };
@@ -149,7 +201,7 @@ export default function DashboardPage() {
             
             const keySaldo = `${tgl}_SALDO_SYSTEM_${item.id}`;
             listPemasukanGrup[keySaldo] = {
-              note: `SALDO MENGENDAP BULAN ${tgl?.substring(0, 7)}`,
+              note: `${dict.settledBalance} ${tgl?.substring(0, 7)}`,
               transaction_date: tgl,
               amount: nominalPositif
             };
@@ -158,7 +210,6 @@ export default function DashboardPage() {
             calcMasuk += nominalPositif;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalPositif;
 
-            // 🔒 KUNCI PRIVASI: Gabungkan mutlak berdasarkan Tanggal + Nama Kategori
             const grupKey = `${tgl}_${catName.toLowerCase().replace(/\s+/g, '_')}_Donatur`;
             
             if (!listPemasukanGrup[grupKey]) {
@@ -172,12 +223,11 @@ export default function DashboardPage() {
             }
             listPemasukanGrup[grupKey].amount += nominalPositif;
             listPemasukanGrup[grupKey].count += 1;
-            listPemasukanGrup[grupKey].note = `GABUNGAN DARI ${listPemasukanGrup[grupKey].count} DONATUR ${catName.toUpperCase()}`;
+            listPemasukanGrup[grupKey].note = `${dict.combinedDonor} ${listPemasukanGrup[grupKey].count} ${dict.donorUpper} ${catName.toUpperCase()}`;
           }
         });
       }
 
-      // 2. Olah tabel data transaksi pembukuan kas internal (Pembersihan data ganda)
       if (transactionsDb) {
         transactionsDb.forEach((item) => {
           const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
@@ -188,7 +238,6 @@ export default function DashboardPage() {
 
           if (!tgl) return;
 
-          // 🛡️ SATPAM FILTER: Blokir total data kotor "DETAIL (APLIKASI PEMASUKAN)" agar tidak double
           if (
             noteText.includes('APLIKASI PEMASUKAN') || 
             noteText.includes('DETAIL') || 
@@ -201,7 +250,7 @@ export default function DashboardPage() {
             calcKeluar += nominal;
             expenseMap[catName] = (expenseMap[catName] || 0) + nominal;
             listPengeluaranGrup.push({
-              note: item.note || 'Pengeluaran Operasional',
+              note: item.note || dict.operasionalExpense,
               transaction_date: tgl,
               amount: nominal
             });
@@ -260,13 +309,26 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="p-12 text-center text-slate-400 text-xs font-mono animate-pulse">
-        ⏳ Memuat antarmuka Cirebonan Premium...
+        {dict.loading}
       </div>
     );
   }
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-white">
+      
+      {/* Menu Tombol Ganti Bahasa Langsung */}
+      <div className="flex justify-end items-center gap-2 mb-2">
+        <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase">Language:</span>
+        <select 
+          value={lang} 
+          onChange={(e) => setLang(e.target.value)}
+          className="bg-zinc-900 border border-zinc-800 text-xs text-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-zinc-700 font-mono"
+        >
+          <option value="id">🇮🇩 Indonesia</option>
+          <option value="jv">🎯 Cirebonan</option>
+        </select>
+      </div>
       
       {announcement && (
         <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner">
@@ -293,8 +355,8 @@ export default function DashboardPage() {
             </svg>
           </div>
           <div className="relative z-10">
-            <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-60">KAS UTAMA HAUL</span>
-            <p className="text-[11px] font-semibold opacity-70 mt-0.5">Sisa Saldo Kas Bersih</p>
+            <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-60">{dict.mainCash}</span>
+            <p className="text-[11px] font-semibold opacity-70 mt-0.5">{dict.netBalance}</p>
           </div>
           <div className="relative z-10 mt-3">
             <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none">
@@ -302,7 +364,7 @@ export default function DashboardPage() {
             </h2>
             <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-60">
               <span>**** **** **** 2026</span>
-              <span className="font-bold uppercase tracking-wide">PANITIA HAUL</span>
+              <span className="font-bold uppercase tracking-wide">{dict.committee}</span>
             </div>
           </div>
         </div>
@@ -311,22 +373,22 @@ export default function DashboardPage() {
           <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/40`}>
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm shadow-sm">🟢</div>
-              <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>Total Uang Masuk</p>
+              <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalIncome}</p>
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.masuk)}</h3>
-              <p className="text-[10px] text-emerald-400 font-medium mt-1">✓ {catSummaryMasuk.length} Kategori Kontribusi</p>
+              <p className="text-[10px] text-emerald-400 font-medium mt-1">✓ {catSummaryMasuk.length} {dict.categories}</p>
             </div>
           </div>
 
           <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-rose-500/40`}>
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm shadow-sm">🔴</div>
-              <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>Total Uang Belanja</p>
+              <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalExpense}</p>
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.keluar)}</h3>
-              <p className="text-[10px] text-rose-400 font-medium mt-1">⚡ {catSummaryKeluar.length} Pos Alokasi Terpakai</p>
+              <p className="text-[10px] text-rose-400 font-medium mt-1">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
             </div>
           </div>
         </div>
@@ -336,7 +398,7 @@ export default function DashboardPage() {
       <div className={`p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <span>🎯</span> Progres Capaian Target Plafon Anggaran
+            <span>🎯</span> {dict.progressTitle}
           </h3>
           <span className={`${style.accentText} font-mono text-xs font-black bg-white/5 px-2 py-0.5 rounded-md`}>{progress.percent}%</span>
         </div>
@@ -344,14 +406,14 @@ export default function DashboardPage() {
           <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
         <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-0.5">
-          <span>Terkumpul: <strong className="text-slate-300">{formatRupiah(progress.current)}</strong></span>
-          <span>Plafon Target: <strong className="text-slate-300">{formatRupiah(progress.target)}</strong></span>
+          <span>{dict.collected}: <strong className="text-slate-300">{formatRupiah(progress.current)}</strong></span>
+          <span>{dict.target}: <strong className="text-slate-300">{formatRupiah(progress.target)}</strong></span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
-          <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>📊 Rekap Kategori Uang Masuk</h4>
+          <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>{dict.rekapIncome}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
@@ -363,7 +425,7 @@ export default function DashboardPage() {
         </div>
 
         <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">📊 Rekap Alokasi Anggaran Belanja</h4>
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
@@ -377,10 +439,10 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border-l-4 border-l-emerald-500 rounded-2xl space-y-3.5 shadow-xl`}>
-          <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>Pemasukan Terakhir (Cash In)</h5>
+          <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi masuk.</p>
+              <p className="text-xs text-slate-500 font-mono py-1">{dict.emptyMutation}</p>
             ) : (
               rincianMasuk.map((t, i) => (
                 <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
@@ -398,10 +460,10 @@ export default function DashboardPage() {
         </div>
 
         <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-3.5 shadow-xl`}>
-          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">Pengeluaran Terakhir (Cash Out)</h5>
+          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-1">Belum ada mutasi belanja.</p>
+              <p className="text-xs text-slate-500 font-mono py-1">{dict.emptyMutation}</p>
             ) : (
               rincianKeluar.map((t, i) => (
                 <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
