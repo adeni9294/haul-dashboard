@@ -425,21 +425,30 @@ export default function TransaksiPage() {
   if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">{t.syncData}</div>;
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
+    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white relative">
       
-      {/* 🛠️ FILTER CETAK YANG AMAN: Menyembunyikan header navigasi aplikasi luar secara mutlak */}
-      <style>{`
+      {/* 🛠️ TARGET INJECTOR CSS: Menyembunyikan paksa Navbar luar dan komponen layout luar saat print */}
+      <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Menyembunyikan komponen navigasi global di atas layout */
-          nav, header, footer, .print\\:hidden, [class*="navbar"] {
+          /* Menyembunyikan navigasi atas (berisi logo, status, jam) dan navigasi bawah */
+          body > div:first-child,
+          div[class*="fixed"],
+          div[class*="sticky"],
+          nav, 
+          header,
+          .print\\:hidden {
             display: none !important;
+            height: 0 !important;
+            visibility: hidden !important;
           }
-          /* Memastikan container utama tidak ikut tersembunyi */
-          body, main, #__next, div {
-            visibility: visible;
+          
+          /* Menghilangkan background gelap monitor dan bayangan */
+          body, main, html {
+            background: white !important;
+            color: black !important;
           }
         }
-      `}</style>
+      `}} />
 
       {/* AREA UTAMA INTERFACES - HIDDEN KETIKA CETAK */}
       <div className="print:hidden space-y-4">
@@ -576,7 +585,7 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL */}
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
       <div className="hidden print:block bg-white text-black p-6 font-serif text-[11px] leading-relaxed w-full">
         
         {/* Kop Laporan Resmi */}
