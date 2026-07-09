@@ -13,7 +13,12 @@ export default function TransaksiPage() {
   const [categories, setCategories] = useState([]);
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [metaOrg, setMetaOrg] = useState({ name: 'PANITIA HAUL', address: '' });
+  const [metaOrg, setMetaOrg] = useState({ 
+    name: 'PANITIA HAUL', 
+    address: '',
+    ketua: '....................',
+    bendahara: '....................'
+  });
 
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -68,17 +73,30 @@ export default function TransaksiPage() {
       setLoading(true);
       
       const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
+      let currentName = 'PANITIA HAUL MAQBAROH BUYUT KEPUH & BUYUT BESUS';
+      let currentAddress = 'Blok Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon';
+
       if (setDb && setDb.length > 0) {
-        setMetaOrg({ 
-          name: setDb[0].org_name || 'PANITIA HAUL MAQBAROH BUYUT KEPUH & BUYUT BESUS', 
-          address: setDb[0].address || 'Blok Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon' 
-        });
-      } else {
-        setMetaOrg({
-          name: 'PANITIA HAUL MAQBAROH BUYUT KEPUH & BUYUT BESUS',
-          address: 'Blok Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon'
-        });
+        currentName = setDb[0].org_name || currentName;
+        currentAddress = setDb[0].address || currentAddress;
       }
+
+      // 🔄 Tarik data nama kepanitiaan otomatis dari tabel 'committee'
+      const { data: committeeDb } = await supabase.from('committee').select('*');
+      let currentKetua = '....................';
+      let currentBendahara = '....................';
+
+      if (committeeDb && committeeDb.length > 0) {
+        currentKetua = committeeDb.find(c => c.position?.toLowerCase() === 'ketua')?.name || currentKetua;
+        currentBendahara = committeeDb.find(c => c.position?.toLowerCase() === 'bendahara')?.name || currentBendahara;
+      }
+
+      setMetaOrg({
+        name: currentName,
+        address: currentAddress,
+        ketua: currentKetua,
+        bendahara: currentBendahara
+      });
 
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb && catDb.length > 0) {
@@ -267,7 +285,6 @@ export default function TransaksiPage() {
     return matchSearch && matchType && matchCat;
   });
 
-  // 🚀 FUNGSI EXCEL REVOLUSIONER: Aman tanpa crash library window global
   const handleExportExcelManual = () => {
     try {
       let csvContent = "data:text/csv;charset=utf-8,";
@@ -423,69 +440,90 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (HANYA MUNCUL SAAT DI-PRINT / DI-SAVE PDF) */}
-      <div className="hidden print:block bg-white text-black p-4 font-[serif] text-xs leading-relaxed w-full">
-        <div className="text-center border-b-4 border-double border-black pb-3 mb-6">
-          <h1 className="text-base font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
-          <p className="text-[10px] font-sans italic text-gray-600">{metaOrg.address}</p>
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (CLEAN ACCOUNTING STANDARD) */}
+      <div className="hidden print:block bg-white text-black p-6 font-serif text-[11px] leading-relaxed w-full">
+        {/* Kop Surat / Header */}
+        <div className="text-center border-b-4 border-double border-black pb-3 mb-5">
+          <h1 className="text-lg font-bold uppercase font-sans tracking-wide">{metaOrg.name}</h1>
+          <p className="text-[10px] font-sans italic text-gray-700">{metaOrg.address}</p>
         </div>
         
+        {/* Judul Laporan */}
         <div className="text-center mb-6">
           <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">LAPORAN PERTANGGUNGJAWABAN (LPJ) KEUANGAN HAUL</h2>
-          <p className="text-[10px] text-gray-500 mt-0.5">Periode: Real-Time s/d {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <p className="text-[9px] text-gray-500 mt-0.5">Periode: Real-Time s/d {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 font-sans border border-black p-3 rounded mb-6 text-[10px] bg-gray-50 text-center">
-          <div><p className="text-gray-500 uppercase font-bold">Total Penerimaan</p><p className="text-sm font-black text-green-700">{formatRupiah(totalLpjMasuk)}</p></div>
-          <div><p className="text-gray-500 uppercase font-bold">Total Pengeluaran</p><p className="text-sm font-black text-red-700">{formatRupiah(totalLpjKeluar)}</p></div>
-          <div><p className="text-gray-500 uppercase font-bold">Sisa Saldo Kas Bersih</p><p className="text-sm font-black text-blue-800 underline font-bold">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</p></div>
-        </div>
+        {/* Neraca Saldo / Tabel Ringkasan Kas */}
+        <table className="w-full border-collapse border border-black text-[11px] mb-6 font-sans">
+          <thead>
+            <tr className="bg-gray-100 uppercase text-[9px] tracking-wider text-center">
+              <th className="border border-black py-2 px-3 text-left w-2/3">Deskripsi / Ikhtisar Akun</th>
+              <th className="border border-black py-2 px-3 text-right w-1/3">Jumlah Kas (IDR)</th>
+            </tr>
+          </thead>
+          <tbody className="font-medium">
+            <tr>
+              <td className="border border-black py-2 px-3 text-left">Total Penerimaan Arus Kas Masuk (A)</td>
+              <td className="border border-black py-2 px-3 text-right text-emerald-700 font-bold">{formatRupiah(totalLpjMasuk)}</td>
+            </tr>
+            <tr>
+              <td className="border border-black py-2 px-3 text-left">Total Pengeluaran Belanja Operasional (B)</td>
+              <td className="border border-black py-2 px-3 text-right text-rose-700 font-bold">({formatRupiah(totalLpjKeluar)})</td>
+            </tr>
+            <tr className="bg-gray-50 font-bold text-sm">
+              <td className="border border-black py-2 px-3 text-left uppercase">Sisa Saldo Buku Kas Bersih (A - B)</td>
+              <td className="border border-black py-2 px-3 text-right text-blue-900 border-b-4 border-double border-black">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</td>
+            </tr>
+          </tbody>
+        </table>
 
+        {/* Rincian Arus Transaksi Buku Besar */}
         <div className="space-y-6">
-          {/* TABEL PEMASUKAN */}
+          {/* TABEL ARUS KAS MASUK */}
           <div>
-            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">A. Aliran Arus Kas Masuk</h3>
-            <table className="w-full text-left border-collapse text-[10px]">
+            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">A. Buku Rincian Aliran Arus Kas Masuk</h3>
+            <table className="w-full text-left border-collapse border border-black text-[10px]">
               <thead>
-                <tr className="border-b-2 border-black bg-gray-100 font-bold">
-                  <th className="py-1 px-2 w-24">Tanggal</th>
-                  <th className="py-1 px-2 w-32">Kategori Pos</th>
-                  <th className="py-1 px-2">Uraian Keterangan</th>
-                  <th className="py-1 px-2 text-right w-32">Nominal</th>
+                <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
+                  <th className="border border-black py-1.5 px-2 w-24 text-center">Tanggal</th>
+                  <th className="border border-black py-1.5 px-2 w-32">Kategori Pos</th>
+                  <th className="border border-black py-1.5 px-2">Uraian Keterangan Transaksi</th>
+                  <th className="border border-black py-1.5 px-2 text-right w-32">Nominal (IDR)</th>
                 </tr>
               </thead>
               <tbody>
                 {dataTransaksiFinal.filter(x => x.aliranJenis === 'Masuk').map((t, idx) => (
-                  <tr key={idx} className="border-b border-gray-200">
-                    <td className="py-1 px-2 font-mono text-gray-600">{t.transaction_date}</td>
-                    <td className="py-1 px-2 uppercase text-gray-700">{t.category}</td>
-                    <td className="py-1 px-2 uppercase font-sans text-gray-900">{t.uraian}</td>
-                    <td className="py-1 px-2 text-right font-mono font-bold text-green-700">+{formatRupiah(t.amount)}</td>
+                  <tr key={idx} className="border-b border-gray-300">
+                    <td className="border border-black py-1.5 px-2 font-mono text-center text-gray-700">{t.transaction_date}</td>
+                    <td className="border border-black py-1.5 px-2 uppercase text-gray-700 font-sans">{t.category}</td>
+                    <td className="border border-black py-1.5 px-2 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
+                    <td className="border border-black py-1.5 px-2 text-right font-mono font-bold text-emerald-700">{formatRupiah(t.amount)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* TABEL PENGELUARAN */}
-          <div className="pt-4">
-            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">B. Aliran Arus Kas Keluar (Belanja)</h3>
-            <table className="w-full text-left border-collapse text-[10px]">
+          {/* TABEL ARUS KAS KELUAR */}
+          <div className="pt-2">
+            <h3 className="font-bold text-xs uppercase mb-1.5 font-sans border-b border-black pb-0.5">B. Buku Rincian Aliran Arus Kas Keluar (Belanja)</h3>
+            <table className="w-full text-left border-collapse border border-black text-[10px]">
               <thead>
-                <tr className="border-b-2 border-black bg-gray-100 font-bold">
-                  <th className="py-1 px-2 w-24">Tanggal</th>
-                  <th className="py-1 px-2 w-32">Kategori Pos</th>
-                  <th className="py-1 px-2">Uraian Keterangan</th>
-                  <th className="py-1 px-2 text-right w-32">Nominal</th>
+                <tr className="border-b border-black bg-gray-50 font-bold uppercase text-[9px]">
+                  <th className="border border-black py-1.5 px-2 w-24 text-center">Tanggal</th>
+                  <th className="border border-black py-1.5 px-2 w-32">Kategori Pos</th>
+                  <th className="border border-black py-1.5 px-2">Uraian Keterangan Transaksi</th>
+                  <th className="border border-black py-1.5 px-2 text-right w-32">Nominal (IDR)</th>
                 </tr>
               </thead>
               <tbody>
                 {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((t, idx) => (
-                  <tr key={idx} className="border-b border-gray-200">
-                    <td className="py-1 px-2 font-mono text-gray-600">{t.transaction_date}</td>
-                    <td className="py-1 px-2 uppercase text-gray-700">{t.category}</td>
-                    <td className="py-1 px-2 uppercase font-sans text-gray-900">{t.uraian}</td>
-                    <td className="py-1 px-2 text-right font-mono font-bold text-red-700">-{formatRupiah(t.amount)}</td>
+                  <tr key={idx} className="border-b border-gray-300">
+                    <td className="border border-black py-1.5 px-2 font-mono text-center text-gray-700">{t.transaction_date}</td>
+                    <td className="border border-black py-1.5 px-2 uppercase text-gray-700 font-sans">{t.category}</td>
+                    <td className="border border-black py-1.5 px-2 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
+                    <td className="border border-black py-1.5 px-2 text-right font-mono font-bold text-rose-700">{formatRupiah(t.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -493,21 +531,21 @@ export default function TransaksiPage() {
           </div>
         </div>
 
-        {/* HALAMAN VALIDASI TANDA TANGAN KETUA & BENDAHARA */}
-        <div className="mt-12 break-inside-avoid">
-          <p className="text-right text-[10px] text-gray-700 italic mb-10">
+        {/* VALIDASI KEPANITIAAN OTOMATIS DARI SUPABASE */}
+        <div className="mt-14 break-inside-avoid">
+          <p className="text-right text-[10px] text-gray-700 italic mb-12 font-sans">
             Cirebon, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
           <div className="grid grid-cols-2 gap-8 text-center text-[11px] font-sans">
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16">Mengetahui,<br />Ketua Panitia Haul</p>
-              <p className="font-bold underline uppercase">( ________________________ )</p>
-              <p className="text-[9px] text-gray-500 mt-0.5">PANITIA HAUL 2026</p>
+              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Mengetahui,<br />Ketua Panitia Haul</p>
+              <p className="font-bold underline uppercase text-black">{metaOrg.ketua}</p>
+              <p className="text-[9px] text-gray-500 font-medium mt-0.5">PANITIA HAUL 2026</p>
             </div>
             <div>
-              <p className="font-bold uppercase tracking-wider mb-16">Dibuat Oleh,<br />Bendahara Panitia</p>
-              <p className="font-bold underline uppercase">( ________________________ )</p>
-              <p className="text-[9px] text-gray-500 mt-0.5">PANITIA HAUL 2026</p>
+              <p className="font-bold uppercase tracking-wider mb-16 text-gray-800">Dibuat Oleh,<br />Bendahara Panitia</p>
+              <p className="font-bold underline uppercase text-black">{metaOrg.bendahara}</p>
+              <p className="text-[9px] text-gray-500 font-medium mt-0.5">PANITIA HAUL 2026</p>
             </div>
           </div>
         </div>
