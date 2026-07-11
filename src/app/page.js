@@ -26,7 +26,10 @@ const DICTIONARY = {
     settledBalance: 'SALDO MENGENDAP BULAN',
     combinedDonor: 'GABUNGAN DARI',
     donorUpper: 'DONATUR',
-    operasionalExpense: 'Pengeluaran Operasional'
+    operasionalExpense: 'Pengeluaran Operasional',
+    // Fitur Baru Visitor
+    totalKunjungan: 'Total Kunjungan Aplikasi',
+    pengunjungUnik: 'Pengunjung Unik (IP)'
   },
   jv: { 
     loading: '⏳ Nembe ngebuka antarmuka Cirebonan Premium...',
@@ -50,7 +53,10 @@ const DICTIONARY = {
     settledBalance: 'SALDO MENGENDAP WULAN',
     combinedDonor: 'GABUNGAN SAKING',
     donorUpper: 'DONATUR',
-    operasionalExpense: 'Pragat Blonjo Operasional'
+    operasionalExpense: 'Pragat Blonjo Operasional',
+    // Fitur Baru Visitor
+    totalKunjungan: 'Kabeh Klik Sing Mlebu',
+    pengunjungUnik: 'Wong Sing Deleng (IP)'
   },
   en: {
     loading: '⏳ Loading Premium Interface...',
@@ -74,81 +80,24 @@ const DICTIONARY = {
     settledBalance: 'RETAINED BALANCE FOR MONTH',
     combinedDonor: 'COMBINED OF',
     donorUpper: 'DONORS',
-    operasionalExpense: 'Operational Expenditure'
+    operasionalExpense: 'Operational Expenditure',
+    // Fitur Baru Visitor
+    totalKunjungan: 'Total Hits / Pageviews',
+    pengunjungUnik: 'Unique Visitors (IP)'
   }
 };
 
 const THEME_STYLES = {
-  'emerald-cyber': { 
-    card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', 
-    textMuted: 'text-zinc-500', 
-    accentText: 'text-emerald-400', 
-    progressBg: 'from-emerald-600 to-emerald-400', 
-    balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/10' 
-  },
-  'velvet-rose': { 
-    card: 'bg-neutral-900 border-purple-900/40 text-rose-50 shadow-2xl', 
-    textMuted: 'text-purple-300', 
-    accentText: 'text-rose-400', 
-    progressBg: 'from-rose-600 to-fuchsia-500', 
-    balanceCard: 'bg-rose-500 text-black shadow-rose-500/10' 
-  },
-  'neon-sunset': { 
-    card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', 
-    textMuted: 'text-stone-400', 
-    accentText: 'text-orange-400', 
-    progressBg: 'from-orange-600 to-orange-400', 
-    balanceCard: 'bg-orange-500 text-black shadow-orange-500/10' 
-  },
-  'amber-gold': { 
-    card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', 
-    textMuted: 'text-gray-400', 
-    accentText: 'text-amber-400', 
-    progressBg: 'from-amber-600 to-amber-400', 
-    balanceCard: 'bg-amber-500 text-black shadow-amber-500/10' 
-  },
-  'midnight-blue': { 
-    card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', 
-    textMuted: 'text-blue-400', 
-    accentText: 'text-blue-400', 
-    progressBg: 'from-blue-600 to-cyan-500', 
-    balanceCard: 'bg-blue-500 text-black shadow-blue-500/10' 
-  },
-  'nordic-frost': { 
-    card: 'bg-slate-800 border-slate-750 text-slate-50 shadow-2xl', 
-    textMuted: 'text-slate-400', 
-    accentText: 'text-cyan-400', 
-    progressBg: 'from-cyan-600 to-teal-400', 
-    balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/10' 
-  },
-  'crimson-tide': { 
-    card: 'bg-slate-950 border-red-950 text-red-100 shadow-2xl', 
-    textMuted: 'text-zinc-400', 
-    accentText: 'text-[#E63946]', 
-    progressBg: 'from-[#E63946] to-[#9B2226]', 
-    balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' 
-  },
-  'dracula-vamp': { 
-    card: 'bg-zinc-900 border-fuchsia-950 text-purple-200 shadow-2xl', 
-    textMuted: 'text-neutral-500', 
-    accentText: 'text-fuchsia-400', 
-    progressBg: 'from-purple-600 to-fuchsia-500', 
-    balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' 
-  },
-  'forest-moss': { 
-    card: 'bg-stone-900 border-emerald-950 text-stone-100 shadow-2xl', 
-    textMuted: 'text-stone-400', 
-    accentText: 'text-green-400', 
-    progressBg: 'from-emerald-700 to-green-500', 
-    balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' 
-  },
-  'default': { 
-    card: 'bg-[#12161A] border-[#1E2329] text-slate-100 shadow-2xl', 
-    textMuted: 'text-slate-400', 
-    accentText: 'text-[#BFEC25]', 
-    progressBg: 'from-[#BFEC25] to-[#A3CB1B]', 
-    balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' 
-  }
+  'emerald-cyber': { card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', textMuted: 'text-zinc-500', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/10' },
+  'velvet-rose': { card: 'bg-neutral-900 border-purple-900/40 text-rose-50 shadow-2xl', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/10' },
+  'neon-sunset': { card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/10' },
+  'amber-gold': { card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/10' },
+  'midnight-blue': { card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/10' },
+  'nordic-frost': { card: 'bg-slate-800 border-slate-750 text-slate-50 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/10' },
+  'crimson-tide': { card: 'bg-slate-950 border-red-950 text-red-100 shadow-2xl', textMuted: 'text-zinc-400', accentText: 'text-[#E63946]', progressBg: 'from-[#E63946] to-[#9B2226]', balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' },
+  'dracula-vamp': { card: 'bg-zinc-900 border-fuchsia-950 text-purple-200 shadow-2xl', textMuted: 'text-neutral-500', accentText: 'text-fuchsia-400', progressBg: 'from-purple-600 to-fuchsia-500', balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' },
+  'forest-moss': { card: 'bg-stone-900 border-emerald-950 text-stone-100 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-emerald-700 to-green-500', balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' },
+  'default': { card: 'bg-[#12161A] border-[#1E2329] text-slate-100 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' }
 };
 
 export default function DashboardPage() {
@@ -163,6 +112,9 @@ export default function DashboardPage() {
   const [announcement, setAnnouncement] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
+  
+  // State Baru untuk Data Pengunjung
+  const [visitorStats, setVisitorStats] = useState({ totalViews: 0, uniqueCount: 0 });
 
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
@@ -180,6 +132,22 @@ export default function DashboardPage() {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
         if (settingsData[0].logo_url) setLogoUrl(settingsData[0].logo_url);
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
+      }
+
+      // 🟢 PROSES QUERY DATA LOG PENGUNJUNG
+      try {
+        const { count: countViews } = await supabase
+          .from('visitor_logs')
+          .select('*', { count: 'exact', head: true });
+
+        const { data: listIps } = await supabase
+          .from('visitor_logs')
+          .select('ip_address');
+
+        const uniqueIpsCount = listIps ? new Set(listIps.map(v => v.ip_address)).size : 0;
+        setVisitorStats({ totalViews: countViews || 0, uniqueCount: uniqueIpsCount });
+      } catch (visErr) {
+        console.error('Gagal memuat analitik log:', visErr);
       }
 
       const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
@@ -344,7 +312,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-white">
       
-      {/* 🌐 SELEKTOR PILIHAN 3 BAHASA (Hilang saat dicetak) */}
+      {/* 🌐 SELEKTOR PILIHAN 3 BAHASA */}
       <div className="flex justify-end items-center gap-2 mb-2 print:hidden">
         <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Select Language:</span>
         <select 
@@ -358,7 +326,7 @@ export default function DashboardPage() {
         </select>
       </div>
       
-      {/* 📢 ANNOUNCEMENT BANNER (Hilang saat dicetak) */}
+      {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
         <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner print:hidden">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
@@ -367,8 +335,10 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* STRUKTUR UTAMA DASHBOARD */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
+        {/* KAS BERSIH */}
         <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl border border-white/5 transition-transform duration-300 hover:scale-[1.01]`}>
           <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
@@ -398,6 +368,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* REKAP CARD UANG MASUK & BELANJA */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/40`}>
             <div className="flex justify-between items-start">
@@ -424,6 +395,26 @@ export default function DashboardPage() {
 
       </div>
 
+      {/* 📊 BARU: CARD LOG TRAFIK PENGUNJUNG APLIKASI */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
+        <div className={`p-4 ${style.card} border rounded-2xl flex items-center gap-4 transition-all hover:border-zinc-700/60`}>
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-base shadow-sm">📈</div>
+          <div>
+            <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalKunjungan}</p>
+            <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.totalViews} <span className="text-xs font-normal text-slate-400 font-sans">Kali</span></h4>
+          </div>
+        </div>
+
+        <div className={`p-4 ${style.card} border rounded-2xl flex items-center gap-4 transition-all hover:border-zinc-700/60`}>
+          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-base shadow-sm">👥</div>
+          <div>
+            <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.pengunjungUnik}</p>
+            <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.uniqueCount} <span className="text-xs font-normal text-slate-400 font-sans">Orang</span></h4>
+          </div>
+        </div>
+      </div>
+
+      {/* TARGET PLAFON PROGRESS */}
       <div className={`p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -440,6 +431,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
           <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>{dict.rekapIncome}</h4>
@@ -466,6 +458,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* MUTASI MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className={`p-5 ${style.card} border-l-4 border-l-emerald-500 rounded-2xl space-y-3.5 shadow-xl`}>
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
