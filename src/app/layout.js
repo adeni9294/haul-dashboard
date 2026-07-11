@@ -25,7 +25,6 @@ const THEME_STYLES = {
   'default': { body: 'bg-[#0B0E11] text-slate-100', card: 'bg-[#12161A] border-[#1E2329] text-slate-100', navBg: 'bg-[#12161A]/70 border-zinc-800/60', innerBg: 'bg-black/30 border border-slate-800/40', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]' }
 };
 
-// Fungsi helper penarik class Tailwind murni untuk diekspor menjadi CSS Variable murni
 const extractColorClass = (classes, type) => {
   if (!classes) return '';
   const part = classes.split(' ').find(c => c.startsWith(type));
@@ -58,6 +57,33 @@ export default function RootLayout({ children }) {
     checkAdminSession();
     loadHeaderSettings();
     setShowMainMenuDrawer(false); 
+
+    // 🟢 FITUR TAMBAHAN: Mencatat Log Pengunjung dari Sisi Client
+    const recordVisitorLog = async () => {
+      try {
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+        
+        // Mengambil IP publik via pihak ketiga karena client-side tidak bisa membaca header Vercel secara langsung
+        let ipAddress = 'unknown';
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const ipData = await res.json();
+          ipAddress = ipData.ip;
+        } catch (e) {
+          console.log('Gagal mendapatkan IP via ipify, menggunakan default.');
+        }
+
+        await supabase.from('visitor_logs').insert({
+          path: pathname,
+          ip_address: ipAddress,
+          user_agent: window.navigator.userAgent || 'unknown'
+        });
+      } catch (err) {
+        console.error('Gagal menyimpan log pengunjung:', err);
+      }
+    };
+
+    recordVisitorLog();
 
     const updateTime = () => {
       const sekarang = new Date();
@@ -180,7 +206,6 @@ export default function RootLayout({ children }) {
 
   const listRekening = parseBankInfo(bankInfo);
 
-  // Parsing warna HEX custom untuk diinjeksi ke level root document variable CSS
   const customHexBg = extractColorClass(currentStyle.body, 'bg-[');
   const customHexCard = extractColorClass(currentStyle.card, 'bg-[');
   const customHexBorder = extractColorClass(currentStyle.card, 'border-[');
@@ -193,7 +218,6 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      {/* PERBAIKAN UTAMA: Menginjeksikan style dinamis global token ke body agar halaman anak ikut berubah warnanya */}
       <body 
         className={`${currentStyle.body} font-['Poppins'] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}
         style={{
