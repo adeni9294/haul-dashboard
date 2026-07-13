@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Analytics } from '@vercel/analytics/next';
 import '@/app/globals.css';
 
 const THEME_STYLES = {
@@ -416,6 +417,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
         )}
+        <Analytics />
       </body>
     </html>
   );
