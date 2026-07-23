@@ -11,6 +11,11 @@ export default function KepanitiaanPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // ➕ State Periode Haul
+  const [periodeList, setPeriodeList] = useState([]);
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
+  const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
+
   // Inisialisasi Supabase Client
   const getSupabase = () => {
     return createClient(
@@ -25,7 +30,7 @@ export default function KepanitiaanPage() {
 
     const interval = setInterval(checkAdminSession, 500);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedPeriodeId]);
 
   // Memeriksa status login admin
   async function checkAdminSession() {
@@ -40,15 +45,40 @@ export default function KepanitiaanPage() {
     }
   }
 
-  // Mengambil data dari tabel 'committee'
+  // Mengambil data dari tabel 'committee' berdasarkan periode
   async function loadPanitia() {
     try {
       setLoading(true);
       const supabase = getSupabase();
-      const { data, error } = await supabase
+
+      // 1. Memuat Daftar Periode
+      let activePeriodeId = selectedPeriodeId;
+      const { data: listPeriode } = await supabase
+        .from('periode_haul')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (listPeriode && listPeriode.length > 0) {
+        setPeriodeList(listPeriode);
+        if (!activePeriodeId) {
+          activePeriodeId = listPeriode[0].id;
+          setSelectedPeriodeId(activePeriodeId);
+        }
+        const found = listPeriode.find(p => p.id === activePeriodeId) || listPeriode[0];
+        setCurrentPeriodeObj(found);
+      }
+
+      // 2. Query Data Kepanitiaan berdasarkan Periode
+      let query = supabase
         .from('committee')
         .select('*')
         .order('id', { ascending: true });
+
+      if (activePeriodeId) {
+        query = query.eq('periode_id', activePeriodeId);
+      }
+
+      const { data, error } = await query;
 
       if (!error && data) {
         setPanitiaList(data);
@@ -66,15 +96,17 @@ export default function KepanitiaanPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
+    if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini telah ditutup buku. Tidak dapat merubah data kepanitiaan.');
     if (!nama.trim()) return;
 
     const supabase = getSupabase();
     
-    // Payload disesuaikan persis dengan struktur kolom database Anda
+    // Payload disesuaikan dengan struktur kolom database + periode_id
     const payload = { 
       name: nama.trim(),
       position: jabatan.trim() || '-',
-      phone: nomorHp.trim() || '-'
+      phone: nomorHp.trim() || '-',
+      periode_id: selectedPeriodeId // ➕ Connect ke Periode Aktif
     };
 
     try {
@@ -101,6 +133,7 @@ export default function KepanitiaanPage() {
 
   const handleEdit = (p) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
+    if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     setEditingId(p.id);
     setNama(p.name || '');
     setJabatan(p.position || '');
@@ -110,6 +143,7 @@ export default function KepanitiaanPage() {
 
   const handleDelete = async (id) => {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
+    if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     if (!confirm('Apakah Anda yakin ingin menghapus anggota panitia ini?')) return;
     
     try {
@@ -128,17 +162,44 @@ export default function KepanitiaanPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
+      {/* HEADER PAGE STATUS & PERIODE SELECTOR */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider">👥 Susunan Kepanitiaan Haul</h2>
           <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
+
+        {/* SELECTOR PERIODE */}
+        {periodeList.length > 0 && (
+          <div className="flex items-center bg-slate-950 p-1 border border-slate-800 rounded-xl">
+            <span className="text-[9px] font-mono font-bold text-slate-400 px-2 uppercase">Periode Haul:</span>
+            <select
+              value={selectedPeriodeId || ''}
+              onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+              className="bg-slate-900 border border-slate-800 text-[10px] text-amber-400 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+            >
+              {periodeList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      {/* INDIKATOR TUTUP BUKU */}
+      {currentPeriodeObj?.is_closed && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex items-center justify-between text-amber-400 font-mono text-xs">
+          <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Susunan kepanitiaan bersifat Read-Only.</span>
+          <span className="bg-amber-500 text-black px-2 py-0.5 rounded font-bold text-[10px] uppercase">Arsip</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* FORM INPUT ADMIN */}
-        {isAdmin ? (
+        {isAdmin && !currentPeriodeObj?.is_closed ? (
           <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
             <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">
               {editingId ? '🔄 Perbarui Data Panitia' : '➕ Tambah Anggota Panitia'}
@@ -165,8 +226,12 @@ export default function KepanitiaanPage() {
           </form>
         ) : (
           <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
-            <p className="text-xs text-slate-400 font-medium">💡 Anda berada di Mode Publik (Lihat Saja).</p>
-            <p className="text-[10px] text-slate-500 font-mono">Gunakan akses admin untuk mengaktifkan formulir manajemen panitia.</p>
+            <p className="text-xs text-slate-400 font-medium">
+              {currentPeriodeObj?.is_closed ? '🔒 Periode ini sudah ditutup buku.' : '💡 Anda berada di Mode Publik (Lihat Saja).'}
+            </p>
+            <p className="text-[10px] text-slate-500 font-mono">
+              {currentPeriodeObj?.is_closed ? 'Struktur kepanitiaan telah dikunci.' : 'Gunakan akses admin untuk mengaktifkan formulir manajemen panitia.'}
+            </p>
           </div>
         )}
 
@@ -175,7 +240,7 @@ export default function KepanitiaanPage() {
           <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">📋 Susunan Kepanitiaan Terdaftar ({panitiaList.length})</h3>
           <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
             {panitiaList.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-6 text-center">Belum ada daftar kepanitiaan yang ditemukan di tabel database.</p>
+              <p className="text-xs text-slate-500 font-mono py-6 text-center">Belum ada daftar kepanitiaan yang ditemukan pada periode ini.</p>
             ) : (
               panitiaList.map((p) => (
                 <div key={p.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
@@ -192,8 +257,14 @@ export default function KepanitiaanPage() {
                   
                   {isAdmin && (
                     <div className="flex gap-3 font-mono text-[11px]">
-                      <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                      <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                      {currentPeriodeObj?.is_closed ? (
+                        <span className="text-amber-500 italic text-[10px]">🔒 Terkunci</span>
+                      ) : (
+                        <>
+                          <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold">Edit</button>
+                          <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
