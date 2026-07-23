@@ -6,10 +6,32 @@ export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
   const [budgetList, setBudgetList] = useState([]);
   const [expenseSummary, setExpenseSummary] = useState({});
-  const [categoryName, setCategoryName] = useState('');
+  
+  // State Form Anggaran sesuai permintaan
+  const [allocationName, setAllocationName] = useState('');
+  const [category, setCategory] = useState('Acara (Hiburan & Atraksi)');
   const [plannedAmount, setPlannedAmount] = useState('');
+  
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Daftar Kategori Pos Buku Kas (disesuaikan dengan sistem Anda)
+  const categoryOptions = [
+    'Acara (Hiburan & Atraksi)',
+    'Administrasi',
+    'Akomodasi & Transportasi',
+    'Dana tak terduga',
+    'Donatur Khitanan Massal',
+    'Donatur lain-lain',
+    'Honorarium',
+    'Iuran wajib warga cibogo kidul (ahli waris)',
+    'Iuran wajib warga luar cibogo kidul (ahli waris)',
+    'Khitanan Massal',
+    'Konsumsi pengunjung',
+    'Konsumsi VIP',
+    'Logistik & Perlengkapan',
+    'Perantauan (Ahli waris)'
+  ];
 
   // ➕ State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
@@ -101,14 +123,15 @@ export default function AnggaranPage() {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini telah ditutup buku!');
-    if (!categoryName.trim() || !plannedAmount) return;
+    if (!allocationName.trim() || !plannedAmount) return;
 
     const supabase = getSupabase();
     const cleanAmount = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
 
     const payload = { 
-      category_name: categoryName.trim(),
-      planned_amount: cleanAmount,
+      category_name: allocationName.trim(), // Nama Alokasi
+      category: category,                   // Pilihan Kategori Pos Buku Kas
+      planned_amount: cleanAmount,          // Nominal
       periode_id: selectedPeriodeId
     };
 
@@ -123,7 +146,8 @@ export default function AnggaranPage() {
         alert('🟢 Pos rencana anggaran baru berhasil ditambahkan!');
       }
 
-      setCategoryName('');
+      setAllocationName('');
+      setCategory(categoryOptions[0]);
       setPlannedAmount('');
       setEditingId(null);
       await loadBudgetsAndExpenses();
@@ -137,7 +161,8 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     setEditingId(b.id);
-    setCategoryName(b.category_name || '');
+    setAllocationName(b.category_name || '');
+    setCategory(b.category || categoryOptions[0]);
     setPlannedAmount(b.planned_amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -160,7 +185,6 @@ export default function AnggaranPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  // Total Keseluruhan
   const totalRencana = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.planned_amount) || 0), 0);
   const totalRealisasi = Object.values(expenseSummary).reduce((acc, curr) => acc + curr, 0);
   const totalSelisih = totalRencana - totalRealisasi;
@@ -179,7 +203,6 @@ export default function AnggaranPage() {
           <p className="text-[10px] opacity-80 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
 
-        {/* SELECTOR PERIODE */}
         {periodeList.length > 0 && (
           <div className="flex items-center bg-black/30 p-1 border border-white/20 rounded-xl">
             <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">Periode Haul:</span>
@@ -226,25 +249,45 @@ export default function AnggaranPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-        {/* INTERFACE FORM INPUT (GLASS) */}
+        {/* INTERFACE FORM INPUT (NAMA ALOKASI -> KATEGORI -> NOMINAL) */}
         {isAdmin && !currentPeriodeObj?.is_closed ? (
           <form onSubmit={handleSubmit} className="p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl h-fit space-y-4 shadow-xl">
             <h3 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
               <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Anggaran' : 'Tambah Anggaran'}
             </h3>
+            
+            {/* 1. NAMA ALOKASI */}
             <div>
-              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Nama Alokasi / Kategori</label>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Nama Alokasi</label>
               <input 
                 type="text" 
                 required 
-                value={categoryName} 
-                onChange={(e) => setCategoryName(e.target.value)} 
-                placeholder="Contoh: Tenda & Panggung" 
+                value={allocationName} 
+                onChange={(e) => setAllocationName(e.target.value)} 
+                placeholder="Contoh: Sewa Tenda Utama & Panggung" 
                 className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-white focus:outline-none placeholder:text-slate-400" 
               />
             </div>
+
+            {/* 2. KATEGORI */}
             <div>
-              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Anggaran (Rp)</label>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Kategori Pos Buku Kas</label>
+              <select 
+                value={category} 
+                onChange={(e) => setCategory(e.target.value)} 
+                className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-xs text-amber-300 font-mono focus:outline-none cursor-pointer"
+              >
+                {categoryOptions.map((cat, idx) => (
+                  <option key={idx} value={cat} className="bg-zinc-900 text-white">
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 3. NOMINAL (JUMLAH ANGGARAN) */}
+            <div>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Anggaran (Nominal Rp)</label>
               <input 
                 type="number" 
                 required 
@@ -259,7 +302,7 @@ export default function AnggaranPage() {
               {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
             </button>
             {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setCategoryName(''); setPlannedAmount(''); }} className="w-full py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold rounded-xl mt-2 transition-all">Batal Edit</button>
+              <button type="button" onClick={() => { setEditingId(null); setAllocationName(''); setPlannedAmount(''); }} className="w-full py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold rounded-xl mt-2 transition-all">Batal Edit</button>
             )}
           </form>
         ) : (
@@ -284,7 +327,9 @@ export default function AnggaranPage() {
             ) : (
               budgetList.map((b) => {
                 const plan = parseFloat(b.planned_amount) || 0;
-                const real = expenseSummary[b.category_name?.trim().toLowerCase()] || 0;
+                // Cocokkan realisasi berdasarkan kategori yang dipilih atau nama alokasi
+                const catKey = (b.category || b.category_name || '').trim().toLowerCase();
+                const real = expenseSummary[catKey] || expenseSummary[(b.category_name || '').trim().toLowerCase()] || 0;
                 const selisih = plan - real;
                 const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
 
@@ -292,8 +337,9 @@ export default function AnggaranPage() {
                   <div key={b.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl space-y-2 hover:border-white/30 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
-                        {/* 🌟 NAMA ALOKASI / KATEGORI ANGGARAN KEMBALI MUNCUL DI SINI */}
-                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.category_name || 'Tanpa Kategori'}</p>
+                        {/* NAMA ALOKASI & KATEGORI */}
+                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.category_name || 'Tanpa Nama Alokasi'}</p>
+                        <p className="text-[10px] text-amber-300 font-mono mt-0.5">📂 Kategori: {b.category || 'Umum'}</p>
                       </div>
                       {isAdmin && (
                         <div className="flex gap-3 font-mono text-[11px] shrink-0 ml-2">
