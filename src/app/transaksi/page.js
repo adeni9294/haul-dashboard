@@ -14,6 +14,7 @@ const translations = {
     btnTambah: "➕ Tambah Kas",
     btnExcel: "📊 Excel Data",
     btnCetak: "🖨️ Cetak LPJ",
+    btnTutupBuku: "🔒 Tutup Buku Periode",
     searchPlaceholder: "Cari uraian keterangan...",
     allCash: "Semua Aliran Kas",
     onlyIn: "🟢 Hanya Kas Masuk",
@@ -44,7 +45,10 @@ const translations = {
     city: "Cirebon",
     summarySect: "IKHTISAR REKAP TOTAL PER KATEGORI POS KAS",
     summaryCat: "Kategori Pos Anggaran",
-    summaryTotal: "Total Realisasi Dana"
+    summaryTotal: "Total Realisasi Dana",
+    selectPeriod: "PERIODE HAUL:",
+    statusClosed: "(Tutup Buku)",
+    statusActive: "(Aktif)"
   },
   jv: { 
     title: "💰 Buku Kas & Transaksi Haul",
@@ -52,6 +56,7 @@ const translations = {
     btnTambah: "➕ Tambah Kas",
     btnExcel: "📊 Pragat Excel",
     btnCetak: "🖨️ Cetak LPJ",
+    btnTutupBuku: "🔒 Tutup Buku Periode",
     searchPlaceholder: "Goleki keterangan...",
     allCash: "Kabeh Aliran Kas",
     onlyIn: "🟢 Pragat Mlebu Tok",
@@ -82,7 +87,10 @@ const translations = {
     city: "Cirebon",
     summarySect: "IKHTISAR REKAP TOTAL PER KATEGORI POS KAS",
     summaryCat: "Kategori Pos Anggaran",
-    summaryTotal: "Total Realisasi Dana"
+    summaryTotal: "Total Realisasi Dana",
+    selectPeriod: "PERIODE HAUL:",
+    statusClosed: "(Rampung)",
+    statusActive: "(Mlaku)"
   },
   en: {
     title: "💰 Cash Book & Haul Transactions",
@@ -90,6 +98,7 @@ const translations = {
     btnTambah: "➕ Add Cash",
     btnExcel: "📊 Export Excel",
     btnCetak: "🖨️ Print Report",
+    btnTutupBuku: "🔒 Close Accounting Period",
     searchPlaceholder: "Search description...",
     allCash: "All Cash Flows",
     onlyIn: "🟢 Cash Inflow Only",
@@ -120,7 +129,10 @@ const translations = {
     city: "Cirebon",
     summarySect: "SUMMARY OF TOTALS BY CASH POSITION CATEGORY",
     summaryCat: "Budget Position Category",
-    summaryTotal: "Total Realized Funds"
+    summaryTotal: "Total Realized Funds",
+    selectPeriod: "HAUL PERIOD:",
+    statusClosed: "(Closed)",
+    statusActive: "(Active)"
   }
 };
 
@@ -133,6 +145,15 @@ export default function TransaksiPage() {
   const [allExpenses, setAllExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   
+  // ➕ State Periode Haul
+  const [periodeList, setPeriodeList] = useState([]);
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
+  const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
+  
+  // Modal Tutup Buku
+  const [showModalTutupBuku, setShowModalTutupBuku] = useState(false);
+  const [namaPeriodeBaruInput, setNamaPeriodeBaruInput] = useState('');
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [metaOrg, setMetaOrg] = useState({ 
     name: 'PANITIA HAUL', 
@@ -161,7 +182,7 @@ export default function TransaksiPage() {
 
     const interval = setInterval(checkAdminSessionOnly, 500);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedPeriodeId]);
 
   async function checkAdminSessionAndLoad() {
     const savedPassword = localStorage.getItem('admin_password_haul');
@@ -192,6 +213,23 @@ export default function TransaksiPage() {
   async function loadData() {
     try {
       setLoading(true);
+
+      // 1. MEMUAT DAFTAR PERIODE HAUL
+      let activePeriodeId = selectedPeriodeId;
+      const { data: listPeriode } = await supabase
+        .from('periode_haul')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (listPeriode && listPeriode.length > 0) {
+        setPeriodeList(listPeriode);
+        if (!activePeriodeId) {
+          activePeriodeId = listPeriode[0].id;
+          setSelectedPeriodeId(activePeriodeId);
+        }
+        const found = listPeriode.find(p => p.id === activePeriodeId) || listPeriode[0];
+        setCurrentPeriodeObj(found);
+      }
       
       const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
       let currentName = 'PANITIA HAUL MAQBAROH BUYUT KEPUH & BUYUT BESUS';
@@ -224,11 +262,20 @@ export default function TransaksiPage() {
         if (!formCategory) setFormCategory(catDb[0].name);
       }
 
-      const { data: donationsDb } = await supabase.from('donation_details').select('*');
-      const { data: expensesDb } = await supabase.from('transactions').select('*');
+      // 2. QUERY TRANSAKSI BERDASARKAN PERIODE
+      let donQuery = supabase.from('donation_details').select('*');
+      let expQuery = supabase.from('transactions').select('*');
+
+      if (activePeriodeId) {
+        donQuery = donQuery.eq('periode_id', activePeriodeId);
+        expQuery = expQuery.eq('periode_id', activePeriodeId);
+      }
+
+      const { data: donationsDb } = await donQuery;
+      const { data: expensesDb } = await expQuery;
         
-      if (donationsDb) setAllDonations(donationsDb);
-      if (expensesDb) setAllExpenses(expensesDb);
+      setAllDonations(donationsDb || []);
+      setAllExpenses(expensesDb || []);
     } catch (e) {
       console.error("Gagal load data: ", e);
     } finally {
@@ -239,6 +286,10 @@ export default function TransaksiPage() {
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!isAdmin) return;
+    if (currentPeriodeObj?.is_closed) {
+      alert('🔒 Periode ini telah ditutup buku. Tidak dapat menambah atau mengubah transaksi.');
+      return;
+    }
     
     const cleanAmount = parseFloat(formAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
     if (cleanAmount <= 0) return;
@@ -250,7 +301,8 @@ export default function TransaksiPage() {
       type: formType === 'Pengeluaran' ? 'keluar' : 'masuk',
       category: finalCategory,
       note: formDescription.trim(),
-      amount: cleanAmount
+      amount: cleanAmount,
+      periode_id: selectedPeriodeId // ➕ Sertakan periode_id aktif
     };
 
     try {
@@ -269,7 +321,38 @@ export default function TransaksiPage() {
     }
   };
 
+  // ➕ PROSES EKSEKUSI TUTUP BUKU (RPC)
+  const handleProsesTutupBuku = async (e) => {
+    e.preventDefault();
+    if (!isAdmin || !selectedPeriodeId) return;
+    if (!namaPeriodeBaruInput.trim()) {
+      alert('Harap isi nama periode baru!');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('proses_tutup_buku', {
+        p_periode_id_lama: selectedPeriodeId,
+        p_nama_periode_baru: namaPeriodeBaruInput.trim()
+      });
+
+      if (error) throw error;
+
+      alert('🎉 Tutup Buku Berhasil! Periode baru telah otomatis dibuat.');
+      setShowModalTutupBuku(false);
+      setNamaPeriodeBaruInput('');
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Gagal Tutup Buku: ${err.message}`);
+    }
+  };
+
   const triggerEdit = (item) => {
+    if (currentPeriodeObj?.is_closed) {
+      alert('🔒 Periode ini sudah ditutup buku dan bersifat Read-Only!');
+      return;
+    }
     setSelectedId(item.id);
     setIsEditMode(true);
     setFormDate(item.transaction_date);
@@ -282,6 +365,10 @@ export default function TransaksiPage() {
 
   const triggerHapus = async (id, isFromExpenses) => {
     if (!isAdmin) return;
+    if (currentPeriodeObj?.is_closed) {
+      alert('🔒 Periode ini telah ditutup buku!');
+      return;
+    }
     if (!confirm('Hapus permanen catatan transaksi internal ini?')) return;
     try {
       const targetTable = isFromExpenses ? 'transactions' : 'donation_details';
@@ -444,7 +531,7 @@ export default function TransaksiPage() {
   return (
     <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white relative">
       
-      {/* 🛠️ ULTRA TOTAL KILLER PRINT STYLES */}
+      {/* 🛠️ PRINT STYLES */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           body * {
@@ -471,7 +558,6 @@ export default function TransaksiPage() {
             color: black !important;
           }
           
-          /* 🔥 MEMAKSA KONTAINER DAN ASSET LOGO CLOUD RENDERING SAAT PRINT */
           .cetak-wrapper-logo, .cetak-wrapper-logo img {
             display: block !important;
             visibility: visible !important;
@@ -493,8 +579,10 @@ export default function TransaksiPage() {
         }
       `}} />
 
-      {/* AREA UTAMA INTERFACES - HIDDEN KETIKA CETAK */}
+      {/* AREA UTAMA INTERFACE */}
       <div className="print:hidden space-y-4">
+        
+        {/* HEADER & TOP CONTROLS */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
           <div>
             <div className="flex items-center gap-2">
@@ -503,21 +591,63 @@ export default function TransaksiPage() {
             </div>
             <p className="text-[10px] font-mono mt-0.5 text-slate-400">{t.subtitle}</p>
           </div>
+
+          {/* ACTION BUTTONS & PERIODE SELECTOR */}
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            
+            {/* SELECTOR PERIODE HAUL */}
+            {periodeList.length > 0 && (
+              <div className="flex items-center bg-slate-950 p-1 border border-slate-800 rounded-xl mr-1">
+                <span className="text-[9px] font-mono font-bold text-slate-400 px-2 uppercase">{t.selectPeriod}</span>
+                <select
+                  value={selectedPeriodeId || ''}
+                  onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+                  className="bg-slate-900 border border-slate-800 text-[10px] text-amber-400 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+                >
+                  {periodeList.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nama_periode} {p.is_closed ? t.statusClosed : t.statusActive}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* LANGUAGE SELECTOR */}
             <div className="flex bg-slate-950 p-1 border border-slate-800 rounded-xl mr-1">
               <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'id' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>ID 🇮🇩</button>
               <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'jv' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>JV 🎯</button>
               <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>EN 🇬🇧</button>
             </div>
 
-            {isAdmin && (
-              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl shadow-md">{t.btnTambah}</button>
+            {/* TOMBOL TUTUP BUKU (ADMIN ONLY & JIKA PERIODE MASIH AKTIF) */}
+            {isAdmin && currentPeriodeObj && !currentPeriodeObj.is_closed && (
+              <button 
+                onClick={() => setShowModalTutupBuku(true)} 
+                className="flex-1 sm:flex-initial px-3 py-2 bg-purple-700 hover:bg-purple-600 text-white font-bold uppercase rounded-xl shadow-md transition-all text-[10px]"
+              >
+                {t.btnTutupBuku}
+              </button>
             )}
-            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 text-white font-bold uppercase rounded-xl shadow-md">{t.btnExcel}</button>
-            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl shadow-md">{t.btnCetak}</button>
+
+            {isAdmin && !currentPeriodeObj?.is_closed && (
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl shadow-md text-[10px]">{t.btnTambah}</button>
+            )}
+            
+            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 text-white font-bold uppercase rounded-xl shadow-md text-[10px]">{t.btnExcel}</button>
+            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl shadow-md text-[10px]">{t.btnCetak}</button>
           </div>
         </div>
 
+        {/* INDICATOR STATUS PERIODE CLOSED */}
+        {currentPeriodeObj?.is_closed && (
+          <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex items-center justify-between text-amber-400 font-mono text-xs">
+            <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku pada {currentPeriodeObj.tanggal_selesai}. Data bersifat Read-Only.</span>
+            <span className="bg-amber-500 text-black px-2 py-0.5 rounded font-bold text-[10px] uppercase">Arsip</span>
+          </div>
+        )}
+
+        {/* SEARCH & FILTERS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900 border border-slate-800/60 p-3 rounded-xl">
           <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none">
@@ -544,30 +674,32 @@ export default function TransaksiPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-slate-200">
-              {filteredTrans.map((t, idx) => {
-                const isKeluar = t.aliranJenis === 'Keluar';
+              {filteredTrans.map((tItem, idx) => {
+                const isKeluar = tItem.aliranJenis === 'Keluar';
                 return (
                   <tr key={idx} className="hover:bg-slate-950/20 transition-all">
-                    <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{t.transaction_date}</td>
+                    <td className="p-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{tItem.transaction_date}</td>
                     <td className="p-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase ${!isKeluar ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
-                        {t.category}
+                        {tItem.category}
                       </span> 
                     </td>
                     <td className="p-3 font-medium text-[11px] sm:text-xs text-neutral-200 uppercase tracking-wide">
-                      {t.uraian}
+                      {tItem.uraian}
                     </td>
                     <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isKeluar ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {!isKeluar ? '+' : '-'}{formatRupiah(t.amount)}
+                      {!isKeluar ? '+' : '-'}{formatRupiah(tItem.amount)}
                     </td>
                     {isAdmin && (
                       <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
-                        {t.isSystem ? (
+                        {currentPeriodeObj?.is_closed ? (
+                          <span className="text-amber-500 italic text-[10px]">🔒 Terkunci (Closed)</span>
+                        ) : tItem.isSystem ? (
                           <>
-                            {t.isFromExpenses && (
-                              <button type="button" onClick={() => triggerEdit(t)} className="text-amber-400 hover:underline font-bold px-1 py-0.5">Edit</button>
+                            {tItem.isFromExpenses && (
+                              <button type="button" onClick={() => triggerEdit(tItem)} className="text-amber-400 hover:underline font-bold px-1 py-0.5">Edit</button>
                             )}
-                            <button type="button" onClick={() => triggerHapus(t.id, t.isFromExpenses)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
+                            <button type="button" onClick={() => triggerHapus(tItem.id, tItem.isFromExpenses)} className="text-rose-400 hover:underline font-bold px-1 py-0.5">Hapus</button>
                           </>
                         ) : (
                           <span className="text-slate-600 italic text-[10px]">🔒 Terkunci Privasi</span>
@@ -585,8 +717,37 @@ export default function TransaksiPage() {
         </div>
       </div>
 
-      {/* REGISTRASI MODAL INPUT DIALOG */}
-      {showModal && isAdmin && (
+      {/* MODAL TUTUP BUKU */}
+      {showModalTutupBuku && isAdmin && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 print:hidden">
+          <form onSubmit={handleProsesTutupBuku} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
+            <h3 className="text-sm font-black uppercase tracking-wider text-purple-400">
+              🔒 Konfirmasi Tutup Buku Periode
+            </h3>
+            <p className="text-xs text-slate-400">
+              Proses ini akan mengunci seluruh transaksi di <strong>{currentPeriodeObj?.nama_periode}</strong> dan membentuk Saldo Kas Akhir sebesar <strong className="text-emerald-400">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</strong> menjadi Saldo Kas Awal periode baru.
+            </p>
+            <div>
+              <label className="block text-slate-400 mb-1 text-[11px]">Nama Periode Baru</label>
+              <input 
+                type="text" 
+                placeholder="Contoh: Haul 2027" 
+                required 
+                value={namaPeriodeBaruInput} 
+                onChange={e => setNamaPeriodeBaruInput(e.target.value)} 
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-bold text-amber-400" 
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => setShowModalTutupBuku(false)} className="flex-1 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">Batal</button>
+              <button type="submit" className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl shadow-lg">Eksekusi Tutup Buku</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* REGISTRASI MODAL INPUT TRANSAKSI */}
+      {showModal && isAdmin && !currentPeriodeObj?.is_closed && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 print:hidden">
           <form onSubmit={handleSaveTransaction} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
             <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">
@@ -629,13 +790,8 @@ export default function TransaksiPage() {
 
       {/* 🖨️ AREA CETAK LPJ PROFESIONAL */}
       <div className="hidden print:block bg-white text-black p-2 font-serif text-[11px] leading-relaxed w-full">
-        
-        {/* ==================== HALAMAN 1: REKAP / SUMMARY UTAMA ==================== */}
         <div className="print-page-wrapper">
-          {/* Kop Laporan Resmi dengan Aliansi Logo */}
           <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6">
-            
-            {/* 🌐 CLOUD STORAGE INTEGRATION: Memanggil asset mentah langsung dari Supabase Public Bucket */}
             <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
                 src={`${supabaseUrl}/storage/v1/object/public/logos/logo_system.png`}
@@ -644,24 +800,18 @@ export default function TransaksiPage() {
                 crossOrigin="anonymous"
               />
             </div>
-            
-            {/* Sisi Tengah: Detail Text Organisasi */}
             <div className="text-center flex-1 px-2">
               <h1 className="text-lg font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
               <p className="text-[9px] font-sans italic text-gray-700 mt-0.5">{metaOrg.address}</p>
             </div>
-
-            {/* Sisi Kanan: Ruang Kosong Penyeimbang Grid Kop */}
             <div className="w-16 h-16 flex-shrink-0 print:hidden sm:block"></div>
           </div>
           
-          {/* Judul Laporan */}
           <div className="text-center mb-6">
             <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">{t.lpjTitle}</h2>
             <p className="text-[9px] text-gray-500 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
 
-          {/* Neraca Laporan Utama */}
           <table className="w-full border-collapse border border-black text-[11px] mb-6 font-sans">
             <thead>
               <tr className="bg-gray-100 uppercase text-[9px] tracking-wider text-center">
@@ -685,11 +835,9 @@ export default function TransaksiPage() {
             </tbody>
           </table>
 
-          {/* TABEL REKAP PER KATEGORI */}
           <div className="space-y-4">
             <h3 className="font-bold text-xs uppercase border-b border-black pb-1 font-sans">{t.summarySect}</h3>
             <div className="grid grid-cols-2 gap-4">
-              {/* Rekap Pemasukan */}
               <div>
                 <table className="w-full text-left border-collapse border border-black text-[10px] font-sans">
                   <thead>
@@ -709,7 +857,6 @@ export default function TransaksiPage() {
                 </table>
               </div>
 
-              {/* Rekap Pengeluaran */}
               <div>
                 <table className="w-full text-left border-collapse border border-black text-[10px] font-sans">
                   <thead>
@@ -736,13 +883,11 @@ export default function TransaksiPage() {
           </p>
         </div>
 
-
-        {/* ==================== HALAMAN 2: LAMPIRAN RINCIAN DATA ==================== */}
+        {/* HALAMAN 2: RINCIAN MUTASI */}
         <div className="page-break print-page-wrapper">
           <h2 className="text-center font-sans font-bold text-xs uppercase underline tracking-wider mb-4">LAMPIRAN MUTASI PEMBUKUAN ALIRAN KAS</h2>
           
           <div className="space-y-6">
-            {/* TABEL RINCIAN MASUK */}
             <div>
               <h3 className="font-bold text-[10px] uppercase mb-1 font-sans border-b border-black pb-0.5">{t.sectIn}</h3>
               <table className="w-full text-left border-collapse border border-black text-[9px]">
@@ -755,19 +900,18 @@ export default function TransaksiPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {dataTransaksiFinal.filter(x => x.aliranJenis === 'Masuk').map((t, idx) => (
+                  {dataTransaksiFinal.filter(x => x.aliranJenis === 'Masuk').map((tItem, idx) => (
                     <tr key={idx} className="border-b border-gray-200">
-                      <td className="border border-black py-1 px-1.5 font-mono text-center text-gray-700">{t.transaction_date}</td>
-                      <td className="border border-black py-1 px-1.5 uppercase text-gray-700 font-sans">{t.category}</td>
-                      <td className="border border-black py-1 px-1.5 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
-                      <td className="border border-black py-1 px-1.5 text-right font-mono font-bold text-emerald-700">{formatRupiah(t.amount)}</td>
+                      <td className="border border-black py-1 px-1.5 font-mono text-center text-gray-700">{tItem.transaction_date}</td>
+                      <td className="border border-black py-1 px-1.5 uppercase text-gray-700 font-sans">{tItem.category}</td>
+                      <td className="border border-black py-1 px-1.5 uppercase font-sans text-gray-900 tracking-wide">{tItem.uraian}</td>
+                      <td className="border border-black py-1 px-1.5 text-right font-mono font-bold text-emerald-700">{formatRupiah(tItem.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* TABEL RINCIAN KELUAR */}
             <div>
               <h3 className="font-bold text-[10px] uppercase mb-1 font-sans border-b border-black pb-0.5">{t.sectOut}</h3>
               <table className="w-full text-left border-collapse border border-black text-[9px]">
@@ -780,12 +924,12 @@ export default function TransaksiPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((t, idx) => (
+                  {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((tItem, idx) => (
                     <tr key={idx} className="border-b border-gray-200">
-                      <td className="border border-black py-1.5 px-1.5 font-mono text-center text-gray-700">{t.transaction_date}</td>
-                      <td className="border border-black py-1.5 px-1.5 uppercase text-gray-700 font-sans">{t.category}</td>
-                      <td className="border border-black py-1.5 px-1.5 uppercase font-sans text-gray-900 tracking-wide">{t.uraian}</td>
-                      <td className="border border-black py-1.5 px-1.5 text-right font-mono font-bold text-rose-700">{formatRupiah(t.amount)}</td>
+                      <td className="border border-black py-1.5 px-1.5 font-mono text-center text-gray-700">{tItem.transaction_date}</td>
+                      <td className="border border-black py-1.5 px-1.5 uppercase text-gray-700 font-sans">{tItem.category}</td>
+                      <td className="border border-black py-1.5 px-1.5 uppercase font-sans text-gray-900 tracking-wide">{tItem.uraian}</td>
+                      <td className="border border-black py-1.5 px-1.5 text-right font-mono font-bold text-rose-700">{formatRupiah(tItem.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -793,7 +937,6 @@ export default function TransaksiPage() {
             </div>
           </div>
 
-          {/* Validasi Tanda Tangan */}
           <div className="mt-10 break-inside-avoid">
             <p className="text-right text-[10px] text-gray-700 italic mb-10 font-sans">
               {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
