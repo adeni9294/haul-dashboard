@@ -196,12 +196,53 @@ export default function RootLayout({ children }) {
 
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
-  const drawerMenus = [
-    { name: '💰 Transaksi Kas', href: '/transaksi' },
-    { name: '📅 Jadwal Acara', href: '/acara' },
-    { name: '📸 Galeri Dokumentasi', href: '/dokumentasi' },
-    { name: '👥 Kepanitiaan', href: '/kepanitiaan' },
-    ...(isAdmin ? [{ name: '⚙️ Setelan Sistem', href: '/pengaturan' }] : [])
+const drawerMenus = [
+    { 
+      name: 'Transaksi Kas', 
+      href: '/transaksi',
+      icon: (
+        <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Jadwal Acara', 
+      href: '/acara',
+      icon: (
+        <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Galeri Dokumentasi', 
+      href: '/dokumentasi',
+      icon: (
+        <svg className="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Kepanitiaan', 
+      href: '/kepanitiaan',
+      icon: (
+        <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      )
+    },
+    ...(isAdmin ? [{ 
+      name: 'Setelan Sistem', 
+      href: '/pengaturan',
+      icon: (
+        <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    }] : [])
   ];
 
   const listRekening = parseBankInfo(bankInfo);
@@ -367,7 +408,7 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* DRAWER MENU UTAMA */}
+{/* DRAWER MENU UTAMA */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center transition-all" onClick={() => setShowMainMenuDrawer(false)}>
             <div className="w-full max-w-md bg-[#12161A] border-t border-zinc-800 rounded-t-3xl p-6 space-y-4 shadow-2xl transform transition-transform" onClick={(e) => e.stopPropagation()}>
@@ -377,19 +418,33 @@ export default function RootLayout({ children }) {
               </div>
               <div className="grid grid-cols-1 gap-2 pt-2">
                 {drawerMenus.map((dm) => (
-                  <Link key={dm.href} href={dm.href} className={`w-full py-3 px-4 rounded-xl font-medium text-xs text-left flex justify-between items-center ${pathname === dm.href ? 'bg-[#BFEC25]/10 text-[#BFEC25] border border-[#BFEC25]/20' : `bg-black/30 border border-slate-800/40 text-white hover:bg-zinc-800`}`}>
-                    <span>{dm.name}</span>
-                    <span className="opacity-40">›</span>
+                  <Link 
+                    key={dm.href} 
+                    href={dm.href} 
+                    onClick={() => setShowMainMenuDrawer(false)}
+                    className={`w-full py-2.5 px-3.5 rounded-xl font-medium text-xs text-left flex justify-between items-center transition-all ${
+                      pathname === dm.href 
+                        ? 'bg-[#BFEC25]/10 text-[#BFEC25] border border-[#BFEC25]/30' 
+                        : 'bg-black/30 border border-slate-800/40 text-white hover:bg-zinc-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
+                        {dm.icon}
+                      </div>
+                      <span className="font-semibold">{dm.name}</span>
+                    </div>
+                    <span className="opacity-40 text-sm">›</span>
                   </Link>
                 ))}
               </div>
               <div className="pt-4 border-t border-zinc-800">
                 {isAdmin ? (
-                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950 text-rose-400 border border-rose-900 rounded-xl text-xs font-bold uppercase tracking-wide">
+                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-400 border border-rose-900 rounded-xl text-xs font-bold uppercase tracking-wide transition-all">
                     🚪 Keluar Mode Admin
                   </button>
                 ) : (
-                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-[#BFEC25] text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md">
+                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-[#BFEC25] hover:bg-[#a8d41e] text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md transition-all">
                     🔑 Otorisasi Login Admin
                   </button>
                 )}
