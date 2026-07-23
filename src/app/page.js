@@ -29,7 +29,6 @@ const DICTIONARY = {
     operasionalExpense: 'Pengeluaran Operasional',
     totalKunjungan: 'Total Kunjungan Aplikasi',
     pengunjungUnik: 'Pengunjung Unik (IP)',
-    // ➕ Fitur Baru Period
     selectPeriod: 'PILIH PERIODE HAUL:',
     initialBalance: 'Saldo Awal Kas',
     statusClosed: '(Selesai/Tutup Buku)',
@@ -60,7 +59,6 @@ const DICTIONARY = {
     operasionalExpense: 'Pragat Blonjo Operasional',
     totalKunjungan: 'Kabeh Klik Sing Mlebu',
     pengunjungUnik: 'Wong Sing Deleng (IP)',
-    // ➕ Fitur Baru Period
     selectPeriod: 'PILIH PERIODE HAUL:',
     initialBalance: 'Bondo Awal Kas',
     statusClosed: '(Rampung/Tutup Buku)',
@@ -91,7 +89,6 @@ const DICTIONARY = {
     operasionalExpense: 'Operational Expenditure',
     totalKunjungan: 'Total Hits / Pageviews',
     pengunjungUnik: 'Unique Visitors (IP)',
-    // ➕ Fitur Baru Period
     selectPeriod: 'SELECT HAUL PERIOD:',
     initialBalance: 'Opening Cash Balance',
     statusClosed: '(Closed)',
@@ -100,16 +97,16 @@ const DICTIONARY = {
 };
 
 const THEME_STYLES = {
-  'emerald-cyber': { card: 'bg-emerald-950/20 border-emerald-500/30 text-emerald-50 shadow-2xl', textMuted: 'text-emerald-400/70', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/20' },
-  'velvet-rose': { card: 'bg-rose-950/20 border-rose-500/30 text-rose-50 shadow-2xl', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/20' },
-  'neon-sunset': { card: 'bg-orange-950/20 border-orange-500/30 text-orange-50 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/20' },
-  'amber-gold': { card: 'bg-amber-950/20 border-amber-500/30 text-amber-50 shadow-2xl', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/20' },
-  'midnight-blue': { card: 'bg-blue-950/20 border-blue-500/30 text-blue-50 shadow-2xl', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/20' },
-  'nordic-frost': { card: 'bg-slate-900/30 border-cyan-500/30 text-slate-50 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/20' },
-  'crimson-tide': { card: 'bg-red-950/20 border-red-500/30 text-red-100 shadow-2xl', textMuted: 'text-zinc-400', accentText: 'text-[#E63946]', progressBg: 'from-[#E63946] to-[#9B2226]', balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' },
-  'dracula-vamp': { card: 'bg-purple-950/20 border-fuchsia-500/30 text-purple-200 shadow-2xl', textMuted: 'text-neutral-500', accentText: 'text-fuchsia-400', progressBg: 'from-purple-600 to-fuchsia-500', balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' },
-  'forest-moss': { card: 'bg-emerald-950/20 border-emerald-500/30 text-stone-100 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-emerald-700 to-green-500', balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' },
-  'default': { card: 'bg-white/[0.03] border-white/10 text-slate-100 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' }
+  'emerald-cyber': { textMuted: 'text-emerald-400/70', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/20' },
+  'velvet-rose': { textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/20' },
+  'neon-sunset': { textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/20' },
+  'amber-gold': { textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/20' },
+  'midnight-blue': { textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/20' },
+  'nordic-frost': { textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/20' },
+  'crimson-tide': { textMuted: 'text-zinc-400', accentText: 'text-[#E63946]', progressBg: 'from-[#E63946] to-[#9B2226]', balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' },
+  'dracula-vamp': { textMuted: 'text-neutral-500', accentText: 'text-fuchsia-400', progressBg: 'from-purple-600 to-fuchsia-500', balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' },
+  'forest-moss': { textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-emerald-700 to-green-500', balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' },
+  'default': { textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' }
 };
 
 export default function DashboardPage() {
@@ -135,8 +132,32 @@ export default function DashboardPage() {
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
   useEffect(() => { 
+    recordVisitorLog();
     loadDashboardData(); 
   }, [lang, selectedPeriodeId]);
+
+  // 🟢 PERBAIKAN: Fungsi Perekam Kunjungan Langsung
+  async function recordVisitorLog() {
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+      let ipAddress = '127.0.0.1';
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const ipData = await res.json();
+        ipAddress = ipData.ip;
+      } catch (e) {
+        console.log('Gagal ambil IP via ipify');
+      }
+
+      await supabase.from('visitor_logs').insert({
+        path: window.location.pathname || '/',
+        ip_address: ipAddress,
+        user_agent: window.navigator.userAgent || 'unknown'
+      });
+    } catch (err) {
+      console.error('Error saat insert log:', err);
+    }
+  }
 
   async function loadDashboardData() {
     try {
@@ -379,10 +400,10 @@ export default function DashboardPage() {
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 text-xs text-amber-400 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+              className="bg-zinc-900/80 backdrop-blur-md border border-amber-500/30 text-xs text-amber-400 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)]"
             >
               {periodeList.map((p) => (
-                <option key={p.id} value={p.id}>
+                <option key={p.id} value={p.id} className="bg-zinc-950 text-white">
                   {p.nama_periode} {p.is_closed ? dict.statusClosed : dict.statusActive}
                 </option>
               ))}
@@ -396,18 +417,18 @@ export default function DashboardPage() {
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
+            className="bg-zinc-900/80 backdrop-blur-md border border-zinc-700 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
           >
-            <option value="id">🇮🇩 Indonesia</option>
-            <option value="jv">🎯 Cirebonan</option>
-            <option value="en">🇬🇧 English</option>
+            <option value="id" className="bg-zinc-950 text-white">🇮🇩 Indonesia</option>
+            <option value="jv" className="bg-zinc-950 text-white">🎯 Cirebonan</option>
+            <option value="en" className="bg-zinc-950 text-white">🇬🇧 English</option>
           </select>
         </div>
       </div>
       
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className="w-full bg-black/30 backdrop-blur-md border border-white/10 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-[0_0_20px_rgba(191,236,37,0.1)] print:hidden">
+        <div className="w-full bg-black/40 backdrop-blur-md border border-white/10 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-[0_0_20px_rgba(191,236,37,0.1)] print:hidden">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
             📢 {announcement}
           </div>
@@ -417,7 +438,7 @@ export default function DashboardPage() {
       {/* STRUKTUR UTAMA DASHBOARD */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KAS BERSIH (CARD SALDO NEON GLOW) */}
+        {/* KAS BERSIH (CARD SALDO NYALA NEON) */}
         <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-[0_0_30px_rgba(191,236,37,0.25)] border border-white/30 backdrop-blur-xl transition-transform duration-300 hover:scale-[1.01]`}>
           <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
@@ -447,16 +468,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* REKAP CARD UANG MASUK & BELANJA (GLASS & GLOW) */}
+        {/* REKAP CARD UANG MASUK & BELANJA (GLASS & NEON GLOW) */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* UANG MASUK (HIJAU NEON GLOW) */}
-          <div 
-            style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-            className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.12)] hover:shadow-[0_0_35px_rgba(16,185,129,0.25)]"
-          >
+          {/* UANG MASUK */}
+          <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-emerald-500/40 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.18)] hover:border-emerald-500/80 hover:shadow-[0_0_35px_rgba(16,185,129,0.3)]">
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]">🟢</div>
-              <p className={`text-[10px] font-mono text-emerald-300 uppercase tracking-wider`}>{dict.totalIncome}</p>
+              <p className="text-[10px] font-mono text-emerald-300 uppercase tracking-wider">{dict.totalIncome}</p>
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk'] drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{formatRupiah(totals.masuk)}</h3>
@@ -464,14 +482,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* UANG BELANJA (MERAH ROSY GLOW) */}
-          <div 
-            style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-            className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.12)] hover:shadow-[0_0_35px_rgba(244,63,94,0.25)]"
-          >
+          {/* UANG BELANJA */}
+          <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-rose-500/40 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.18)] hover:border-rose-500/80 hover:shadow-[0_0_35px_rgba(244,63,94,0.3)]">
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(244,63,94,0.3)]">🔴</div>
-              <p className={`text-[10px] font-mono text-rose-300 uppercase tracking-wider`}>{dict.totalExpense}</p>
+              <p className="text-[10px] font-mono text-rose-300 uppercase tracking-wider">{dict.totalExpense}</p>
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk'] drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{formatRupiah(totals.keluar)}</h3>
@@ -484,34 +499,25 @@ export default function DashboardPage() {
 
       {/* CARD LOG TRAFIK PENGUNJUNG APLIKASI (GLASS GLOW) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
-        <div 
-          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-          className="p-4 border rounded-2xl backdrop-blur-xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(59,130,246,0.12)]"
-        >
+        <div className="p-4 bg-[#12161A]/80 backdrop-blur-xl border border-blue-500/40 rounded-2xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(59,130,246,0.18)] hover:border-blue-500/70">
           <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-base shadow-[0_0_15px_rgba(59,130,246,0.3)]">📈</div>
           <div>
-            <p className={`text-[10px] font-mono text-blue-300 uppercase tracking-wider`}>{dict.totalKunjungan}</p>
+            <p className="text-[10px] font-mono text-blue-300 uppercase tracking-wider">{dict.totalKunjungan}</p>
             <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.totalViews} <span className="text-xs font-normal text-slate-400 font-sans">Kali</span></h4>
           </div>
         </div>
 
-        <div 
-          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-          className="p-4 border rounded-2xl backdrop-blur-xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(168,85,247,0.12)]"
-        >
+        <div className="p-4 bg-[#12161A]/80 backdrop-blur-xl border border-purple-500/40 rounded-2xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(168,85,247,0.18)] hover:border-purple-500/70">
           <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-base shadow-[0_0_15px_rgba(168,85,247,0.3)]">👥</div>
           <div>
-            <p className={`text-[10px] font-mono text-purple-300 uppercase tracking-wider`}>{dict.pengunjungUnik}</p>
+            <p className="text-[10px] font-mono text-purple-300 uppercase tracking-wider">{dict.pengunjungUnik}</p>
             <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.uniqueCount} <span className="text-xs font-normal text-slate-400 font-sans">Orang</span></h4>
           </div>
         </div>
       </div>
 
       {/* TARGET PLAFON PROGRESS (GLASS GLOW) */}
-      <div 
-        style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-        className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.5)] space-y-3"
-      >
+      <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-amber-500/30 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(245,158,11,0.12)] space-y-3">
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
             <span>🎯</span> {dict.progressTitle}
@@ -529,10 +535,7 @@ export default function DashboardPage() {
 
       {/* REKAP KATEGORI (GLASS GLOW) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div 
-          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-          className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.5)] space-y-3.5"
-        >
+        <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-white/10 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(255,255,255,0.05)] space-y-3.5">
           <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/10 pb-2`}>{dict.rekapIncome}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
@@ -544,10 +547,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div 
-          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-          className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.5)] space-y-3.5"
-        >
+        <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-white/10 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(255,255,255,0.05)] space-y-3.5">
           <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/10 pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
@@ -562,10 +562,7 @@ export default function DashboardPage() {
 
       {/* MUTASI MUTASI TERAKHIR (GLASS GLOW) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div 
-          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-          className="p-5 border border-l-4 border-l-emerald-400 rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.08)] space-y-3.5"
-        >
+        <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-emerald-500/30 border-l-4 border-l-emerald-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.12)] space-y-3.5">
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
@@ -586,10 +583,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div 
-          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-          className="p-5 border border-l-4 border-l-rose-400 rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.08)] space-y-3.5"
-        >
+        <div className="p-5 bg-[#12161A]/80 backdrop-blur-xl border border-rose-500/30 border-l-4 border-l-rose-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.12)] space-y-3.5">
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
