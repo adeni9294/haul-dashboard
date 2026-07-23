@@ -53,76 +53,54 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Data dari Tabel Terkait
+      // 2. Ambil Data dari Tabel 'transactions' dan 'budgets'
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
-      const { data: allDonations } = await supabase.from('donation_details').select('*');
 
-      // 3. Mapping Statistik per Periode
+      // 3. Mapping Statistik per Periode Berdasarkan Kolom 'type' di 'transactions'
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
 
         let masuk = 0;
-        let keluar = 0;
+        let kel = 0;
         let rencanaBudget = 0;
 
-        // Ambil Saldo Awal jika tersimpan di objek periode atau tabel settings
-        let saldoAwal = parseFloat(p.saldo_awal || 0);
-
-        // Hitung dari transactions (Kas Masuk & Keluar)
+        // Hitung dari transactions
         if (allTransactions) {
           allTransactions.forEach(t => {
             const matchPeriode = t.periode_id === pId || !t.periode_id;
             if (matchPeriode) {
-              const type = (t.type || t.jenis || '').toString().toLowerCase().trim();
-              const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
-              
-              if (type === 'masuk' || type === 'pemasukan' || type === 'in') {
+              const typeVal = (t.type || '').toString().trim();
+              const nominal = Math.abs(parseFloat(t.amount || 0));
+
+              // Sesuai dengan database: 'Pemasukan' atau 'keluar'
+              if (typeVal.toLowerCase() === 'pemasukan') {
                 masuk += nominal;
-              } else if (type === 'keluar' || type === 'pengeluaran' || type === 'out') {
-                keluar += nominal;
+              } else if (typeVal.toLowerCase() === 'keluar') {
+                kel += nominal;
               }
             }
           });
         }
-
-        // Jika transaksi kas masuk belum mencakup seluruh donation_details, tambahkan akumulasi donation_details bersih
-        // (menghindari duplikasi jika donation_details sudah masuk ke transactions)
-        let totalDonasiFromDetails = 0;
-        if (allDonations) {
-          allDonations.forEach(d => {
-            const matchPeriode = d.periode_id === pId || !d.periode_id;
-            if (matchPeriode) {
-              const nominal = Math.abs(parseFloat(d.amount || d.nominal || d.jumlah || 0));
-              const donorName = (d.donor_name || '').toString();
-              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
-                totalDonasiFromDetails += nominal;
-              }
-            }
-          });
-        }
-
-        // Gunakan nilai terbesar antara rekap transactions atau donation_details ditambah saldo awal
-        const realMasuk = Math.max(masuk, totalDonasiFromDetails) + saldoAwal;
 
         // Hitung Rencana Anggaran (Budget)
         if (allBudgets) {
           allBudgets.forEach(b => {
             const matchPeriode = b.periode_id === pId || !b.periode_id;
             if (matchPeriode) {
-              rencanaBudget += parseFloat(b.planned_amount || b.amount || b.jumlah || 0);
+              rencanaBudget += parseFloat(b.planned_amount || 0);
             }
           });
         }
 
-        const saldo = realMasuk - keluar;
+        const saldo = masuk - kel;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: realMasuk,
-          totalKeluar: keluar,
+          totalMasuk: masuk,
+          totalKeluar: kel,
           saldoBersih: saldo,
           totalRencanaBudget: rencanaBudget
         };
