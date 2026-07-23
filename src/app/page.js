@@ -449,7 +449,8 @@ export default function DashboardPage() {
 
         {/* REKAP CARD UANG MASUK & BELANJA */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-emerald-500/40`}>
+          <div style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl">
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm shadow-sm">🟢</div>
               <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalIncome}</p>
