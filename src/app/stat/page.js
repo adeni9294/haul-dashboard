@@ -7,7 +7,6 @@ export default function StatPage() {
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
   
-  // Data Statistik
   const [allPeriodeStats, setAllPeriodeStats] = useState([]);
   const [currentSummary, setCurrentSummary] = useState({
     namaPeriode: '-',
@@ -40,13 +39,12 @@ export default function StatPage() {
       setLoading(true);
       const supabase = getSupabase();
 
-      // 1. Ambil Semua Periode Haul
-      const { data: listPeriode, error: errPeriode } = await supabase
+      // 1. Ambil Periode Haul
+      const { data: listPeriode } = await supabase
         .from('periode_haul')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (errPeriode) throw errPeriode;
       if (!listPeriode || listPeriode.length === 0) {
         setLoading(false);
         return;
@@ -55,55 +53,66 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Semua Donasi (Pemasukan), Transaksi (Pengeluaran), dan Budgets untuk di-mapping per periode
+      // 2. Ambil Data dari Tabel Terkait
       const { data: allDonations } = await supabase.from('donation_details').select('*');
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Rekap Statistik Per Periode
+      // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
 
-        // Hitung Total Masuk (dari donation_details & transactions jenis masuk)
         let masuk = 0;
-        (allDonations || []).filter(d => d.periode_id === pId).forEach(d => {
-          if (d.donor_name !== '__ADMIN_FEE__') {
-            masuk += Math.abs(d.amount || 0);
-          }
-        });
-        (allTransactions || []).filter(t => t.periode_id === pId).forEach(t => {
-          const type = (t.type || '').toLowerCase();
-          if (type === 'masuk' || type === 'pemasukan') {
-            masuk += Math.abs(t.amount || 0);
-          }
-        });
-
-        // Hitung Total Keluar (dari transactions jenis keluar)
         let keluar = 0;
-        (allTransactions || []).filter(t => t.periode_id === pId).forEach(t => {
-          const type = (t.type || '').toLowerCase();
-          if (type === 'keluar' || type === 'pengeluaran') {
-            keluar += Math.abs(t.amount || 0);
-          }
-        });
-        // Tambah admin fee dari donation jika ada
-        (allDonations || []).filter(d => d.periode_id === pId && d.donor_name === '__ADMIN_FEE__').forEach(d => {
-          keluar += Math.abs(d.amount || 0);
-        });
-
-        // Hitung Total Rencana Anggaran (Budget)
         let rencanaBudget = 0;
-        (allBudgets || []).filter(b => b.periode_id === pId).forEach(b => {
-          rencanaBudget += parseFloat(b.planned_amount || b.jumlah || 0);
-        });
 
-        const saldo = masuk - kelar;
+        // Hitung dari donation_details
+        if (allDonations) {
+          allDonations.forEach(d => {
+            const matchPeriode = d.periode_id === pId || !d.periode_id; // fallback jika belum terikat
+            if (matchPeriode) {
+              const nominal = Math.abs(parseFloat(d.amount || d.nominal || d.jumlah || 0));
+              const donorName = (d.donor_name || d.nama || '').toString();
+              if (donorName === '__ADMIN_FEE__') {
+                keluar += nominal;
+              } else {
+                masuk += nominal;
+              }
+            }
+          });
+        }
+
+        // Hitung dari transactions (Kas Masuk / Keluar)
+        if (allTransactions) {
+          allTransactions.forEach(t => {
+            const matchPeriode = t.periode_id === pId || !t.periode_id;
+            if (matchPeriode) {
+              const type = (t.type || t.jenis || '').toString().toLowerCase().trim();
+              const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
+              if (type === 'masuk' || type === 'pemasukan' || type === 'in') {
+                masuk += nominal;
+              } else if (type === 'keluar' || type === 'pengeluaran' || type === 'out') {
+                keluar += nominal;
+              }
+            }
+          });
+        }
+
+        // Hitung dari budgets (Rencana Anggaran)
+        if (allBudgets) {
+          allBudgets.forEach(b => {
+            const matchPeriode = b.periode_id === pId || !b.periode_id;
+            if (matchPeriode) {
+              rencanaBudget += parseFloat(b.planned_amount || b.amount || b.jumlah || 0);
+            }
+          });
+        }
+
+        const saldo = masuk - keluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
-          tanggal_mulai: p.tanggal_mulai || '-',
-          tanggal_selesai: p.tanggal_selesai || '-',
           is_closed: p.is_closed,
           totalMasuk: masuk,
           totalKeluar: keluar,
@@ -114,7 +123,7 @@ export default function StatPage() {
 
       setAllPeriodeStats(statsMap);
     } catch (err) {
-      console.error("Gagal memuat statistik global:", err);
+      console.error("Gagal kalkulasi statistik:", err);
     } finally {
       setLoading(false);
     }
