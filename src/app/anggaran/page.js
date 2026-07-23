@@ -77,7 +77,7 @@ export default function AnggaranPage() {
       }
     } catch (e) {
       console.error(e);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }
