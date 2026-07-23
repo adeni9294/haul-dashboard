@@ -110,7 +110,7 @@ export default function DokumentasiPage() {
         .insert([{ 
           title: formTitle.trim(), 
           image_url: publicUrl,
-          periode_id: selectedPeriodeId // ➕ Connect to Periode Aktif
+          periode_id: selectedPeriodeId
         }]);
 
       if (insertError) throw insertError;
@@ -171,30 +171,32 @@ export default function DokumentasiPage() {
     setShowModal(false);
   };
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Membuka album dokumentasi...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Membuka album dokumentasi...</div>;
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* AREA UTAMA PANEL KONTROL & SELECTOR PERIODE */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
+      {/* AREA UTAMA PANEL KONTROL & SELECTOR PERIODE (GLASSMORPISM) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-wider">📸 Galeri Dokumentasi Kegiatan Haul</h2>
-          <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
+          <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+            <span>📸</span> Galeri Dokumentasi Kegiatan Haul
+          </h2>
+          <p className="text-[10px] opacity-80 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* SELECTOR PERIODE HAUL */}
           {periodeList.length > 0 && (
-            <div className="flex items-center bg-slate-950 p-1 border border-slate-800 rounded-xl">
-              <span className="text-[9px] font-mono font-bold text-slate-400 px-2 uppercase">Periode:</span>
+            <div className="flex items-center bg-black/30 p-1 border border-white/20 rounded-xl">
+              <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">Periode:</span>
               <select
                 value={selectedPeriodeId || ''}
                 onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                className="bg-slate-900 border border-slate-800 text-[10px] text-amber-400 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+                className="bg-black/40 border border-white/20 text-[10px] text-amber-300 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
               >
                 {periodeList.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <option key={p.id} value={p.id} className="bg-zinc-900 text-white">
                     {p.nama_periode}
                   </option>
                 ))}
@@ -203,7 +205,7 @@ export default function DokumentasiPage() {
           )}
 
           {isAdmin && (
-            <button onClick={() => setShowModal(true)} className="px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md text-[10px]">
+            <button onClick={() => setShowModal(true)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase rounded-xl transition-all shadow-md text-[10px]">
               ➕ Tambah Foto
             </button>
           )}
@@ -212,36 +214,36 @@ export default function DokumentasiPage() {
 
       {/* STRUKTUR GRID DAFTAR FOTO */}
       {photos.length === 0 ? (
-        <div className="p-12 text-center text-slate-500 font-mono border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
+        <div className="p-12 text-center opacity-70 font-mono border border-dashed border-white/20 bg-white/5 backdrop-blur-xl rounded-2xl">
           Belum ada arsip foto dokumentasi kegiatan yang diunggah untuk periode ini.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {photos.map((p, idx) => (
-            <div key={idx} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-lg hover:border-slate-700 transition-all">
-              <div className="relative bg-slate-950 aspect-video w-full flex items-center justify-center overflow-hidden">
+            <div key={idx} className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xl hover:border-white/40 transition-all group">
+              <div className="relative bg-black/40 aspect-video w-full flex items-center justify-center overflow-hidden">
                 <img 
                   src={p.image_url} 
                   alt={p.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
                   loading="lazy"
                 />
               </div>
-              <div className="p-3.5 flex justify-between items-center bg-slate-950/40 border-t border-slate-800/60">
-                <span className="text-xs font-bold text-slate-200 truncate max-w-[150px] sm:max-w-[180px]">
+              <div className="p-3.5 flex justify-between items-center bg-black/20 border-t border-white/10">
+                <span className="text-xs font-bold text-slate-100 truncate max-w-[150px] sm:max-w-[180px] tracking-wide">
                   {p.title}
                 </span>
                 <div className="flex gap-2 shrink-0">
                   <button 
                     onClick={() => handleDownload(p.image_url, p.title)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-slate-700 transition-all"
+                    className="bg-white/10 hover:bg-white/20 text-slate-100 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-white/20 transition-all"
                   >
                     Unduh
                   </button>
                   {isAdmin && (
                     <button 
                       onClick={() => triggerHapus(p)}
-                      className="bg-rose-950/40 hover:bg-rose-900 border border-rose-900/60 text-rose-300 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                      className="bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-300 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
                     >
                       Hapus
                     </button>
@@ -253,38 +255,40 @@ export default function DokumentasiPage() {
         </div>
       )}
 
-      {/* MODAL DIALOG POP-UP INPUT FOTO */}
+      {/* MODAL DIALOG POP-UP INPUT FOTO (GLASSMORPISM) */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <form onSubmit={handleSavePhoto} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-200">
-            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">➕ Unggah Dokumentasi Baru</h3>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <form onSubmit={handleSavePhoto} className="bg-white/10 backdrop-blur-2xl border border-white/20 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl text-slate-100">
+            <h3 className="text-sm font-black uppercase tracking-wider text-amber-300 flex items-center gap-2">
+              <span>➕</span> Unggah Dokumentasi Baru
+            </h3>
             
             <div>
-              <label className="block text-slate-400 mb-1">Nama / Judul Dokumentasi Kegiatan</label>
+              <label className="block text-slate-200 mb-1 font-semibold">Nama / Judul Dokumentasi Kegiatan</label>
               <input 
                 type="text" 
                 required 
                 placeholder="Contoh: Pendirian Tenda Utama Maqbaroh"
                 value={formTitle} 
                 onChange={e => setFormTitle(e.target.value)} 
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-medium" 
+                className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none font-medium text-white placeholder:text-slate-400" 
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Pilih File Foto Gambar</label>
+              <label className="block text-slate-200 mb-1 font-semibold">Pilih File Foto Gambar</label>
               <input 
                 type="file" 
                 required
                 accept="image/*"
                 onChange={e => setFormFile(e.target.files[0])} 
-                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 file:font-bold hover:file:bg-zinc-700 cursor-pointer focus:outline-none" 
+                className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-white/20 file:text-white file:font-bold hover:file:bg-white/30 cursor-pointer focus:outline-none" 
               />
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button type="button" onClick={resetForm} disabled={uploading} className="flex-1 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl disabled:opacity-50">Batal</button>
-              <button type="submit" disabled={uploading} className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black uppercase rounded-xl shadow-lg disabled:opacity-50">
+              <button type="button" onClick={resetForm} disabled={uploading} className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-slate-200 font-bold rounded-xl disabled:opacity-50 transition-all">Batal</button>
+              <button type="submit" disabled={uploading} className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase rounded-xl shadow-lg disabled:opacity-50 transition-all">
                 {uploading ? '⏳ Mengunggah...' : 'Simpan Foto'}
               </button>
             </div>
