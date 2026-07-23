@@ -30,24 +30,20 @@ export default function PengaturanPage() {
   const [saldoAwalInput, setSaldoAwalInput] = useState('');
   const [editingPeriodeId, setEditingPeriodeId] = useState(null);
 
+  // 🎨 SINKRONISASI 12 TEMA BARU BEDA KARAKTER
   const listTema = [
-    { id: 'default', name: 'Slate Default (Bawaan)' },
-    { id: 'emerald-cyber', name: 'Emerald Cyber (Hijau Hitam)' },
-    { id: 'velvet-rose', name: 'Velvet Rose (Ungu Gelap)' },
-    { id: 'neon-sunset', name: 'Neon Sunset (Oranye Estetik)' },
-    { id: 'amber-gold', name: 'Amber Gold (Kuning Mewah)' },
+    { id: 'default', name: 'Default Charcoal (Abu/Neon Lime)' },
+    { id: 'emerald-cyber', name: 'Emerald Cyber (Hijau Zamrud)' },
+    { id: 'crimson-tide', name: 'Crimson Tide (Merah Ruby)' },
     { id: 'midnight-blue', name: 'Midnight Blue (Biru Samudra)' },
-    { id: 'nordic-frost', name: 'Nordic Frost (Abu Elegan)' },
-    { id: 'dracula-vamp', name: 'Dracula Dark (Ungu Vampir)' },
-    { id: 'forest-moss', name: 'Forest Moss (Hijau Alam)' },
-    { id: 'cyberpunk-2077', name: 'Cyberpunk 2077 (Kuning Neon)' },
-    { id: 'ocean-breeze', name: 'Ocean Breeze (Toska Segar)' },
-    { id: 'rose-gold', name: 'Rose Gold (Emas Merah Muda)' },
-    { id: 'lavender-dream', name: 'Lavender Dream (Ungu Lembut)' },
+    { id: 'dracula-vamp', name: 'Dracula Dark (Ungu Violet/Neon)' },
+    { id: 'amber-gold', name: 'Amber Gold (Kuning Emas)' },
+    { id: 'neon-sunset', name: 'Neon Sunset (Jingga Warm)' },
     { id: 'coffee-latte', name: 'Coffee Latte (Cokelat Klasik)' },
-    { id: 'toxic-lime', name: 'Toxic Lime (Hijau Lemon)' },
-    { id: 'crimson-tide', name: 'Crimson Tide (Merah Berani)' },
-    { id: 'solarized-dark', name: 'Solarized Dark (Hijau Kelabu)' }
+    { id: 'nordic-frost', name: 'Nordic Frost (Cyan/Biru Salju)' },
+    { id: 'rose-gold', name: 'Rose Gold (Quartz / Pink)' },
+    { id: 'toxic-lime', name: 'Toxic Lime (Hijau Lemon Neon)' },
+    { id: 'light-clean', name: 'Light Clean (Tema Terang / Putih)' }
   ];
 
   const getSupabase = () => {
@@ -92,7 +88,6 @@ export default function PengaturanPage() {
     if (data) setCategories(data);
   }
 
-  // Memuat Daftar Periode Haul
   async function loadPeriodeList() {
     const supabase = getSupabase();
     const { data } = await supabase.from('periode_haul').select('*').order('created_at', { ascending: false });
@@ -153,7 +148,6 @@ export default function PengaturanPage() {
     }
   };
 
-  // Tambah / Edit Periode Haul
   const handleSavePeriode = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak!');
@@ -191,7 +185,6 @@ export default function PengaturanPage() {
     setSaldoAwalInput(p.saldo_awal?.toString() || '0');
   };
 
-  // ➕ FUNGSI EKSEKUSI TUTUP BUKU
   const handleTutupBuku = async (periodeObj) => {
     if (!confirm(`Apakah Anda yakin ingin MENUTUP BUKU untuk ${periodeObj.nama_periode}?\n\nSemua transaksi pada periode ini akan DIKUNCI dan sisa saldo akhir akan otomatis dipindahkan menjadi Saldo Awal periode berikutnya.`)) return;
 
@@ -284,7 +277,7 @@ export default function PengaturanPage() {
 
   if (!isAdmin) {
     return (
-      <div className="p-6 text-center text-slate-400 text-xs font-mono">
+      <div className="p-8 text-center text-slate-300 text-xs font-mono bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl max-w-md mx-auto mt-10">
         🔒 Halaman dilindungi. Silakan login sebagai admin di header atas untuk mengaktifkan setelan.
       </div>
     );
@@ -295,62 +288,66 @@ export default function PengaturanPage() {
       
       {/* KOLOM KIRI: FORM CONFIG & TEMA */}
       <div className="space-y-6">
-        <form onSubmit={handleSaveConfig} className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
-          <h3 className="text-amber-500 font-bold uppercase tracking-wider">⚙️ Pengaturan Aplikasi</h3>
+        <form onSubmit={handleSaveConfig} className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-amber-300 font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>⚙️</span> Pengaturan Aplikasi
+          </h3>
           
           <div>
-            <label className="block text-slate-400 mb-1">Pilih Tema Tampilan Beranda</label>
-            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none">
+            <label className="block text-slate-200 mb-1 font-semibold">Pilih Tema Tampilan Beranda</label>
+            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-white focus:outline-none cursor-pointer font-bold">
               {listTema.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id} className="bg-zinc-900 text-white">{t.name}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">Nama Organisasi</label>
-            <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+            <label className="block text-slate-200 mb-1 font-semibold">Nama Organisasi</label>
+            <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white" />
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">Teks Banner Informasi Beranda Utama</label>
-            <textarea rows="2" value={bannerText} onChange={(e) => setBannerText(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+            <label className="block text-slate-200 mb-1 font-semibold">Teks Banner Informasi Beranda Utama</label>
+            <textarea rows="2" value={bannerText} onChange={(e) => setBannerText(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white" />
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">Alamat Lembaga</label>
-            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+            <label className="block text-slate-200 mb-1 font-semibold">Alamat Lembaga</label>
+            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white" />
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">Info Rekening Bank (💳)</label>
-            <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none" />
+            <label className="block text-slate-200 mb-1 font-semibold">Info Rekening Bank (💳)</label>
+            <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white" />
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">Logo Organisasi Resmi</label>
-            <div className="flex items-center gap-4 p-3 bg-slate-950 border border-slate-800 rounded-xl">
-              <div className="w-12 h-12 rounded-full border border-slate-800 bg-slate-900 overflow-hidden shrink-0 flex items-center justify-center">
-                {logoUrl ? <img src={logoUrl} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-[9px] text-slate-600">NO LOGO</span>}
+            <label className="block text-slate-200 mb-1 font-semibold">Logo Organisasi Resmi</label>
+            <div className="flex items-center gap-4 p-3 bg-black/30 border border-white/20 rounded-xl">
+              <div className="w-12 h-12 rounded-full border border-white/20 bg-black/40 overflow-hidden shrink-0 flex items-center justify-center">
+                {logoUrl ? <img src={logoUrl} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-[9px] text-slate-400">NO LOGO</span>}
               </div>
               <div className="flex-1">
                 <input type="file" accept="image/*" id="upload-logo-input" onChange={handleUploadLogo} disabled={isUploading} className="hidden" />
-                <label htmlFor="upload-logo-input" className={`inline-block px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${isUploading ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}>
+                <label htmlFor="upload-logo-input" className={`inline-block px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${isUploading ? 'bg-white/10 text-slate-400' : 'bg-white/20 text-white hover:bg-white/30'}`}>
                   {isUploading ? '⏳ Mengunggah...' : '📁 Pilih Gambar Logo'}
                 </label>
-                <p className="text-[9px] text-slate-500 mt-1 truncate max-w-[180px]">{logoUrl || 'Belum ada file dipilih'}</p>
+                <p className="text-[9px] text-slate-300 mt-1 truncate max-w-[180px]">{logoUrl || 'Belum ada file dipilih'}</p>
               </div>
             </div>
           </div>
 
-          <button type="submit" className="w-full py-2 bg-amber-500 text-slate-950 font-black uppercase rounded-xl hover:bg-amber-400 transition-all">
+          <button type="submit" className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-black font-black uppercase rounded-xl transition-all shadow-md">
             💾 Simpan Konfigurasi & Tema
           </button>
         </form>
 
         {/* 🏛️ PANEL KELOLA PERIODE HAUL */}
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
-          <h3 className="text-purple-400 font-bold uppercase tracking-wider">🏛️ Kelola Periode Haul</h3>
+        <div className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-purple-300 font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>🏛️</span> Kelola Periode Haul
+          </h3>
 
           <form onSubmit={handleSavePeriode} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -360,22 +357,22 @@ export default function PengaturanPage() {
                 required 
                 value={namaPeriodeInput} 
                 onChange={(e) => setNamaPeriodeInput(e.target.value)} 
-                className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white" 
+                className="px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white placeholder:text-slate-400" 
               />
               <input 
                 type="number" 
                 placeholder="Saldo Kas Awal (Rp)" 
                 value={saldoAwalInput} 
                 onChange={(e) => setSaldoAwalInput(e.target.value)} 
-                className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-amber-400 font-mono font-bold" 
+                className="px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-amber-300 font-mono font-bold placeholder:text-slate-400" 
               />
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all">
+              <button type="submit" className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-md">
                 {editingPeriodeId ? '💾 Perbarui Periode' : '➕ Tambah Periode Baru'}
               </button>
               {editingPeriodeId && (
-                <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-3 py-2 bg-slate-800 text-slate-400 rounded-xl">Batal</button>
+                <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-3 py-2 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl">Batal</button>
               )}
             </div>
           </form>
@@ -383,26 +380,26 @@ export default function PengaturanPage() {
           {/* LIST DAFTAR PERIODE */}
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {periodeList.map((p) => (
-              <div key={p.id} className="flex justify-between items-center p-2.5 bg-slate-950 border border-slate-800 rounded-xl">
+              <div key={p.id} className="flex justify-between items-center p-2.5 bg-black/20 border border-white/10 rounded-xl">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-white">{p.nama_periode}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${p.is_closed ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${p.is_closed ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
                       {p.is_closed ? '🔒 Closed' : '🟢 Active'}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">Saldo Awal: <strong className="text-amber-400">{formatRupiah(p.saldo_awal)}</strong></p>
+                  <p className="text-[10px] text-slate-300 font-mono mt-0.5">Saldo Awal: <strong className="text-amber-300">{formatRupiah(p.saldo_awal)}</strong></p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => handleEditPeriode(p)} className="text-amber-400 font-mono font-bold hover:underline text-[11px]">Edit</button>
+                  <button type="button" onClick={() => handleEditPeriode(p)} className="text-amber-300 font-mono font-bold hover:underline text-[11px]">Edit</button>
                   
                   {/* TOMBOL TUTUP BUKU */}
                   {!p.is_closed && (
                     <button 
                       type="button" 
                       onClick={() => handleTutupBuku(p)} 
-                      className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 border border-amber-500/40 text-amber-300 hover:text-black font-mono font-bold rounded-lg text-[10px] transition-all"
+                      className="px-2 py-1 bg-amber-500/20 hover:bg-amber-400 border border-amber-400/40 text-amber-300 hover:text-black font-mono font-bold rounded-lg text-[10px] transition-all"
                     >
                       🔒 Tutup Buku
                     </button>
@@ -416,8 +413,10 @@ export default function PengaturanPage() {
 
       {/* KOLOM KANAN: KATEGORI POS BUKU KAS & UBAH SANDI */}
       <div className="space-y-6">
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
-          <h3 className="text-slate-300 font-bold uppercase tracking-wider">📁 Kategori Pos Buku Kas</h3>
+        <div className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-slate-200 font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>📁</span> Kategori Pos Buku Kas
+          </h3>
           
           <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2">
             <input 
@@ -426,19 +425,19 @@ export default function PengaturanPage() {
               required 
               value={newCategory} 
               onChange={(e) => setNewCategory(e.target.value)} 
-              className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white" 
+              className="flex-1 px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white placeholder:text-slate-400" 
             />
             
             <select
               value={categoryType}
               onChange={(e) => setCategoryType(e.target.value)}
-              className="px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white cursor-pointer"
+              className="px-2 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white cursor-pointer font-bold"
             >
-              <option value="pemasukan">📥 Pemasukan</option>
-              <option value="pengeluaran">📤 Pengeluaran</option>
+              <option value="pemasukan" className="bg-zinc-900 text-emerald-400">📥 Pemasukan</option>
+              <option value="pengeluaran" className="bg-zinc-900 text-rose-400">📤 Pengeluaran</option>
             </select>
 
-            <button type="submit" className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl hover:bg-emerald-400 transition-all shrink-0">
+            <button type="submit" className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl transition-all shrink-0 shadow-md">
               Tambah
             </button>
           </form>
@@ -446,47 +445,49 @@ export default function PengaturanPage() {
           {/* LIST KATEGORI DENGAN EDIT PILIHAN JENIS LANGSUNG */}
           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {categories.map((cat) => (
-              <div key={cat.id} className="flex justify-between items-center p-2.5 bg-slate-950 border border-slate-800 rounded-xl">
+              <div key={cat.id} className="flex justify-between items-center p-2.5 bg-black/20 border border-white/10 rounded-xl">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="truncate">🏷️ {cat.name}</span>
+                  <span className="truncate font-semibold">🏷️ {cat.name}</span>
                   
                   <select
                     value={cat.type || ''}
                     onChange={(e) => handleUpdateCategoryType(cat.id, e.target.value)}
-                    className={`px-1.5 py-0.5 rounded text-[10px] bg-slate-900 border focus:outline-none cursor-pointer ${
+                    className={`px-1.5 py-0.5 rounded text-[10px] bg-black/40 border focus:outline-none cursor-pointer font-mono font-bold ${
                       cat.type === 'pemasukan' 
-                        ? 'text-emerald-400 border-emerald-800' 
+                        ? 'text-emerald-300 border-emerald-500/50' 
                         : cat.type === 'pengeluaran' 
-                        ? 'text-rose-400 border-rose-800' 
-                        : 'text-slate-400 border-slate-800'
+                        ? 'text-rose-300 border-rose-500/50' 
+                        : 'text-slate-300 border-white/20'
                     }`}
                   >
-                    <option value="" disabled>-- Pilih Jenis --</option>
-                    <option value="pemasukan" className="text-emerald-400 bg-slate-950">📥 Pemasukan</option>
-                    <option value="pengeluaran" className="text-rose-400 bg-slate-950">📤 Pengeluaran</option>
+                    <option value="" disabled className="bg-zinc-900 text-white">-- Pilih Jenis --</option>
+                    <option value="pemasukan" className="text-emerald-400 bg-zinc-900">📥 Pemasukan</option>
+                    <option value="pengeluaran" className="text-rose-400 bg-zinc-900">📤 Pengeluaran</option>
                   </select>
                 </div>
-                <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="text-rose-400 font-bold hover:underline ml-2 shrink-0">Hapus</button>
+                <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="text-rose-300 font-bold hover:underline ml-2 shrink-0">Hapus</button>
               </div>
             ))}
           </div>
         </div>
 
-        <form onSubmit={handleUpdatePassword} className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
-          <h3 className="text-rose-400 font-bold uppercase tracking-wider">🔒 Ubah Sandi Otorisasi Admin</h3>
+        <form onSubmit={handleUpdatePassword} className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-rose-300 font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>🔒</span> Ubah Sandi Otorisasi Admin
+          </h3>
           <div>
-            <label className="block text-slate-400 mb-1">Sandi Lama Saat Ini</label>
-            <input type="password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-center" />
+            <label className="block text-slate-200 mb-1 font-semibold">Sandi Lama Saat Ini</label>
+            <input type="password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none font-mono text-center text-white" />
           </div>
           <div>
-            <label className="block text-slate-400 mb-1">Sandi Baru</label>
-            <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-center" />
+            <label className="block text-slate-200 mb-1 font-semibold">Sandi Baru</label>
+            <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none font-mono text-center text-white" />
           </div>
           <div>
-            <label className="block text-slate-400 mb-1">Konfirmasi Sandi Baru</label>
-            <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none font-mono text-center" />
+            <label className="block text-slate-200 mb-1 font-semibold">Konfirmasi Sandi Baru</label>
+            <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl focus:outline-none font-mono text-center text-white" />
           </div>
-          <button type="submit" className="w-full py-2 bg-rose-600 text-white font-black uppercase rounded-xl hover:bg-rose-500 transition-all">
+          <button type="submit" className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase rounded-xl transition-all shadow-md">
             🔑 Perbarui Sandi Admin
           </button>
         </form>
