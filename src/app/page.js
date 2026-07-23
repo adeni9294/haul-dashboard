@@ -97,15 +97,15 @@ const DICTIONARY = {
 };
 
 const THEME_STYLES = {
-  'emerald-cyber': { textMuted: 'text-emerald-300/70', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/25' },
-  'velvet-rose': { textMuted: 'text-rose-300/70', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/25' },
-  'neon-sunset': { textMuted: 'text-orange-300/70', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/25' },
-  'amber-gold': { textMuted: 'text-amber-300/70', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/25' },
-  'midnight-blue': { textMuted: 'text-blue-300/70', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/25' },
-  'nordic-frost': { textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/25' },
-  'dracula-vamp': { textMuted: 'text-purple-300/70', accentText: 'text-fuchsia-400', progressBg: 'from-purple-600 to-fuchsia-500', balanceCard: 'bg-purple-600 text-white shadow-purple-600/25' },
-  'forest-moss': { textMuted: 'text-stone-300/70', accentText: 'text-green-400', progressBg: 'from-emerald-700 to-green-500', balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/25' },
-  'default': { textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/25' }
+  'emerald-cyber': { textMuted: 'text-emerald-200/70', accentText: 'text-emerald-300', progressBg: 'from-emerald-500 to-teal-300', balanceCard: 'bg-[#BFEC25] text-black shadow-lg' },
+  'velvet-rose': { textMuted: 'text-rose-200/70', accentText: 'text-rose-300', progressBg: 'from-rose-500 to-fuchsia-400', balanceCard: 'bg-rose-400 text-black shadow-lg' },
+  'neon-sunset': { textMuted: 'text-orange-200/70', accentText: 'text-orange-300', progressBg: 'from-orange-500 to-amber-300', balanceCard: 'bg-orange-400 text-black shadow-lg' },
+  'amber-gold': { textMuted: 'text-amber-200/70', accentText: 'text-amber-300', progressBg: 'from-amber-500 to-yellow-300', balanceCard: 'bg-amber-400 text-black shadow-lg' },
+  'midnight-blue': { textMuted: 'text-blue-200/70', accentText: 'text-blue-300', progressBg: 'from-blue-500 to-cyan-300', balanceCard: 'bg-blue-400 text-black shadow-lg' },
+  'nordic-frost': { textMuted: 'text-slate-300', accentText: 'text-cyan-300', progressBg: 'from-cyan-500 to-teal-300', balanceCard: 'bg-cyan-400 text-black shadow-lg' },
+  'dracula-vamp': { textMuted: 'text-purple-200/70', accentText: 'text-fuchsia-300', progressBg: 'from-purple-500 to-fuchsia-400', balanceCard: 'bg-purple-400 text-white shadow-lg' },
+  'forest-moss': { textMuted: 'text-emerald-200/70', accentText: 'text-green-300', progressBg: 'from-emerald-600 to-green-400', balanceCard: 'bg-emerald-500 text-white shadow-lg' },
+  'default': { textMuted: 'text-slate-300', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-lg' }
 };
 
 export default function DashboardPage() {
@@ -121,11 +121,8 @@ export default function DashboardPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
   
-  // ➕ State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
-
-  // State Data Pengunjung
   const [visitorStats, setVisitorStats] = useState({ totalViews: 0, uniqueCount: 0 });
 
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
@@ -162,7 +159,6 @@ export default function DashboardPage() {
       setLoading(true);
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
-      // 1. MEMUAT DAFTAR PERIODE HAUL
       let activePeriodeId = selectedPeriodeId;
       let currentSaldoAwal = 0;
 
@@ -182,7 +178,6 @@ export default function DashboardPage() {
         currentSaldoAwal = parseFloat(selectedObj.saldo_awal || 0);
       }
 
-      // 2. MEMUAT SETTINGS
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
@@ -190,7 +185,6 @@ export default function DashboardPage() {
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
       }
 
-      // 3. LOG PENGUNJUNG
       try {
         const { count: countViews } = await supabase
           .from('visitor_logs')
@@ -206,14 +200,12 @@ export default function DashboardPage() {
         console.error('Gagal memuat analitik log:', visErr);
       }
 
-      // 4. BUDGET TARGET
       const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
       let totalPlafonDinamis = 0;
       if (budgetsData) {
         budgetsData.forEach(b => { totalPlafonDinamis += parseFloat(b.planned_amount) || 0; });
       }
 
-      // 5. FETCH TRANSAKSI & DONASI
       let donQuery = supabase.from('donation_details').select('*');
       let txQuery = supabase.from('transactions').select('*');
 
@@ -391,13 +383,13 @@ export default function DashboardPage() {
         {/* Dropdown Filter Periode */}
         {periodeList.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono tracking-wider text-emerald-200/80 uppercase font-bold">
+            <span className="text-[10px] font-mono tracking-wider opacity-80 uppercase font-bold">
               {dict.selectPeriod}
             </span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/30 backdrop-blur-xl border border-emerald-400/30 text-xs text-amber-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-400 font-mono font-bold cursor-pointer transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+              className="bg-black/20 backdrop-blur-md border border-white/20 text-xs text-amber-300 rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all"
             >
               {periodeList.map((p) => (
                 <option key={p.id} value={p.id} className="bg-zinc-900 text-white">
@@ -410,11 +402,11 @@ export default function DashboardPage() {
 
         {/* Dropdown Bahasa */}
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-[10px] font-mono tracking-wider text-emerald-200/60 uppercase">Select Language:</span>
+          <span className="text-[10px] font-mono tracking-wider opacity-70 uppercase">Select Language:</span>
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            className="bg-black/30 backdrop-blur-xl border border-emerald-400/30 text-xs text-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-400 font-mono font-bold cursor-pointer transition-all"
+            className="bg-black/20 backdrop-blur-md border border-white/20 text-xs text-slate-100 rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all"
           >
             <option value="id" className="bg-zinc-900 text-white">🇮🇩 Indonesia</option>
             <option value="jv" className="bg-zinc-900 text-white">🎯 Cirebonan</option>
@@ -425,7 +417,7 @@ export default function DashboardPage() {
       
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className="w-full bg-white/5 backdrop-blur-xl border border-white/10 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-[0_0_20px_rgba(191,236,37,0.1)] print:hidden">
+        <div className="w-full bg-white/10 backdrop-blur-md border border-white/20 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center print:hidden">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
             📢 {announcement}
           </div>
@@ -435,8 +427,8 @@ export default function DashboardPage() {
       {/* STRUKTUR UTAMA DASHBOARD */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KAS BERSIH (CARD SALDO NEON HIGHLIGHT) */}
-        <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 border border-white/40 backdrop-blur-xl transition-transform duration-300 hover:scale-[1.01]`}>
+        {/* KAS BERSIH (CARD SALDO AKSE) */}
+        <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 border border-white/30 transition-transform duration-300 hover:scale-[1.01]`}>
           <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
               <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -465,113 +457,113 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* REKAP CARD UANG MASUK & BELANJA (GLASSMORPISM TRANSPARAN & GLOW) */}
+        {/* REKAP CARD UANG MASUK & BELANJA (MURNI SENSASI KACA & MENYALA) */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* UANG MASUK */}
-          <div className="p-5 bg-white/5 backdrop-blur-2xl border border-emerald-400/40 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:border-emerald-400/80 hover:bg-white/10">
+          <div className="p-5 bg-white/10 backdrop-blur-xl border border-emerald-400/50 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:border-emerald-300 hover:bg-white/15">
             <div className="flex justify-between items-start">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(16,185,129,0.4)]">🟢</div>
-              <p className="text-[10px] font-mono text-emerald-300 uppercase tracking-wider">{dict.totalIncome}</p>
+              <div className="w-9 h-9 rounded-xl bg-emerald-400/20 border border-emerald-300/60 flex items-center justify-center text-sm shadow-[0_0_12px_rgba(16,185,129,0.5)]">🟢</div>
+              <p className="text-[10px] font-mono text-emerald-200 uppercase tracking-wider">{dict.totalIncome}</p>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk'] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{formatRupiah(totals.masuk)}</h3>
-              <p className="text-[10px] text-emerald-400 font-medium mt-1">✓ {catSummaryMasuk.length} {dict.categories}</p>
+              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.masuk)}</h3>
+              <p className="text-[10px] text-emerald-300 font-medium mt-1">✓ {catSummaryMasuk.length} {dict.categories}</p>
             </div>
           </div>
 
           {/* UANG BELANJA */}
-          <div className="p-5 bg-white/5 backdrop-blur-2xl border border-rose-400/40 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_30px_rgba(244,63,94,0.2)] hover:border-rose-400/80 hover:bg-white/10">
+          <div className="p-5 bg-white/10 backdrop-blur-xl border border-rose-400/50 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_20px_rgba(244,63,94,0.25)] hover:border-rose-300 hover:bg-white/15">
             <div className="flex justify-between items-start">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-400/50 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(244,63,94,0.4)]">🔴</div>
-              <p className="text-[10px] font-mono text-rose-300 uppercase tracking-wider">{dict.totalExpense}</p>
+              <div className="w-9 h-9 rounded-xl bg-rose-400/20 border border-rose-300/60 flex items-center justify-center text-sm shadow-[0_0_12px_rgba(244,63,94,0.5)]">🔴</div>
+              <p className="text-[10px] font-mono text-rose-200 uppercase tracking-wider">{dict.totalExpense}</p>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk'] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{formatRupiah(totals.keluar)}</h3>
-              <p className="text-[10px] text-rose-400 font-medium mt-1">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
+              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.keluar)}</h3>
+              <p className="text-[10px] text-rose-300 font-medium mt-1">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* CARD LOG TRAFIK PENGUNJUNG APLIKASI (GLASS GLOW) */}
+      {/* CARD LOG TRAFIK PENGUNJUNG (GLASS GLOW) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
-        <div className="p-4 bg-white/5 backdrop-blur-xl border border-blue-400/40 rounded-2xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:border-blue-400/80">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/50 flex items-center justify-center text-base shadow-[0_0_15px_rgba(59,130,246,0.4)]">📈</div>
+        <div className="p-4 bg-white/10 backdrop-blur-xl border border-blue-400/50 rounded-2xl flex items-center gap-4 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+          <div className="w-10 h-10 rounded-xl bg-blue-400/20 border border-blue-300/60 flex items-center justify-center text-base shadow-[0_0_12px_rgba(59,130,246,0.4)]">📈</div>
           <div>
-            <p className="text-[10px] font-mono text-blue-300 uppercase tracking-wider">{dict.totalKunjungan}</p>
-            <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.totalViews} <span className="text-xs font-normal text-slate-300 font-sans">Kali</span></h4>
+            <p className="text-[10px] font-mono text-blue-200 uppercase tracking-wider">{dict.totalKunjungan}</p>
+            <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.totalViews} <span className="text-xs font-normal text-slate-200 font-sans">Kali</span></h4>
           </div>
         </div>
 
-        <div className="p-4 bg-white/5 backdrop-blur-xl border border-purple-400/40 rounded-2xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:border-purple-400/80">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-base shadow-[0_0_15px_rgba(168,85,247,0.4)]">👥</div>
+        <div className="p-4 bg-white/10 backdrop-blur-xl border border-purple-400/50 rounded-2xl flex items-center gap-4 transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+          <div className="w-10 h-10 rounded-xl bg-purple-400/20 border border-purple-300/60 flex items-center justify-center text-base shadow-[0_0_12px_rgba(168,85,247,0.4)]">👥</div>
           <div>
-            <p className="text-[10px] font-mono text-purple-300 uppercase tracking-wider">{dict.pengunjungUnik}</p>
-            <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.uniqueCount} <span className="text-xs font-normal text-slate-300 font-sans">Orang</span></h4>
+            <p className="text-[10px] font-mono text-purple-200 uppercase tracking-wider">{dict.pengunjungUnik}</p>
+            <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.uniqueCount} <span className="text-xs font-normal text-slate-200 font-sans">Orang</span></h4>
           </div>
         </div>
       </div>
 
-      {/* TARGET PLAFON PROGRESS (GLASS GLOW) */}
-      <div className="p-5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.3)] space-y-3">
+      {/* TARGET PLAFON PROGRESS */}
+      <div className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3">
         <div className="flex justify-between items-center">
-          <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-[10px] font-black text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
             <span>🎯</span> {dict.progressTitle}
           </h3>
-          <span className={`${style.accentText} font-mono text-xs font-black bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 shadow-[0_0_10px_rgba(191,236,37,0.2)]`}>{progress.percent}%</span>
+          <span className={`${style.accentText} font-mono text-xs font-black bg-white/15 px-2.5 py-1 rounded-md border border-white/20`}>{progress.percent}%</span>
         </div>
-        <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/10 shadow-inner">
-          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(191,236,37,0.5)]`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
+        <div className="w-full h-3 bg-black/30 rounded-full overflow-hidden p-0.5 border border-white/20">
+          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-300 pt-0.5">
+        <div className="flex justify-between items-center text-[10px] font-mono text-slate-200 pt-0.5">
           <span>{dict.collected}: <strong className="text-white">{formatRupiah(progress.current)}</strong></span>
           <span>{dict.target}: <strong className="text-white">{formatRupiah(progress.target)}</strong></span>
         </div>
       </div>
 
-      {/* REKAP KATEGORI (GLASS GLOW) */}
+      {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="p-5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.3)] space-y-3.5">
-          <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/10 pb-2`}>{dict.rekapIncome}</h4>
+        <div className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5">
+          <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/15 pb-2`}>{dict.rekapIncome}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/10 last:border-0 last:pb-0">
                 <span className="text-zinc-100 flex items-center gap-1">🔹 {c.label}</span>
-                <span className={`font-mono font-bold ${c.value < 0 ? 'text-red-400' : style.accentText}`}>{formatRupiah(c.value)}</span>
+                <span className={`font-mono font-bold ${c.value < 0 ? 'text-red-300' : style.accentText}`}>{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="p-5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.3)] space-y-3.5">
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/10 pb-2">{dict.rekapExpense}</h4>
+        <div className="p-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5">
+          <h4 className="text-[10px] font-black text-rose-300 uppercase tracking-widest border-b border-white/15 pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
+              <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/10 last:border-0 last:pb-0">
                 <span className="text-zinc-100 flex items-center gap-1">🔸 {c.label}</span>
-                <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
+                <span className="font-mono font-bold text-rose-300">{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* MUTASI TERAKHIR (GLASS GLOW) */}
+      {/* MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="p-5 bg-white/5 backdrop-blur-xl border border-emerald-400/30 border-l-4 border-l-emerald-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.15)] space-y-3.5">
+        <div className="p-5 bg-white/10 backdrop-blur-xl border border-emerald-400/40 border-l-4 border-l-emerald-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5">
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
-              <p className="text-xs text-slate-400 font-mono py-1">{dict.emptyMutationIn}</p>
+              <p className="text-xs text-slate-300 font-mono py-1">{dict.emptyMutationIn}</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/10 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-100 font-bold truncate uppercase tracking-wide">{t.note}</p>
-                    <p className="text-[9px] text-slate-400 font-mono mt-0.5">{t.transaction_date}</p>
+                    <p className="text-[9px] text-slate-300 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className={`font-mono font-black shrink-0 ml-3 text-sm ${t.amount < 0 ? 'text-red-400' : style.accentText}`}>
+                  <p className={`font-mono font-black shrink-0 ml-3 text-sm ${t.amount < 0 ? 'text-red-300' : style.accentText}`}>
                     {t.amount < 0 ? formatRupiah(t.amount) : `+${formatRupiah(t.amount)}`}
                   </p>
                 </div>
@@ -580,19 +572,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="p-5 bg-white/5 backdrop-blur-xl border border-rose-400/30 border-l-4 border-l-rose-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.15)] space-y-3.5">
-          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
+        <div className="p-5 bg-white/10 backdrop-blur-xl border border-rose-400/40 border-l-4 border-l-rose-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5">
+          <h5 className="text-[10px] font-black text-rose-300 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
-              <p className="text-xs text-slate-400 font-mono py-1">{dict.emptyMutationOut}</p>
+              <p className="text-xs text-slate-300 font-mono py-1">{dict.emptyMutationOut}</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/5 last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-white/10 last:border-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-100 font-bold truncate uppercase tracking-wide">{t.note}</p>
-                    <p className="text-[9px] text-slate-400 font-mono mt-0.5">{t.transaction_date}</p>
+                    <p className="text-[9px] text-slate-300 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <div className="font-mono font-black text-rose-400 shrink-0 ml-3 text-sm">-{formatRupiah(t.amount)}</div>
+                  <div className="font-mono font-black text-rose-300 shrink-0 ml-3 text-sm">-{formatRupiah(t.amount)}</div>
                 </div>
               ))
             )}
