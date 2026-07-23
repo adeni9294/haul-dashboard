@@ -119,9 +119,9 @@ export default function AnggaranPage() {
     const supabase = getSupabase();
     const cleanAmount = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
 
-    // Sesuai dengan kolom Supabase: category_name (atau name/alokasi) dan category
+    // Menggunakan kolom 'name' untuk Nama Alokasi dan 'category' serta 'planned_amount'
     const payload = { 
-      category_name: allocationName.trim(), 
+      name: allocationName.trim(), 
       category: category,                   
       planned_amount: cleanAmount,          
       periode_id: selectedPeriodeId
@@ -153,7 +153,7 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     setEditingId(b.id);
-    setAllocationName(b.category_name || '');
+    setAllocationName(b.name || b.category_name || '');
     setCategory(b.category || categoryOptions[0] || '');
     setPlannedAmount(b.planned_amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -261,7 +261,7 @@ export default function AnggaranPage() {
               />
             </div>
 
-            {/* 2. KATEGORI (DIAMBIL DARI TABEL CATEGORY) */}
+            {/* 2. KATEGORI */}
             <div>
               <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Kategori Pos Buku Kas</label>
               <select 
@@ -320,7 +320,7 @@ export default function AnggaranPage() {
               budgetList.map((b) => {
                 const plan = parseFloat(b.planned_amount) || 0;
                 const catKey = (b.category || '').trim().toLowerCase();
-                const real = expenseSummary[catKey] || expenseSummary[(b.category_name || '').trim().toLowerCase()] || 0;
+                const real = expenseSummary[catKey] || expenseSummary[(b.name || '').trim().toLowerCase()] || 0;
                 const selisih = plan - real;
                 const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
 
@@ -328,7 +328,7 @@ export default function AnggaranPage() {
                   <div key={b.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl space-y-2 hover:border-white/30 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.category_name || 'Tanpa Nama Alokasi'}</p>
+                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.name || 'Tanpa Nama Alokasi'}</p>
                         <p className="text-[10px] text-amber-300 font-mono mt-0.5">📂 Kategori: {b.category || 'Umum'}</p>
                       </div>
                       {isAdmin && (
