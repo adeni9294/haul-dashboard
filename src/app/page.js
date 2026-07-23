@@ -27,9 +27,13 @@ const DICTIONARY = {
     combinedDonor: 'GABUNGAN DARI',
     donorUpper: 'DONATUR',
     operasionalExpense: 'Pengeluaran Operasional',
-    // Fitur Baru Visitor
     totalKunjungan: 'Total Kunjungan Aplikasi',
-    pengunjungUnik: 'Pengunjung Unik (IP)'
+    pengunjungUnik: 'Pengunjung Unik (IP)',
+    // ➕ Fitur Baru Period
+    selectPeriod: 'PILIH PERIODE HAUL:',
+    initialBalance: 'Saldo Awal Kas',
+    statusClosed: '(Selesai/Tutup Buku)',
+    statusActive: '(Berjalan)'
   },
   jv: { 
     loading: '⏳ Nembe ngebuka antarmuka Cirebonan Premium...',
@@ -54,9 +58,13 @@ const DICTIONARY = {
     combinedDonor: 'GABUNGAN SAKING',
     donorUpper: 'DONATUR',
     operasionalExpense: 'Pragat Blonjo Operasional',
-    // Fitur Baru Visitor
     totalKunjungan: 'Kabeh Klik Sing Mlebu',
-    pengunjungUnik: 'Wong Sing Deleng (IP)'
+    pengunjungUnik: 'Wong Sing Deleng (IP)',
+    // ➕ Fitur Baru Period
+    selectPeriod: 'PILIH PERIODE HAUL:',
+    initialBalance: 'Bondo Awal Kas',
+    statusClosed: '(Rampung/Tutup Buku)',
+    statusActive: '(Mlaku)'
   },
   en: {
     loading: '⏳ Loading Premium Interface...',
@@ -81,9 +89,13 @@ const DICTIONARY = {
     combinedDonor: 'COMBINED OF',
     donorUpper: 'DONORS',
     operasionalExpense: 'Operational Expenditure',
-    // Fitur Baru Visitor
     totalKunjungan: 'Total Hits / Pageviews',
-    pengunjungUnik: 'Unique Visitors (IP)'
+    pengunjungUnik: 'Unique Visitors (IP)',
+    // ➕ Fitur Baru Period
+    selectPeriod: 'SELECT HAUL PERIOD:',
+    initialBalance: 'Opening Cash Balance',
+    statusClosed: '(Closed)',
+    statusActive: '(Active)'
   }
 };
 
@@ -103,7 +115,7 @@ const THEME_STYLES = {
 export default function DashboardPage() {
   const [lang, setLang] = useState('id'); 
   const [loading, setLoading] = useState(true);
-  const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0 });
+  const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0, saldoAwal: 0 });
   const [progress, setProgress] = useState({ percent: 0, current: 0, target: 0 });
   const [rincianMasuk, setRincianMasuk] = useState([]);
   const [rincianKeluar, setRincianKeluar] = useState([]);
@@ -113,20 +125,45 @@ export default function DashboardPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
   
-  // State Baru untuk Data Pengunjung
+  // ➕ State Periode Haul
+  const [periodeList, setPeriodeList] = useState([]);
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
+
+  // State Data Pengunjung
   const [visitorStats, setVisitorStats] = useState({ totalViews: 0, uniqueCount: 0 });
 
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
   useEffect(() => { 
     loadDashboardData(); 
-  }, [lang]);
+  }, [lang, selectedPeriodeId]);
 
   async function loadDashboardData() {
     try {
       setLoading(true);
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
+      // 1. MEMUAT DAFTAR PERIODE HAUL
+      let activePeriodeId = selectedPeriodeId;
+      let currentSaldoAwal = 0;
+
+      const { data: listPeriode } = await supabase
+        .from('periode_haul')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (listPeriode && listPeriode.length > 0) {
+        setPeriodeList(listPeriode);
+        if (!activePeriodeId) {
+          activePeriodeId = listPeriode[0].id;
+          setSelectedPeriodeId(activePeriodeId);
+        }
+
+        const selectedObj = listPeriode.find(p => p.id === activePeriodeId) || listPeriode[0];
+        currentSaldoAwal = parseFloat(selectedObj.saldo_awal || 0);
+      }
+
+      // 2. MEMUAT SETTINGS
       const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
       if (settingsData && settingsData.length > 0) {
         setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
@@ -134,7 +171,7 @@ export default function DashboardPage() {
         if (settingsData[0].theme) setCurrentThemeKey(settingsData[0].theme);
       }
 
-      // 🟢 PROSES QUERY DATA LOG PENGUNJUNG
+      // 3. LOG PENGUNJUNG
       try {
         const { count: countViews } = await supabase
           .from('visitor_logs')
@@ -150,14 +187,24 @@ export default function DashboardPage() {
         console.error('Gagal memuat analitik log:', visErr);
       }
 
+      // 4. BUDGET TARGET
       const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
       let totalPlafonDinamis = 0;
       if (budgetsData) {
         budgetsData.forEach(b => { totalPlafonDinamis += parseFloat(b.planned_amount) || 0; });
       }
 
-      const { data: donationsDb } = await supabase.from('donation_details').select('*');
-      const { data: transactionsDb } = await supabase.from('transactions').select('*');
+      // 5. FETCH TRANSAKSI & DONASI (DENGAN FILTER PERIODE_ID)
+      let donQuery = supabase.from('donation_details').select('*');
+      let txQuery = supabase.from('transactions').select('*');
+
+      if (activePeriodeId) {
+        donQuery = donQuery.eq('periode_id', activePeriodeId);
+        txQuery = txQuery.eq('periode_id', activePeriodeId);
+      }
+
+      const { data: donationsDb } = await donQuery;
+      const { data: transactionsDb } = await txQuery;
         
       let calcMasuk = 0; 
       let calcKeluar = 0;
@@ -275,16 +322,24 @@ export default function DashboardPage() {
 
       setCatSummaryMasuk(parseChart(incomeMap, calcMasuk));
       setCatSummaryKeluar(parseChart(expenseMap, calcKeluar));
-      setTotals({ total: calcMasuk - calcKeluar, masuk: calcMasuk, keluar: calcKeluar });
+
+      // Sisa Kas Bersih = Saldo Awal Periode + Total Masuk - Total Keluar
+      const totalSaldoNet = currentSaldoAwal + calcMasuk - calcKeluar;
+      setTotals({ 
+        total: totalSaldoNet, 
+        masuk: calcMasuk, 
+        keluar: calcKeluar, 
+        saldoAwal: currentSaldoAwal 
+      });
       
       setRincianMasuk(arrayMasukFinal.slice(0, 15)); 
       setRincianKeluar(arrayKeluarFinal.slice(0, 15));
 
       let hitungPersen = 0;
       if (totalPlafonDinamis > 0) {
-        hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
+        hitungPersen = parseFloat((((calcMasuk + currentSaldoAwal) / totalPlafonDinamis) * 100).toFixed(1));
       }
-      setProgress({ percent: hitungPersen, current: calcMasuk, target: totalPlafonDinamis });
+      setProgress({ percent: hitungPersen, current: calcMasuk + currentSaldoAwal, target: totalPlafonDinamis });
 
     } catch (err) { 
       console.error(err); 
@@ -312,18 +367,42 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-white">
       
-      {/* 🌐 SELEKTOR PILIHAN 3 BAHASA */}
-      <div className="flex justify-end items-center gap-2 mb-2 print:hidden">
-        <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Select Language:</span>
-        <select 
-          value={lang} 
-          onChange={(e) => setLang(e.target.value)}
-          className="bg-zinc-950 border border-zinc-800 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
-        >
-          <option value="id">🇮🇩 Indonesia</option>
-          <option value="jv">🎯 Cirebonan</option>
-          <option value="en">🇬🇧 English</option>
-        </select>
+      {/* 🌐 SELEKTOR PERIODE & BAHASA */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2 print:hidden">
+        
+        {/* Dropdown Filter Periode */}
+        {periodeList.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold">
+              {dict.selectPeriod}
+            </span>
+            <select
+              value={selectedPeriodeId || ''}
+              onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+              className="bg-zinc-950 border border-zinc-800 text-xs text-amber-400 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
+            >
+              {periodeList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nama_periode} {p.is_closed ? dict.statusClosed : dict.statusActive}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Dropdown Bahas */}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Select Language:</span>
+          <select 
+            value={lang} 
+            onChange={(e) => setLang(e.target.value)}
+            className="bg-zinc-950 border border-zinc-800 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
+          >
+            <option value="id">🇮🇩 Indonesia</option>
+            <option value="jv">🎯 Cirebonan</option>
+            <option value="en">🇬🇧 English</option>
+          </select>
+        </div>
       </div>
       
       {/* 📢 ANNOUNCEMENT BANNER */}
@@ -362,7 +441,7 @@ export default function DashboardPage() {
               {formatRupiah(totals.total)}
             </h2>
             <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-60">
-              <span>**** **** **** 2026</span>
+              <span>{dict.initialBalance}: {formatRupiah(totals.saldoAwal)}</span>
               <span className="font-bold uppercase tracking-wide">{dict.committee}</span>
             </div>
           </div>
@@ -395,7 +474,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* 📊 BARU: CARD LOG TRAFIK PENGUNJUNG APLIKASI */}
+      {/* CARD LOG TRAFIK PENGUNJUNG APLIKASI */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
         <div className={`p-4 ${style.card} border rounded-2xl flex items-center gap-4 transition-all hover:border-zinc-700/60`}>
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-base shadow-sm">📈</div>
