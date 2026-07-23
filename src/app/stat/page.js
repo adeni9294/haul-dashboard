@@ -53,54 +53,74 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Data dari Tabel 'transactions' dan 'budgets'
+      // 2. Ambil Semua Data Transactions, Budgets, dan Donation Details
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
+      const { data: allDonations } = await supabase.from('donation_details').select('*');
 
-      // 3. Mapping Statistik per Periode Berdasarkan Kolom 'type' di 'transactions'
+      // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
 
         let masuk = 0;
-        let kel = 0;
+        let keluar = 0;
         let rencanaBudget = 0;
+        let saldoAwal = parseFloat(p.saldo_awal || 0);
 
-        // Hitung dari transactions
+        // Hitung dari transactions (Menjumlahkan semua baris yang tipenya Pemasukan/keluar)
         if (allTransactions) {
           allTransactions.forEach(t => {
-            const matchPeriode = t.periode_id === pId || !t.periode_id;
+            // Longgarkan filter periode agar data yang periode_id-nya null tetap terhitung di periode aktif
+            const matchPeriode = t.periode_id === pId || !t.periode_id || t.periode_id === Number(pId);
             if (matchPeriode) {
-              const typeVal = (t.type || '').toString().trim();
-              const amount = Math.abs(parseFloat(t.amount || 0));
+              const typeVal = (t.type || '').toString().trim().toLowerCase();
+              const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
 
-              // Sesuai dengan database: 'Pemasukan' atau 'keluar'
-              if (typeVal.toLowerCase() === 'Pemasukan') {
-                masuk += amount;
-              } else if (typeVal.toLowerCase() === 'keluar') {
-                kel += amount;
+              if (typeVal === 'pemasukan' || typeVal === 'masuk' || type === 'in') {
+                masuk += nominal;
+              } else if (typeVal === 'keluar' || type === 'pengeluaran' || type === 'out') {
+                keluar += nominal;
               }
             }
           });
         }
 
-        // Hitung Rencana Anggaran (Budget)
-        if (allBudgets) {
-          allBudgets.forEach(b => {
-            const matchPeriode = b.periode_id === pId || !b.periode_id;
+        // Jika transaksi kas kurang lengkap, sinkronkan dengan akumulasi donation_details bersih
+        let totalDonasiClean = 0;
+        if (allDonations) {
+          allDonations.forEach(d => {
+            const matchPeriode = d.periode_id === pId || !d.periode_id || d.periode_id === Number(pId);
             if (matchPeriode) {
-              rencanaBudget += parseFloat(b.planned_amount || 0);
+              const nominal = Math.abs(parseFloat(d.amount || d.nominal || 0));
+              const donorName = (d.donor_name || '').toString();
+              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
+                totalDonasiClean += nominal;
+              }
             }
           });
         }
 
-        const saldo = masuk - kel;
+        // Ambil nilai pemasukan terbesar yang paling akurat (antara rekap transaksi atau donasi ditambah saldo awal)
+        const finalMasuk = Math.max(masuk, totalDonasiClean) + saldoAwal;
+
+        // Hitung Rencana Anggaran (Budget)
+        if (allBudgets) {
+          allBudgets.forEach(b => {
+            const matchPeriode = b.periode_id === pId || !b.periode_id || b.periode_id === Number(pId);
+            if (matchPeriode) {
+              rencanaBudget += parseFloat(b.planned_amount || b.amount || 0);
+            }
+          });
+        }
+
+        const saldo = finalMasuk - keluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: masuk,
-          totalKeluar: kel,
+          totalMasuk: finalMasuk > 0 ? finalMasuk : masuk,
+          totalKeluar: keluar,
           saldoBersih: saldo,
           totalRencanaBudget: rencanaBudget
         };
