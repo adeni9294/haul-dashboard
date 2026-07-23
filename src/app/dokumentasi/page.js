@@ -7,6 +7,10 @@ export default function DokumentasiPage() {
   const [photos, setPhotos] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // ➕ State Periode Haul
+  const [periodeList, setPeriodeList] = useState([]);
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
+
   // State Form Modal Tambah Dokumentasi
   const [showModal, setShowModal] = useState(false);
   const [formTitle, setFormTitle] = useState('');
@@ -16,7 +20,7 @@ export default function DokumentasiPage() {
   useEffect(() => {
     checkAdminSession();
     loadPhotos();
-  }, []);
+  }, [selectedPeriodeId]);
 
   const getSupabase = () => {
     return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
@@ -38,10 +42,33 @@ export default function DokumentasiPage() {
     try {
       setLoading(true);
       const supabase = getSupabase();
-      const { data, error } = await supabase
+
+      // 1. Memuat Daftar Periode
+      let activePeriodeId = selectedPeriodeId;
+      const { data: listPeriode } = await supabase
+        .from('periode_haul')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (listPeriode && listPeriode.length > 0) {
+        setPeriodeList(listPeriode);
+        if (!activePeriodeId) {
+          activePeriodeId = listPeriode[0].id;
+          setSelectedPeriodeId(activePeriodeId);
+        }
+      }
+
+      // 2. Query Data Foto berdasarkan Periode
+      let query = supabase
         .from('photos')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (activePeriodeId) {
+        query = query.eq('periode_id', activePeriodeId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setPhotos(data || []);
@@ -54,7 +81,6 @@ export default function DokumentasiPage() {
 
   const handleSavePhoto = async (e) => {
     e.preventDefault();
-    // DISESUAIKAN: Validasi status admin disamakan persis seperti halaman transaksi Anda
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (!formFile || !formTitle.trim()) return alert('Harap isi judul kegiatan dan pilih berkas foto!');
 
@@ -78,10 +104,14 @@ export default function DokumentasiPage() {
         .from('dokumentasi')
         .getPublicUrl(filePath);
 
-      // C. Masukkan catatan baris ke tabel database 'photos'
+      // C. Masukkan catatan baris ke tabel database 'photos' + periode_id
       const { error: insertError } = await supabase
         .from('photos')
-        .insert([{ title: formTitle.trim(), image_url: publicUrl }]);
+        .insert([{ 
+          title: formTitle.trim(), 
+          image_url: publicUrl,
+          periode_id: selectedPeriodeId // ➕ Connect to Periode Aktif
+        }]);
 
       if (insertError) throw insertError;
 
@@ -146,25 +176,44 @@ export default function DokumentasiPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* AREA UTAMA PANEL KONTROL */}
+      {/* AREA UTAMA PANEL KONTROL & SELECTOR PERIODE */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider">📸 Galeri Dokumentasi Kegiatan Haul</h2>
           <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
-        {isAdmin && (
-          <div className="w-full sm:w-auto">
-            <button onClick={() => setShowModal(true)} className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md">
+
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* SELECTOR PERIODE HAUL */}
+          {periodeList.length > 0 && (
+            <div className="flex items-center bg-slate-950 p-1 border border-slate-800 rounded-xl">
+              <span className="text-[9px] font-mono font-bold text-slate-400 px-2 uppercase">Periode:</span>
+              <select
+                value={selectedPeriodeId || ''}
+                onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+                className="bg-slate-900 border border-slate-800 text-[10px] text-amber-400 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              >
+                {periodeList.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nama_periode}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {isAdmin && (
+            <button onClick={() => setShowModal(true)} className="px-4 py-2 bg-emerald-600 text-white font-bold uppercase rounded-xl hover:bg-emerald-500 transition-all shadow-md text-[10px]">
               ➕ Tambah Foto
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* STRUKTUR GRID DAFTAR FOTO */}
       {photos.length === 0 ? (
         <div className="p-12 text-center text-slate-500 font-mono border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
-          Belum ada arsip foto dokumentasi kegiatan yang diunggah.
+          Belum ada arsip foto dokumentasi kegiatan yang diunggah untuk periode ini.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
