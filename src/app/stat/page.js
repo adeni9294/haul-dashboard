@@ -24,21 +24,51 @@ export default function StatPage() {
   const [monthlyData, setMonthlyData] = useState([]);
   const [activeMonthIndex, setActiveMonthIndex] = useState(new Date().getMonth());
 
+  // ➕ State Periode Haul
+  const [periodeList, setPeriodeList] = useState([]);
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
+  const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
+
   useEffect(() => {
     async function loadStatData() {
       try {
         setLoading(true);
         const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
+        // 1. MEMUAT SETTINGS
         const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
         if (settingsData && settingsData.length > 0 && settingsData[0].theme) {
           setCurrentThemeKey(settingsData[0].theme);
         }
 
-        const { data: trans, error } = await supabase
+        // 2. MEMUAT DAFTAR PERIODE HAUL
+        let activePeriodeId = selectedPeriodeId;
+        const { data: listPeriode } = await supabase
+          .from('periode_haul')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (listPeriode && listPeriode.length > 0) {
+          setPeriodeList(listPeriode);
+          if (!activePeriodeId) {
+            activePeriodeId = listPeriode[0].id;
+            setSelectedPeriodeId(activePeriodeId);
+          }
+          const found = listPeriode.find(p => p.id === activePeriodeId) || listPeriode[0];
+          setCurrentPeriodeObj(found);
+        }
+
+        // 3. QUERY TRANSAKSI DENGAN FILTER PERIODE_ID
+        let query = supabase
           .from('transactions')
           .select('*')
           .order('transaction_date', { ascending: true });
+
+        if (activePeriodeId) {
+          query = query.eq('periode_id', activePeriodeId);
+        }
+
+        const { data: trans, error } = await query;
 
         if (!error && trans) {
           let calcMasuk = 0;
@@ -81,7 +111,7 @@ export default function StatPage() {
       }
     }
     loadStatData();
-  }, []);
+  }, [selectedPeriodeId]);
 
   const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 
@@ -100,16 +130,45 @@ export default function StatPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 sm:px-6 pb-24 text-white">
       
-      {/* JUDUL HALAMAN */}
-      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+      {/* JUDUL HALAMAN & PERIODE SELECTOR */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-800/80 pb-3 gap-3">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider font-mono">📊 Statistics Analytics</h2>
           <p className="text-[10px] text-slate-500">Akumulasi pengeluaran operasional per bulan</p>
         </div>
-        <div className="flex gap-1.5 text-[10px] font-mono">
-          <span className={`px-2 py-0.5 rounded bg-red-500/10 ${style.accentText} font-bold animate-pulse`}>● LIVE SYNC</span>
+
+        {/* SELECTOR PERIODE */}
+        <div className="flex items-center gap-2">
+          {periodeList.length > 0 && (
+            <div className="flex items-center bg-slate-950 p-1 border border-slate-800 rounded-xl">
+              <span className="text-[9px] font-mono font-bold text-slate-400 px-2 uppercase">Periode:</span>
+              <select
+                value={selectedPeriodeId || ''}
+                onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+                className="bg-slate-900 border border-slate-800 text-[10px] text-amber-400 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              >
+                {periodeList.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex gap-1.5 text-[10px] font-mono">
+            <span className={`px-2 py-0.5 rounded bg-red-500/10 ${style.accentText} font-bold animate-pulse`}>● LIVE SYNC</span>
+          </div>
         </div>
       </div>
+
+      {/* INDIKATOR STATUS PERIODE */}
+      {currentPeriodeObj?.is_closed && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex items-center justify-between text-amber-400 font-mono text-xs">
+          <span>🔒 Menampilkan statistik data arsip untuk <strong>{currentPeriodeObj.nama_periode}</strong> (Tutup Buku).</span>
+          <span className="bg-amber-500 text-black px-2 py-0.5 rounded font-bold text-[10px] uppercase">Arsip</span>
+        </div>
+      )}
 
       {/* TOTAL VALUE PANEL */}
       <div className={`${style.card} border rounded-3xl p-6 relative overflow-hidden`}>
@@ -170,7 +229,7 @@ export default function StatPage() {
         <div className={`${style.innerBg} p-4 rounded-2xl grid grid-cols-2 gap-4 shadow-inner`}>
           <div>
             <p className="text-[9px] font-mono text-slate-500 uppercase">Bulan Terpilih</p>
-            <p className="text-sm font-black text-white">{MONTH_LABELS[activeMonthIndex]} 2026</p>
+            <p className="text-sm font-black text-white">{MONTH_LABELS[activeMonthIndex]} ({currentPeriodeObj?.nama_periode || '2026'})</p>
           </div>
           <div className="text-right">
             <p className="text-[9px] font-mono text-slate-500 uppercase">Belanja Logistik</p>
