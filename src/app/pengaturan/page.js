@@ -22,7 +22,13 @@ export default function PengaturanPage() {
   // State Kategori Pos Kas
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
-  const [categoryType, setCategoryType] = useState('pemasukan'); // Default untuk kategori baru
+  const [categoryType, setCategoryType] = useState('pemasukan');
+
+  // ➕ State Kelola Periode Haul
+  const [periodeList, setPeriodeList] = useState([]);
+  const [namaPeriodeInput, setNamaPeriodeInput] = useState('');
+  const [saldoAwalInput, setSaldoAwalInput] = useState('');
+  const [editingPeriodeId, setEditingPeriodeId] = useState(null);
 
   const listTema = [
     { id: 'default', name: 'Slate Default (Bawaan)' },
@@ -52,6 +58,7 @@ export default function PengaturanPage() {
     validateAdminFromSupabase();
     loadSettings();
     loadCategories();
+    loadPeriodeList();
   }, []);
 
   async function validateAdminFromSupabase() {
@@ -81,8 +88,15 @@ export default function PengaturanPage() {
 
   async function loadCategories() {
     const supabase = getSupabase();
-    const { data } = await supabase.from('categories').select('*').order('id', { ascending: true });
+    const { data } = await supabase.from('category').select('*').order('id', { ascending: true });
     if (data) setCategories(data);
+  }
+
+  // ➕ Memuat Daftar Periode Haul
+  async function loadPeriodeList() {
+    const supabase = getSupabase();
+    const { data } = await supabase.from('periode_haul').select('*').order('created_at', { ascending: false });
+    if (data) setPeriodeList(data);
   }
 
   const handleUploadLogo = async (e) => {
@@ -139,6 +153,44 @@ export default function PengaturanPage() {
     }
   };
 
+  // ➕ Tambah / Edit Periode Haul
+  const handleSavePeriode = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) return alert('Aksi ditolak!');
+    if (!namaPeriodeInput.trim()) return;
+
+    const supabase = getSupabase();
+    const payload = {
+      nama_periode: namaPeriodeInput.trim(),
+      saldo_awal: parseFloat(saldoAwalInput) || 0
+    };
+
+    try {
+      if (editingPeriodeId) {
+        const { error } = await supabase.from('periode_haul').update(payload).eq('id', editingPeriodeId);
+        if (error) throw error;
+        alert('🟢 Periode berhasil diperbarui!');
+      } else {
+        const { error } = await supabase.from('periode_haul').insert([payload]);
+        if (error) throw error;
+        alert('🟢 Periode baru berhasil dibuat!');
+      }
+
+      setNamaPeriodeInput('');
+      setSaldoAwalInput('');
+      setEditingPeriodeId(null);
+      await loadPeriodeList();
+    } catch (err) {
+      alert(`❌ Gagal menyimpan periode: ${err.message}`);
+    }
+  };
+
+  const handleEditPeriode = (p) => {
+    setEditingPeriodeId(p.id);
+    setNamaPeriodeInput(p.nama_periode);
+    setSaldoAwalInput(p.saldo_awal?.toString() || '0');
+  };
+
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) return alert('❌ Konfirmasi sandi baru tidak cocok!');
@@ -167,13 +219,12 @@ export default function PengaturanPage() {
     }
   };
 
-  // 1. FUNGSI TAMBAH KATEGORI BARU
   const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
     const supabase = getSupabase();
     
-    const { error } = await supabase.from('categories').insert([
+    const { error } = await supabase.from('category').insert([
       { 
         name: newCategory.trim(),
         type: categoryType 
@@ -188,16 +239,14 @@ export default function PengaturanPage() {
     }
   };
 
-  // 2. FUNGSI UPDATE/PILIH JENIS KATEGORI LANGSUNG DARI LIST UI
   const handleUpdateCategoryType = async (id, updatedType) => {
     const supabase = getSupabase();
     const { error } = await supabase
-      .from('categories')
+      .from('category')
       .update({ type: updatedType })
       .eq('id', id);
 
     if (!error) {
-      // Perbarui state lokal secara instan agar UI terasa responsif tanpa reload halaman
       setCategories(categories.map(cat => cat.id === id ? { ...cat, type: updatedType } : cat));
     } else {
       alert('❌ Gagal memperbarui jenis kategori.');
@@ -207,13 +256,15 @@ export default function PengaturanPage() {
   const handleDeleteCategory = async (id) => {
     if (!confirm('Hapus kategori pos buku kas ini?')) return;
     const supabase = getSupabase();
-    const { error } = await supabase.from('categories').delete().eq('id', id);
+    const { error } = await supabase.from('category').delete().eq('id', id);
     if (!error) {
       await loadCategories();
     } else {
       alert('❌ Gagal menghapus kategori.');
     }
   };
+
+  const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
   if (!isAdmin) {
     return (
@@ -280,6 +331,57 @@ export default function PengaturanPage() {
             💾 Simpan Konfigurasi & Tema
           </button>
         </form>
+
+        {/* 🏛️ PANEL KELOLA PERIODE HAUL */}
+        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-purple-400 font-bold uppercase tracking-wider">🏛️ Kelola Periode Haul</h3>
+
+          <form onSubmit={handleSavePeriode} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input 
+                type="text" 
+                placeholder="Nama Periode (Misal: Haul 2027)" 
+                required 
+                value={namaPeriodeInput} 
+                onChange={(e) => setNamaPeriodeInput(e.target.value)} 
+                className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-white" 
+              />
+              <input 
+                type="number" 
+                placeholder="Saldo Kas Awal (Rp)" 
+                value={saldoAwalInput} 
+                onChange={(e) => setSaldoAwalInput(e.target.value)} 
+                className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none text-amber-400 font-mono font-bold" 
+              />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all">
+                {editingPeriodeId ? '💾 Perbarui Periode' : '➕ Tambah Periode Baru'}
+              </button>
+              {editingPeriodeId && (
+                <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-3 py-2 bg-slate-800 text-slate-400 rounded-xl">Batal</button>
+              )}
+            </div>
+          </form>
+
+          {/* LIST DAFTAR PERIODE */}
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+            {periodeList.map((p) => (
+              <div key={p.id} className="flex justify-between items-center p-2.5 bg-slate-950 border border-slate-800 rounded-xl">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white">{p.nama_periode}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${p.is_closed ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                      {p.is_closed ? '🔒 Closed' : '🟢 Active'}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">Saldo Awal: <strong className="text-amber-400">{formatRupiah(p.saldo_awal)}</strong></p>
+                </div>
+                <button type="button" onClick={() => handleEditPeriode(p)} className="text-amber-400 font-mono font-bold hover:underline text-[11px]">Edit</button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* KOLOM KANAN: KATEGORI POS BUKU KAS & UBAH SANDI */}
@@ -318,7 +420,6 @@ export default function PengaturanPage() {
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <span className="truncate">🏷️ {cat.name}</span>
                   
-                  {/* Dropdown untuk memilih/merubah jenis kategori langsung */}
                   <select
                     value={cat.type || ''}
                     onChange={(e) => handleUpdateCategoryType(cat.id, e.target.value)}
