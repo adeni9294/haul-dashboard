@@ -106,7 +106,7 @@ export default function KepanitiaanPage() {
       name: nama.trim(),
       position: jabatan.trim() || '-',
       phone: nomorHp.trim() || '-',
-      periode_id: selectedPeriodeId // ➕ Connect ke Periode Aktif
+      periode_id: selectedPeriodeId
     };
 
     try {
@@ -157,29 +157,31 @@ export default function KepanitiaanPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono text-slate-500">Memuat struktur kepanitiaan...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Memuat struktur kepanitiaan...</div>;
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* HEADER PAGE STATUS & PERIODE SELECTOR */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl">
+      {/* HEADER PAGE STATUS & PERIODE SELECTOR (GLASSMORPISM) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-wider">👥 Susunan Kepanitiaan Haul</h2>
-          <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
+          <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+            <span>👥</span> Susunan Kepanitiaan Haul
+          </h2>
+          <p className="text-[10px] opacity-80 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
 
         {/* SELECTOR PERIODE */}
         {periodeList.length > 0 && (
-          <div className="flex items-center bg-slate-950 p-1 border border-slate-800 rounded-xl">
-            <span className="text-[9px] font-mono font-bold text-slate-400 px-2 uppercase">Periode Haul:</span>
+          <div className="flex items-center bg-black/30 p-1 border border-white/20 rounded-xl">
+            <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">Periode Haul:</span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-slate-900 border border-slate-800 text-[10px] text-amber-400 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              className="bg-black/40 border border-white/20 text-[10px] text-amber-300 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
             >
               {periodeList.map((p) => (
-                <option key={p.id} value={p.id}>
+                <option key={p.id} value={p.id} className="bg-zinc-900 text-white">
                   {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
                 </option>
               ))}
@@ -190,79 +192,81 @@ export default function KepanitiaanPage() {
 
       {/* INDIKATOR TUTUP BUKU */}
       {currentPeriodeObj?.is_closed && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex items-center justify-between text-amber-400 font-mono text-xs">
+        <div className="bg-amber-500/20 border border-amber-400/40 p-3 rounded-xl flex items-center justify-between text-amber-300 font-mono text-xs backdrop-blur-md">
           <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Susunan kepanitiaan bersifat Read-Only.</span>
-          <span className="bg-amber-500 text-black px-2 py-0.5 rounded font-bold text-[10px] uppercase">Arsip</span>
+          <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* FORM INPUT ADMIN */}
+        {/* FORM INPUT ADMIN (GLASSMORPISM) */}
         {isAdmin && !currentPeriodeObj?.is_closed ? (
-          <form onSubmit={handleSubmit} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-fit space-y-4 shadow-xl">
-            <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">
-              {editingId ? '🔄 Perbarui Data Panitia' : '➕ Tambah Anggota Panitia'}
+          <form onSubmit={handleSubmit} className="p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl h-fit space-y-4 shadow-xl">
+            <h3 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+              <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Data Panitia' : 'Tambah Anggota Panitia'}
             </h3>
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Nama Anggota Panitia</label>
-              <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Contoh: Ahmad Deni" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Nama Anggota Panitia</label>
+              <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Contoh: Ahmad Deni" className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-white focus:outline-none placeholder:text-slate-400" />
             </div>
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Jabatan / Posisi</label>
-              <input type="text" value={jabatan} onChange={(e) => setJabatan(e.target.value)} placeholder="Contoh: Bendahara" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none" />
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jabatan / Posisi</label>
+              <input type="text" value={jabatan} onChange={(e) => setJabatan(e.target.value)} placeholder="Contoh: Bendahara" className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-white focus:outline-none placeholder:text-slate-400" />
             </div>
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Nomor WhatsApp / Phone</label>
-              <input type="text" value={nomorHp} onChange={(e) => setNomorHp(e.target.value)} placeholder="Contoh: +62 812-3456-789" className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono" />
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Nomor WhatsApp / Phone</label>
+              <input type="text" value={nomorHp} onChange={(e) => setNomorHp(e.target.value)} placeholder="Contoh: +62 812-3456-789" className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-white focus:outline-none font-mono placeholder:text-slate-400" />
             </div>
             
-            <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs uppercase rounded-xl hover:from-amber-400 hover:to-amber-500 shadow-md">
+            <button type="submit" className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-black font-black text-xs uppercase rounded-xl transition-all shadow-md">
               {editingId ? '💾 Simpan Perubahan' : 'Simpan Panitia'}
             </button>
             {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setNama(''); setJabatan(''); setNomorHp(''); }} className="w-full py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl mt-2">Batal Edit</button>
+              <button type="button" onClick={() => { setEditingId(null); setNama(''); setJabatan(''); setNomorHp(''); }} className="w-full py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold rounded-xl mt-2 transition-all">Batal Edit</button>
             )}
           </form>
         ) : (
-          <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl h-fit text-center space-y-2">
-            <p className="text-xs text-slate-400 font-medium">
+          <div className="p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl h-fit text-center space-y-2 shadow-xl">
+            <p className="text-xs text-slate-200 font-medium">
               {currentPeriodeObj?.is_closed ? '🔒 Periode ini sudah ditutup buku.' : '💡 Anda berada di Mode Publik (Lihat Saja).'}
             </p>
-            <p className="text-[10px] text-slate-500 font-mono">
+            <p className="text-[10px] opacity-70 font-mono">
               {currentPeriodeObj?.is_closed ? 'Struktur kepanitiaan telah dikunci.' : 'Gunakan akses admin untuk mengaktifkan formulir manajemen panitia.'}
             </p>
           </div>
         )}
 
-        {/* DATA UTAMA STRUKTUR LIST */}
-        <div className="lg:col-span-2 p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 shadow-md">
-          <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">📋 Susunan Kepanitiaan Terdaftar ({panitiaList.length})</h3>
-          <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
+        {/* DATA UTAMA STRUKTUR LIST (GLASSMORPISM) */}
+        <div className="lg:col-span-2 p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-3 shadow-xl">
+          <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider flex items-center gap-2">
+            <span>📋</span> Susunan Kepanitiaan Terdaftar ({panitiaList.length})
+          </h3>
+          <div className="space-y-2.5 max-h-[550px] overflow-y-auto pr-1">
             {panitiaList.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono py-6 text-center">Belum ada daftar kepanitiaan yang ditemukan pada periode ini.</p>
+              <p className="text-xs opacity-70 font-mono py-6 text-center">Belum ada daftar kepanitiaan yang ditemukan pada periode ini.</p>
             ) : (
               panitiaList.map((p) => (
-                <div key={p.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex justify-between items-center text-xs hover:border-slate-700/80 transition-all">
+                <div key={p.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl flex justify-between items-center text-xs hover:border-white/30 transition-all">
                   <div>
                     {/* Kolom name */}
-                    <p className="font-bold text-white text-sm">{p.name || 'Tanpa Nama'}</p>
+                    <p className="font-bold text-white text-sm tracking-wide">{p.name || 'Tanpa Nama'}</p>
                     
                     {/* Kolom position dan phone */}
-                    <div className="flex flex-col gap-0.5 text-[10px] text-slate-400 font-mono mt-1">
-                      <p>💼 Jabatan: <span className="text-amber-400 font-sans font-medium">{p.position || '-'}</span></p>
-                      <p>📞 Phone: <span className="text-slate-300">{p.phone || '-'}</span></p>
+                    <div className="flex flex-col gap-0.5 text-[10px] opacity-80 font-mono mt-1">
+                      <p>💼 Jabatan: <span className="text-amber-300 font-sans font-semibold">{p.position || '-'}</span></p>
+                      <p>📞 Phone: <span className="text-slate-200">{p.phone || '-'}</span></p>
                     </div>
                   </div>
                   
                   {isAdmin && (
-                    <div className="flex gap-3 font-mono text-[11px]">
+                    <div className="flex gap-3 font-mono text-[11px] shrink-0 ml-2">
                       {currentPeriodeObj?.is_closed ? (
-                        <span className="text-amber-500 italic text-[10px]">🔒 Terkunci</span>
+                        <span className="text-amber-300 italic text-[10px]">🔒 Terkunci</span>
                       ) : (
                         <>
-                          <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                          <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                          <button onClick={() => handleEdit(p)} className="text-amber-300 hover:underline font-bold">Edit</button>
+                          <button onClick={() => handleDelete(p.id)} className="text-rose-300 hover:underline font-bold">Hapus</button>
                         </>
                       )}
                     </div>
