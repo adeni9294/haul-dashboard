@@ -53,11 +53,12 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Data dari Tabel Transaksi & Budgets
+      // 2. Ambil Data dari Tabel Terkait
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
+      const { data: allDonations } = await supabase.from('donation_details').select('*');
 
-      // 3. Mapping Statistik per Periode secara Akurat dari tabel 'transactions'
+      // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
 
@@ -65,7 +66,10 @@ export default function StatPage() {
         let keluar = 0;
         let rencanaBudget = 0;
 
-        // Hitung akurat dari tabel transactions (sama seperti buku kas utama)
+        // Ambil Saldo Awal jika tersimpan di objek periode atau tabel settings
+        let saldoAwal = parseFloat(p.saldo_awal || 0);
+
+        // Hitung dari transactions (Kas Masuk & Keluar)
         if (allTransactions) {
           allTransactions.forEach(t => {
             const matchPeriode = t.periode_id === pId || !t.periode_id;
@@ -82,6 +86,25 @@ export default function StatPage() {
           });
         }
 
+        // Jika transaksi kas masuk belum mencakup seluruh donation_details, tambahkan akumulasi donation_details bersih
+        // (menghindari duplikasi jika donation_details sudah masuk ke transactions)
+        let totalDonasiFromDetails = 0;
+        if (allDonations) {
+          allDonations.forEach(d => {
+            const matchPeriode = d.periode_id === pId || !d.periode_id;
+            if (matchPeriode) {
+              const nominal = Math.abs(parseFloat(d.amount || d.nominal || d.jumlah || 0));
+              const donorName = (d.donor_name || '').toString();
+              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
+                totalDonasiFromDetails += nominal;
+              }
+            }
+          });
+        }
+
+        // Gunakan nilai terbesar antara rekap transactions atau donation_details ditambah saldo awal
+        const realMasuk = Math.max(masuk, totalDonasiFromDetails) + saldoAwal;
+
         // Hitung Rencana Anggaran (Budget)
         if (allBudgets) {
           allBudgets.forEach(b => {
@@ -92,13 +115,13 @@ export default function StatPage() {
           });
         }
 
-        const saldo = masuk - keluar;
+        const saldo = realMasuk - keluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: masuk,
+          totalMasuk: realMasuk,
           totalKeluar: keluar,
           saldoBersih: saldo,
           totalRencanaBudget: rencanaBudget
