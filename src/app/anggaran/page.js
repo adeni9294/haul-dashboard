@@ -6,32 +6,15 @@ export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
   const [budgetList, setBudgetList] = useState([]);
   const [expenseSummary, setExpenseSummary] = useState({});
+  const [categoryOptions, setCategoryOptions] = useState([]);
   
-  // State Form Anggaran sesuai permintaan
+  // State Form Anggaran
   const [allocationName, setAllocationName] = useState('');
-  const [category, setCategory] = useState('Acara (Hiburan & Atraksi)');
+  const [category, setCategory] = useState('');
   const [plannedAmount, setPlannedAmount] = useState('');
   
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  // Daftar Kategori Pos Buku Kas (disesuaikan dengan sistem Anda)
-  const categoryOptions = [
-    'Acara (Hiburan & Atraksi)',
-    'Administrasi',
-    'Akomodasi & Transportasi',
-    'Dana tak terduga',
-    'Donatur Khitanan Massal',
-    'Donatur lain-lain',
-    'Honorarium',
-    'Iuran wajib warga cibogo kidul (ahli waris)',
-    'Iuran wajib warga luar cibogo kidul (ahli waris)',
-    'Khitanan Massal',
-    'Konsumsi pengunjung',
-    'Konsumsi VIP',
-    'Logistik & Perlengkapan',
-    'Perantauan (Ahli waris)'
-  ];
 
   // ➕ State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
@@ -87,12 +70,20 @@ export default function AnggaranPage() {
         setCurrentPeriodeObj(found);
       }
 
-      // 2. Query Data Rencana Anggaran (budgets)
+      // 2. Memuat Opsi Kategori dari tabel 'category'
+      const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
+      if (catDb && catDb.length > 0) {
+        const catNames = catDb.map(c => c.name);
+        setCategoryOptions(catNames);
+        if (!category) setCategory(catNames[0]);
+      }
+
+      // 3. Query Data Rencana Anggaran (budgets)
       let budgetQuery = supabase.from('budgets').select('*').order('id', { ascending: true });
       if (activePeriodeId) budgetQuery = budgetQuery.eq('periode_id', activePeriodeId);
       const { data: bData } = await budgetQuery;
 
-      // 3. Query Realisasi Pengeluaran (transactions) untuk Hitung Total Realisasi per Kategori
+      // 4. Query Realisasi Pengeluaran (transactions) untuk Hitung Total Realisasi per Kategori
       let expQuery = supabase.from('transactions').select('*');
       if (activePeriodeId) expQuery = expQuery.eq('periode_id', activePeriodeId);
       const { data: tData } = await expQuery;
@@ -128,10 +119,11 @@ export default function AnggaranPage() {
     const supabase = getSupabase();
     const cleanAmount = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
 
+    // Sesuai dengan kolom Supabase: category_name (atau name/alokasi) dan category
     const payload = { 
-      category_name: allocationName.trim(), // Nama Alokasi
-      category: category,                   // Pilihan Kategori Pos Buku Kas
-      planned_amount: cleanAmount,          // Nominal
+      category_name: allocationName.trim(), 
+      category: category,                   
+      planned_amount: cleanAmount,          
       periode_id: selectedPeriodeId
     };
 
@@ -147,7 +139,7 @@ export default function AnggaranPage() {
       }
 
       setAllocationName('');
-      setCategory(categoryOptions[0]);
+      if (categoryOptions.length > 0) setCategory(categoryOptions[0]);
       setPlannedAmount('');
       setEditingId(null);
       await loadBudgetsAndExpenses();
@@ -162,7 +154,7 @@ export default function AnggaranPage() {
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     setEditingId(b.id);
     setAllocationName(b.category_name || '');
-    setCategory(b.category || categoryOptions[0]);
+    setCategory(b.category || categoryOptions[0] || '');
     setPlannedAmount(b.planned_amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -249,7 +241,7 @@ export default function AnggaranPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-        {/* INTERFACE FORM INPUT (NAMA ALOKASI -> KATEGORI -> NOMINAL) */}
+        {/* INTERFACE FORM INPUT */}
         {isAdmin && !currentPeriodeObj?.is_closed ? (
           <form onSubmit={handleSubmit} className="p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl h-fit space-y-4 shadow-xl">
             <h3 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
@@ -269,7 +261,7 @@ export default function AnggaranPage() {
               />
             </div>
 
-            {/* 2. KATEGORI */}
+            {/* 2. KATEGORI (DIAMBIL DARI TABEL CATEGORY) */}
             <div>
               <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Kategori Pos Buku Kas</label>
               <select 
@@ -285,7 +277,7 @@ export default function AnggaranPage() {
               </select>
             </div>
 
-            {/* 3. NOMINAL (JUMLAH ANGGARAN) */}
+            {/* 3. NOMINAL */}
             <div>
               <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Anggaran (Nominal Rp)</label>
               <input 
@@ -327,8 +319,7 @@ export default function AnggaranPage() {
             ) : (
               budgetList.map((b) => {
                 const plan = parseFloat(b.planned_amount) || 0;
-                // Cocokkan realisasi berdasarkan kategori yang dipilih atau nama alokasi
-                const catKey = (b.category || b.category_name || '').trim().toLowerCase();
+                const catKey = (b.category || '').trim().toLowerCase();
                 const real = expenseSummary[catKey] || expenseSummary[(b.category_name || '').trim().toLowerCase()] || 0;
                 const selisih = plan - real;
                 const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
@@ -337,7 +328,6 @@ export default function AnggaranPage() {
                   <div key={b.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl space-y-2 hover:border-white/30 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
-                        {/* NAMA ALOKASI & KATEGORI */}
                         <p className="font-bold text-white text-sm tracking-wide uppercase">{b.category_name || 'Tanpa Nama Alokasi'}</p>
                         <p className="text-[10px] text-amber-300 font-mono mt-0.5">📂 Kategori: {b.category || 'Umum'}</p>
                       </div>
