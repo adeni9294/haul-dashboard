@@ -92,7 +92,7 @@ export default function PengaturanPage() {
     if (data) setCategories(data);
   }
 
-  // ➕ Memuat Daftar Periode Haul
+  // Memuat Daftar Periode Haul
   async function loadPeriodeList() {
     const supabase = getSupabase();
     const { data } = await supabase.from('periode_haul').select('*').order('created_at', { ascending: false });
@@ -153,7 +153,7 @@ export default function PengaturanPage() {
     }
   };
 
-  // ➕ Tambah / Edit Periode Haul
+  // Tambah / Edit Periode Haul
   const handleSavePeriode = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak!');
@@ -189,6 +189,22 @@ export default function PengaturanPage() {
     setEditingPeriodeId(p.id);
     setNamaPeriodeInput(p.nama_periode);
     setSaldoAwalInput(p.saldo_awal?.toString() || '0');
+  };
+
+  // ➕ FUNGSI EKSEKUSI TUTUP BUKU
+  const handleTutupBuku = async (periodeObj) => {
+    if (!confirm(`Apakah Anda yakin ingin MENUTUP BUKU untuk ${periodeObj.nama_periode}?\n\nSemua transaksi pada periode ini akan DIKUNCI dan sisa saldo akhir akan otomatis dipindahkan menjadi Saldo Awal periode berikutnya.`)) return;
+
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.rpc('proses_tutup_buku', { p_periode_id: periodeObj.id });
+      if (error) throw error;
+
+      alert('🟢 Berhasil! Periode ini resmi Ditutup Buku.');
+      await loadPeriodeList();
+    } catch (err) {
+      alert(`❌ Gagal tutup buku: ${err.message || err}`);
+    }
   };
 
   const handleUpdatePassword = async (e) => {
@@ -377,7 +393,21 @@ export default function PengaturanPage() {
                   </div>
                   <p className="text-[10px] text-slate-400 font-mono mt-0.5">Saldo Awal: <strong className="text-amber-400">{formatRupiah(p.saldo_awal)}</strong></p>
                 </div>
-                <button type="button" onClick={() => handleEditPeriode(p)} className="text-amber-400 font-mono font-bold hover:underline text-[11px]">Edit</button>
+
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => handleEditPeriode(p)} className="text-amber-400 font-mono font-bold hover:underline text-[11px]">Edit</button>
+                  
+                  {/* TOMBOL TUTUP BUKU */}
+                  {!p.is_closed && (
+                    <button 
+                      type="button" 
+                      onClick={() => handleTutupBuku(p)} 
+                      className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 border border-amber-500/40 text-amber-300 hover:text-black font-mono font-bold rounded-lg text-[10px] transition-all"
+                    >
+                      🔒 Tutup Buku
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
