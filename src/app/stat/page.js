@@ -71,13 +71,13 @@ export default function StatPage() {
             const matchPeriode = t.periode_id === pId || !t.periode_id;
             if (matchPeriode) {
               const typeVal = (t.type || '').toString().trim();
-              const nominal = Math.abs(parseFloat(t.amount || 0));
+              const amount = Math.abs(parseFloat(t.amount || 0));
 
               // Sesuai dengan database: 'Pemasukan' atau 'keluar'
               if (typeVal.toLowerCase() === 'Pemasukan') {
-                masuk += nominal;
+                masuk += amount;
               } else if (typeVal.toLowerCase() === 'keluar') {
-                kel += nominal;
+                kel += amount;
               }
             }
           });
