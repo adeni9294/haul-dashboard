@@ -461,7 +461,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className={`p-5 ${style.card} border rounded-[28px] flex flex-col justify-between transition-all duration-300 hover:border-rose-500/40`}>
+      <div style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl">
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm shadow-sm">🔴</div>
               <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalExpense}</p>
@@ -495,7 +496,10 @@ export default function DashboardPage() {
       </div>
 
       {/* TARGET PLAFON PROGRESS */}
-      <div className={`p-5 ${style.card} border rounded-2xl space-y-3 shadow-xl`}>
+<div 
+  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
+>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
             <span>🎯</span> {dict.progressTitle}
@@ -513,7 +517,10 @@ export default function DashboardPage() {
 
       {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
+<div 
+  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
+>
           <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>{dict.rekapIncome}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
@@ -524,8 +531,10 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-
-        <div className={`p-5 ${style.card} border rounded-2xl space-y-3.5 shadow-xl`}>
+<div 
+  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
+>
           <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
@@ -540,7 +549,10 @@ export default function DashboardPage() {
 
       {/* MUTASI MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className={`p-5 ${style.card} border-l-4 border-l-emerald-500 rounded-2xl space-y-3.5 shadow-xl`}>
+<div 
+  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
+>
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
@@ -560,8 +572,10 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-
-        <div className={`p-5 ${style.card} border-l-4 border-l-rose-500 rounded-2xl space-y-3.5 shadow-xl`}>
+<div 
+  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
+>
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
