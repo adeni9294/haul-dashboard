@@ -74,7 +74,7 @@ export default function StatPage() {
               const nominal = Math.abs(parseFloat(t.amount || 0));
 
               // Sesuai dengan database: 'Pemasukan' atau 'keluar'
-              if (typeVal.toLowerCase() === 'pemasukan') {
+              if (typeVal.toLowerCase() === 'Pemasukan') {
                 masuk += nominal;
               } else if (typeVal.toLowerCase() === 'keluar') {
                 kel += nominal;
