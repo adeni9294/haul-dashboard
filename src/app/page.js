@@ -100,16 +100,16 @@ const DICTIONARY = {
 };
 
 const THEME_STYLES = {
-  'emerald-cyber': { card: 'bg-zinc-900 border-zinc-800 text-emerald-50 shadow-2xl', textMuted: 'text-zinc-500', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/10' },
-  'velvet-rose': { card: 'bg-neutral-900 border-purple-900/40 text-rose-50 shadow-2xl', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/10' },
-  'neon-sunset': { card: 'bg-stone-900 border-stone-800 text-orange-50 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/10' },
-  'amber-gold': { card: 'bg-gray-900 border-gray-800 text-amber-50 shadow-2xl', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/10' },
-  'midnight-blue': { card: 'bg-slate-900 border-blue-900 text-blue-50 shadow-2xl', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/10' },
-  'nordic-frost': { card: 'bg-slate-800 border-slate-750 text-slate-50 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/10' },
-  'crimson-tide': { card: 'bg-slate-950 border-red-950 text-red-100 shadow-2xl', textMuted: 'text-zinc-400', accentText: 'text-[#E63946]', progressBg: 'from-[#E63946] to-[#9B2226]', balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' },
-  'dracula-vamp': { card: 'bg-zinc-900 border-fuchsia-950 text-purple-200 shadow-2xl', textMuted: 'text-neutral-500', accentText: 'text-fuchsia-400', progressBg: 'from-purple-600 to-fuchsia-500', balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' },
-  'forest-moss': { card: 'bg-stone-900 border-emerald-950 text-stone-100 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-emerald-700 to-green-500', balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' },
-  'default': { card: 'bg-[#12161A] border-[#1E2329] text-slate-100 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' }
+  'emerald-cyber': { card: 'bg-emerald-950/20 border-emerald-500/30 text-emerald-50 shadow-2xl', textMuted: 'text-emerald-400/70', accentText: 'text-emerald-400', progressBg: 'from-emerald-600 to-emerald-400', balanceCard: 'bg-emerald-600 text-black shadow-emerald-500/20' },
+  'velvet-rose': { card: 'bg-rose-950/20 border-rose-500/30 text-rose-50 shadow-2xl', textMuted: 'text-purple-300', accentText: 'text-rose-400', progressBg: 'from-rose-600 to-fuchsia-500', balanceCard: 'bg-rose-500 text-black shadow-rose-500/20' },
+  'neon-sunset': { card: 'bg-orange-950/20 border-orange-500/30 text-orange-50 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-orange-400', progressBg: 'from-orange-600 to-orange-400', balanceCard: 'bg-orange-500 text-black shadow-orange-500/20' },
+  'amber-gold': { card: 'bg-amber-950/20 border-amber-500/30 text-amber-50 shadow-2xl', textMuted: 'text-gray-400', accentText: 'text-amber-400', progressBg: 'from-amber-600 to-amber-400', balanceCard: 'bg-amber-500 text-black shadow-amber-500/20' },
+  'midnight-blue': { card: 'bg-blue-950/20 border-blue-500/30 text-blue-50 shadow-2xl', textMuted: 'text-blue-400', accentText: 'text-blue-400', progressBg: 'from-blue-600 to-cyan-500', balanceCard: 'bg-blue-500 text-black shadow-blue-500/20' },
+  'nordic-frost': { card: 'bg-slate-900/30 border-cyan-500/30 text-slate-50 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-cyan-400', progressBg: 'from-cyan-600 to-teal-400', balanceCard: 'bg-cyan-500 text-black shadow-cyan-500/20' },
+  'crimson-tide': { card: 'bg-red-950/20 border-red-500/30 text-red-100 shadow-2xl', textMuted: 'text-zinc-400', accentText: 'text-[#E63946]', progressBg: 'from-[#E63946] to-[#9B2226]', balanceCard: 'bg-[#9B2226] text-white shadow-[#9B2226]/20' },
+  'dracula-vamp': { card: 'bg-purple-950/20 border-fuchsia-500/30 text-purple-200 shadow-2xl', textMuted: 'text-neutral-500', accentText: 'text-fuchsia-400', progressBg: 'from-purple-600 to-fuchsia-500', balanceCard: 'bg-purple-600 text-white shadow-purple-600/20' },
+  'forest-moss': { card: 'bg-emerald-950/20 border-emerald-500/30 text-stone-100 shadow-2xl', textMuted: 'text-stone-400', accentText: 'text-green-400', progressBg: 'from-emerald-700 to-green-500', balanceCard: 'bg-emerald-600 text-white shadow-emerald-600/20' },
+  'default': { card: 'bg-white/[0.03] border-white/10 text-slate-100 shadow-2xl', textMuted: 'text-slate-400', accentText: 'text-[#BFEC25]', progressBg: 'from-[#BFEC25] to-[#A3CB1B]', balanceCard: 'bg-[#BFEC25] text-black shadow-[#BFEC25]/20' }
 };
 
 export default function DashboardPage() {
@@ -379,7 +379,7 @@ export default function DashboardPage() {
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-zinc-950 border border-zinc-800 text-xs text-amber-400 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
+              className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 text-xs text-amber-400 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)]"
             >
               {periodeList.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -390,13 +390,13 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Dropdown Bahas */}
+        {/* Dropdown Bahasa */}
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Select Language:</span>
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            className="bg-zinc-950 border border-zinc-800 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
+            className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 text-xs text-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-mono font-bold cursor-pointer transition-all"
           >
             <option value="id">🇮🇩 Indonesia</option>
             <option value="jv">🎯 Cirebonan</option>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
       
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className="w-full bg-black/40 border border-zinc-800/80 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-inner print:hidden">
+        <div className="w-full bg-black/30 backdrop-blur-md border border-white/10 py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-[0_0_20px_rgba(191,236,37,0.1)] print:hidden">
           <div className="animate-marquee inline-block text-[#BFEC25] font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
             📢 {announcement}
           </div>
@@ -417,8 +417,8 @@ export default function DashboardPage() {
       {/* STRUKTUR UTAMA DASHBOARD */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KAS BERSIH */}
-        <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-xl border border-white/5 transition-transform duration-300 hover:scale-[1.01]`}>
+        {/* KAS BERSIH (CARD SALDO NEON GLOW) */}
+        <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 shadow-[0_0_30px_rgba(191,236,37,0.25)] border border-white/30 backdrop-blur-xl transition-transform duration-300 hover:scale-[1.01]`}>
           <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
               <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -433,42 +433,48 @@ export default function DashboardPage() {
             </svg>
           </div>
           <div className="relative z-10">
-            <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-60">{dict.mainCash}</span>
-            <p className="text-[11px] font-semibold opacity-70 mt-0.5">{dict.netBalance}</p>
+            <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-70">{dict.mainCash}</span>
+            <p className="text-[11px] font-semibold opacity-80 mt-0.5">{dict.netBalance}</p>
           </div>
           <div className="relative z-10 mt-3">
-            <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none">
+            <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-black tracking-tight leading-none drop-shadow-md">
               {formatRupiah(totals.total)}
             </h2>
-            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-60">
+            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-70">
               <span>{dict.initialBalance}: {formatRupiah(totals.saldoAwal)}</span>
               <span className="font-bold uppercase tracking-wide">{dict.committee}</span>
             </div>
           </div>
         </div>
 
-        {/* REKAP CARD UANG MASUK & BELANJA */}
+        {/* REKAP CARD UANG MASUK & BELANJA (GLASS & GLOW) */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl">
+          {/* UANG MASUK (HIJAU NEON GLOW) */}
+          <div 
+            style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+            className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.12)] hover:shadow-[0_0_35px_rgba(16,185,129,0.25)]"
+          >
             <div className="flex justify-between items-start">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm shadow-sm">🟢</div>
-              <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalIncome}</p>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]">🟢</div>
+              <p className={`text-[10px] font-mono text-emerald-300 uppercase tracking-wider`}>{dict.totalIncome}</p>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.masuk)}</h3>
+              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk'] drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{formatRupiah(totals.masuk)}</h3>
               <p className="text-[10px] text-emerald-400 font-medium mt-1">✓ {catSummaryMasuk.length} {dict.categories}</p>
             </div>
           </div>
 
-      <div style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl">
+          {/* UANG BELANJA (MERAH ROSY GLOW) */}
+          <div 
+            style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+            className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.12)] hover:shadow-[0_0_35px_rgba(244,63,94,0.25)]"
+          >
             <div className="flex justify-between items-start">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-sm shadow-sm">🔴</div>
-              <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalExpense}</p>
+              <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(244,63,94,0.3)]">🔴</div>
+              <p className={`text-[10px] font-mono text-rose-300 uppercase tracking-wider`}>{dict.totalExpense}</p>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk']">{formatRupiah(totals.keluar)}</h3>
+              <h3 className="text-2xl font-black text-white tracking-tight sm:text-3xl font-['Space_Grotesk'] drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{formatRupiah(totals.keluar)}</h3>
               <p className="text-[10px] text-rose-400 font-medium mt-1">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
             </div>
           </div>
@@ -476,52 +482,58 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* CARD LOG TRAFIK PENGUNJUNG APLIKASI */}
+      {/* CARD LOG TRAFIK PENGUNJUNG APLIKASI (GLASS GLOW) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
-        <div className={`p-4 ${style.card} border rounded-2xl flex items-center gap-4 transition-all hover:border-zinc-700/60`}>
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-base shadow-sm">📈</div>
+        <div 
+          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+          className="p-4 border rounded-2xl backdrop-blur-xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(59,130,246,0.12)]"
+        >
+          <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-base shadow-[0_0_15px_rgba(59,130,246,0.3)]">📈</div>
           <div>
-            <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.totalKunjungan}</p>
+            <p className={`text-[10px] font-mono text-blue-300 uppercase tracking-wider`}>{dict.totalKunjungan}</p>
             <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.totalViews} <span className="text-xs font-normal text-slate-400 font-sans">Kali</span></h4>
           </div>
         </div>
 
-        <div className={`p-4 ${style.card} border rounded-2xl flex items-center gap-4 transition-all hover:border-zinc-700/60`}>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-base shadow-sm">👥</div>
+        <div 
+          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+          className="p-4 border rounded-2xl backdrop-blur-xl flex items-center gap-4 transition-all shadow-[0_0_20px_rgba(168,85,247,0.12)]"
+        >
+          <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-base shadow-[0_0_15px_rgba(168,85,247,0.3)]">👥</div>
           <div>
-            <p className={`text-[10px] font-mono ${style.textMuted} uppercase tracking-wider`}>{dict.pengunjungUnik}</p>
+            <p className={`text-[10px] font-mono text-purple-300 uppercase tracking-wider`}>{dict.pengunjungUnik}</p>
             <h4 className="text-xl font-black font-['Space_Grotesk'] mt-0.5">{visitorStats.uniqueCount} <span className="text-xs font-normal text-slate-400 font-sans">Orang</span></h4>
           </div>
         </div>
       </div>
 
-      {/* TARGET PLAFON PROGRESS */}
-<div 
-  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
->
+      {/* TARGET PLAFON PROGRESS (GLASS GLOW) */}
+      <div 
+        style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+        className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.5)] space-y-3"
+      >
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
             <span>🎯</span> {dict.progressTitle}
           </h3>
-          <span className={`${style.accentText} font-mono text-xs font-black bg-white/5 px-2 py-0.5 rounded-md`}>{progress.percent}%</span>
+          <span className={`${style.accentText} font-mono text-xs font-black bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 shadow-[0_0_10px_rgba(191,236,37,0.2)]`}>{progress.percent}%</span>
         </div>
-        <div className="w-full h-2.5 bg-black/60 rounded-full overflow-hidden p-0.5 border border-zinc-800/50">
-          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
+        <div className="w-full h-3 bg-black/80 rounded-full overflow-hidden p-0.5 border border-white/10 shadow-inner">
+          <div className={`h-full bg-gradient-to-r ${style.progressBg} rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(191,236,37,0.5)]`} style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-0.5">
-          <span>{dict.collected}: <strong className="text-slate-300">{formatRupiah(progress.current)}</strong></span>
-          <span>{dict.target}: <strong className="text-slate-300">{formatRupiah(progress.target)}</strong></span>
+        <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 pt-0.5">
+          <span>{dict.collected}: <strong className="text-slate-200">{formatRupiah(progress.current)}</strong></span>
+          <span>{dict.target}: <strong className="text-slate-200">{formatRupiah(progress.target)}</strong></span>
         </div>
       </div>
 
-      {/* REKAP KATEGORI */}
+      {/* REKAP KATEGORI (GLASS GLOW) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-<div 
-  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
->
-          <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/5 pb-2`}>{dict.rekapIncome}</h4>
+        <div 
+          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+          className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.5)] space-y-3.5"
+        >
+          <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/10 pb-2`}>{dict.rekapIncome}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
@@ -531,11 +543,12 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-<div 
-  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
->
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/5 pb-2">{dict.rekapExpense}</h4>
+
+        <div 
+          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+          className="p-5 border rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(0,0,0,0.5)] space-y-3.5"
+        >
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/10 pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs pb-1.5 border-b border-white/5 last:border-0 last:pb-0">
@@ -547,12 +560,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* MUTASI MUTASI TERAKHIR */}
+      {/* MUTASI MUTASI TERAKHIR (GLASS GLOW) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-<div 
-  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
->
+        <div 
+          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+          className="p-5 border border-l-4 border-l-emerald-400 rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.08)] space-y-3.5"
+        >
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
@@ -572,10 +585,11 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-<div 
-  style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
-  className="p-5 border rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-2xl"
->
+
+        <div 
+          style={{ backgroundColor: 'var(--bg-card-custom)', borderColor: 'var(--border-custom)' }} 
+          className="p-5 border border-l-4 border-l-rose-400 rounded-[28px] backdrop-blur-xl flex flex-col justify-between transition-all duration-300 shadow-[0_0_25px_rgba(244,63,94,0.08)] space-y-3.5"
+        >
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
