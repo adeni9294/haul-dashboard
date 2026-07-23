@@ -292,7 +292,8 @@ export default function AnggaranPage() {
                   <div key={b.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl space-y-2 hover:border-white/30 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-bold text-white text-sm tracking-wide">{b.category_name}</p>
+                        {/* 🌟 NAMA ALOKASI / KATEGORI ANGGARAN KEMBALI MUNCUL DI SINI */}
+                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.category_name || 'Tanpa Kategori'}</p>
                       </div>
                       {isAdmin && (
                         <div className="flex gap-3 font-mono text-[11px] shrink-0 ml-2">
