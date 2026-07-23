@@ -53,12 +53,11 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Data dari Tabel Terkait
-      const { data: allDonations } = await supabase.from('donation_details').select('*');
+      // 2. Ambil Data dari Tabel Transaksi & Budgets
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Mapping Statistik per Periode
+      // 3. Mapping Statistik per Periode secara Akurat dari tabel 'transactions'
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
 
@@ -66,29 +65,14 @@ export default function StatPage() {
         let keluar = 0;
         let rencanaBudget = 0;
 
-        // Hitung dari donation_details
-        if (allDonations) {
-          allDonations.forEach(d => {
-            const matchPeriode = d.periode_id === pId || !d.periode_id; // fallback jika belum terikat
-            if (matchPeriode) {
-              const nominal = Math.abs(parseFloat(d.amount || d.nominal || d.jumlah || 0));
-              const donorName = (d.donor_name || d.nama || '').toString();
-              if (donorName === '__ADMIN_FEE__') {
-                keluar += nominal;
-              } else {
-                masuk += nominal;
-              }
-            }
-          });
-        }
-
-        // Hitung dari transactions (Kas Masuk / Keluar)
+        // Hitung akurat dari tabel transactions (sama seperti buku kas utama)
         if (allTransactions) {
           allTransactions.forEach(t => {
             const matchPeriode = t.periode_id === pId || !t.periode_id;
             if (matchPeriode) {
               const type = (t.type || t.jenis || '').toString().toLowerCase().trim();
               const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
+              
               if (type === 'masuk' || type === 'pemasukan' || type === 'in') {
                 masuk += nominal;
               } else if (type === 'keluar' || type === 'pengeluaran' || type === 'out') {
@@ -98,7 +82,7 @@ export default function StatPage() {
           });
         }
 
-        // Hitung dari budgets (Rencana Anggaran)
+        // Hitung Rencana Anggaran (Budget)
         if (allBudgets) {
           allBudgets.forEach(b => {
             const matchPeriode = b.periode_id === pId || !b.periode_id;
