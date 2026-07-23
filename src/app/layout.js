@@ -5,7 +5,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import '@/app/globals.css';
 
-// 🌐 KAMUS 12 TEMA BERVARIASI BEDA WARNA (NO DOUBLE COLOURS)
+// 🎨 ICON MODERN DARI LUCIDE REACT
+import { 
+  Home, 
+  BarChart3, 
+  Gift, 
+  ClipboardList, 
+  Menu, 
+  ChevronRight, 
+  Lock, 
+  LogOut, 
+  Building2, 
+  Copy, 
+  Check, 
+  X 
+} from 'lucide-react';
+
 const THEME_STYLES = {
   'emerald-cyber': { 
     body: 'bg-[#04201a] text-emerald-100', 
@@ -293,7 +308,7 @@ export default function RootLayout({ children }) {
                   {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={currentStyle.accentText}><path d="M2 22h20"/><path d="M12 2v3"/><path d="M12 7a5 5 0 0 1 5 5v10H7V12a5 5 0 0 1 5-5z"/></svg>
+                    <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
                   )}
                 </div>
                 
@@ -335,32 +350,32 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* BOTTOM NAV FLOATING */}
+        {/* 🚀 BOTTOM NAV FLOATING MODERN (ICON LUCIDE REACT) */}
         <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
-          <div className={`${currentStyle.navBg} backdrop-blur-xl h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl border`}>
+          <div className={`${currentStyle.navBg} backdrop-blur-xl h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl border border-white/20`}>
             
-            <Link href="/" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100'}`}>
-              <span className="text-xs">🏠</span>
-              <span className="text-[8px] font-bold font-mono mt-0.5">Home</span>
+            <Link href="/" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+              <Home className="w-5 h-5" />
+              <span className="text-[9px] font-bold font-mono mt-1">Home</span>
             </Link>
 
-            <Link href="/stat" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/stat' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100'}`}>
-              <span className="text-xs">📊</span>
-              <span className="text-[8px] font-bold font-mono mt-0.5">Stat</span>
+            <Link href="/stat" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/stat' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+              <BarChart3 className="w-5 h-5" />
+              <span className="text-[9px] font-bold font-mono mt-1">Stat</span>
             </Link>
 
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg transform active:scale-95 transition-all">
-              <span className="text-base">🎁</span>
+              <Gift className="w-5 h-5 stroke-[2.5]" />
             </button>
 
-            <Link href="/anggaran" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/anggaran' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100'}`}>
-              <span className="text-xs">📋</span>
-              <span className="text-[8px] font-bold font-mono mt-0.5">Budget</span>
+            <Link href="/anggaran" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/anggaran' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+              <ClipboardList className="w-5 h-5" />
+              <span className="text-[9px] font-bold font-mono mt-1">Budget</span>
             </Link>
 
-            <button onClick={() => setShowMainMenuDrawer(true)} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${showMainMenuDrawer ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100'}`}>
-              <span className="text-xs">🍔</span>
-              <span className="text-[8px] font-bold font-mono mt-0.5">Menu</span>
+            <button onClick={() => setShowMainMenuDrawer(true)} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${showMainMenuDrawer ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+              <Menu className="w-5 h-5" />
+              <span className="text-[9px] font-bold font-mono mt-1">Menu</span>
             </button>
 
           </div>
@@ -369,9 +384,15 @@ export default function RootLayout({ children }) {
         {/* MODAL DONASI */}
         {showDonationModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
-            <div className={`${currentStyle.card} border p-5 rounded-[24px] w-full max-w-sm space-y-4 shadow-2xl`}>
+            <div className={`${currentStyle.card} border p-5 rounded-[24px] w-full max-w-sm space-y-4 shadow-2xl relative`}>
+              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1 rounded-lg bg-white/10 hover:bg-white/20">
+                <X className="w-4 h-4" />
+              </button>
+              
               <div className="text-center space-y-1">
-                <div className="text-xl">💳</div>
+                <div className="p-3 bg-[#BFEC25]/20 text-[#BFEC25] w-fit rounded-2xl mx-auto mb-2 border border-[#BFEC25]/30">
+                  <Gift className="w-6 h-6" />
+                </div>
                 <h3 className="text-xs font-black uppercase tracking-wider">Rekening Donasi Jemaah</h3>
                 <p className={`text-[10px] ${currentStyle.textMuted} max-w-[280px] mx-auto`}>
                   Salurkan infak & sedekah jariyah Anda melalui opsi rekening resmi berikut:
@@ -394,9 +415,9 @@ export default function RootLayout({ children }) {
                     </div>
                     <button 
                       onClick={() => handleCopy(item.number, idx)}
-                      className={`px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-bold uppercase transition-all shrink-0 ${copiedIndex === idx ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-white/10 hover:bg-white/20'}`}
+                      className={`px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-white/10 hover:bg-white/20'}`}
                     >
-                      {copiedIndex === idx ? 'Disalin' : 'Salin'}
+                      {copiedIndex === idx ? <><Check className="w-3 h-3" /> Disalin</> : <><Copy className="w-3 h-3" /> Salin</>}
                     </button>
                   </div>
                 ))}
@@ -430,18 +451,18 @@ export default function RootLayout({ children }) {
                     }`}
                   >
                     <span>{dm.name}</span>
-                    <span className="opacity-40 text-sm">›</span>
+                    <ChevronRight className="w-4 h-4 opacity-40" />
                   </Link>
                 ))}
               </div>
               <div className="pt-4 border-t border-white/10">
                 {isAdmin ? (
-                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-bold uppercase tracking-wide">
-                    🚪 Keluar Mode Admin
+                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2">
+                    <LogOut className="w-4 h-4" /> Keluar Mode Admin
                   </button>
                 ) : (
-                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-[#BFEC25] hover:bg-[#a8d41e] text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md">
-                    🔑 Otorisasi Login Admin
+                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-[#BFEC25] hover:bg-[#a8d41e] text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md flex items-center justify-center gap-2">
+                    <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
                 )}
               </div>
@@ -454,7 +475,8 @@ export default function RootLayout({ children }) {
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className={`${currentStyle.card} border p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl`}>
               <div className="text-center">
-                <h3 className="text-sm font-bold uppercase tracking-wider">🔒 Otorisasi Sistem</h3>
+                <Lock className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                <h3 className="text-sm font-bold uppercase tracking-wider">Otorisasi Sistem</h3>
                 <p className={`text-xs ${currentStyle.textMuted} mt-1`}>Masukkan kata sandi untuk masuk ke Mode Admin</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
