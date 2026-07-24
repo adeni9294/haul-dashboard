@@ -58,7 +58,7 @@ export default function StatPage() {
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Mapping Statistik per Periode (Sama persis dengan logika Dashboard Home)
+      // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
         let totalDonasi = 0;
@@ -80,7 +80,7 @@ export default function StatPage() {
           });
         }
 
-        // Total Masuk Keseluruhan = Saldo Awal + Total Donasi
+        // Total Pemasukan Terkumpul = Saldo Awal + Total Donasi (Sama persis dengan Home)
         const finalMasuk = saldoAwal + totalDonasi;
 
         // Hitung total pengeluaran dari transactions (tipe 'keluar')
@@ -107,7 +107,7 @@ export default function StatPage() {
           });
         }
 
-        // Sisa Saldo Kas Bersih = Final Masuk - Total Keluar
+        // Sisa Kas Bersih = Total Pemasukan Terkumpul - Total Pengeluaran
         const saldoBersih = finalMasuk - totalKeluar;
 
         return {
@@ -181,31 +181,36 @@ export default function StatPage() {
         )}
       </div>
 
-      {/* SECTION 1: PENCAPAIAN TARGET PADA PERIODE TERPILIH */}
+      {/* SECTION 1: INDIKATOR PENCAPAIAN UTAMA (5 CARDS) */}
       <div className="space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
           <span>🎯</span> Indikator Pencapaian Utama: <span className="text-amber-300 font-black">{currentSummary.namaPeriode}</span>
         </h3>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Uang Masuk)</p>
-            <h4 className="text-lg font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Terkumpul)</p>
+            <h4 className="text-base font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
           </div>
 
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pengeluaran (Realisasi)</p>
-            <h4 className="text-lg font-black font-mono text-rose-300">{formatRupiah(currentSummary.totalKeluar)}</h4>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pengeluaran</p>
+            <h4 className="text-base font-black font-mono text-rose-300">{formatRupiah(currentSummary.totalKeluar)}</h4>
           </div>
 
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Target Rencana Anggaran</p>
-            <h4 className="text-lg font-black font-mono text-amber-300">{formatRupiah(currentSummary.totalRencanaBudget)}</h4>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Sisa Kas Bersih</p>
+            <h4 className="text-base font-black font-mono text-blue-300">{formatRupiah(currentSummary.saldoBersih)}</h4>
           </div>
 
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Serapan Anggaran vs Rencana</p>
-            <h4 className="text-lg font-black font-mono text-blue-300">{currentSummary.persentaseSerapan}% <span className="text-[10px] font-normal opacity-70">terserap</span></h4>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Target Anggaran</p>
+            <h4 className="text-base font-black font-mono text-amber-300">{formatRupiah(currentSummary.totalRencanaBudget)}</h4>
+          </div>
+
+          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
+            <p className="text-[10px] font-mono opacity-80 uppercase">Serapan Anggaran</p>
+            <h4 className="text-base font-black font-mono text-purple-300">{currentSummary.persentaseSerapan}% <span className="text-[9px] font-normal opacity-70">terserap</span></h4>
           </div>
         </div>
       </div>
