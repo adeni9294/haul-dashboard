@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import '@/app/globals.css';
 
-// 🎨 ICON MODERN DARI LUCIDE REACT
+// 🎨 ICON MODERN DARI LUCIDE REACT (DITAMBAHKAN IKON UNTUK DRAWER MENU)
 import { 
   Home, 
   BarChart3, 
@@ -18,7 +18,12 @@ import {
   Building2, 
   Copy, 
   Check, 
-  X 
+  X,
+  CreditCard,   // ➕ Ikon Transaksi
+  Calendar,     // ➕ Ikon Jadwal
+  Images,       // ➕ Ikon Galeri
+  Users,        // ➕ Ikon Kepanitiaan
+  Settings      // ➕ Ikon Pengaturan
 } from 'lucide-react';
 
 const THEME_STYLES = {
@@ -278,12 +283,13 @@ export default function RootLayout({ children }) {
 
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
+  // 📌 SEKARANG DRAWER MENUS MEMILIKI PROPERTI IKON
   const drawerMenus = [
-    { name: 'Transaksi Kas', href: '/transaksi' },
-    { name: 'Jadwal Acara', href: '/acara' },
-    { name: 'Galeri Dokumentasi', href: '/dokumentasi' },
-    { name: 'Kepanitiaan', href: '/kepanitiaan' },
-    ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan' }] : [])
+    { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard },
+    { name: 'Jadwal Acara', href: '/acara', icon: Calendar },
+    { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images },
+    { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users },
+    ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings }] : [])
   ];
 
   const listRekening = parseBankInfo(bankInfo);
@@ -430,7 +436,7 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* DRAWER MENU */}
+        {/* DRAWER MENU (📌 SUDAH MENAMPILKAN IKON) */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
             <div className={`w-full max-w-md ${currentStyle.card} border-t rounded-t-3xl p-6 space-y-4 shadow-2xl`} onClick={(e) => e.stopPropagation()}>
@@ -439,21 +445,27 @@ export default function RootLayout({ children }) {
                 <h4 className="text-xs font-bold uppercase tracking-widest opacity-80">Navigasi Halaman</h4>
               </div>
               <div className="grid grid-cols-1 gap-2 pt-2">
-                {drawerMenus.map((dm) => (
-                  <Link 
-                    key={dm.href} 
-                    href={dm.href} 
-                    onClick={() => setShowMainMenuDrawer(false)}
-                    className={`w-full py-2.5 px-3.5 rounded-xl font-medium text-xs text-left flex justify-between items-center transition-all ${
-                      pathname === dm.href 
-                        ? 'bg-[#BFEC25]/20 text-[#BFEC25] border border-[#BFEC25]/40' 
-                        : `${currentStyle.innerBg} hover:bg-white/10`
-                    }`}
-                  >
-                    <span>{dm.name}</span>
-                    <ChevronRight className="w-4 h-4 opacity-40" />
-                  </Link>
-                ))}
+                {drawerMenus.map((dm) => {
+                  const IconComponent = dm.icon;
+                  return (
+                    <Link 
+                      key={dm.href} 
+                      href={dm.href} 
+                      onClick={() => setShowMainMenuDrawer(false)}
+                      className={`w-full py-2.5 px-3.5 rounded-xl font-medium text-xs text-left flex justify-between items-center transition-all ${
+                        pathname === dm.href 
+                          ? 'bg-[#BFEC25]/20 text-[#BFEC25] border border-[#BFEC25]/40' 
+                          : `${currentStyle.innerBg} hover:bg-white/10`
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <IconComponent className="w-4 h-4 text-[#BFEC25] shrink-0" />
+                        <span>{dm.name}</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 opacity-40" />
+                    </Link>
+                  );
+                })}
               </div>
               <div className="pt-4 border-t border-white/10">
                 {isAdmin ? (
