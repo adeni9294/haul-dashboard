@@ -20,13 +20,14 @@ import {
   X,
   CreditCard,   
   Calendar,     
-  Images,       
+  Images,        
   Users,        
   Settings,
   Clock,
   Compass,
   Bell,
-  BellOff
+  BellOff,
+  MapPin
 } from 'lucide-react';
 
 const THEME_STYLES = {
@@ -72,6 +73,20 @@ const THEME_STYLES = {
   }
 };
 
+// Daftar Kota Populer untuk Pilihan Manual
+const DAFTAR_KOTA = [
+  { id: '1202', name: 'Kab. Cirebon' },
+  { id: '1212', name: 'Kota Cirebon' },
+  { id: '1211', name: 'Kota Bandung' },
+  { id: '1219', name: 'Kab. Bandung Barat' },
+  { id: '1301', name: 'DKI Jakarta' },
+  { id: '1214', name: 'Kab. Indramayu' },
+  { id: '1215', name: 'Kab. Majalengka' },
+  { id: '1213', name: 'Kab. Kuningan' },
+  { id: '1501', name: 'Kota Semarang' },
+  { id: '1609', name: 'Kota Surabaya' }
+];
+
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -94,13 +109,22 @@ export default function RootLayout({ children }) {
   // State Jadwal Sholat & Alarm
   const [jadwalSholat, setJadwalSholat] = useState(null);
   const [kotaSholat, setKotaSholat] = useState('Memuat lokasi...');
+  const [selectedKotaId, setSelectedKotaId] = useState('');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
   const lastTriggeredSholat = useRef('');
 
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
-    fetchJadwalSholat();
+
+    // Cek apakah ada kota tersimpan di local storage
+    const savedKotaId = localStorage.getItem('manual_kota_id');
+    if (savedKotaId) {
+      setSelectedKotaId(savedKotaId);
+      fetchJadwalSholat(savedKotaId);
+    } else {
+      fetchJadwalSholat();
+    }
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
@@ -138,7 +162,7 @@ export default function RootLayout({ children }) {
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
 
-      // Jika user memilih kota secara manual, gunakan itu
+      // Jika user memilih kota secara manual, gunakan ID tersebut
       if (forcedId) {
         const resJadwal = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${forcedId}/${yyyy}/${mm}/${dd}`);
         const resultJadwal = await resJadwal.json();
@@ -149,7 +173,7 @@ export default function RootLayout({ children }) {
         return;
       }
 
-      // Jika tidak ada pilihan manual, coba deteksi GPS
+      // Jika tidak ada pilihan manual, coba deteksi via GPS
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -173,17 +197,15 @@ export default function RootLayout({ children }) {
                   return;
                 }
               }
-              // Fallback aman ke Cirebon (1202) jika koordinat gagal dicocokkan
               fetchCirebonDirect(yyyy, mm, dd);
             } catch (e) {
               fetchCirebonDirect(yyyy, mm, dd);
             }
           },
           (error) => {
-            // Fallback aman ke Cirebon (1202) jika GPS ditolak/tidak aktif
             fetchCirebonDirect(yyyy, mm, dd);
           },
-          { timeout: 8000, enableHighAccuracy: false } // Diubah ke false agar lebih cepat dan stabil mendeteksi wilayah umum
+          { timeout: 8000, enableHighAccuracy: false }
         );
       } else {
         fetchCirebonDirect(yyyy, mm, dd);
@@ -205,6 +227,18 @@ export default function RootLayout({ children }) {
       console.error('Gagal ambil data Cirebon:', e);
     }
   }
+
+  const handleSelectKotaManual = (e) => {
+    const id = e.target.value;
+    setSelectedKotaId(id);
+    if (id === 'auto') {
+      localStorage.removeItem('manual_kota_id');
+      fetchJadwalSholat();
+    } else {
+      localStorage.setItem('manual_kota_id', id);
+      fetchJadwalSholat(id);
+    }
+  };
   
   const checkSholatAlarm = (currentHHMM) => {
     if (!jadwalSholat) return;
@@ -448,7 +482,7 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* 🎯 BOTTOM NAV BAR SIMETRIS 5 MENU (HOME, STAT, DONASI, BUDGET, MENU) */}
+        {/* 🎯 BOTTOM NAV BAR SIMETRIS 5 MENU */}
         <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
           <div className={`${currentStyle.navBg} backdrop-blur-2xl h-16 rounded-3xl w-full max-w-md flex items-center justify-around px-3 transition-all duration-300 shadow-2xl`}>
             
@@ -485,7 +519,7 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC */}
+        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC + SELEKSI KOTA MANUAL */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -499,6 +533,23 @@ export default function RootLayout({ children }) {
                 </div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
                 <p className="text-[10px] font-mono text-emerald-200/80">📍 {kotaSholat} & Sekitarnya</p>
+              </div>
+
+              {/* DROPDOWN MANUAL PILIH KOTA */}
+              <div className="p-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl space-y-1">
+                <label className="text-[9px] font-bold text-slate-400 flex items-center gap-1 uppercase font-mono">
+                  <MapPin className="w-3 h-3 text-cyan-400" /> Lokasi Kota / Wilayah:
+                </label>
+                <select
+                  value={selectedKotaId}
+                  onChange={handleSelectKotaManual}
+                  className="w-full bg-slate-800 text-xs text-emerald-300 font-bold px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-400 cursor-pointer"
+                >
+                  <option value="auto">🌐 Deteksi Otomatis (GPS)</option>
+                  {DAFTAR_KOTA.map((k) => (
+                    <option key={k.id} value={k.id}>{k.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* TOGGLE MUTE/UNMUTE ALARM */}
@@ -597,16 +648,14 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* 📱 DRAWER MENU DENGAN PREVENT AUTO-CLOSE DI MOBILE */}
+        {/* 📱 DRAWER MENU */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-            {/* AREA BACKDROP LUAR UNTUK MENUTUP DRAWER */}
             <div 
               className="absolute inset-0 z-0" 
               onClick={() => setShowMainMenuDrawer(false)} 
             />
 
-            {/* KONTEN DRAWER UTAMA */}
             <div 
               className="w-full max-w-md bg-slate-900 border-t border-slate-700 rounded-t-3xl p-6 space-y-4 shadow-2xl text-white relative z-10"
               onClick={(e) => e.stopPropagation()}
