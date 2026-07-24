@@ -1,21 +1,25 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-export default function StatPage() {
+export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
+  const [budgetList, setBudgetList] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  
+  // State Form Anggaran (Fleksibel dengan input Realisasi Manual)
+  const [allocationName, setAllocationName] = useState('');
+  const [category, setCategory] = useState('');
+  const [plannedAmount, setPlannedAmount] = useState('');
+  const [realizedAmount, setRealizedAmount] = useState('');
+  
+  const [editingId, setEditingId] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // ➕ State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
-  
-  const [allPeriodeStats, setAllPeriodeStats] = useState([]);
-  const [currentSummary, setCurrentSummary] = useState({
-    namaPeriode: '-',
-    totalMasuk: 0,
-    totalKeluar: 0,
-    totalRencanaBudget: 0,
-    saldoBersih: 0,
-    persentaseSerapan: 0
-  });
+  const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
 
   const getSupabase = () => {
     return createClient(
@@ -25,152 +29,160 @@ export default function StatPage() {
   };
 
   useEffect(() => {
-    loadGlobalStats();
-  }, []);
+    checkAdminSession();
+    loadBudgets();
 
-  useEffect(() => {
-    if (selectedPeriodeId) {
-      calculateCurrentPeriod(selectedPeriodeId);
+    const interval = setInterval(checkAdminSession, 500);
+    return () => clearInterval(interval);
+  }, [selectedPeriodeId]);
+
+  async function checkAdminSession() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) return setIsAdmin(false);
+    try {
+      const supabase = getSupabase();
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      setIsAdmin(false);
     }
-  }, [selectedPeriodeId, allPeriodeStats]);
+  }
 
-  async function loadGlobalStats() {
+  async function loadBudgets() {
     try {
       setLoading(true);
       const supabase = getSupabase();
 
-      // 1. Ambil Periode Haul
+      // 1. Memuat Daftar Periode
+      let activePeriodeId = selectedPeriodeId;
       const { data: listPeriode } = await supabase
         .from('periode_haul')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!listPeriode || listPeriode.length === 0) {
-        setLoading(false);
-        return;
+      if (listPeriode && listPeriode.length > 0) {
+        setPeriodeList(listPeriode);
+        if (!activePeriodeId) {
+          activePeriodeId = listPeriode[0].id;
+          setSelectedPeriodeId(activePeriodeId);
+        }
+        const found = listPeriode.find(p => p.id === activePeriodeId) || listPeriode[0];
+        setCurrentPeriodeObj(found);
       }
 
-      setPeriodeList(listPeriode);
-      setSelectedPeriodeId(listPeriode[0].id);
+      // 2. Memuat Opsi Kategori dari tabel 'category' (kolom 'name')
+      const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
+      if (catDb && catDb.length > 0) {
+        const catNames = catDb.map(c => c.name);
+        setCategoryOptions(catNames);
+        if (!category) setCategory(catNames[0]);
+      }
 
-      // 2. Ambil Semua Data Transactions, Budgets, dan Donation Details
-      const { data: allTransactions } = await supabase.from('transactions').select('*');
-      const { data: allBudgets } = await supabase.from('budgets').select('*');
-      const { data: allDonations } = await supabase.from('donation_details').select('*');
+      // 3. Query Data Rencana Anggaran (budgets)
+      let budgetQuery = supabase.from('budgets').select('*').order('id', { ascending: true });
+      if (activePeriodeId) budgetQuery = budgetQuery.eq('periode_id', activePeriodeId);
+      const { data: bData } = await budgetQuery;
 
-      // 3. Mapping Statistik per Periode
-      const statsMap = listPeriode.map(p => {
-        const pId = p.id;
-
-        let masuk = 0;
-        let keluar = 0;
-        let rencanaBudget = 0;
-        let saldoAwal = parseFloat(p.saldo_awal || 0);
-
-        // Hitung dari transactions (Menjumlahkan semua baris yang tipenya Pemasukan/keluar)
-        if (allTransactions) {
-          allTransactions.forEach(t => {
-            // Longgarkan filter periode agar data yang periode_id-nya null tetap terhitung di periode aktif
-            const matchPeriode = t.periode_id === pId || !t.periode_id || t.periode_id === Number(pId);
-            if (matchPeriode) {
-              const typeVal = (t.type || '').toString().trim().toLowerCase();
-              const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
-
-              if (typeVal === 'pemasukan' || typeVal === 'masuk' || type === 'in') {
-                masuk += nominal;
-              } else if (typeVal === 'keluar' || type === 'pengeluaran' || type === 'out') {
-                keluar += nominal;
-              }
-            }
-          });
-        }
-
-        // Jika transaksi kas kurang lengkap, sinkronkan dengan akumulasi donation_details bersih
-        let totalDonasiClean = 0;
-        if (allDonations) {
-          allDonations.forEach(d => {
-            const matchPeriode = d.periode_id === pId || !d.periode_id || d.periode_id === Number(pId);
-            if (matchPeriode) {
-              const nominal = Math.abs(parseFloat(d.amount || d.nominal || 0));
-              const donorName = (d.donor_name || '').toString();
-              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
-                totalDonasiClean += nominal;
-              }
-            }
-          });
-        }
-
-        // Ambil nilai pemasukan terbesar yang paling akurat (antara rekap transaksi atau donasi ditambah saldo awal)
-        const finalMasuk = Math.max(masuk, totalDonasiClean) + saldoAwal;
-
-        // Hitung Rencana Anggaran (Budget)
-        if (allBudgets) {
-          allBudgets.forEach(b => {
-            const matchPeriode = b.periode_id === pId || !b.periode_id || b.periode_id === Number(pId);
-            if (matchPeriode) {
-              rencanaBudget += parseFloat(b.planned_amount || b.amount || 0);
-            }
-          });
-        }
-
-        const saldo = finalMasuk - keluar;
-
-        return {
-          id: pId,
-          nama_periode: p.nama_periode,
-          is_closed: p.is_closed,
-          totalMasuk: finalMasuk > 0 ? finalMasuk : masuk,
-          totalKeluar: keluar,
-          saldoBersih: saldo,
-          totalRencanaBudget: rencanaBudget
-        };
-      });
-
-      setAllPeriodeStats(statsMap);
-    } catch (err) {
-      console.error("Gagal kalkulasi statistik:", err);
+      setBudgetList(bData || []);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   }
 
-  function calculateCurrentPeriod(pId) {
-    const found = allPeriodeStats.find(s => s.id === pId);
-    if (!found) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
+    if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini telah ditutup buku!');
+    if (!allocationName.trim() || !plannedAmount) return;
 
-    const serapan = found.totalRencanaBudget > 0 
-      ? Math.round((found.totalKeluar / found.totalRencanaBudget) * 100) 
-      : 0;
+    const supabase = getSupabase();
+    const cleanPlanned = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
+    const cleanRealized = parseFloat((realizedAmount || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
 
-    setCurrentSummary({
-      namaPeriode: found.nama_periode,
-      totalMasuk: found.totalMasuk,
-      totalKeluar: found.totalKeluar,
-      totalRencanaBudget: found.totalRencanaBudget,
-      saldoBersih: found.saldoBersih,
-      persentaseSerapan: serapan
-    });
-  }
+    // Payload dengan realisasi manual (pastikan tabel budgets memiliki kolom real_amount atau realized_amount, atau kita simpan ke real_amount)
+    const payload = { 
+      name: allocationName.trim(), 
+      category: category,                   
+      planned_amount: cleanPlanned,
+      real_amount: cleanRealized, // Kolom realisasi manual
+      periode_id: selectedPeriodeId
+    };
+
+    try {
+      if (editingId) {
+        const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
+        if (error) throw error;
+        alert('🟢 Rencana & realisasi anggaran berhasil diperbarui!');
+      } else {
+        const { error } = await supabase.from('budgets').insert([payload]);
+        if (error) throw error;
+        alert('🟢 Pos rencana anggaran baru berhasil ditambahkan!');
+      }
+
+      setAllocationName('');
+      if (categoryOptions.length > 0) setCategory(categoryOptions[0]);
+      setPlannedAmount('');
+      setRealizedAmount('');
+      setEditingId(null);
+      await loadBudgets();
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Gagal menyimpan: ${err?.message || err}`);
+    }
+  };
+
+  const handleEdit = (b) => {
+    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
+    if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
+    setEditingId(b.id);
+    setAllocationName(b.name || '');
+    setCategory(b.category || categoryOptions[0] || '');
+    setPlannedAmount(b.planned_amount || '');
+    setRealizedAmount(b.real_amount || b.realized_amount || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id) => {
+    if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
+    if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
+    if (!confirm('Apakah Anda yakin ingin menghapus pos anggaran ini?')) return;
+      
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.from('budgets').delete().eq('id', id);
+      if (error) throw error;
+      alert('🗑️ Pos anggaran berhasil dihapus.');
+      await loadBudgets();
+    } catch (err) {
+      alert(`❌ Gagal menghapus: ${err?.message || err}`);
+    }
+  };
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Menghitung statistik pencapaian...</div>;
+  const totalRencana = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.planned_amount) || 0), 0);
+  const totalRealisasi = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.real_amount || curr.realized_amount) || 0), 0);
+  const totalSelisih = totalRencana - totalRealisasi;
+
+  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Memuat data anggaran...</div>;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
-      
-      {/* HEADER & SELECTOR PERIODE (GLASS) */}
+    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
+        
+      {/* HEADER PAGE STATUS & PERIODE SELECTOR (GLASS) */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
-            <span>📈</span> Statistik & Pencapaian Finansial Haul
+            <span>📋</span> Rencana Anggaran & Alokasi Haul
           </h2>
-          <p className="text-[10px] opacity-80 font-mono mt-0.5">Komparasi pencapaian antar periode & realisasi target anggaran</p>
+          <p className="text-[10px] opacity-80 font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
 
         {periodeList.length > 0 && (
           <div className="flex items-center bg-black/30 p-1 border border-white/20 rounded-xl">
-            <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">Fokus Periode:</span>
+            <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">Periode Haul:</span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
@@ -186,79 +198,182 @@ export default function StatPage() {
         )}
       </div>
 
-      {/* SECTION 1: PENCAPAIAN TARGET PADA PERIODE TERPILIH */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <span>🎯</span> Indikator Pencapaian Utama: <span className="text-amber-300 font-black">{currentSummary.namaPeriode}</span>
-        </h3>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Kas Masuk)</p>
-            <h4 className="text-lg font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
-          </div>
+      {/* INDIKATOR TUTUP BUKU */}
+      {currentPeriodeObj?.is_closed && (
+        <div className="bg-amber-500/20 border border-amber-400/40 p-3 rounded-xl flex items-center justify-between text-amber-300 font-mono text-xs backdrop-blur-md">
+          <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Data anggaran bersifat Read-Only.</span>
+          <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
+        </div>
+      )}
 
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pengeluaran (Realisasi)</p>
-            <h4 className="text-lg font-black font-mono text-rose-300">{formatRupiah(currentSummary.totalKeluar)}</h4>
-          </div>
-
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Target Rencana Anggaran</p>
-            <h4 className="text-lg font-black font-mono text-amber-300">{formatRupiah(currentSummary.totalRencanaBudget)}</h4>
-          </div>
-
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Serapan Anggaran vs Rencana</p>
-            <h4 className="text-lg font-black font-mono text-blue-300">{currentSummary.persentaseSerapan}% <span className="text-[10px] font-normal opacity-70">terserap</span></h4>
-          </div>
+      {/* CARD REKAP TOTAL PLAFON & REALISASI */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl">
+          <p className="text-[10px] font-mono opacity-80 uppercase font-bold">Total Rencana Anggaran</p>
+          <h3 className="text-xl font-black font-['Space_Grotesk'] mt-1 text-amber-300">{formatRupiah(totalRencana)}</h3>
+        </div>
+        <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl">
+          <p className="text-[10px] font-mono opacity-80 uppercase font-bold">Total Realisasi Belanja</p>
+          <h3 className="text-xl font-black font-['Space_Grotesk'] mt-1 text-rose-300">{formatRupiah(totalRealisasi)}</h3>
+        </div>
+        <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl">
+          <p className="text-[10px] font-mono opacity-80 uppercase font-bold">Sisa / Selisih Plafon</p>
+          <h3 className={`text-xl font-black font-['Space_Grotesk'] mt-1 ${totalSelisih >= 0 ? 'text-emerald-300' : 'text-rose-400'}`}>
+            {formatRupiah(totalSelisih)}
+          </h3>
         </div>
       </div>
 
-      {/* SECTION 2: KOMPARASI ANTAR PERIODE (TAHUN KE TAHUN) */}
-      <div className="space-y-3 pt-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <span>📊</span> Komparasi Kinerja Keuangan Antar Periode Haul (Tahun ke Tahun)
-        </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+        {/* INTERFACE FORM INPUT MANUAL */}
+        {isAdmin && !currentPeriodeObj?.is_closed ? (
+          <form onSubmit={handleSubmit} className="p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl h-fit space-y-4 shadow-xl">
+            <h3 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+              <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Anggaran & Realisasi' : 'Tambah Anggaran Baru'}
+            </h3>
+            
+            {/* 1. NAMA ALOKASI */}
+            <div>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Nama Alokasi</label>
+              <input 
+                type="text" 
+                required 
+                value={allocationName} 
+                onChange={(e) => setAllocationName(e.target.value)} 
+                placeholder="Contoh: Sewa Tenda Utama & Panggung" 
+                className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-white focus:outline-none placeholder:text-slate-400" 
+              />
+            </div>
 
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="bg-black/40 text-slate-200 border-b border-white/20 font-mono uppercase text-[9px] tracking-wider">
-                  <th className="p-3">Periode Haul</th>
-                  <th className="p-3 text-right">Total Pemasukan</th>
-                  <th className="p-3 text-right">Total Pengeluaran</th>
-                  <th className="p-3 text-right">Target Anggaran</th>
-                  <th className="p-3 text-right">Sisa Saldo Kas Bersih</th>
-                  <th className="p-3 text-center">Status Buku</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10 text-slate-100 font-mono text-[11px]">
-                {allPeriodeStats.map((stat) => (
-                  <tr key={stat.id} className="hover:bg-white/5 transition-all">
-                    <td className="p-3 font-bold font-sans text-white text-xs">{stat.nama_periode}</td>
-                    <td className="p-3 text-right text-emerald-300 font-bold">{formatRupiah(stat.totalMasuk)}</td>
-                    <td className="p-3 text-right text-rose-300 font-bold">{formatRupiah(stat.totalKeluar)}</td>
-                    <td className="p-3 text-right text-amber-300">{formatRupiah(stat.totalRencanaBudget)}</td>
-                    <td className={`p-3 text-right font-black ${stat.saldoBersih >= 0 ? 'text-blue-300' : 'text-rose-400'}`}>
-                      {formatRupiah(stat.saldoBersih)}
-                    </td>
-                    <td className="p-3 text-center">
-                      {stat.is_closed ? (
-                        <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded font-black text-[9px] uppercase">Arsip (Closed)</span>
-                      ) : (
-                        <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded font-black text-[9px] uppercase">Aktif (Running)</span>
-                      )}
-                    </td>
-                  </tr>
+            {/* 2. KATEGORI */}
+            <div>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Kategori Pos Buku Kas</label>
+              <select 
+                value={category} 
+                onChange={(e) => setCategory(e.target.value)} 
+                className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-xs text-amber-300 font-mono focus:outline-none cursor-pointer"
+              >
+                {categoryOptions.map((cat, idx) => (
+                  <option key={idx} value={cat} className="bg-zinc-900 text-white">
+                    {cat}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+
+            {/* 3. JUMLAH RENCANA ANGGARAN */}
+            <div>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Rencana Anggaran (Rp)</label>
+              <input 
+                type="number" 
+                required 
+                value={plannedAmount} 
+                onChange={(e) => setPlannedAmount(e.target.value)} 
+                placeholder="Contoh: 5000000" 
+                className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-amber-300 font-mono font-bold focus:outline-none placeholder:text-slate-400" 
+              />
+            </div>
+
+            {/* 4. JUMLAH REALISASI (FLEKSIBEL / MANUAL) */}
+            <div>
+              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Realisasi Belanja (Rp)</label>
+              <input 
+                type="number" 
+                value={realizedAmount} 
+                onChange={(e) => setRealizedAmount(e.target.value)} 
+                placeholder="Contoh: 4500000 (Opsional/Manual)" 
+                className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-xl text-xs text-rose-300 font-mono font-bold focus:outline-none placeholder:text-slate-400" 
+              />
+            </div>
+
+            <button type="submit" className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-black font-black text-xs uppercase rounded-xl transition-all shadow-md">
+              {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={() => { setEditingId(null); setAllocationName(''); setPlannedAmount(''); setRealizedAmount(''); }} className="w-full py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold rounded-xl mt-2 transition-all">Batal Edit</button>
+            )}
+          </form>
+        ) : (
+          <div className="p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl h-fit text-center space-y-2 shadow-xl">
+            <p className="text-xs text-slate-200 font-medium font-sans">
+              {currentPeriodeObj?.is_closed ? '🔒 Periode ini sudah ditutup buku.' : '💡 Anda berada di Mode Publik (Read-Only).'}
+            </p>
+            <p className="text-[10px] opacity-70 font-mono">
+              {currentPeriodeObj?.is_closed ? 'Data rencana anggaran telah dikunci.' : 'Gunakan login admin untuk mengelola rencana anggaran.'}
+            </p>
+          </div>
+        )}
+
+        {/* LIST DAFTAR RENCANA ANGGARAN, REALISASI MANUAL, DAN SELISIH */}
+        <div className="lg:col-span-2 p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-3 shadow-xl">
+          <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider flex items-center gap-2">
+            <span>📊</span> Rencana Anggaran vs Realisasi Belanja ({budgetList.length})
+          </h3>
+          <div className="space-y-2.5 max-h-[550px] overflow-y-auto pr-1">
+            {budgetList.length === 0 ? (
+              <p className="text-xs opacity-70 font-mono py-6 text-center">Belum ada daftar alokasi anggaran pada periode ini.</p>
+            ) : (
+              budgetList.map((b) => {
+                const plan = parseFloat(b.planned_amount) || 0;
+                const real = parseFloat(b.real_amount || b.realized_amount) || 0;
+                const selisih = plan - real;
+                const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
+
+                return (
+                  <div key={b.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl space-y-2 hover:border-white/30 transition-all">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.name || 'Tanpa Nama Alokasi'}</p>
+                        <p className="text-[10px] text-amber-300 font-mono mt-0.5">📂 Kategori: {b.category || 'Umum'}</p>
+                      </div>
+                      {isAdmin && (
+                        <div className="flex gap-3 font-mono text-[11px] shrink-0 ml-2">
+                          {currentPeriodeObj?.is_closed ? (
+                            <span className="text-amber-300 italic text-[10px]">🔒 Terkunci</span>
+                          ) : (
+                            <>
+                              <button onClick={() => handleEdit(b)} className="text-amber-300 hover:underline font-bold">Edit</button>
+                              <button onClick={() => handleDelete(b.id)} className="text-rose-300 hover:underline font-bold">Hapus</button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* RINCIAN NOMINAL 3 KOLOM */}
+                    <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-[10px] border-t border-white/10">
+                      <div>
+                        <span className="opacity-60 block text-[9px] uppercase">Rencana:</span>
+                        <strong className="text-amber-300 text-xs">{formatRupiah(plan)}</strong>
+                      </div>
+                      <div>
+                        <span className="opacity-60 block text-[9px] uppercase">Realisasi (Manual):</span>
+                        <strong className="text-rose-300 text-xs">{formatRupiah(real)}</strong>
+                      </div>
+                      <div>
+                        <span className="opacity-60 block text-[9px] uppercase">Sisa / Selisih:</span>
+                        <strong className={`text-xs ${selisih >= 0 ? 'text-emerald-300' : 'text-rose-400 font-black'}`}>
+                          {formatRupiah(selisih)}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* PROGRESS BAR SERAPAN */}
+                    <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${real > plan ? 'bg-rose-500' : 'bg-emerald-400'}`} 
+                        style={{ width: `${percentUsed}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }
