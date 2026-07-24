@@ -1,47 +1,54 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #080d1a;
+  --card-bg: #11192e;
+  --border-color: rgba(51, 65, 85, 0.8);
+  --foreground: #f8fafc;
+  --accent-color: #22d3ee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: 'Plus Jakarta Sans', var(--font-geist-sans), Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
 /* ==================== 15 DAFTAR TEMA MODERN GLOBAL PANITIA ==================== */
-body.theme-emerald-cyber { --accent-color: #10b981; }
-body.theme-velvet-rose { --accent-color: #ec4899; }
-body.theme-neon-sunset { --accent-color: #f97316; }
-body.theme-nordic-frost { --accent-color: #38bdf8; }
-body.theme-tokyo-night { --accent-color: #8b5cf6; }
-body.theme-amber-gold { --accent-color: #f59e0b; }
-body.theme-cyberpunk-2076 { --accent-color: #eab308; }
-body.theme-ocean-deep { --accent-color: #2563eb; }
-body.theme-forest-moss { --accent-color: #059669; }
-body.theme-crimson-tide { --accent-color: #dc2626; }
-body.theme-obsidian-stark { --accent-color: #94a3b8; }
-body.theme-dracula-vamp { --accent-color: #a855f7; }
-body.theme-coffee-latte { --accent-color: #b45309; }
-body.theme-mint-fresh { --accent-color: #2dd4bf; }
-body.theme-retro-wave { --accent-color: #f43f5e; }
+body.theme-emerald-cyber   { --background: #021814; --card-bg: #052e24; --border-color: rgba(16, 185, 129, 0.3); --accent-color: #10b981; }
+body.theme-velvet-rose     { --background: #18020c; --card-bg: #2e0518; --border-color: rgba(236, 72, 153, 0.3); --accent-color: #ec4899; }
+body.theme-neon-sunset     { --background: #1a0c02; --card-bg: #2e1605; --border-color: rgba(249, 115, 22, 0.3);  --accent-color: #f97316; }
+body.theme-nordic-frost    { --background: #03141e; --card-bg: #062436; --border-color: rgba(56, 189, 248, 0.3);  --accent-color: #38bdf8; }
+body.theme-tokyo-night     { --background: #0b071a; --card-bg: #160e33; --border-color: rgba(139, 92, 246, 0.3);  --accent-color: #8b5cf6; }
+body.theme-amber-gold      { --background: #181202; --card-bg: #2e2205; --border-color: rgba(245, 158, 11, 0.3);  --accent-color: #f59e0b; }
+body.theme-cyberpunk-2076  { --background: #161502; --card-bg: #2a2905; --border-color: rgba(234, 179, 8, 0.3);   --accent-color: #eab308; }
+body.theme-ocean-deep      { --background: #020b18; --card-bg: #05162e; --border-color: rgba(37, 99, 235, 0.3);   --accent-color: #2563eb; }
+body.theme-forest-moss     { --background: #02160d; --card-bg: #052a1a; --border-color: rgba(5, 150, 105, 0.3);   --accent-color: #059669; }
+body.theme-crimson-tide    { --background: #180202; --card-bg: #2e0505; --border-color: rgba(220, 38, 38, 0.3);   --accent-color: #dc2626; }
+body.theme-obsidian-stark  { --background: #0f172a; --card-bg: #1e293b; --border-color: rgba(148, 163, 184, 0.3);--accent-color: #94a3b8; }
+body.theme-dracula-vamp    { --background: #120518; --card-bg: #220a2e; --border-color: rgba(168, 85, 247, 0.3);  --accent-color: #a855f7; }
+body.theme-coffee-latte    { --background: #160d06; --card-bg: #2a1a0c; --border-color: rgba(180, 83, 9, 0.3);   --accent-color: #b45309; }
+body.theme-mint-fresh      { --background: #021614; --card-bg: #052b27; --border-color: rgba(45, 212, 191, 0.3);  --accent-color: #2dd4bf; }
+body.theme-retro-wave      { --background: #18030d; --card-bg: #2e061a; --border-color: rgba(244, 63, 94, 0.3);   --accent-color: #f43f5e; }
+
+/* Utility Classes untuk Komponen Kartu dan Teks */
+.theme-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-text-accent {
+  color: var(--accent-color) !important;
+}
 
 @layer base {
-  /* Memastikan kelas-kelas ini tidak dihapus oleh sistem build */
   .bg-zinc-950, .bg-neutral-950, .bg-stone-950, .bg-gray-950, .bg-slate-950 {}
 }
