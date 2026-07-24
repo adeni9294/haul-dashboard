@@ -27,39 +27,43 @@ import {
   Sparkles
 } from 'lucide-react';
 
-// 🎨 THEME STYLES - DENGAN TEMA DEFAULT BARU YANG FRESH & SEGAR (LIGHT/GLASS)
+// 🎨 KOLEKSI TEMA DINAMIS MODERAN (TERMASUK CYBERPUNK ULTRA-NEON)
 const THEME_STYLES = {
   'default': { 
     body: 'bg-gradient-to-br from-slate-100 via-indigo-50/60 to-cyan-50 text-slate-800', 
-    card: 'bg-white/80 backdrop-blur-xl border-slate-200/80 text-slate-800 shadow-xl shadow-indigo-500/5', 
-    navBg: 'bg-slate-900/90 backdrop-blur-xl border-slate-800 text-white shadow-2xl shadow-slate-900/30', 
-    innerBg: 'bg-slate-50 border border-slate-200/80', 
+    liquidCard: 'bg-white/40 backdrop-blur-2xl border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.05),_inset_0_1px_2px_rgba(255,255,255,0.9),_inset_0_-2px_4px_rgba(0,0,0,0.05)] text-slate-800', 
+    navBg: 'bg-slate-900/80 backdrop-blur-2xl border border-white/20 shadow-[0_15px_35px_rgba(0,0,0,0.2),_inset_0_1px_1px_rgba(255,255,255,0.3)] text-white', 
+    innerBg: 'bg-white/60 backdrop-blur-md border border-white/60 shadow-inner', 
     textMuted: 'text-slate-500', 
-    accentText: 'text-indigo-600' 
+    accentText: 'text-indigo-600',
+    accentBadge: 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30'
+  },
+  'cyberpunk-neon': { 
+    body: 'bg-[#090514] text-cyan-100 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]', 
+    liquidCard: 'bg-fuchsia-950/20 backdrop-blur-2xl border border-fuchsia-500/40 shadow-[0_10px_35px_rgba(217,70,239,0.15),_inset_0_1px_2px_rgba(255,255,255,0.4),_inset_0_0_15px_rgba(217,70,239,0.2)] text-cyan-100', 
+    navBg: 'bg-[#120326]/85 backdrop-blur-2xl border border-cyan-400/40 shadow-[0_15px_40px_rgba(6,182,212,0.25),_inset_0_1px_2px_rgba(255,255,255,0.4)] text-white', 
+    innerBg: 'bg-purple-950/40 backdrop-blur-md border border-fuchsia-500/30 shadow-inner', 
+    textMuted: 'text-fuchsia-300/70', 
+    accentText: 'text-cyan-300',
+    accentBadge: 'bg-gradient-to-r from-fuchsia-500 to-cyan-400 text-black font-black shadow-lg shadow-cyan-500/40'
   },
   'emerald-cyber': { 
-    body: 'bg-[#04201a] text-emerald-100', 
-    card: 'bg-[#09382e]/80 border-emerald-500/40 text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.2)]', 
-    navBg: 'bg-[#09382e]/90 border-emerald-500/50', 
-    innerBg: 'bg-[#04201a]/90 border border-emerald-500/30', 
-    textMuted: 'text-emerald-300/80', 
-    accentText: 'text-emerald-300' 
+    body: 'bg-[#021814] text-emerald-100 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-emerald-900/40 via-teal-950/20 to-black', 
+    liquidCard: 'bg-emerald-950/30 backdrop-blur-2xl border border-emerald-400/30 shadow-[0_10px_30px_rgba(16,185,129,0.12),_inset_0_1px_2px_rgba(255,255,255,0.3)] text-emerald-100', 
+    navBg: 'bg-[#052e24]/85 backdrop-blur-2xl border border-emerald-400/40 shadow-[0_15px_35px_rgba(16,185,129,0.2)] text-white', 
+    innerBg: 'bg-emerald-900/30 backdrop-blur-md border border-emerald-500/20', 
+    textMuted: 'text-emerald-300/70', 
+    accentText: 'text-emerald-300',
+    accentBadge: 'bg-emerald-400 text-black font-black shadow-md shadow-emerald-400/30'
   },
   'midnight-blue': { 
-    body: 'bg-[#071326] text-blue-100', 
-    card: 'bg-[#122748]/80 border-blue-500/40 text-blue-100 shadow-[0_0_25px_rgba(59,130,246,0.2)]', 
-    navBg: 'bg-[#122748]/90 border-blue-500/50', 
-    innerBg: 'bg-[#071326]/90 border border-blue-500/30', 
-    textMuted: 'text-blue-300/80', 
-    accentText: 'text-sky-300' 
-  },
-  'nordic-frost': { 
-    body: 'bg-[#0a192f] text-slate-100', 
-    card: 'bg-[#172a45]/80 border-cyan-400/40 text-slate-100 shadow-[0_0_25px_rgba(34,211,238,0.2)]', 
-    navBg: 'bg-[#172a45]/90 border-cyan-400/50', 
-    innerBg: 'bg-[#0a192f]/90 border border-cyan-400/30', 
-    textMuted: 'text-slate-300', 
-    accentText: 'text-cyan-300' 
+    body: 'bg-[#050c1a] text-blue-100 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-black', 
+    liquidCard: 'bg-blue-950/30 backdrop-blur-2xl border border-blue-400/30 shadow-[0_10px_30px_rgba(59,130,246,0.15),_inset_0_1px_2px_rgba(255,255,255,0.3)] text-blue-100', 
+    navBg: 'bg-[#0a1a36]/85 backdrop-blur-2xl border border-blue-400/40 shadow-[0_15px_35px_rgba(59,130,246,0.2)] text-white', 
+    innerBg: 'bg-blue-900/30 backdrop-blur-md border border-blue-500/20', 
+    textMuted: 'text-blue-300/70', 
+    accentText: 'text-sky-300',
+    accentBadge: 'bg-sky-400 text-slate-950 font-black shadow-md shadow-sky-400/30'
   }
 };
 
@@ -86,30 +90,6 @@ export default function RootLayout({ children }) {
     loadHeaderSettings();
     setShowMainMenuDrawer(false); 
 
-    const recordVisitorLog = async () => {
-      try {
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
-        let ipAddress = 'unknown';
-        try {
-          const res = await fetch('https://api.ipify.org?format=json');
-          const ipData = await res.json();
-          ipAddress = ipData.ip;
-        } catch (e) {
-          console.log('Gagal ambil IP');
-        }
-
-        await supabase.from('visitor_logs').insert({
-          path: pathname,
-          ip_address: ipAddress,
-          user_agent: window.navigator.userAgent || 'unknown'
-        });
-      } catch (err) {
-        console.error('Gagal log visitor:', err);
-      }
-    };
-
-    recordVisitorLog();
-
     const updateTime = () => {
       const sekarang = new Date();
       setTimeString(sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
@@ -123,10 +103,7 @@ export default function RootLayout({ children }) {
 
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
-    if (!savedPassword) {
-      setIsAdmin(false);
-      return;
-    }
+    if (!savedPassword) return setIsAdmin(false);
     try {
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
       const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
@@ -222,11 +199,11 @@ export default function RootLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
   const drawerMenus = [
-    { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard, color: 'text-emerald-500 bg-emerald-50' },
-    { name: 'Jadwal Acara', href: '/acara', icon: Calendar, color: 'text-amber-500 bg-amber-50' },
-    { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-500 bg-purple-50' },
-    { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users, color: 'text-blue-500 bg-blue-50' },
-    ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings, color: 'text-rose-500 bg-rose-50' }] : [])
+    { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard, color: 'text-emerald-400 bg-emerald-500/10' },
+    { name: 'Jadwal Acara', href: '/acara', icon: Calendar, color: 'text-amber-400 bg-amber-500/10' },
+    { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-400 bg-purple-500/10' },
+    { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users, color: 'text-blue-400 bg-blue-500/10' },
+    ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings, color: 'text-rose-400 bg-rose-500/10' }] : [])
   ];
 
   const listRekening = parseBankInfo(bankInfo);
@@ -236,41 +213,41 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${currentStyle.body} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}>
+      <body className={`${currentStyle.body} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 transition-all duration-500 antialiased relative overflow-x-hidden`}>
         
-        <div className={`w-full min-h-screen flex flex-col`}>
-          
-          {/* HEADER SEGAR & CERAH DENGAN ORNAMEN GLASS */}
-          <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
-            <div className={`p-4 md:p-6 ${currentStyle.card} rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden border border-white/60 shadow-lg`}>
-              
-              {/* DEKORASI BUBBLE GLOW */}
-              <div className="absolute -top-10 -right-10 w-36 h-36 bg-indigo-300/30 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-cyan-300/30 rounded-full blur-2xl pointer-events-none" />
+        {/* ORNAMEN GLOW BACKGROUND LENS */}
+        <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-cyan-500/0 rounded-full blur-[120px] pointer-events-none" />
+        <div className="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-fuchsia-500/20 via-teal-500/20 to-cyan-500/0 rounded-full blur-[120px] pointer-events-none" />
 
+        <div className="w-full min-h-screen flex flex-col relative z-10">
+          
+          {/* HEADER DENGAN EFEK LIQUID GLASS DINAMIS */}
+          <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
+            <div className={`p-4 md:p-6 ${currentStyle.liquidCard} rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden transition-all duration-300`}>
+              
               <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 rounded-2xl shrink-0 shadow-md">
-                  <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden">
+                <div className="w-12 h-12 md:w-16 md:h-16 p-0.5 rounded-2xl shrink-0 shadow-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500">
+                  <div className="w-full h-full bg-slate-950/90 rounded-[14px] flex items-center justify-center overflow-hidden">
                     {logoUrl ? (
                       <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                     ) : (
-                      <Building2 className="w-6 h-6 text-indigo-600" />
+                      <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
                     )}
                   </div>
                 </div>
                 
                 <div className="text-left space-y-1 min-w-0 flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-                    <h1 className="text-xs sm:text-sm font-extrabold tracking-tight uppercase leading-tight text-slate-800 break-words">
+                    <h1 className="text-xs sm:text-sm font-extrabold tracking-tight uppercase leading-tight break-words">
                       {orgName}
                     </h1>
-                    <span className={`w-fit px-2 py-0.5 text-[9px] rounded-full font-mono font-black uppercase shadow-xs ${isAdmin ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                      {isAdmin ? '⚡ ADMIN MODE' : 'PUBLIC'}
+                    <span className={`w-fit px-2.5 py-0.5 text-[9px] rounded-full font-mono font-black uppercase ${currentStyle.accentBadge}`}>
+                      {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-500 leading-normal break-words font-medium">
+                  <p className={`text-[10px] ${currentStyle.textMuted} leading-normal break-words font-medium`}>
                     {address}
                   </p>
                 </div>
@@ -278,9 +255,11 @@ export default function RootLayout({ children }) {
 
               {/* LIVE CLOCK */}
               {timeString && (
-                <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-200/60 pt-2 sm:pt-0 shrink-0 relative z-10">
-                  <span className="text-sm font-black font-mono tracking-wider text-indigo-900 bg-indigo-50/80 px-2.5 py-0.5 rounded-lg border border-indigo-100">{timeString}</span>
-                  <span className="text-[10px] font-bold text-slate-500 font-mono tracking-wide mt-1">{dateString}</span>
+                <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/20 pt-2 sm:pt-0 shrink-0 relative z-10">
+                  <span className={`text-sm font-black font-mono tracking-wider ${currentStyle.accentText} bg-white/10 px-3 py-1 rounded-xl border border-white/20 backdrop-blur-md shadow-inner`}>
+                    {timeString}
+                  </span>
+                  <span className={`text-[10px] font-bold font-mono tracking-wide mt-1 ${currentStyle.textMuted}`}>{dateString}</span>
                 </div>
               )}
 
@@ -293,37 +272,37 @@ export default function RootLayout({ children }) {
           </main>
 
           {/* FOOTER */}
-          <footer className="py-6 border-t border-slate-200/80 text-center text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-20 sm:mb-4">
+          <footer className={`py-6 border-t border-white/10 text-center text-[10px] ${currentStyle.textMuted} font-bold tracking-widest uppercase mb-20 sm:mb-4`}>
             Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
           </footer>
 
         </div>
 
-        {/* 🚀 FLOATING BOTTOM NAV BAR DENGAN DESAIN ANIMATED POP-UP CERAH */}
+        {/* 🚀 FLOATING BOTTOM NAV BAR (LIQUID GLASS DINAMIS) */}
         <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
-          <div className="bg-slate-900/90 backdrop-blur-2xl h-16 rounded-3xl w-full max-w-md flex items-center justify-around px-3 shadow-2xl shadow-indigo-900/20 border border-slate-700/80">
+          <div className={`${currentStyle.navBg} backdrop-blur-2xl h-16 rounded-3xl w-full max-w-md flex items-center justify-around px-3 transition-all duration-300`}>
             
-            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? 'text-indigo-400 font-black bg-indigo-500/20 scale-105 border border-indigo-400/30' : 'text-slate-400 hover:text-white'}`}>
+            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/30 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
               <Home className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Home</span>
             </Link>
 
-            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? 'text-cyan-400 font-black bg-cyan-500/20 scale-105 border border-cyan-400/30' : 'text-slate-400 hover:text-white'}`}>
+            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/30 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
               <BarChart3 className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            {/* TOMBOL UTAMA DONASI CERAH (AQUAMARINE NEON) */}
-            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-emerald-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white">
+            {/* TOMBOL DONASI LIQUID GLASS */}
+            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
 
-            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? 'text-amber-400 font-black bg-amber-500/20 scale-105 border border-amber-400/30' : 'text-slate-400 hover:text-white'}`}>
+            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/30 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
               <ClipboardList className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Budget</span>
             </Link>
 
-            <button onClick={() => setShowMainMenuDrawer(true)} className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? 'text-purple-400 font-black bg-purple-500/20 scale-105 border border-purple-400/30' : 'text-slate-400 hover:text-white'}`}>
+            <button onClick={() => setShowMainMenuDrawer(true)} className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/30 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
               <Menu className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Menu</span>
             </button>
@@ -331,41 +310,41 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* MODAL DONASI CERAH & ELEGAN */}
+        {/* MODAL DONASI LIQUID GLASS */}
         {showDonationModal && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-white border border-slate-200 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative animate-in zoom-in-95 duration-200">
-              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+            <div className={`${currentStyle.liquidCard} p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative animate-in zoom-in-95 duration-200`}>
+              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20">
                 <X className="w-4 h-4" />
               </button>
               
               <div className="text-center space-y-1">
-                <div className="p-3 bg-emerald-50 text-emerald-600 w-fit rounded-2xl mx-auto mb-2 border border-emerald-200/80 shadow-xs">
+                <div className="p-3 bg-emerald-500/20 text-emerald-300 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30 shadow-inner">
                   <Gift className="w-6 h-6" />
                 </div>
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Rekening Donasi Jemaah</h3>
-                <p className="text-[10px] text-slate-500 max-w-[280px] mx-auto font-medium">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider">Rekening Donasi Jemaah</h3>
+                <p className={`text-[10px] ${currentStyle.textMuted} max-w-[280px] mx-auto font-medium`}>
                   Salurkan infak & sedekah jariyah Anda melalui opsi rekening resmi berikut:
                 </p>
               </div>
               
               <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
                 {listRekening.map((item, idx) => (
-                  <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                  <div key={idx} className={`p-3.5 ${currentStyle.innerBg} rounded-2xl flex items-center justify-between gap-3 shadow-sm`}>
                     <div className="min-w-0 flex-1 space-y-0.5">
-                      <span className="text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">
+                      <span className="text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
                         {item.bank}
                       </span>
-                      <p className="text-xs font-black font-mono tracking-wider pt-1 text-slate-800 select-all">
+                      <p className="text-xs font-black font-mono tracking-wider pt-1 select-all">
                         {item.number}
                       </p>
-                      <p className="text-[9px] text-slate-500 font-sans truncate font-medium">
-                        AN. <span className="font-bold text-slate-700">{item.name}</span>
+                      <p className={`text-[9px] ${currentStyle.textMuted} font-sans truncate font-medium`}>
+                        AN. <span className="font-bold">{item.name}</span>
                       </p>
                     </div>
                     <button 
                       onClick={() => handleCopy(item.number, idx)}
-                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'}`}
+                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-md' : 'bg-white/10 hover:bg-white/20'}`}
                     >
                       {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
                     </button>
@@ -373,20 +352,20 @@ export default function RootLayout({ children }) {
                 ))}
               </div>
 
-              <button onClick={() => setShowDonationModal(false)} className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-all font-mono uppercase">
+              <button onClick={() => setShowDonationModal(false)} className="w-full py-3 bg-white/10 hover:bg-white/20 text-xs font-bold rounded-2xl transition-all font-mono uppercase border border-white/20">
                 Tutup Window
               </button>
             </div>
           </div>
         )}
 
-        {/* DRAWER MENU CERAH DENGAN IKON COLORFUL */}
+        {/* DRAWER MENU LIQUID GLASS */}
         {showMainMenuDrawer && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
-            <div className="w-full max-w-md bg-white border-t border-slate-200 rounded-t-3xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
-              <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-2" />
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
+            <div className={`w-full max-w-md ${currentStyle.liquidCard} rounded-t-3xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200`} onClick={(e) => e.stopPropagation()}>
+              <div className="w-12 h-1.5 bg-white/30 rounded-full mx-auto mb-2" />
               <div className="text-center">
-                <h4 className="text-xs font-extrabold uppercase tracking-widest text-slate-700">Navigasi Halaman</h4>
+                <h4 className="text-xs font-extrabold uppercase tracking-widest opacity-80">Navigasi Halaman</h4>
               </div>
               <div className="grid grid-cols-1 gap-2.5 pt-2">
                 {drawerMenus.map((dm) => {
@@ -398,8 +377,8 @@ export default function RootLayout({ children }) {
                       onClick={() => setShowMainMenuDrawer(false)}
                       className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all ${
                         pathname === dm.href 
-                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' 
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30' 
+                          : `${currentStyle.innerBg} hover:bg-white/20`
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -413,13 +392,13 @@ export default function RootLayout({ children }) {
                   );
                 })}
               </div>
-              <div className="pt-4 border-t border-slate-200">
+              <div className="pt-4 border-t border-white/10">
                 {isAdmin ? (
-                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all">
+                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2">
                     <LogOut className="w-4 h-4" /> Keluar Mode Admin
                   </button>
                 ) : (
-                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:opacity-95 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all">
+                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2">
                     <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
                 )}
@@ -428,22 +407,22 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* MODAL LOGIN CERAH */}
+        {/* MODAL LOGIN LIQUID GLASS */}
         {showLoginModal && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-white border border-slate-200 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+            <div className={`${currentStyle.liquidCard} p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl animate-in zoom-in-95 duration-200`}>
               <div className="text-center">
-                <div className="p-3 bg-indigo-50 text-indigo-600 w-fit rounded-2xl mx-auto mb-2 border border-indigo-200/80">
+                <div className="p-3 bg-amber-500/20 text-amber-300 w-fit rounded-2xl mx-auto mb-2 border border-amber-400/30">
                   <Lock className="w-6 h-6" />
                 </div>
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Otorisasi Sistem</h3>
-                <p className="text-xs text-slate-500 mt-1 font-medium">Masukkan kata sandi untuk masuk ke Mode Admin</p>
+                <h3 className="text-xs font-extrabold uppercase tracking-wider">Otorisasi Sistem</h3>
+                <p className={`text-xs ${currentStyle.textMuted} mt-1 font-medium`}>Masukkan kata sandi untuk masuk ke Mode Admin</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
-                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-center font-mono tracking-widest text-slate-800 focus:outline-none focus:border-indigo-500" />
+                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={`w-full px-4 py-3 ${currentStyle.innerBg} rounded-2xl text-xs text-center font-mono tracking-widest focus:outline-none focus:border-cyan-400`} />
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-all">Batal</button>
-                  <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold uppercase rounded-2xl shadow-md shadow-indigo-500/20 transition-all">Masuk</button>
+                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-xs font-bold rounded-2xl">Batal</button>
+                  <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-extrabold text-xs uppercase rounded-2xl shadow-md">Masuk</button>
                 </div>
               </form>
             </div>
