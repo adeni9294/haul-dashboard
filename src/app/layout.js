@@ -35,7 +35,7 @@ const THEME_STYLES = {
     bodyBg: '#080d1a',
     bodyClass: 'bg-[#080d1a] text-slate-100', 
     liquidCard: 'bg-[#11192e]/80 backdrop-blur-2xl border border-slate-700/80 shadow-2xl text-slate-100', 
-    navBg: 'bg-[#0f172a]/95 backdrop-blur-2xl border border-slate-700/80 text-white', 
+    navBg: 'bg-[#080d1a]', 
     innerBg: 'bg-[#1a243b]/60 border border-slate-700/60', 
     textMuted: 'text-slate-300', 
     accentText: 'text-cyan-400',
@@ -45,7 +45,7 @@ const THEME_STYLES = {
     bodyBg: '#090514',
     bodyClass: 'bg-[#090514] text-cyan-100', 
     liquidCard: 'bg-[#160a2c]/80 backdrop-blur-2xl border border-fuchsia-500/40 shadow-[0_10px_35px_rgba(217,70,239,0.2)] text-cyan-100', 
-    navBg: 'bg-[#120326]/95 backdrop-blur-2xl border border-cyan-400/40 text-white', 
+    navBg: 'bg-[#090514]', 
     innerBg: 'bg-purple-950/60 border border-fuchsia-500/30', 
     textMuted: 'text-fuchsia-200', 
     accentText: 'text-cyan-300',
@@ -55,7 +55,7 @@ const THEME_STYLES = {
     bodyBg: '#021814',
     bodyClass: 'bg-[#021814] text-emerald-100', 
     liquidCard: 'bg-[#052e24]/80 backdrop-blur-2xl border border-emerald-400/30 shadow-[0_10px_30px_rgba(16,185,129,0.2)] text-emerald-100', 
-    navBg: 'bg-[#052e24]/95 backdrop-blur-2xl border border-emerald-400/40 text-white', 
+    navBg: 'bg-[#021814]', 
     innerBg: 'bg-emerald-900/50 border border-emerald-500/30', 
     textMuted: 'text-emerald-200', 
     accentText: 'text-emerald-300',
@@ -65,7 +65,7 @@ const THEME_STYLES = {
     bodyBg: '#050c1a',
     bodyClass: 'bg-[#050c1a] text-blue-100', 
     liquidCard: 'bg-[#0a1a36]/80 backdrop-blur-2xl border border-blue-400/30 shadow-[0_10px_30px_rgba(59,130,246,0.2)] text-blue-100', 
-    navBg: 'bg-[#0a1a36]/95 backdrop-blur-2xl border border-blue-400/40 text-white', 
+    navBg: 'bg-[#050c1a]', 
     innerBg: 'bg-blue-900/50 border border-blue-500/30', 
     textMuted: 'text-blue-200', 
     accentText: 'text-sky-300',
@@ -418,7 +418,7 @@ export default function RootLayout({ children }) {
       </head>
       <body 
         style={{ backgroundColor: currentStyle.bodyBg }} 
-        className={`${currentStyle.bodyClass} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased relative overflow-x-hidden`}
+        className={`${currentStyle.bodyClass} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-32 transition-all duration-300 antialiased relative overflow-x-hidden`}
       >
         
         <div className="w-full min-h-screen flex flex-col relative z-10">
@@ -471,36 +471,40 @@ export default function RootLayout({ children }) {
           </div>
 
           {/* MAIN CONTENT */}
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 mb-12">
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 mb-8">
             {children}
+            <div className="h-12 w-full pointer-events-none" />
           </main>
 
           {/* FOOTER */}
-          <footer className={`py-6 border-t border-white/10 text-center text-[10px] ${currentStyle.textMuted} font-bold tracking-widest uppercase mb-20 sm:mb-4`}>
+          <footer className={`py-6 border-t border-white/10 text-center text-[10px] ${currentStyle.textMuted} font-bold tracking-widest uppercase mb-6`}>
             Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
           </footer>
 
         </div>
 
-        {/* 🎯 BOTTOM NAV BAR SIMETRIS 5 MENU */}
-        <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
-          <div className={`${currentStyle.navBg} backdrop-blur-2xl h-16 rounded-3xl w-full max-w-md flex items-center justify-around px-3 transition-all duration-300 shadow-2xl`}>
+        {/* 🎯 BOTTOM NAV BAR DOCK SOLID (DIKUNCI TANPA MELAYANG/TEMBUS) */}
+        <div 
+          style={{ backgroundColor: currentStyle.bodyBg }}
+          className="fixed bottom-0 inset-x-0 z-50 border-t border-slate-800 shadow-[0_-10px_25px_rgba(0,0,0,0.8)]"
+        >
+          <div className="max-w-md mx-auto h-16 flex items-center justify-around px-3">
             
-            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
               <Home className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Home</span>
             </Link>
 
-            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
               <BarChart3 className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
+            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-105 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-slate-900">
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
 
-            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
               <ClipboardList className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Budget</span>
             </Link>
@@ -510,7 +514,7 @@ export default function RootLayout({ children }) {
                 e.stopPropagation();
                 setShowMainMenuDrawer((prev) => !prev);
               }} 
-              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}
             >
               <Menu className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Menu</span>
