@@ -99,32 +99,32 @@ const DICTIONARY = {
 // 🎨 KOLEKSI TEMA LIQUID GLASS DINAMIS
 const THEME_STYLES = {
   'default': { 
-    liquidCard: 'bg-white/40 backdrop-blur-2xl border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.05),_inset_0_1px_2px_rgba(255,255,255,0.9),_inset_0_-2px_4px_rgba(0,0,0,0.05)] text-slate-800', 
-    innerBg: 'bg-white/60 backdrop-blur-md border border-white/60 shadow-inner', 
-    textMuted: 'text-slate-500', 
-    accentText: 'text-indigo-600',
-    progressBg: 'from-indigo-500 to-cyan-400',
-    balanceCard: 'bg-gradient-to-tr from-lime-400 via-emerald-300 to-teal-300 text-slate-950 shadow-xl shadow-emerald-400/20 border-2 border-white/80'
+    liquidCard: 'bg-slate-800/80 backdrop-blur-2xl border border-slate-700/80 shadow-2xl text-slate-100', 
+    innerBg: 'bg-slate-900/80 border border-slate-700/80', 
+    textMuted: 'text-slate-400', 
+    accentText: 'text-emerald-400',
+    progressBg: 'from-emerald-400 via-teal-300 to-cyan-300',
+    balanceCard: 'bg-gradient-to-tr from-lime-400 via-emerald-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/20 border-2 border-white/80'
   },
   'cyberpunk-neon': { 
-    liquidCard: 'bg-fuchsia-950/20 backdrop-blur-2xl border border-fuchsia-500/40 shadow-[0_10px_35px_rgba(217,70,239,0.15),_inset_0_1px_2px_rgba(255,255,255,0.4),_inset_0_0_15px_rgba(217,70,239,0.2)] text-cyan-100', 
-    innerBg: 'bg-purple-950/40 backdrop-blur-md border border-fuchsia-500/30 shadow-inner', 
+    liquidCard: 'bg-[#160a2c]/80 backdrop-blur-2xl border border-fuchsia-500/40 shadow-[0_10px_35px_rgba(217,70,239,0.2)] text-cyan-100', 
+    innerBg: 'bg-purple-950/60 border border-fuchsia-500/30', 
     textMuted: 'text-fuchsia-300/70', 
     accentText: 'text-cyan-300',
     progressBg: 'from-fuchsia-500 via-purple-500 to-cyan-400',
     balanceCard: 'bg-gradient-to-tr from-fuchsia-600 via-purple-600 to-cyan-400 text-white shadow-xl shadow-fuchsia-500/30 border-2 border-white/40'
   },
   'emerald-cyber': { 
-    liquidCard: 'bg-emerald-950/30 backdrop-blur-2xl border border-emerald-400/30 shadow-[0_10px_30px_rgba(16,185,129,0.12),_inset_0_1px_2px_rgba(255,255,255,0.3)] text-emerald-100', 
-    innerBg: 'bg-emerald-900/30 backdrop-blur-md border border-emerald-500/20', 
+    liquidCard: 'bg-[#052e24]/80 backdrop-blur-2xl border border-emerald-400/30 shadow-[0_10px_30px_rgba(16,185,129,0.2)] text-emerald-100', 
+    innerBg: 'bg-emerald-900/50 border border-emerald-500/30', 
     textMuted: 'text-emerald-300/70', 
     accentText: 'text-emerald-300',
     progressBg: 'from-emerald-400 to-teal-300',
     balanceCard: 'bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-400/30 border-2 border-white/50'
   },
   'midnight-blue': { 
-    liquidCard: 'bg-blue-950/30 backdrop-blur-2xl border border-blue-400/30 shadow-[0_10px_30px_rgba(59,130,246,0.15),_inset_0_1px_2px_rgba(255,255,255,0.3)] text-blue-100', 
-    innerBg: 'bg-blue-900/30 backdrop-blur-md border border-blue-500/20', 
+    liquidCard: 'bg-[#0a1a36]/80 backdrop-blur-2xl border border-blue-400/30 shadow-[0_10px_30px_rgba(59,130,246,0.2)] text-blue-100', 
+    innerBg: 'bg-blue-900/50 border border-blue-500/30', 
     textMuted: 'text-blue-300/70', 
     accentText: 'text-sky-300',
     progressBg: 'from-blue-500 to-cyan-300',
@@ -385,12 +385,12 @@ export default function DashboardPage() {
     const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(absValue);
     return angka < 0 ? `-${formatted}` : formatted;
   };
-  
+
   const style = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
   if (loading) {
     return (
-      <div className="p-12 text-center opacity-80 text-xs font-mono animate-pulse">
+      <div className="p-12 text-center text-cyan-300 text-xs font-mono animate-pulse">
         {dict.loading}
       </div>
     );
@@ -399,19 +399,18 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-xs transition-all duration-500">
       
-      {/* 🌐 SELEKTOR PERIODE & BAHASA DENGAN GLASS DOKUMEN */}
+      {/* 🌐 SELEKTOR PERIODE & BAHASA */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden">
         
-        {/* Dropdown Filter Periode */}
         {periodeList.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono tracking-wider opacity-80 uppercase font-bold">
+            <span className="text-[10px] font-mono tracking-wider text-slate-300 uppercase font-bold">
               {dict.selectPeriod}
             </span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/20 backdrop-blur-md border border-white/20 text-xs rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all"
+              className="bg-slate-800 border border-slate-700 text-cyan-300 text-xs rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all shadow-md"
             >
               {periodeList.map((p) => (
                 <option key={p.id} value={p.id} className="bg-slate-900 text-white">
@@ -422,13 +421,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Dropdown Bahasa */}
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-[10px] font-mono tracking-wider opacity-70 uppercase">Select Language:</span>
+          <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase">Select Language:</span>
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            className="bg-black/20 backdrop-blur-md border border-white/20 text-xs rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all"
+            className="bg-slate-800 border border-slate-700 text-cyan-300 text-xs rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all shadow-md"
           >
             <option value="id" className="bg-slate-900 text-white">🇮🇩 Indonesia</option>
             <option value="jv" className="bg-slate-900 text-white">🎯 Cirebonan</option>
@@ -439,78 +437,88 @@ export default function DashboardPage() {
       
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className={`w-full ${style.liquidCard} py-2.5 px-4 rounded-2xl overflow-hidden flex items-center print:hidden`}>
-          <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono">
+        <div className={`w-full ${style.liquidCard} py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-lg print:hidden`}>
+          <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono text-amber-300">
             📢 {announcement}
           </div>
         </div>
       )}
 
-      {/* STRUKTUR UTAMA DASHBOARD */}
+      {/* 💳 3 KARTU KAS UTAMA MODERN DENGAN GRADASI & ORNAMEN SVG ABSTRACT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-        {/* KAS UTAMA HAUL (LIQUID GLASS 3D) */}
+        {/* CARD 1: KAS UTAMA (LIME/TEAL GRADIENT + SVG RIPPLE CIRCLE) */}
         <div className={`${style.balanceCard} p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 transition-transform duration-300 hover:scale-[1.01]`}>
-          <div className="absolute inset-y-0 right-0 w-[60%] opacity-[0.15] pointer-events-none select-none z-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 200 200">
-              <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M120,30 C145,10 175,15 185,35 C195,55 175,75 145,70 C115,65 105,40 120,30 Z" />
-                <path d="M130,40 C150,25 170,28 177,42 C184,56 170,70 150,66 C130,62 123,48 130,40 Z" />
-                <path d="M140,50 C152,40 162,42 166,50 C170,58 162,66 152,64 C142,62 138,56 140,50 Z" />
-                <path d="M50,100 C75,80 105,85 115,105 C125,125 105,145 75,140 C45,135 35,110 50,100 Z" />
-                <path d="M60,110 C78,95 98,98 105,112 C112,126 98,140 78,136 C58,132 51,118 60,110 Z" />
-                <path d="M110,120 C135,100 165,105 175,125 C185,145 165,165 135,160 C105,155 95,130 110,120 Z" />
-                <path d="M120,130 C140,115 160,118 167,132 C174,146 160,160 140,156 C120,152 113,138 120,130 Z" />
-              </g>
+          <div className="absolute top-0 right-0 w-48 h-48 opacity-25 pointer-events-none select-none">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-950">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.3" />
+              <circle cx="100" cy="100" r="55" fill="none" stroke="currentColor" strokeWidth="10" opacity="0.5" />
+              <circle cx="100" cy="100" r="30" fill="none" stroke="currentColor" strokeWidth="14" opacity="0.8" />
             </svg>
           </div>
+
           <div className="relative z-10">
-            <span className="font-mono text-[10px] font-black uppercase tracking-widest opacity-80">{dict.mainCash}</span>
-            <p className="text-[11px] font-semibold opacity-90 mt-0.5">{dict.netBalance}</p>
+            <span className="font-mono text-[10px] font-black uppercase tracking-widest text-slate-900/80">{dict.mainCash}</span>
+            <p className="text-[11px] font-bold text-slate-900 mt-0.5">{dict.netBalance}</p>
           </div>
           <div className="relative z-10 mt-3">
-            <h2 className="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none drop-shadow-md">
+            <h2 className="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none text-slate-950 drop-shadow-xs">
               {formatRupiah(totals.total)}
             </h2>
-            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider opacity-85">
+            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider text-slate-900/90 font-bold">
               <span>{dict.initialBalance}: {formatRupiah(totals.saldoAwal)}</span>
-              <span className="font-bold uppercase tracking-wide">{dict.committee}</span>
+              <span className="font-extrabold uppercase">{dict.committee}</span>
             </div>
           </div>
         </div>
 
-        {/* REKAP CARD UANG MASUK & BELANJA */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+        {/* CARD 2: TOTAL UANG MASUK (EMERALD GRADIENT + SVG MESH GRID) */}
+        <div className="p-6 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-[32px] shadow-xl border border-emerald-500/40 relative overflow-hidden flex flex-col justify-between h-52 transition-transform duration-300 hover:scale-[1.01]">
+          <div className="absolute inset-0 opacity-15 pointer-events-none select-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]" />
+
+          <div className="relative z-10 flex justify-between items-start">
+            <div>
+              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
+              <p className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+            </div>
+            <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-sm shadow-md">
+              🟢
+            </div>
+          </div>
           
-          {/* UANG MASUK */}
-          <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-xl border-l-4 border-l-emerald-400`}>
-            <div className="flex justify-between items-start">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-sm shadow-md">🟢</div>
-              <p className="text-[10px] font-mono opacity-90 uppercase tracking-wider">{dict.totalIncome}</p>
+          <div className="relative z-10">
+            <h3 className="text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
+            <p className="text-[10px] text-emerald-200/80 font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
+          </div>
+        </div>
+
+        {/* CARD 3: TOTAL UANG BELANJA (ROSE/PURPLE GRADIENT + SVG ABSTRACT WAVES) */}
+        <div className="p-6 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-[32px] shadow-xl border border-rose-500/40 relative overflow-hidden flex flex-col justify-between h-52 transition-transform duration-300 hover:scale-[1.01]">
+          <div className="absolute -bottom-10 -right-10 w-44 h-44 opacity-20 pointer-events-none select-none">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-rose-400">
+              <path fill="currentColor" d="M42.7,-62.9C54.2,-54.1,61.6,-40.4,66.8,-26.1C72,-11.8,75,3.1,72.2,17.4C69.4,31.7,60.8,45.4,48.9,54.8C37,64.2,21.8,69.3,5.8,68.5C-10.2,67.7,-27,61.1,-40.8,51.3C-54.6,41.5,-65.4,28.5,-70.2,13C-75,-2.5,-73.8,-20.5,-65.9,-34.8C-58,-49.1,-43.4,-59.7,-28.9,-66.6C-14.4,-73.5,-0.1,-76.7,13.6,-73.3C27.3,-69.9,31.2,-71.7,42.7,-62.9Z" transform="translate(100 100)" />
+            </svg>
+          </div>
+
+          <div className="relative z-10 flex justify-between items-start">
+            <div>
+              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
+              <p className="text-[10px] text-rose-200/80 font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="mt-4">
-              <h3 className="text-2xl font-black tracking-tight sm:text-3xl font-mono text-emerald-400">{formatRupiah(totals.masuk)}</h3>
-              <p className={`text-[10px] ${style.textMuted} font-medium mt-1`}>✓ {catSummaryMasuk.length} {dict.categories}</p>
+            <div className="w-9 h-9 rounded-2xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-sm shadow-md">
+              🔴
             </div>
           </div>
 
-          {/* UANG BELANJA */}
-          <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 shadow-xl border-l-4 border-l-rose-400`}>
-            <div className="flex justify-between items-start">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-sm shadow-md">🔴</div>
-              <p className="text-[10px] font-mono opacity-90 uppercase tracking-wider">{dict.totalExpense}</p>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-2xl font-black tracking-tight sm:text-3xl font-mono text-rose-400">{formatRupiah(totals.keluar)}</h3>
-              <p className={`text-[10px] ${style.textMuted} font-medium mt-1`}>⚡ {catSummaryKeluar.length} {dict.allocation}</p>
-            </div>
+          <div className="relative z-10">
+            <h3 className="text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
+            <p className="text-[10px] text-rose-200/80 font-mono mt-2 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
           </div>
-
         </div>
 
       </div>
 
-      {/* CARD LOG TRAFIK PENGUNJUNG */}
+      {/* LOG TRAFIK PENGUNJUNG */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
         <div className={`p-4 ${style.liquidCard} rounded-2xl flex items-center gap-4 transition-all shadow-md`}>
           <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-base shadow-sm">📈</div>
@@ -530,7 +538,7 @@ export default function DashboardPage() {
       </div>
 
       {/* TARGET PLAFON PROGRESS */}
-      <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3`}>
+      <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3 shadow-lg`}>
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
             <span>🎯</span> {dict.progressTitle}
@@ -548,7 +556,7 @@ export default function DashboardPage() {
 
       {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5`}>
+        <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg`}>
           <h4 className={`text-[10px] font-black ${style.accentText} uppercase tracking-widest border-b border-white/15 pb-2`}>{dict.rekapIncome}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
@@ -560,7 +568,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5`}>
+        <div className={`p-5 ${style.liquidCard} rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg`}>
           <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/15 pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
@@ -575,7 +583,7 @@ export default function DashboardPage() {
 
       {/* MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className={`p-5 ${style.liquidCard} border-l-4 border-l-emerald-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5`}>
+        <div className={`p-5 ${style.liquidCard} border-l-4 border-l-emerald-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg`}>
           <h5 className={`text-[10px] font-black ${style.accentText} uppercase tracking-wider`}>{dict.lastIncome}</h5>
           <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
@@ -596,7 +604,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className={`p-5 ${style.liquidCard} border-l-4 border-l-rose-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5`}>
+        <div className={`p-5 ${style.liquidCard} border-l-4 border-l-rose-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg`}>
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
