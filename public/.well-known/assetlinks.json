@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.haul_cibogo.twa",
+        "sha256_cert_fingerprints": ["FA:E1:22:CA:5F:08:7E:43:F6:B3:9C:AA:61:20:57:44:DB:E4:F2:91:87:EA:6E:70:E2:90:95:0F:3D:05:EA:E1"]
+      }
+    }]
