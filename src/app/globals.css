@@ -15,11 +15,25 @@
   --font-mono: var(--font-geist-mono);
 }
 
-body {
+/* ==================== PENGUNCI LAYAR & PREVENSI ZOOM PWA ==================== */
+html, body {
   background-color: var(--background) !important;
   color: var(--foreground) !important;
   font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  
+  /* 🚫 Mengunci gestur zoom di Android/iOS */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Membolehkan elemen input/form bisa diseleksi dan diketik normal */
+input, textarea, select {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* ==================== 15 DAFTAR TEMA MODERN GLOBAL PANITIA ==================== */
@@ -39,7 +53,7 @@ body.theme-coffee-latte    { --background: #160d06; --card-bg: #2a1a0c; --border
 body.theme-mint-fresh      { --background: #021614; --card-bg: #052b27; --border-color: rgba(45, 212, 191, 0.3);  --accent-color: #2dd4bf; }
 body.theme-retro-wave      { --background: #18030d; --card-bg: #2e061a; --border-color: rgba(244, 63, 94, 0.3);   --accent-color: #f43f5e; }
 
-/* Utility Classes untuk Komponen Kartu dan Teks */
+/* ==================== UTILITY CLASSES KHUSUS ==================== */
 .theme-card {
   background-color: var(--card-bg) !important;
   border-color: var(--border-color) !important;
@@ -47,6 +61,18 @@ body.theme-retro-wave      { --background: #18030d; --card-bg: #2e061a; --border
 
 .theme-text-accent {
   color: var(--accent-color) !important;
+}
+
+/* Animasi Running Text Banner */
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 22s linear infinite;
 }
 
 @layer base {
