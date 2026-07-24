@@ -27,7 +27,10 @@ import {
   Compass,
   Bell,
   BellOff,
-  MapPin
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 
 // 🎨 MAP 15 TEMA MODERN GLOBAL (Sinkron dengan globals.css)
@@ -73,6 +76,18 @@ export default function RootLayout({ children }) {
   const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
+
+  // 🔔 CUSTOM NOTIFICATION POPUP STATE
+  const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
+
+  const showToast = (type, title, message, action = null) => {
+    setToastConfig({ show: true, type, title, message, action });
+  };
+
+  const closeToast = () => {
+    if (toastConfig.action) toastConfig.action();
+    setToastConfig({ show: false, type: 'info', title: '', message: '', action: null });
+  };
   
   const [orgName, setOrgName] = useState('Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus');
   const [address, setAddress] = useState('Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon');
@@ -94,7 +109,7 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     const handleTouchStart = (e) => {
       if (e.touches && e.touches.length > 1) {
-        e.preventDefault(); // Mencegah pinch-to-zoom (2 jari)
+        e.preventDefault();
       }
     };
 
@@ -102,10 +117,9 @@ export default function RootLayout({ children }) {
     const handleTouchEnd = (e) => {
       const now = new Date().getTime();
       if (now - lastTouchEnd <= 300) {
-        // Cek jika yang di-tap bukan input/select/textarea
         const tag = e.target.tagName.toLowerCase();
         if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
-          e.preventDefault(); // Mencegah double-tap zoom
+          e.preventDefault();
         }
       }
       lastTouchEnd = now;
@@ -124,7 +138,6 @@ export default function RootLayout({ children }) {
     checkAdminSession();
     loadHeaderSettings();
 
-    // Cek apakah ada kota tersimpan di local storage
     const savedKotaId = localStorage.getItem('manual_kota_id');
     if (savedKotaId) {
       setSelectedKotaId(savedKotaId);
@@ -157,7 +170,6 @@ export default function RootLayout({ children }) {
     return () => clearInterval(timerId);
   }, [pathname, jadwalSholat, isAlarmActive]);
 
-  // Tutup drawer otomatis jika halaman berpindah
   useEffect(() => {
     setShowMainMenuDrawer(false);
   }, [pathname]);
@@ -169,7 +181,6 @@ export default function RootLayout({ children }) {
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
 
-      // Jika user memilih kota secara manual, gunakan ID tersebut
       if (forcedId) {
         const resJadwal = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${forcedId}/${yyyy}/${mm}/${dd}`);
         const resultJadwal = await resJadwal.json();
@@ -180,7 +191,6 @@ export default function RootLayout({ children }) {
         return;
       }
 
-      // Jika tidak ada pilihan manual, coba deteksi via GPS
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -297,7 +307,7 @@ export default function RootLayout({ children }) {
         icon: logoUrl || '/favicon.ico'
       });
     } else {
-      alert(`🕌 Waktu Sholat ${namaSholat} Telah Tiba!`);
+      showToast('info', '🕌 Waktu Sholat Tiba', `Telah masuk waktu sholat ${namaSholat} untuk wilayah ${kotaSholat} dan sekitarnya.`);
     }
   };
 
@@ -379,21 +389,19 @@ export default function RootLayout({ children }) {
         setIsAdmin(true);
         setShowLoginModal(false);
         setPasswordInput('');
-        alert('🟢 Login Berhasil!');
-        window.location.reload();
+        showToast('success', 'Otorisasi Berhasil', 'Anda berhasil masuk ke Mode Admin.', () => window.location.reload());
       } else {
-        alert('❌ Password salah!');
+        showToast('error', 'Otorisasi Gagal', 'Kata sandi Admin yang Anda masukkan salah!');
       }
     } catch (err) {
-      alert('❌ Gagal terhubung ke server autentikasi.');
+      showToast('error', 'Gangguan Koneksi', 'Gagal terhubung ke server autentikasi Supabase.');
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_password_haul');
     setIsAdmin(false);
-    alert('🚪 Keluar dari mode Admin.');
-    window.location.reload();
+    showToast('info', 'Log Out Berhasil', 'Anda telah keluar dari Mode Admin.', () => window.location.reload());
   };
 
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
@@ -412,11 +420,8 @@ export default function RootLayout({ children }) {
     <html lang="id">
       <head>
         <meta name="color-scheme" content="dark light" />
-        
-        {/* 🚀 TAG MANIFEST PWA & APK SUPPORT */}
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
-
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -487,13 +492,11 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* 🎯 BOTTOM NAV BAR DOCK SOLID FULL WIDTH */}
+        {/* 🎯 BOTTOM NAV BAR DOCK */}
         <div 
           className="fixed bottom-0 left-0 right-0 w-full z-50 theme-card border-t shadow-[0_-12px_30px_rgba(0,0,0,0.95)] transition-all duration-300"
         >
           <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
-            
-            {/* 1. HOME */}
             <Link 
               href="/" 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
@@ -506,7 +509,6 @@ export default function RootLayout({ children }) {
               <span className="text-[9px] font-bold mt-0.5">Home</span>
             </Link>
 
-            {/* 2. STAT */}
             <Link 
               href="/stat" 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
@@ -519,7 +521,6 @@ export default function RootLayout({ children }) {
               <span className="text-[9px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            {/* 3. DONASI */}
             <button 
               onClick={() => setShowDonationModal(true)} 
               className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-105 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-slate-900"
@@ -527,7 +528,6 @@ export default function RootLayout({ children }) {
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
 
-            {/* 4. BUDGET */}
             <Link 
               href="/anggaran" 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
@@ -540,7 +540,6 @@ export default function RootLayout({ children }) {
               <span className="text-[9px] font-bold mt-0.5">Budget</span>
             </Link>
 
-            {/* 5. MENU */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -559,7 +558,7 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC + SELEKSI KOTA MANUAL */}
+        {/* 🕌 MODAL JADWAL SHOLAT */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -575,7 +574,6 @@ export default function RootLayout({ children }) {
                 <p className="text-[10px] font-mono text-emerald-200/80">📍 {kotaSholat} & Sekitarnya</p>
               </div>
 
-              {/* DROPDOWN MANUAL PILIH KOTA */}
               <div className="p-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 flex items-center gap-1 uppercase font-mono">
                   <MapPin className="w-3 h-3 text-cyan-400" /> Lokasi Kota / Wilayah:
@@ -592,7 +590,6 @@ export default function RootLayout({ children }) {
                 </select>
               </div>
 
-              {/* TOGGLE MUTE/UNMUTE ALARM */}
               <div className="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
@@ -803,6 +800,44 @@ export default function RootLayout({ children }) {
             </div>
           </div>
         )}
+
+        {/* 🔔 CUSTOM MODAL TOAST DIALOG (PENGGANTI ALERT BROWSER) */}
+        {toastConfig.show && (
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl text-white text-center relative overflow-hidden">
+              <div className="mx-auto w-fit p-3 rounded-2xl border mb-1">
+                {toastConfig.type === 'success' && (
+                  <div className="bg-emerald-500/20 text-emerald-400 border-emerald-400/30 p-2 rounded-xl">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                )}
+                {toastConfig.type === 'error' && (
+                  <div className="bg-rose-500/20 text-rose-400 border-rose-400/30 p-2 rounded-xl">
+                    <AlertCircle className="w-8 h-8" />
+                  </div>
+                )}
+                {toastConfig.type === 'info' && (
+                  <div className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 p-2 rounded-xl">
+                    <Info className="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-sm font-black uppercase tracking-wider text-white">{toastConfig.title}</h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">{toastConfig.message}</p>
+              </div>
+
+              <button
+                onClick={closeToast}
+                className="w-full py-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs uppercase rounded-2xl shadow-lg transition-all active:scale-95"
+              >
+                Mengerti & Lanjutkan
+              </button>
+            </div>
+          </div>
+        )}
+
       </body>
     </html>
   );
