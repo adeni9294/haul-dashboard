@@ -483,12 +483,12 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* 🎯 BOTTOM NAV BAR DOCK SOLID (DIKUNCI TANPA MELAYANG/TEMBUS) */}
+        {/* 🎯 BOTTOM NAV BAR DOCK SOLID FULL WIDTH (TIDAK BOLEH TEMBUS DI MANAPUN) */}
         <div 
           style={{ backgroundColor: currentStyle.bodyBg }}
-          className="fixed bottom-0 inset-x-0 z-50 border-t border-slate-800 shadow-[0_-10px_25px_rgba(0,0,0,0.8)]"
+          className="fixed bottom-0 left-0 right-0 w-full z-50 border-t border-slate-800/80 shadow-[0_-12px_30px_rgba(0,0,0,0.95)]"
         >
-          <div className="max-w-md mx-auto h-16 flex items-center justify-around px-3">
+          <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
             
             <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
               <Home className="w-5 h-5" />
