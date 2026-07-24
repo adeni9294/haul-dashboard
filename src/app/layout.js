@@ -101,7 +101,6 @@ export default function RootLayout({ children }) {
     checkAdminSession();
     loadHeaderSettings();
     fetchJadwalSholat();
-    setShowMainMenuDrawer(false); 
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
@@ -127,7 +126,11 @@ export default function RootLayout({ children }) {
     return () => clearInterval(timerId);
   }, [pathname, jadwalSholat, isAlarmActive]);
 
-  // FUNGSI JADWAL SHOLAT OTOMATIS BERDASARKAN GPS/KOORDINAT + FALLBACK CIREBON
+  // Tutup drawer otomatis jika halaman berpindah
+  useEffect(() => {
+    setShowMainMenuDrawer(false);
+  }, [pathname]);
+
   async function fetchJadwalSholat() {
     try {
       const today = new Date();
@@ -169,7 +172,6 @@ export default function RootLayout({ children }) {
     }
   }
 
-  // FALLBACK DIRECT KE KABUPATEN CIREBON (ID: 1219)
   async function fetchCirebonDirect(yyyy, mm, dd) {
     try {
       const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1219/${yyyy}/${mm}/${dd}`);
@@ -442,7 +444,13 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold mt-0.5">Budget</span>
             </Link>
 
-            <button onClick={() => setShowMainMenuDrawer(true)} className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMainMenuDrawer((prev) => !prev);
+              }} 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}
+            >
               <Menu className="w-5 h-5" />
               <span className="text-[8px] font-bold mt-0.5">Menu</span>
             </button>
@@ -450,7 +458,7 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC & DYNAMIC LOCATION */}
+        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -562,10 +570,20 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* DRAWER MENU */}
+        {/* 📱 DRAWER MENU DENGAN PREVENT AUTO-CLOSE DI MOBILE */}
         {showMainMenuDrawer && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
-            <div className="w-full max-w-md bg-slate-900 border-t border-slate-700 rounded-t-3xl p-6 space-y-4 shadow-2xl text-white" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
+            {/* AREA BACKDROP LUAR UNTUK MENUTUP DRAWER */}
+            <div 
+              className="absolute inset-0 z-0" 
+              onClick={() => setShowMainMenuDrawer(false)} 
+            />
+
+            {/* KONTEN DRAWER UTAMA */}
+            <div 
+              className="w-full max-w-md bg-slate-900 border-t border-slate-700 rounded-t-3xl p-6 space-y-4 shadow-2xl text-white relative z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-2" />
               <div className="text-center">
                 <h4 className="text-xs font-extrabold uppercase tracking-widest text-slate-300">Navigasi Halaman</h4>
@@ -577,8 +595,12 @@ export default function RootLayout({ children }) {
                     return (
                       <button 
                         key={idx}
-                        onClick={() => { dm.action(); setShowMainMenuDrawer(false); }}
-                        className="w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700"
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          setShowMainMenuDrawer(false);
+                          dm.action(); 
+                        }}
+                        className="w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 active:scale-95"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-xl ${dm.color}`}>
@@ -594,8 +616,11 @@ export default function RootLayout({ children }) {
                     <Link 
                       key={dm.href} 
                       href={dm.href} 
-                      onClick={() => setShowMainMenuDrawer(false)}
-                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMainMenuDrawer(false);
+                      }}
+                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all active:scale-95 ${
                         pathname === dm.href 
                           ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30' 
                           : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700'
@@ -614,11 +639,25 @@ export default function RootLayout({ children }) {
               </div>
               <div className="pt-4 border-t border-slate-800">
                 {isAdmin ? (
-                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2">
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setShowMainMenuDrawer(false); 
+                      handleLogout(); 
+                    }} 
+                    className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 active:scale-95"
+                  >
                     <LogOut className="w-4 h-4" /> Keluar Mode Admin
                   </button>
                 ) : (
-                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2">
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setShowMainMenuDrawer(false); 
+                      setShowLoginModal(true); 
+                    }} 
+                    className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 active:scale-95"
+                  >
                     <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
                 )}
