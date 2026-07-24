@@ -22,7 +22,9 @@ import {
   Calendar,     
   Images,       
   Users,        
-  Settings
+  Settings,
+  Clock,
+  Compass
 } from 'lucide-react';
 
 const THEME_STYLES = {
@@ -73,6 +75,7 @@ export default function RootLayout({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false); 
+  const [showSholatModal, setShowSholatModal] = useState(false); // Modal Jadwal Sholat
   const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -86,9 +89,14 @@ export default function RootLayout({ children }) {
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
+  // State Jadwal Sholat
+  const [jadwalSholat, setJadwalSholat] = useState(null);
+  const [kotaSholat, setKotaSholat] = useState('Kab. Cirebon');
+
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
+    fetchJadwalSholat();
     setShowMainMenuDrawer(false); 
 
     const updateTime = () => {
@@ -101,6 +109,25 @@ export default function RootLayout({ children }) {
     const timerId = setInterval(updateTime, 1000);
     return () => clearInterval(timerId);
   }, [pathname]);
+
+  async function fetchJadwalSholat() {
+    try {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      
+      // ID Kota Cirebon di API Kemenag / MyQuran: 1219 (Kab. Cirebon)
+      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1219/${yyyy}/${mm}/${dd}`);
+      const result = await res.json();
+      if (result && result.status && result.data) {
+        setJadwalSholat(result.data.jadwal);
+        setKotaSholat(result.data.lokasi);
+      }
+    } catch (err) {
+      console.error('Gagal mengambil jadwal sholat:', err);
+    }
+  }
 
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
@@ -224,7 +251,7 @@ export default function RootLayout({ children }) {
         
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER DENGAN TEKS ALAMAT KONTRAS TINGGI */}
+          {/* HEADER */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
             <div className={`p-4 md:p-6 ${currentStyle.liquidCard} rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden transition-all duration-300`}>
               
@@ -248,22 +275,25 @@ export default function RootLayout({ children }) {
                       {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
-                  {/* ALAMAT DENGAN WARNA TERANG KONTRAS */}
                   <p className="text-[11px] text-cyan-200/90 font-mono leading-normal break-words font-semibold">
                     📍 {address}
                   </p>
                 </div>
               </div>
 
-              {/* LIVE CLOCK */}
-              {timeString && (
-                <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0 relative z-10">
-                  <span className={`text-sm font-black font-mono tracking-wider ${currentStyle.accentText} bg-black/40 px-3 py-1 rounded-xl border border-white/20 backdrop-blur-md shadow-inner`}>
-                    {timeString}
-                  </span>
-                  <span className={`text-[10px] font-bold font-mono tracking-wide mt-1 ${currentStyle.textMuted}`}>{dateString}</span>
-                </div>
-              )}
+              {/* LIVE CLOCK & TOMBOL SHOLAT RAPID */}
+              <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0 relative z-10">
+                <button 
+                  onClick={() => setShowSholatModal(true)} 
+                  className="flex items-center gap-1.5 text-xs font-black font-mono tracking-wider text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-500/40 backdrop-blur-md shadow-inner transition-all"
+                >
+                  <Compass className="w-4 h-4 animate-spin-slow text-emerald-400" />
+                  <span>Jadwal Sholat</span>
+                </button>
+                {timeString && (
+                  <span className={`text-[10px] font-bold font-mono tracking-wide ${currentStyle.textMuted}`}>{timeString} • {dateString}</span>
+                )}
+              </div>
 
             </div>
           </div>
@@ -289,11 +319,13 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold mt-0.5">Home</span>
             </Link>
 
-            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
-              <BarChart3 className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Stat</span>
-            </Link>
+            {/* TOMBOL WIDGET SHOLAT */}
+            <button onClick={() => setShowSholatModal(true)} className="relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl opacity-80 hover:opacity-100 transition-all">
+              <Clock className="w-5 h-5 text-emerald-400" />
+              <span className="text-[8px] font-bold mt-0.5 text-emerald-300">Sholat</span>
+            </button>
 
+            {/* TOMBOL DONASI */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
@@ -311,7 +343,53 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* MODAL DONASI DENGAN BADGE NAMA BANK SUPER JELAS & SANGAT KONTRAS */}
+        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC (MYQURAN API) */}
+        {showSholatModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
+              <button onClick={() => setShowSholatModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white">
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="text-center space-y-1">
+                <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
+                  <Compass className="w-6 h-6 animate-pulse" />
+                </div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
+                <p className="text-[10px] font-mono text-emerald-200/80">📍 {kotaSholat} & Sekitarnya</p>
+              </div>
+
+              {jadwalSholat ? (
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  {[
+                    { name: 'Imsak', time: jadwalSholat.imsak },
+                    { name: 'Subuh', time: jadwalSholat.subuh },
+                    { name: 'Terbit', time: jadwalSholat.terbit },
+                    { name: 'Dzuhur', time: jadwalSholat.dzuhur },
+                    { name: 'Ashar', time: jadwalSholat.ashar },
+                    { name: 'Maghrib', time: jadwalSholat.maghrib },
+                    { name: 'Isya', time: jadwalSholat.isya }
+                  ].map((s, idx) => (
+                    <div key={idx} className="p-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
+                      <span className="text-[11px] font-bold text-slate-300">{s.name}</span>
+                      <span className="text-xs font-black font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-lg border border-emerald-800">{s.time} WIB</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-xs font-mono text-slate-400 animate-pulse">
+                  Memuat jadwal sholat...
+                </div>
+              )}
+
+              <button onClick={() => setShowSholatModal(false)} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-2xl transition-all font-mono uppercase shadow-lg shadow-emerald-600/30">
+                Tutup Jadwal
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL DONASI */}
         {showDonationModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -333,7 +411,6 @@ export default function RootLayout({ children }) {
                 {listRekening.map((item, idx) => (
                   <div key={idx} className="p-3.5 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-between gap-3 shadow-md">
                     <div className="min-w-0 flex-1 space-y-1">
-                      {/* BADGE NAMA BANK KONTRAS HITAM TEBAL DI ATAS AMBER/CYAN */}
                       <span className="inline-block text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 uppercase border border-amber-300 shadow-xs">
                         {item.bank}
                       </span>
