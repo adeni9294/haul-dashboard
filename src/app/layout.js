@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -24,7 +24,9 @@ import {
   Users,        
   Settings,
   Clock,
-  Compass
+  Compass,
+  Bell,
+  BellOff
 } from 'lucide-react';
 
 const THEME_STYLES = {
@@ -89,26 +91,100 @@ export default function RootLayout({ children }) {
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
-  // State Jadwal Sholat Cirebon
+  // State Jadwal Sholat & Alarm
   const [jadwalSholat, setJadwalSholat] = useState(null);
   const [kotaSholat, setKotaSholat] = useState('Kab. Cirebon');
+  const [isAlarmActive, setIsAlarmActive] = useState(true);
+  const lastTriggeredSholat = useRef('');
 
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
     fetchJadwalSholat();
-    setShowMainMenuDrawer(false); 
+    setShowMainMenuDrawer(false);
+
+    // Minta Izin Notifikasi Browser
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
 
     const updateTime = () => {
       const sekarang = new Date();
-      setTimeString(sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+      const jamMenitDetik = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      const jamMenit = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+      
+      setTimeString(jamMenitDetik);
       setDateString(sekarang.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
+
+      // CEK WAKTU ALARM SHOLAT TIAP DETIK
+      if (jadwalSholat && isAlarmActive) {
+        checkSholatAlarm(jamMenit);
+      }
     };
 
     updateTime();
     const timerId = setInterval(updateTime, 1000);
     return () => clearInterval(timerId);
-  }, [pathname]);
+  }, [pathname, jadwalSholat, isAlarmActive]);
+
+  // FUNGSI CEK & BUNYIKAN ALARM
+  const checkSholatAlarm = (currentHHMM) => {
+    if (!jadwalSholat) return;
+
+    const daftarWaktu = [
+      { name: 'Subuh', time: jadwalSholat.subuh },
+      { name: 'Dzuhur', time: jadwalSholat.dzuhur },
+      { name: 'Ashar', time: jadwalSholat.ashar },
+      { name: 'Maghrib', time: jadwalSholat.maghrib },
+      { name: 'Isya', time: jadwalSholat.isya }
+    ];
+
+    daftarWaktu.forEach(s => {
+      if (s.time === currentHHMM && lastTriggeredSholat.current !== `${s.name}_${currentHHMM}`) {
+        lastTriggeredSholat.current = `${s.name}_${currentHHMM}`;
+        playAlarmSound();
+        triggerNotification(s.name);
+      }
+    });
+  };
+
+  // BUNYI ALARM NADA CHIME
+  const playAlarmSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nada D5
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1.5); // Nada A5
+
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 2);
+    } catch (e) {
+      console.log('Audio Autoplay terhalang browser:', e);
+    }
+  };
+
+  // NOTIFIKASI BROWSER POPUP
+  const triggerNotification = (namaSholat) => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(`🕌 Waktu Sholat ${namaSholat} Tiba!`, {
+        body: `Telah masuk waktu sholat ${namaSholat} untuk wilayah ${kotaSholat} dan sekitarnya.`,
+        icon: logoUrl || '/favicon.ico'
+      });
+    } else {
+      alert(`🕌 Waktu Sholat ${namaSholat} Telah Tiba untuk Wilayah ${kotaSholat}!`);
+    }
+  };
 
   async function fetchJadwalSholat() {
     try {
@@ -117,7 +193,6 @@ export default function RootLayout({ children }) {
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       
-      // ID 1219 = KABUPATEN CIREBON (API Kemenag / MyQuran)
       const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1219/${yyyy}/${mm}/${dd}`);
       const result = await res.json();
       if (result && result.status && result.data) {
@@ -287,7 +362,7 @@ export default function RootLayout({ children }) {
                   onClick={() => setShowSholatModal(true)} 
                   className="flex items-center gap-1.5 text-xs font-black font-mono tracking-wider text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-500/40 backdrop-blur-md shadow-inner transition-all"
                 >
-                  <Compass className="w-4 h-4 animate-spin-slow text-emerald-400" />
+                  <Compass className="w-4 h-4 text-emerald-400" />
                   <span>Jadwal Sholat</span>
                 </button>
                 {timeString && (
@@ -310,38 +385,43 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* FLOATING BOTTOM NAV BAR */}
-        <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
-          <div className={`${currentStyle.navBg} backdrop-blur-2xl h-16 rounded-3xl w-full max-w-md flex items-center justify-around px-3 transition-all duration-300 shadow-2xl`}>
+        {/* FLOATING BOTTOM NAV BAR LENGKAP */}
+        <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-2 sm:px-4">
+          <div className={`${currentStyle.navBg} backdrop-blur-2xl h-16 rounded-3xl w-full max-w-lg flex items-center justify-around px-2 transition-all duration-300 shadow-2xl`}>
             
-            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
-              <Home className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Home</span>
+            <Link href="/" className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+              <Home className="w-4 h-4" />
+              <span className="text-[7.5px] font-bold mt-0.5">Home</span>
             </Link>
 
-            <button onClick={() => setShowSholatModal(true)} className="relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl opacity-80 hover:opacity-100 transition-all">
-              <Clock className="w-5 h-5 text-emerald-400" />
-              <span className="text-[8px] font-bold mt-0.5 text-emerald-300">Sholat</span>
-            </button>
-
-            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
-              <Gift className="w-6 h-6 stroke-[2.5]" />
-            </button>
-
-            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
-              <ClipboardList className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Budget</span>
+            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${pathname === '/stat' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-[7.5px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            <button onClick={() => setShowMainMenuDrawer(true)} className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
-              <Menu className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Menu</span>
+            <button onClick={() => setShowSholatModal(true)} className="relative flex flex-col items-center justify-center w-10 h-10 rounded-xl opacity-80 hover:opacity-100 transition-all">
+              <Clock className="w-4 h-4 text-emerald-400" />
+              <span className="text-[7.5px] font-bold mt-0.5 text-emerald-300">Sholat</span>
+            </button>
+
+            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
+              <Gift className="w-5 h-5 stroke-[2.5]" />
+            </button>
+
+            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${pathname === '/anggaran' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+              <ClipboardList className="w-4 h-4" />
+              <span className="text-[7.5px] font-bold mt-0.5">Budget</span>
+            </Link>
+
+            <button onClick={() => setShowMainMenuDrawer(true)} className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20 shadow-lg` : 'opacity-70 hover:opacity-100'}`}>
+              <Menu className="w-4 h-4" />
+              <span className="text-[7.5px] font-bold mt-0.5">Menu</span>
             </button>
 
           </div>
         </div>
 
-        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC (CIREBON & SEKITARNYA) */}
+        {/* 🕌 MODAL JADWAL SHOLAT DENGAN SWITCH ALARM AUTOMATIC */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -357,8 +437,25 @@ export default function RootLayout({ children }) {
                 <p className="text-[10px] font-mono text-emerald-200/80">📍 {kotaSholat} & Sekitarnya</p>
               </div>
 
+              {/* TOGGLE MUTE/UNMUTE ALARM */}
+              <div className="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
+                  <span className="text-xs font-bold text-slate-200">Alarm Waktu Sholat</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    setIsAlarmActive(!isAlarmActive);
+                    if (!isAlarmActive) playAlarmSound(); // Tes bunyi suara saat diaktifkan
+                  }}
+                  className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'bg-slate-700 text-slate-400'}`}
+                >
+                  {isAlarmActive ? 'Aktif 🔔' : 'Mute 🔕'}
+                </button>
+              </div>
+
               {jadwalSholat ? (
-                <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-1">
                   {[
                     { name: 'Imsak', time: jadwalSholat.imsak },
                     { name: 'Subuh', time: jadwalSholat.subuh },
@@ -376,7 +473,7 @@ export default function RootLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono text-slate-400 animate-pulse">
-                  Memuat jadwal sholat Cirebon...
+                  Memuat jadwal sholat...
                 </div>
               )}
 
