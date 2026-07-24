@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import '@/app/globals.css';
 
-// 🎨 ICON MODERN DARI LUCIDE REACT (DITAMBAHKAN IKON UNTUK DRAWER MENU)
+// 🎨 ICON MODERN DARI LUCIDE REACT
 import { 
   Home, 
   BarChart3, 
@@ -19,14 +19,24 @@ import {
   Copy, 
   Check, 
   X,
-  CreditCard,   // ➕ Ikon Transaksi
-  Calendar,     // ➕ Ikon Jadwal
-  Images,       // ➕ Ikon Galeri
-  Users,        // ➕ Ikon Kepanitiaan
-  Settings      // ➕ Ikon Pengaturan
+  CreditCard,   
+  Calendar,     
+  Images,       
+  Users,        
+  Settings,
+  Sparkles
 } from 'lucide-react';
 
+// 🎨 THEME STYLES - DENGAN TEMA DEFAULT BARU YANG FRESH & SEGAR (LIGHT/GLASS)
 const THEME_STYLES = {
+  'default': { 
+    body: 'bg-gradient-to-br from-slate-100 via-indigo-50/60 to-cyan-50 text-slate-800', 
+    card: 'bg-white/80 backdrop-blur-xl border-slate-200/80 text-slate-800 shadow-xl shadow-indigo-500/5', 
+    navBg: 'bg-slate-900/90 backdrop-blur-xl border-slate-800 text-white shadow-2xl shadow-slate-900/30', 
+    innerBg: 'bg-slate-50 border border-slate-200/80', 
+    textMuted: 'text-slate-500', 
+    accentText: 'text-indigo-600' 
+  },
   'emerald-cyber': { 
     body: 'bg-[#04201a] text-emerald-100', 
     card: 'bg-[#09382e]/80 border-emerald-500/40 text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.2)]', 
@@ -34,14 +44,6 @@ const THEME_STYLES = {
     innerBg: 'bg-[#04201a]/90 border border-emerald-500/30', 
     textMuted: 'text-emerald-300/80', 
     accentText: 'text-emerald-300' 
-  },
-  'crimson-tide': { 
-    body: 'bg-[#2b070b] text-red-100', 
-    card: 'bg-[#480d14]/80 border-red-500/40 text-red-100 shadow-[0_0_25px_rgba(239,68,68,0.2)]', 
-    navBg: 'bg-[#480d14]/90 border-red-500/50', 
-    innerBg: 'bg-[#2b070b]/90 border border-red-500/30', 
-    textMuted: 'text-red-300/80', 
-    accentText: 'text-rose-400' 
   },
   'midnight-blue': { 
     body: 'bg-[#071326] text-blue-100', 
@@ -51,38 +53,6 @@ const THEME_STYLES = {
     textMuted: 'text-blue-300/80', 
     accentText: 'text-sky-300' 
   },
-  'dracula-vamp': { 
-    body: 'bg-[#18092b] text-purple-100', 
-    card: 'bg-[#2d124d]/80 border-fuchsia-500/40 text-purple-100 shadow-[0_0_25px_rgba(217,70,239,0.2)]', 
-    navBg: 'bg-[#2d124d]/90 border-fuchsia-500/50', 
-    innerBg: 'bg-[#18092b]/90 border border-fuchsia-500/30', 
-    textMuted: 'text-purple-300/80', 
-    accentText: 'text-fuchsia-300' 
-  },
-  'amber-gold': { 
-    body: 'bg-[#241a03] text-amber-100', 
-    card: 'bg-[#423007]/80 border-amber-500/40 text-amber-100 shadow-[0_0_25px_rgba(245,158,11,0.2)]', 
-    navBg: 'bg-[#423007]/90 border-amber-500/50', 
-    innerBg: 'bg-[#241a03]/90 border border-amber-500/30', 
-    textMuted: 'text-amber-300/80', 
-    accentText: 'text-amber-300' 
-  },
-  'neon-sunset': { 
-    body: 'bg-[#2b1003] text-orange-100', 
-    card: 'bg-[#481c07]/80 border-orange-500/40 text-orange-100 shadow-[0_0_25px_rgba(249,115,22,0.2)]', 
-    navBg: 'bg-[#481c07]/90 border-orange-500/50', 
-    innerBg: 'bg-[#2b1003]/90 border border-orange-500/30', 
-    textMuted: 'text-orange-300/80', 
-    accentText: 'text-orange-300' 
-  },
-  'coffee-latte': { 
-    body: 'bg-[#21150c] text-amber-100', 
-    card: 'bg-[#382516]/80 border-amber-700/40 text-amber-100 shadow-[0_0_25px_rgba(180,83,9,0.2)]', 
-    navBg: 'bg-[#382516]/90 border-amber-700/50', 
-    innerBg: 'bg-[#21150c]/90 border border-amber-700/30', 
-    textMuted: 'text-amber-200/70', 
-    accentText: 'text-amber-400' 
-  },
   'nordic-frost': { 
     body: 'bg-[#0a192f] text-slate-100', 
     card: 'bg-[#172a45]/80 border-cyan-400/40 text-slate-100 shadow-[0_0_25px_rgba(34,211,238,0.2)]', 
@@ -90,38 +60,6 @@ const THEME_STYLES = {
     innerBg: 'bg-[#0a192f]/90 border border-cyan-400/30', 
     textMuted: 'text-slate-300', 
     accentText: 'text-cyan-300' 
-  },
-  'rose-gold': { 
-    body: 'bg-[#260c1a] text-rose-100', 
-    card: 'bg-[#42172f]/80 border-rose-400/40 text-rose-100 shadow-[0_0_25px_rgba(251,113,133,0.2)]', 
-    navBg: 'bg-[#42172f]/90 border-rose-400/50', 
-    innerBg: 'bg-[#260c1a]/90 border border-rose-400/30', 
-    textMuted: 'text-rose-200/80', 
-    accentText: 'text-rose-300' 
-  },
-  'toxic-lime': { 
-    body: 'bg-[#112204] text-lime-100', 
-    card: 'bg-[#1f3a09]/80 border-lime-400/40 text-lime-100 shadow-[0_0_25px_rgba(163,230,53,0.2)]', 
-    navBg: 'bg-[#1f3a09]/90 border-lime-400/50', 
-    innerBg: 'bg-[#112204]/90 border border-lime-400/30', 
-    textMuted: 'text-lime-200/80', 
-    accentText: 'text-lime-300' 
-  },
-  'light-clean': { 
-    body: 'bg-[#f1f5f9] text-slate-900', 
-    card: 'bg-white/90 border-slate-300 text-slate-900 shadow-xl', 
-    navBg: 'bg-white/90 border-slate-300', 
-    innerBg: 'bg-slate-100 border border-slate-200', 
-    textMuted: 'text-slate-600', 
-    accentText: 'text-emerald-600' 
-  },
-  'default': { 
-    body: 'bg-[#0d1117] text-slate-100', 
-    card: 'bg-[#161b22]/90 border-slate-700/60 text-slate-100 shadow-[0_0_25px_rgba(191,236,37,0.15)]', 
-    navBg: 'bg-[#161b22]/90 border-slate-700/60', 
-    innerBg: 'bg-[#0d1117]/80 border border-slate-700/50', 
-    textMuted: 'text-slate-400', 
-    accentText: 'text-[#BFEC25]' 
   }
 };
 
@@ -283,13 +221,12 @@ export default function RootLayout({ children }) {
 
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
 
-  // 📌 SEKARANG DRAWER MENUS MEMILIKI PROPERTI IKON
   const drawerMenus = [
-    { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard },
-    { name: 'Jadwal Acara', href: '/acara', icon: Calendar },
-    { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images },
-    { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users },
-    ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings }] : [])
+    { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard, color: 'text-emerald-500 bg-emerald-50' },
+    { name: 'Jadwal Acara', href: '/acara', icon: Calendar, color: 'text-amber-500 bg-amber-50' },
+    { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-500 bg-purple-50' },
+    { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users, color: 'text-blue-500 bg-blue-50' },
+    ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings, color: 'text-rose-500 bg-rose-50' }] : [])
   ];
 
   const listRekening = parseBankInfo(bankInfo);
@@ -299,35 +236,41 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${currentStyle.body} font-['Poppins'] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}>
+      <body className={`${currentStyle.body} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 transition-all duration-300 antialiased`}>
         
-        <div className={`w-full min-h-screen ${currentStyle.body} flex flex-col`}>
+        <div className={`w-full min-h-screen flex flex-col`}>
           
-          {/* HEADER ATAS */}
+          {/* HEADER SEGAR & CERAH DENGAN ORNAMEN GLASS */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
-            <div className={`p-4 md:p-6 ${currentStyle.card} backdrop-blur-xl border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative`}>
+            <div className={`p-4 md:p-6 ${currentStyle.card} rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden border border-white/60 shadow-lg`}>
               
-              <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className={`w-12 h-12 md:w-16 md:h-16 ${currentStyle.innerBg} rounded-2xl flex items-center justify-center overflow-hidden shrink-0 shadow-inner`}>
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
-                  )}
+              {/* DEKORASI BUBBLE GLOW */}
+              <div className="absolute -top-10 -right-10 w-36 h-36 bg-indigo-300/30 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-cyan-300/30 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 rounded-2xl shrink-0 shadow-md">
+                  <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="w-6 h-6 text-indigo-600" />
+                    )}
+                  </div>
                 </div>
                 
                 <div className="text-left space-y-1 min-w-0 flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-                    <h1 className="text-[11px] sm:text-sm font-black tracking-wide uppercase leading-tight break-words">
+                    <h1 className="text-xs sm:text-sm font-extrabold tracking-tight uppercase leading-tight text-slate-800 break-words">
                       {orgName}
                     </h1>
-                    <span className={`w-fit px-1.5 py-0.5 text-[8px] rounded font-mono font-bold uppercase ${currentStyle.innerBg} ${currentStyle.accentText}`}>
-                      {isAdmin ? 'ADMIN' : 'PUBLIC'}
+                    <span className={`w-fit px-2 py-0.5 text-[9px] rounded-full font-mono font-black uppercase shadow-xs ${isAdmin ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      {isAdmin ? '⚡ ADMIN MODE' : 'PUBLIC'}
                     </span>
                   </div>
-                  <p className={`text-[9px] sm:text-[10px] ${currentStyle.textMuted} leading-normal break-words`}>
+                  <p className="text-[10px] text-slate-500 leading-normal break-words font-medium">
                     {address}
                   </p>
                 </div>
@@ -335,9 +278,9 @@ export default function RootLayout({ children }) {
 
               {/* LIVE CLOCK */}
               {timeString && (
-                <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0">
-                  <span className="text-sm font-black font-mono tracking-widest">{timeString}</span>
-                  <span className="text-[10px] font-medium opacity-80 font-mono tracking-wide">{dateString}</span>
+                <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-200/60 pt-2 sm:pt-0 shrink-0 relative z-10">
+                  <span className="text-sm font-black font-mono tracking-wider text-indigo-900 bg-indigo-50/80 px-2.5 py-0.5 rounded-lg border border-indigo-100">{timeString}</span>
+                  <span className="text-[10px] font-bold text-slate-500 font-mono tracking-wide mt-1">{dateString}</span>
                 </div>
               )}
 
@@ -350,101 +293,102 @@ export default function RootLayout({ children }) {
           </main>
 
           {/* FOOTER */}
-          <footer className={`py-6 border-t border-white/10 text-center text-[9px] ${currentStyle.textMuted} font-mono uppercase tracking-widest mb-20 sm:mb-4`}>
+          <footer className="py-6 border-t border-slate-200/80 text-center text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-20 sm:mb-4">
             Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
           </footer>
 
         </div>
 
-        {/* 🚀 BOTTOM NAV FLOATING MODERN (ICON LUCIDE REACT) */}
+        {/* 🚀 FLOATING BOTTOM NAV BAR DENGAN DESAIN ANIMATED POP-UP CERAH */}
         <div className="fixed bottom-5 inset-x-0 z-50 flex justify-center px-4">
-          <div className={`${currentStyle.navBg} backdrop-blur-xl h-16 rounded-2xl w-full max-w-md flex items-center justify-around px-2 shadow-2xl border border-white/20`}>
+          <div className="bg-slate-900/90 backdrop-blur-2xl h-16 rounded-3xl w-full max-w-md flex items-center justify-around px-3 shadow-2xl shadow-indigo-900/20 border border-slate-700/80">
             
-            <Link href="/" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? 'text-indigo-400 font-black bg-indigo-500/20 scale-105 border border-indigo-400/30' : 'text-slate-400 hover:text-white'}`}>
               <Home className="w-5 h-5" />
-              <span className="text-[9px] font-bold font-mono mt-1">Home</span>
+              <span className="text-[8px] font-bold mt-0.5">Home</span>
             </Link>
 
-            <Link href="/stat" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/stat' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? 'text-cyan-400 font-black bg-cyan-500/20 scale-105 border border-cyan-400/30' : 'text-slate-400 hover:text-white'}`}>
               <BarChart3 className="w-5 h-5" />
-              <span className="text-[9px] font-bold font-mono mt-1">Stat</span>
+              <span className="text-[8px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-black bg-[#BFEC25] hover:bg-[#a3cb1b] shadow-lg transform active:scale-95 transition-all">
-              <Gift className="w-5 h-5 stroke-[2.5]" />
+            {/* TOMBOL UTAMA DONASI CERAH (AQUAMARINE NEON) */}
+            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-emerald-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white">
+              <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
 
-            <Link href="/anggaran" className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${pathname === '/anggaran' ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? 'text-amber-400 font-black bg-amber-500/20 scale-105 border border-amber-400/30' : 'text-slate-400 hover:text-white'}`}>
               <ClipboardList className="w-5 h-5" />
-              <span className="text-[9px] font-bold font-mono mt-1">Budget</span>
+              <span className="text-[8px] font-bold mt-0.5">Budget</span>
             </Link>
 
-            <button onClick={() => setShowMainMenuDrawer(true)} className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${showMainMenuDrawer ? `${currentStyle.accentText} bg-white/10` : 'opacity-70 hover:opacity-100 text-white'}`}>
+            <button onClick={() => setShowMainMenuDrawer(true)} className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? 'text-purple-400 font-black bg-purple-500/20 scale-105 border border-purple-400/30' : 'text-slate-400 hover:text-white'}`}>
               <Menu className="w-5 h-5" />
-              <span className="text-[9px] font-bold font-mono mt-1">Menu</span>
+              <span className="text-[8px] font-bold mt-0.5">Menu</span>
             </button>
 
           </div>
         </div>
 
-        {/* MODAL DONASI */}
+        {/* MODAL DONASI CERAH & ELEGAN */}
         {showDonationModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
-            <div className={`${currentStyle.card} border p-5 rounded-[24px] w-full max-w-sm space-y-4 shadow-2xl relative`}>
-              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1 rounded-lg bg-white/10 hover:bg-white/20">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative animate-in zoom-in-95 duration-200">
+              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600">
                 <X className="w-4 h-4" />
               </button>
               
               <div className="text-center space-y-1">
-                <div className="p-3 bg-[#BFEC25]/20 text-[#BFEC25] w-fit rounded-2xl mx-auto mb-2 border border-[#BFEC25]/30">
+                <div className="p-3 bg-emerald-50 text-emerald-600 w-fit rounded-2xl mx-auto mb-2 border border-emerald-200/80 shadow-xs">
                   <Gift className="w-6 h-6" />
                 </div>
-                <h3 className="text-xs font-black uppercase tracking-wider">Rekening Donasi Jemaah</h3>
-                <p className={`text-[10px] ${currentStyle.textMuted} max-w-[280px] mx-auto`}>
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Rekening Donasi Jemaah</h3>
+                <p className="text-[10px] text-slate-500 max-w-[280px] mx-auto font-medium">
                   Salurkan infak & sedekah jariyah Anda melalui opsi rekening resmi berikut:
                 </p>
               </div>
               
               <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
                 {listRekening.map((item, idx) => (
-                  <div key={idx} className={`p-3 ${currentStyle.innerBg} rounded-xl flex items-center justify-between gap-3`}>
+                  <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
                     <div className="min-w-0 flex-1 space-y-0.5">
-                      <span className="text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 uppercase">
+                      <span className="text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">
                         {item.bank}
                       </span>
-                      <p className="text-xs font-black font-mono tracking-wide pt-1 select-all">
+                      <p className="text-xs font-black font-mono tracking-wider pt-1 text-slate-800 select-all">
                         {item.number}
                       </p>
-                      <p className={`text-[9px] ${currentStyle.textMuted} font-sans truncate`}>
-                        AN. <span className="font-medium">{item.name}</span>
+                      <p className="text-[9px] text-slate-500 font-sans truncate font-medium">
+                        AN. <span className="font-bold text-slate-700">{item.name}</span>
                       </p>
                     </div>
                     <button 
                       onClick={() => handleCopy(item.number, idx)}
-                      className={`px-2.5 py-1.5 rounded-lg font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-white/10 hover:bg-white/20'}`}
+                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'}`}
                     >
-                      {copiedIndex === idx ? <><Check className="w-3 h-3" /> Disalin</> : <><Copy className="w-3 h-3" /> Salin</>}
+                      {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
                     </button>
                   </div>
                 ))}
               </div>
 
-              <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 bg-white/10 text-xs font-bold rounded-xl hover:bg-white/20 transition-all font-mono">
-                TUTUP WINDOW
+              <button onClick={() => setShowDonationModal(false)} className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-all font-mono uppercase">
+                Tutup Window
               </button>
             </div>
           </div>
         )}
 
-        {/* DRAWER MENU (📌 SUDAH MENAMPILKAN IKON) */}
+        {/* DRAWER MENU CERAH DENGAN IKON COLORFUL */}
         {showMainMenuDrawer && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
-            <div className={`w-full max-w-md ${currentStyle.card} border-t rounded-t-3xl p-6 space-y-4 shadow-2xl`} onClick={(e) => e.stopPropagation()}>
-              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-2" />
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
+            <div className="w-full max-w-md bg-white border-t border-slate-200 rounded-t-3xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-2" />
               <div className="text-center">
-                <h4 className="text-xs font-bold uppercase tracking-widest opacity-80">Navigasi Halaman</h4>
+                <h4 className="text-xs font-extrabold uppercase tracking-widest text-slate-700">Navigasi Halaman</h4>
               </div>
-              <div className="grid grid-cols-1 gap-2 pt-2">
+              <div className="grid grid-cols-1 gap-2.5 pt-2">
                 {drawerMenus.map((dm) => {
                   const IconComponent = dm.icon;
                   return (
@@ -452,28 +396,30 @@ export default function RootLayout({ children }) {
                       key={dm.href} 
                       href={dm.href} 
                       onClick={() => setShowMainMenuDrawer(false)}
-                      className={`w-full py-2.5 px-3.5 rounded-xl font-medium text-xs text-left flex justify-between items-center transition-all ${
+                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all ${
                         pathname === dm.href 
-                          ? 'bg-[#BFEC25]/20 text-[#BFEC25] border border-[#BFEC25]/40' 
-                          : `${currentStyle.innerBg} hover:bg-white/10`
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' 
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <IconComponent className="w-4 h-4 text-[#BFEC25] shrink-0" />
+                        <div className={`p-2 rounded-xl ${pathname === dm.href ? 'bg-white/20 text-white' : dm.color}`}>
+                          <IconComponent className="w-4 h-4 shrink-0" />
+                        </div>
                         <span>{dm.name}</span>
                       </div>
-                      <ChevronRight className="w-4 h-4 opacity-40" />
+                      <ChevronRight className="w-4 h-4 opacity-50" />
                     </Link>
                   );
                 })}
               </div>
-              <div className="pt-4 border-t border-white/10">
+              <div className="pt-4 border-t border-slate-200">
                 {isAdmin ? (
-                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2">
+                  <button onClick={() => { handleLogout(); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all">
                     <LogOut className="w-4 h-4" /> Keluar Mode Admin
                   </button>
                 ) : (
-                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3 bg-[#BFEC25] hover:bg-[#a8d41e] text-black rounded-xl text-xs font-black uppercase tracking-wide shadow-md flex items-center justify-center gap-2">
+                  <button onClick={() => { setShowLoginModal(true); setShowMainMenuDrawer(false); }} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:opacity-95 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all">
                     <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
                 )}
@@ -482,20 +428,22 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* MODAL LOGIN */}
+        {/* MODAL LOGIN CERAH */}
         {showLoginModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className={`${currentStyle.card} border p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl`}>
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="text-center">
-                <Lock className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                <h3 className="text-sm font-bold uppercase tracking-wider">Otorisasi Sistem</h3>
-                <p className={`text-xs ${currentStyle.textMuted} mt-1`}>Masukkan kata sandi untuk masuk ke Mode Admin</p>
+                <div className="p-3 bg-indigo-50 text-indigo-600 w-fit rounded-2xl mx-auto mb-2 border border-indigo-200/80">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Otorisasi Sistem</h3>
+                <p className="text-xs text-slate-500 mt-1 font-medium">Masukkan kata sandi untuk masuk ke Mode Admin</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
-                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={`w-full px-3 py-2 ${currentStyle.innerBg} rounded-xl text-xs text-center font-mono tracking-widest`} />
+                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-center font-mono tracking-widest text-slate-800 focus:outline-none focus:border-indigo-500" />
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-2 bg-white/10 text-xs font-bold rounded-xl">Batal</button>
-                  <button type="submit" className="flex-1 py-2 bg-[#BFEC25] text-black text-xs font-black uppercase rounded-xl">Masuk</button>
+                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-all">Batal</button>
+                  <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold uppercase rounded-2xl shadow-md shadow-indigo-500/20 transition-all">Masuk</button>
                 </div>
               </form>
             </div>
