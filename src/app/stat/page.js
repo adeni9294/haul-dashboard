@@ -53,11 +53,11 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Data dari tabel transactions dan budgets
+      // 2. Ambil Semua Data Transaksi dan Budgets
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Mapping Statistik per Periode murni dari tabel transactions
+      // 3. Mapping Statistik
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
         let totalMasuk = 0;
@@ -66,18 +66,23 @@ export default function StatPage() {
 
         if (allTransactions) {
           allTransactions.forEach(t => {
-            // Cocokkan periode_id (termasuk yang null/kosong agar tetap masuk ke periode aktif)
-            const matchPeriode = t.periode_id === pId || !t.periode_id || t.periode_id === Number(pId);
+            // Longgarkan matchPeriode agar ID bertipe String/Number atau ID=2/NULL tetap terbaca
+            const matchPeriode = 
+              t.periode_id == pId || 
+              !t.periode_id || 
+              String(t.periode_id) === String(pId) || 
+              listPeriode.length === 1; // Jika hanya 1 periode aktif, hitung semua transaksi
+
             if (matchPeriode) {
               const typeVal = (t.type || '').toString().trim().toLowerCase();
               const nominal = Math.abs(parseFloat(t.amount || t.nominal || 0));
 
-              // Kondisi Pemasukan / Masuk
-              if (typeVal === 'Pemasukan' || typeVal === 'masuk' || typeVal === 'in') {
+              // Menangkap 'pemasukan', 'masuk', 'in'
+              if (typeVal.includes('masuk') || typeVal.includes('in')) {
                 totalMasuk += nominal;
               } 
-              // Kondisi Keluar / Pengeluaran
-              else if (typeVal === 'keluar' || typeVal === 'pengeluaran' || typeVal === 'out') {
+              // Menangkap 'keluar', 'pengeluaran', 'out'
+              else if (typeVal.includes('keluar') || typeVal.includes('out')) {
                 totalKeluar += nominal;
               }
             }
@@ -87,14 +92,13 @@ export default function StatPage() {
         // Hitung Rencana Anggaran (Budget)
         if (allBudgets) {
           allBudgets.forEach(b => {
-            const matchPeriode = b.periode_id === pId || !b.periode_id || b.periode_id === Number(pId);
+            const matchPeriode = b.periode_id == pId || !b.periode_id || String(b.periode_id) === String(pId) || listPeriode.length === 1;
             if (matchPeriode) {
-              rencanaBudget += parseFloat(b.planned_amount || 0);
+              rencanaBudget += parseFloat(b.planned_amount || b.amount || 0);
             }
           });
         }
 
-        // Sisa Kas Bersih = Total Masuk - Total Keluar
         const saldoBersih = totalMasuk - totalKeluar;
 
         return {
@@ -141,7 +145,7 @@ export default function StatPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
       
-      {/* HEADER & SELECTOR PERIODE (GLASS) */}
+      {/* HEADER & SELECTOR PERIODE */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
@@ -176,7 +180,7 @@ export default function StatPage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Transaksi)</p>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan</p>
             <h4 className="text-base font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
           </div>
 
@@ -187,7 +191,9 @@ export default function StatPage() {
 
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
             <p className="text-[10px] font-mono opacity-80 uppercase">Sisa Kas Bersih</p>
-            <h4 className="text-base font-black font-mono text-blue-300">{formatRupiah(currentSummary.saldoBersih)}</h4>
+            <h4 className={`text-base font-black font-mono ${currentSummary.saldoBersih >= 0 ? 'text-blue-300' : 'text-rose-400'}`}>
+              {formatRupiah(currentSummary.saldoBersih)}
+            </h4>
           </div>
 
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
@@ -202,10 +208,10 @@ export default function StatPage() {
         </div>
       </div>
 
-      {/* SECTION 2: KOMPARASI ANTAR PERIODE (TAHUN KE TAHUN) */}
+      {/* SECTION 2: KOMPARASI ANTAR PERIODE */}
       <div className="space-y-3 pt-2">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <span>📊</span> Komparasi Kinerja Keuangan Antar Periode Haul (Tahun ke Tahun)
+          <span>📊</span> Komparasi Kinerja Keuangan Antar Periode Haul
         </h3>
 
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-xl">
