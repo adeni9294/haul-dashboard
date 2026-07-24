@@ -30,47 +30,24 @@ import {
   MapPin
 } from 'lucide-react';
 
+// 🎨 MAP 15 TEMA MODERN GLOBAL (Sinkron dengan globals.css)
 const THEME_STYLES = {
-  'default': { 
-    bodyBg: '#080d1a',
-    bodyClass: 'bg-[#080d1a] text-slate-100', 
-    liquidCard: 'bg-[#11192e]/80 backdrop-blur-2xl border border-slate-700/80 shadow-2xl text-slate-100', 
-    navBg: 'bg-[#080d1a]', 
-    innerBg: 'bg-[#1a243b]/60 border border-slate-700/60', 
-    textMuted: 'text-slate-300', 
-    accentText: 'text-cyan-400',
-    accentBadge: 'bg-cyan-500 text-slate-950 font-black'
-  },
-  'cyberpunk-neon': { 
-    bodyBg: '#090514',
-    bodyClass: 'bg-[#090514] text-cyan-100', 
-    liquidCard: 'bg-[#160a2c]/80 backdrop-blur-2xl border border-fuchsia-500/40 shadow-[0_10px_35px_rgba(217,70,239,0.2)] text-cyan-100', 
-    navBg: 'bg-[#090514]', 
-    innerBg: 'bg-purple-950/60 border border-fuchsia-500/30', 
-    textMuted: 'text-fuchsia-200', 
-    accentText: 'text-cyan-300',
-    accentBadge: 'bg-gradient-to-r from-fuchsia-500 to-cyan-400 text-black font-black'
-  },
-  'emerald-cyber': { 
-    bodyBg: '#021814',
-    bodyClass: 'bg-[#021814] text-emerald-100', 
-    liquidCard: 'bg-[#052e24]/80 backdrop-blur-2xl border border-emerald-400/30 shadow-[0_10px_30px_rgba(16,185,129,0.2)] text-emerald-100', 
-    navBg: 'bg-[#021814]', 
-    innerBg: 'bg-emerald-900/50 border border-emerald-500/30', 
-    textMuted: 'text-emerald-200', 
-    accentText: 'text-emerald-300',
-    accentBadge: 'bg-emerald-400 text-black font-black'
-  },
-  'midnight-blue': { 
-    bodyBg: '#050c1a',
-    bodyClass: 'bg-[#050c1a] text-blue-100', 
-    liquidCard: 'bg-[#0a1a36]/80 backdrop-blur-2xl border border-blue-400/30 shadow-[0_10px_30px_rgba(59,130,246,0.2)] text-blue-100', 
-    navBg: 'bg-[#050c1a]', 
-    innerBg: 'bg-blue-900/50 border border-blue-500/30', 
-    textMuted: 'text-blue-200', 
-    accentText: 'text-sky-300',
-    accentBadge: 'bg-sky-400 text-slate-950 font-black'
-  }
+  'default': { name: 'Default Navy', accentBadge: 'bg-cyan-500 text-slate-950 font-black', accentText: 'text-cyan-400' },
+  'emerald-cyber': { name: 'Emerald Cyber', accentBadge: 'bg-emerald-400 text-black font-black', accentText: 'text-emerald-400' },
+  'velvet-rose': { name: 'Velvet Rose', accentBadge: 'bg-pink-500 text-white font-black', accentText: 'text-pink-400' },
+  'neon-sunset': { name: 'Neon Sunset', accentBadge: 'bg-orange-500 text-black font-black', accentText: 'text-orange-400' },
+  'nordic-frost': { name: 'Nordic Frost', accentBadge: 'bg-sky-400 text-slate-950 font-black', accentText: 'text-sky-400' },
+  'tokyo-night': { name: 'Tokyo Night', accentBadge: 'bg-purple-500 text-white font-black', accentText: 'text-purple-400' },
+  'amber-gold': { name: 'Amber Gold', accentBadge: 'bg-amber-400 text-black font-black', accentText: 'text-amber-400' },
+  'cyberpunk-2076': { name: 'Cyberpunk 2076', accentBadge: 'bg-yellow-400 text-black font-black', accentText: 'text-yellow-400' },
+  'ocean-deep': { name: 'Ocean Deep', accentBadge: 'bg-blue-600 text-white font-black', accentText: 'text-blue-400' },
+  'forest-moss': { name: 'Forest Moss', accentBadge: 'bg-emerald-600 text-white font-black', accentText: 'text-emerald-400' },
+  'crimson-tide': { name: 'Crimson Tide', accentBadge: 'bg-red-600 text-white font-black', accentText: 'text-red-400' },
+  'obsidian-stark': { name: 'Obsidian Stark', accentBadge: 'bg-slate-400 text-black font-black', accentText: 'text-slate-300' },
+  'dracula-vamp': { name: 'Dracula Vamp', accentBadge: 'bg-purple-600 text-white font-black', accentText: 'text-purple-400' },
+  'coffee-latte': { name: 'Coffee Latte', accentBadge: 'bg-amber-700 text-white font-black', accentText: 'text-amber-500' },
+  'mint-fresh': { name: 'Mint Fresh', accentBadge: 'bg-teal-400 text-slate-950 font-black', accentText: 'text-teal-300' },
+  'retro-wave': { name: 'Retro Wave', accentBadge: 'bg-rose-500 text-white font-black', accentText: 'text-rose-400' }
 };
 
 // Daftar Kota Populer untuk Pilihan Manual
@@ -402,14 +379,13 @@ export default function RootLayout({ children }) {
   ];
 
   return (
-    <html lang="id" style={{ backgroundColor: currentStyle.bodyBg }}>
+    <html lang="id">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="color-scheme" content="dark light" />
         
         {/* 🚀 TAG MANIFEST PWA & APK SUPPORT */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#080d1a" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -417,15 +393,14 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body 
-        style={{ backgroundColor: currentStyle.bodyBg }} 
-        className={`${currentStyle.bodyClass} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-32 transition-all duration-300 antialiased relative overflow-x-hidden`}
+        className={`theme-${currentThemeKey} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-32 transition-colors duration-300 antialiased relative overflow-x-hidden`}
       >
         
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
           {/* HEADER */}
           <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
-            <div className={`p-4 md:p-6 ${currentStyle.liquidCard} rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden transition-all duration-300`}>
+            <div className="theme-card p-4 md:p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 shadow-2xl backdrop-blur-2xl">
               
               <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10">
                 <div className="w-12 h-12 md:w-16 md:h-16 p-0.5 rounded-2xl shrink-0 shadow-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500">
@@ -447,7 +422,7 @@ export default function RootLayout({ children }) {
                       {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-cyan-200/90 font-mono leading-normal break-words font-semibold">
+                  <p className="text-[11px] theme-text-accent font-mono leading-normal break-words font-semibold opacity-90">
                     📍 {address}
                   </p>
                 </div>
@@ -463,7 +438,7 @@ export default function RootLayout({ children }) {
                   <span>Jadwal Sholat</span>
                 </button>
                 {timeString && (
-                  <span className={`text-[10px] font-bold font-mono tracking-wide ${currentStyle.textMuted}`}>{timeString} • {dateString}</span>
+                  <span className="text-[10px] font-bold font-mono tracking-wide text-slate-300">{timeString} • {dateString}</span>
                 )}
               </div>
 
@@ -477,84 +452,83 @@ export default function RootLayout({ children }) {
           </main>
 
           {/* FOOTER */}
-          <footer className={`py-6 border-t border-white/10 text-center text-[10px] ${currentStyle.textMuted} font-bold tracking-widest uppercase mb-6`}>
+          <footer className="py-6 border-t border-white/10 text-center text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-6">
             Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
           </footer>
 
         </div>
 
-{/* 🎯 BOTTOM NAV BAR DOCK SOLID DENGAN KONTRAS MENYALA/MATI YANG PAS */}
-<div 
-  style={{ backgroundColor: currentStyle.bodyBg }}
-  className="fixed bottom-0 left-0 right-0 w-full z-50 border-t border-slate-800 shadow-[0_-12px_30px_rgba(0,0,0,0.95)]"
->
-  <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
-    
-    {/* 1. HOME */}
-    <Link 
-      href="/" 
-      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-        pathname === '/' 
-          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
-          : 'text-slate-400 hover:text-slate-200'
-      }`}
-    >
-      <Home className="w-5 h-5" />
-      <span className="text-[9px] font-bold mt-0.5">Home</span>
-    </Link>
+        {/* 🎯 BOTTOM NAV BAR DOCK SOLID FULL WIDTH */}
+        <div 
+          className="fixed bottom-0 left-0 right-0 w-full z-50 theme-card border-t shadow-[0_-12px_30px_rgba(0,0,0,0.95)] transition-all duration-300"
+        >
+          <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
+            
+            {/* 1. HOME */}
+            <Link 
+              href="/" 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                pathname === '/' 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Home</span>
+            </Link>
 
-    {/* 2. STAT */}
-    <Link 
-      href="/stat" 
-      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-        pathname === '/stat' 
-          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
-          : 'text-slate-400 hover:text-slate-200'
-      }`}
-    >
-      <BarChart3 className="w-5 h-5" />
-      <span className="text-[9px] font-bold mt-0.5">Stat</span>
-    </Link>
+            {/* 2. STAT */}
+            <Link 
+              href="/stat" 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                pathname === '/stat' 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Stat</span>
+            </Link>
 
-    {/* 3. DONASI (TETAP MENONJOL/MENYALA) */}
-    <button 
-      onClick={() => setShowDonationModal(true)} 
-      className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-105 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-slate-900"
-    >
-      <Gift className="w-6 h-6 stroke-[2.5]" />
-    </button>
+            {/* 3. DONASI */}
+            <button 
+              onClick={() => setShowDonationModal(true)} 
+              className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-105 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-slate-900"
+            >
+              <Gift className="w-6 h-6 stroke-[2.5]" />
+            </button>
 
-    {/* 4. BUDGET */}
-    <Link 
-      href="/anggaran" 
-      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-        pathname === '/anggaran' 
-          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
-          : 'text-slate-400 hover:text-slate-200'
-      }`}
-    >
-      <ClipboardList className="w-5 h-5" />
-      <span className="text-[9px] font-bold mt-0.5">Budget</span>
-    </Link>
+            {/* 4. BUDGET */}
+            <Link 
+              href="/anggaran" 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                pathname === '/anggaran' 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ClipboardList className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Budget</span>
+            </Link>
 
-    {/* 5. MENU */}
-    <button 
-      onClick={(e) => {
-        e.stopPropagation();
-        setShowMainMenuDrawer((prev) => !prev);
-      }} 
-      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-        showMainMenuDrawer 
-          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
-          : 'text-slate-400 hover:text-slate-200'
-      }`}
-    >
-      <Menu className="w-5 h-5" />
-      <span className="text-[9px] font-bold mt-0.5">Menu</span>
-    </button>
+            {/* 5. MENU */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMainMenuDrawer((prev) => !prev);
+              }} 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                showMainMenuDrawer 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Menu</span>
+            </button>
 
-  </div>
-</div>
+          </div>
+        </div>
 
         {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC + SELEKSI KOTA MANUAL */}
         {showSholatModal && (
