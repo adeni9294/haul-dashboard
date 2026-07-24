@@ -131,13 +131,25 @@ export default function RootLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  async function fetchJadwalSholat() {
+  async function fetchJadwalSholat(forcedId = null) {
     try {
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
 
+      // Jika user memilih kota secara manual, gunakan itu
+      if (forcedId) {
+        const resJadwal = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${forcedId}/${yyyy}/${mm}/${dd}`);
+        const resultJadwal = await resJadwal.json();
+        if (resultJadwal && resultJadwal.status && resultJadwal.data) {
+          setJadwalSholat(resultJadwal.data.jadwal);
+          setKotaSholat(resultJadwal.data.lokasi);
+        }
+        return;
+      }
+
+      // Jika tidak ada pilihan manual, coba deteksi GPS
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -145,7 +157,6 @@ export default function RootLayout({ children }) {
             const lon = position.coords.longitude;
             
             try {
-              // Mencari kota berdasarkan koordinat GPS terkini
               const resCoord = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${lat}/${lon}`);
               const resultCoord = await resCoord.json();
               
@@ -153,7 +164,6 @@ export default function RootLayout({ children }) {
                 const idKota = resultCoord.data.id;
                 const namaKota = resultCoord.data.lokasi;
                 
-                // Ambil jadwal berdasarkan ID kota yang sesuai dengan GPS
                 const resJadwal = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
                 const resultJadwal = await resJadwal.json();
                 
@@ -163,17 +173,17 @@ export default function RootLayout({ children }) {
                   return;
                 }
               }
-              // Jika pencarian koordinat meleset, fallback ke Cirebon (ID: 1202)
+              // Fallback aman ke Cirebon (1202) jika koordinat gagal dicocokkan
               fetchCirebonDirect(yyyy, mm, dd);
             } catch (e) {
               fetchCirebonDirect(yyyy, mm, dd);
             }
           },
           (error) => {
-            // Jika GPS ditolak atau timeout, fallback ke Cirebon
+            // Fallback aman ke Cirebon (1202) jika GPS ditolak/tidak aktif
             fetchCirebonDirect(yyyy, mm, dd);
           },
-          { timeout: 10000, enableHighAccuracy: true }
+          { timeout: 8000, enableHighAccuracy: false } // Diubah ke false agar lebih cepat dan stabil mendeteksi wilayah umum
         );
       } else {
         fetchCirebonDirect(yyyy, mm, dd);
@@ -185,7 +195,6 @@ export default function RootLayout({ children }) {
 
   async function fetchCirebonDirect(yyyy, mm, dd) {
     try {
-      // Menggunakan ID Kab. Cirebon yang akurat (1202)
       const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1202/${yyyy}/${mm}/${dd}`);
       const result = await res.json();
       if (result && result.status && result.data) {
@@ -196,6 +205,7 @@ export default function RootLayout({ children }) {
       console.error('Gagal ambil data Cirebon:', e);
     }
   }
+  
   const checkSholatAlarm = (currentHHMM) => {
     if (!jadwalSholat) return;
 
