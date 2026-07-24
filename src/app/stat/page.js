@@ -73,7 +73,7 @@ export default function StatPage() {
               const nominal = Math.abs(parseFloat(t.amount || t.nominal || 0));
 
               // Kondisi Pemasukan / Masuk
-              if (typeVal === 'pemasukan' || typeVal === 'masuk' || typeVal === 'in') {
+              if (typeVal === 'Pemasukan' || typeVal === 'masuk' || typeVal === 'in') {
                 totalMasuk += nominal;
               } 
               // Kondisi Keluar / Pengeluaran
