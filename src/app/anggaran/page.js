@@ -8,7 +8,7 @@ export default function AnggaranPage() {
   const [categoryOptions, setCategoryOptions] = useState([]);
   
   // State Form Anggaran (Fleksibel dengan input Realisasi Manual)
-  const [allocationName, setAllocationName] = useState('');
+  const [allocationCategory, setAllocationCategory] = useState('');
   const [category, setCategory] = useState('');
   const [plannedAmount, setPlannedAmount] = useState('');
   const [realizedAmount, setRealizedAmount] = useState('');
@@ -95,7 +95,7 @@ export default function AnggaranPage() {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini telah ditutup buku!');
-    if (!allocationName.trim() || !plannedAmount) return;
+    if (!allocationCategory.trim() || !plannedAmount) return;
 
     const supabase = getSupabase();
     const cleanPlanned = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
@@ -103,7 +103,7 @@ export default function AnggaranPage() {
 
     // Payload dengan realisasi manual (pastikan tabel budgets memiliki kolom real_amount atau realized_amount, atau kita simpan ke real_amount)
     const payload = { 
-      name: allocationName.trim(), 
+      name: allocationCategory.trim(), 
       category: category,                   
       planned_amount: cleanPlanned,
       real_amount: cleanRealized, // Kolom realisasi manual
@@ -121,7 +121,7 @@ export default function AnggaranPage() {
         alert('🟢 Pos rencana anggaran baru berhasil ditambahkan!');
       }
 
-      setAllocationName('');
+      setAllocationCategory('');
       if (categoryOptions.length > 0) setCategory(categoryOptions[0]);
       setPlannedAmount('');
       setRealizedAmount('');
@@ -137,7 +137,7 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     setEditingId(b.id);
-    setAllocationName(b.name || '');
+    setAllocationCategory(b.category || '');
     setCategory(b.category || categoryOptions[0] || '');
     setPlannedAmount(b.planned_amount || '');
     setRealizedAmount(b.real_amount || b.realized_amount || '');
