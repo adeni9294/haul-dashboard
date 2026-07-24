@@ -53,10 +53,9 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Semua Data Transactions, Budgets, dan Donation Details
+      // 2. Ambil Semua Data Transactions dan Budgets
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
-      const { data: allDonations } = await supabase.from('donation_details').select('*');
 
       // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
@@ -65,43 +64,26 @@ export default function StatPage() {
         let masuk = 0;
         let keluar = 0;
         let rencanaBudget = 0;
-        let saldoAwal = parseFloat(p.saldo_awal || 0);
 
-        // Hitung dari transactions (Menjumlahkan semua baris yang tipenya Pemasukan/keluar)
+        // Hitung langsung dari tabel transactions secara fleksibel dan akurat
         if (allTransactions) {
           allTransactions.forEach(t => {
-            // Longgarkan filter periode agar data yang periode_id-nya null tetap terhitung di periode aktif
             const matchPeriode = t.periode_id === pId || !t.periode_id || t.periode_id === Number(pId);
             if (matchPeriode) {
               const typeVal = (t.type || '').toString().trim().toLowerCase();
               const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
 
-              if (typeVal === 'Pemasukan' || typeVal === 'masuk' || type === 'in') {
+              // Menangkap semua variasi kata pemasukan / masuk / in
+              if (typeVal === 'pemasukan' || typeVal === 'masuk' || typeVal === 'in') {
                 masuk += nominal;
-              } else if (typeVal === 'keluar' || type === 'pengeluaran' || type === 'out') {
+              } 
+              // Menangkap semua variasi kata keluar / pengeluaran / out
+              else if (typeVal === 'keluar' || typeVal === 'pengeluaran' || typeVal === 'out') {
                 keluar += nominal;
               }
             }
           });
         }
-
-        // Jika transaksi kas kurang lengkap, sinkronkan dengan akumulasi donation_details bersih
-        let totalDonasiClean = 0;
-        if (allDonations) {
-          allDonations.forEach(d => {
-            const matchPeriode = d.periode_id === pId || !d.periode_id || d.periode_id === Number(pId);
-            if (matchPeriode) {
-              const nominal = Math.abs(parseFloat(d.amount || d.nominal || 0));
-              const donorName = (d.donor_name || '').toString();
-              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
-                totalDonasiClean += nominal;
-              }
-            }
-          });
-        }
-
-        // Ambil nilai pemasukan terbesar yang paling akurat (antara rekap transaksi atau donasi ditambah saldo awal)
-        const finalMasuk = Math.max(masuk, totalDonasiClean) + saldoAwal;
 
         // Hitung Rencana Anggaran (Budget)
         if (allBudgets) {
@@ -113,13 +95,13 @@ export default function StatPage() {
           });
         }
 
-        const saldo = finalMasuk - keluar;
+        const saldo = masuk - keluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: finalMasuk > 0 ? finalMasuk : masuk,
+          totalMasuk: masuk,
           totalKeluar: keluar,
           saldoBersih: saldo,
           totalRencanaBudget: rencanaBudget
