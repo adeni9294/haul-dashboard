@@ -7,8 +7,8 @@ export default function AnggaranPage() {
   const [budgetList, setBudgetList] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   
-  // State Form Anggaran (Fleksibel dengan input Realisasi Manual)
-  const [allocationCategory, setAllocationCategory] = useState('');
+  // State Form Anggaran
+  const [allocationName, setAllocationName] = useState('');
   const [category, setCategory] = useState('');
   const [plannedAmount, setPlannedAmount] = useState('');
   const [realizedAmount, setRealizedAmount] = useState('');
@@ -95,18 +95,17 @@ export default function AnggaranPage() {
     e.preventDefault();
     if (!isAdmin) return alert('Aksi ditolak. Anda belum login sebagai admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini telah ditutup buku!');
-    if (!allocationCategory.trim() || !plannedAmount) return;
+    if (!allocationName.trim() || !plannedAmount) return;
 
     const supabase = getSupabase();
     const cleanPlanned = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
     const cleanRealized = parseFloat((realizedAmount || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
 
-    // Payload dengan realisasi manual (pastikan tabel budgets memiliki kolom real_amount atau realized_amount, atau kita simpan ke real_amount)
+    // Menyimpan Nama Alokasi langsung ke kolom 'category' pada tabel budgets
     const payload = { 
-      name: allocationCategory.trim(), 
-      category: category,                   
+      category: allocationName.trim(), 
       planned_amount: cleanPlanned,
-      real_amount: cleanRealized, // Kolom realisasi manual
+      real_amount: cleanRealized, 
       periode_id: selectedPeriodeId
     };
 
@@ -121,7 +120,7 @@ export default function AnggaranPage() {
         alert('🟢 Pos rencana anggaran baru berhasil ditambahkan!');
       }
 
-      setAllocationCategory('');
+      setAllocationName('');
       if (categoryOptions.length > 0) setCategory(categoryOptions[0]);
       setPlannedAmount('');
       setRealizedAmount('');
@@ -137,8 +136,7 @@ export default function AnggaranPage() {
     if (!isAdmin) return alert('Aksi ditolak. Anda bukan admin!');
     if (currentPeriodeObj?.is_closed) return alert('🔒 Periode ini sudah ditutup buku!');
     setEditingId(b.id);
-    setAllocationCategory(b.category || '');
-    setCategory(b.category || categoryOptions[0] || '');
+    setAllocationName(b.category || b.category_name || b.name || b.title || '');
     setPlannedAmount(b.planned_amount || '');
     setRealizedAmount(b.real_amount || b.realized_amount || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -233,7 +231,7 @@ export default function AnggaranPage() {
               <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Anggaran & Realisasi' : 'Tambah Anggaran Baru'}
             </h3>
             
-            {/* 1. NAMA ALOKASI */}
+            {/* NAMA ALOKASI (Disimpan ke kolom 'category') */}
             <div>
               <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Nama Alokasi</label>
               <input 
@@ -246,23 +244,7 @@ export default function AnggaranPage() {
               />
             </div>
 
-            {/* 2. KATEGORI */}
-            <div>
-              <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Kategori Pos Buku Kas</label>
-              <select 
-                value={category} 
-                onChange={(e) => setCategory(e.target.value)} 
-                className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-xs text-amber-300 font-mono focus:outline-none cursor-pointer"
-              >
-                {categoryOptions.map((cat, idx) => (
-                  <option key={idx} value={cat} className="bg-zinc-900 text-white">
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 3. JUMLAH RENCANA ANGGARAN */}
+            {/* JUMLAH RENCANA ANGGARAN */}
             <div>
               <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Rencana Anggaran (Rp)</label>
               <input 
@@ -275,7 +257,7 @@ export default function AnggaranPage() {
               />
             </div>
 
-            {/* 4. JUMLAH REALISASI (FLEKSIBEL / MANUAL) */}
+            {/* JUMLAH REALISASI (FLEKSIBEL / MANUAL) */}
             <div>
               <label className="block text-[11px] text-slate-200 mb-1 font-semibold">Jumlah Realisasi Belanja (Rp)</label>
               <input 
@@ -319,13 +301,13 @@ export default function AnggaranPage() {
                 const real = parseFloat(b.real_amount || b.realized_amount) || 0;
                 const selisih = plan - real;
                 const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
+                const titleName = b.category || b.category_name || b.name || b.title || 'Tanpa Nama Alokasi';
 
                 return (
                   <div key={b.id} className="p-3.5 bg-black/20 border border-white/10 rounded-xl space-y-2 hover:border-white/30 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-bold text-white text-sm tracking-wide uppercase">{b.name || 'Tanpa Nama Alokasi'}</p>
-                        <p className="text-[10px] text-amber-300 font-mono mt-0.5">📂 Kategori: {b.category || 'Umum'}</p>
+                        <p className="font-bold text-white text-sm tracking-wide uppercase">{titleName}</p>
                       </div>
                       {isAdmin && (
                         <div className="flex gap-3 font-mono text-[11px] shrink-0 ml-2">
