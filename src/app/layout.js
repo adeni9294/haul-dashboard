@@ -483,45 +483,78 @@ export default function RootLayout({ children }) {
 
         </div>
 
-        {/* 🎯 BOTTOM NAV BAR DOCK SOLID FULL WIDTH (TIDAK BOLEH TEMBUS DI MANAPUN) */}
-        <div 
-          style={{ backgroundColor: currentStyle.bodyBg }}
-          className="fixed bottom-0 left-0 right-0 w-full z-50 border-t border-slate-800/80 shadow-[0_-12px_30px_rgba(0,0,0,0.95)]"
-        >
-          <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
-            
-            <Link href="/" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
-              <Home className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Home</span>
-            </Link>
+{/* 🎯 BOTTOM NAV BAR DOCK SOLID DENGAN KONTRAS MENYALA/MATI YANG PAS */}
+<div 
+  style={{ backgroundColor: currentStyle.bodyBg }}
+  className="fixed bottom-0 left-0 right-0 w-full z-50 border-t border-slate-800 shadow-[0_-12px_30px_rgba(0,0,0,0.95)]"
+>
+  <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
+    
+    {/* 1. HOME */}
+    <Link 
+      href="/" 
+      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+        pathname === '/' 
+          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
+          : 'text-slate-400 hover:text-slate-200'
+      }`}
+    >
+      <Home className="w-5 h-5" />
+      <span className="text-[9px] font-bold mt-0.5">Home</span>
+    </Link>
 
-            <Link href="/stat" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/stat' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
-              <BarChart3 className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Stat</span>
-            </Link>
+    {/* 2. STAT */}
+    <Link 
+      href="/stat" 
+      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+        pathname === '/stat' 
+          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
+          : 'text-slate-400 hover:text-slate-200'
+      }`}
+    >
+      <BarChart3 className="w-5 h-5" />
+      <span className="text-[9px] font-bold mt-0.5">Stat</span>
+    </Link>
 
-            <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-105 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-slate-900">
-              <Gift className="w-6 h-6 stroke-[2.5]" />
-            </button>
+    {/* 3. DONASI (TETAP MENONJOL/MENYALA) */}
+    <button 
+      onClick={() => setShowDonationModal(true)} 
+      className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-105 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-slate-900"
+    >
+      <Gift className="w-6 h-6 stroke-[2.5]" />
+    </button>
 
-            <Link href="/anggaran" className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${pathname === '/anggaran' ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}>
-              <ClipboardList className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Budget</span>
-            </Link>
+    {/* 4. BUDGET */}
+    <Link 
+      href="/anggaran" 
+      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+        pathname === '/anggaran' 
+          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
+          : 'text-slate-400 hover:text-slate-200'
+      }`}
+    >
+      <ClipboardList className="w-5 h-5" />
+      <span className="text-[9px] font-bold mt-0.5">Budget</span>
+    </Link>
 
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMainMenuDrawer((prev) => !prev);
-              }} 
-              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${showMainMenuDrawer ? `${currentStyle.accentText} font-black bg-white/10 scale-105 border border-white/20` : 'opacity-70 hover:opacity-100'}`}
-            >
-              <Menu className="w-5 h-5" />
-              <span className="text-[8px] font-bold mt-0.5">Menu</span>
-            </button>
+    {/* 5. MENU */}
+    <button 
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowMainMenuDrawer((prev) => !prev);
+      }} 
+      className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+        showMainMenuDrawer 
+          ? `${currentStyle.accentText} font-black bg-cyan-500/10 scale-105 border border-cyan-400/40 shadow-md shadow-cyan-500/20` 
+          : 'text-slate-400 hover:text-slate-200'
+      }`}
+    >
+      <Menu className="w-5 h-5" />
+      <span className="text-[9px] font-bold mt-0.5">Menu</span>
+    </button>
 
-          </div>
-        </div>
+  </div>
+</div>
 
         {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC + SELEKSI KOTA MANUAL */}
         {showSholatModal && (
