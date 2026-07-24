@@ -90,6 +90,36 @@ export default function RootLayout({ children }) {
   const [isAlarmActive, setIsAlarmActive] = useState(true);
   const lastTriggeredSholat = useRef('');
 
+  // 🚫 EFEK PREVENSI DOUBLE-TAP & PINCH ZOOM DI HP
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      if (e.touches && e.touches.length > 1) {
+        e.preventDefault(); // Mencegah pinch-to-zoom (2 jari)
+      }
+    };
+
+    let lastTouchEnd = 0;
+    const handleTouchEnd = (e) => {
+      const now = new Date().getTime();
+      if (now - lastTouchEnd <= 300) {
+        // Cek jika yang di-tap bukan input/select/textarea
+        const tag = e.target.tagName.toLowerCase();
+        if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
+          e.preventDefault(); // Mencegah double-tap zoom
+        }
+      }
+      lastTouchEnd = now;
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, false);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
@@ -381,7 +411,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="color-scheme" content="dark light" />
         
         {/* 🚀 TAG MANIFEST PWA & APK SUPPORT */}
@@ -778,3 +807,11 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
+// 🚫 EXPORT VIEWPORT KHUSUS NEXT.JS (APPLIES STRICT NO-ZOOM RULE)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
