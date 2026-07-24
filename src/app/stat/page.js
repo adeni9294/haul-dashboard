@@ -53,74 +53,99 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil SELURUH Data Transaksi tanpa limit pagination (sampai 10.000 baris)
-      const { data: allTransactions } = await supabase
-        .from('transactions')
-        .select('*')
-        .range(0, 9999);
+      // 2. Ambil Data Master
+      const { data: allDonations } = await supabase.from('donation_details').select('*');
+      const { data: allTransactions } = await supabase.from('transactions').select('*');
+      const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      const { data: allBudgets } = await supabase
-        .from('budgets')
-        .select('*')
-        .range(0, 9999);
-
-      // 3. Mapping Kalkulasi Statistik
+      // 3. Mapping Statistik per Periode (Mengikuti Logika Dashboard 1:1)
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
-        let totalMasuk = 0;
-        let totalKeluar = 0;
-        let rencanaBudget = 0;
+        let currentSaldoAwal = parseFloat(p.saldo_awal || 0);
 
-        if (allTransactions) {
-          allTransactions.forEach(t => {
-            // Pencocokan fleksibel periode_id (termasuk string/number atau NULL)
-            const matchPeriode = 
-              t.periode_id == pId || 
-              !t.periode_id || 
-              String(t.periode_id) === String(pId) || 
-              listPeriode.length === 1;
+        let calcMasuk = 0;
+        let calcKeluar = 0;
+        let totalPlafonDinamis = 0;
 
-            if (matchPeriode) {
-              const typeVal = (t.type || '').toString().trim().toLowerCase();
-              const nominal = Math.abs(parseFloat(t.amount || t.nominal || 0));
+        // --- A. OLAH DATA DONATION DETAILS ---
+        if (allDonations) {
+          allDonations.forEach((item) => {
+            const matchPeriode = item.periode_id === pId || !item.periode_id || item.periode_id === Number(pId);
+            if (!matchPeriode) return;
 
-              // Menangkap 'pemasukan', 'masuk', 'in'
-              if (typeVal.includes('masuk') || typeVal.includes('in')) {
-                totalMasuk += nominal;
-              } 
-              // Menangkap 'keluar', 'pengeluaran', 'out'
-              else if (typeVal.includes('keluar') || typeVal.includes('out')) {
-                totalKeluar += nominal;
-              }
+            const rawAmount = parseFloat(item.amount) || 0;
+            const tgl = item.transaction_date || '';
+            if (!tgl) return;
+
+            const donorNameClean = (item.donor_name || '').toString().trim();
+            const isAdminFee = donorNameClean === '__ADMIN_FEE__';
+            const isSaldoMengendap = donorNameClean === '__SALDO_MENGENDAP__';
+
+            if (isAdminFee) {
+              calcMasuk += -Math.abs(rawAmount);
+            } else if (isSaldoMengendap) {
+              calcMasuk += Math.abs(rawAmount);
+            } else {
+              calcMasuk += Math.abs(rawAmount);
             }
           });
         }
 
-        // Hitung Total Rencana Anggaran (Budget)
+        // --- B. OLAH DATA TRANSACTIONS ---
+        if (allTransactions) {
+          allTransactions.forEach((item) => {
+            const matchPeriode = item.periode_id === pId || !item.periode_id || item.periode_id === Number(pId);
+            if (!matchPeriode) return;
+
+            const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
+            const rawType = (item.type || item.jenis || '').toString().toLowerCase().trim();
+            const catName = (item.category || item.kategori || 'Lain-lain').toString().trim();
+            const tgl = item.transaction_date || '';
+            const noteText = (item.note || '').toString().toUpperCase();
+
+            if (!tgl) return;
+
+            // Abaikan transaksi yang sudah direkap oleh aplikasi agar tidak duplikat
+            if (
+              noteText.includes('APLIKASI PEMASUKAN') || 
+              noteText.includes('DETAIL') || 
+              catName.toUpperCase().includes('DETAIL')
+            ) {
+              return; 
+            }
+
+            if (rawType === 'keluar' || rawType === 'pengeluaran') {
+              calcKeluar += nominal;
+            } else {
+              if (!item.note || item.note.trim() === '') return;
+              calcMasuk += nominal;
+            }
+          });
+        }
+
+        // --- C. OLAH DATA BUDGETS ---
         if (allBudgets) {
           allBudgets.forEach(b => {
-            const matchPeriode = 
-              b.periode_id == pId || 
-              !b.periode_id || 
-              String(b.periode_id) === String(pId) || 
-              listPeriode.length === 1;
-
+            const matchPeriode = b.periode_id === pId || !b.periode_id || b.periode_id === Number(pId);
             if (matchPeriode) {
-              rencanaBudget += parseFloat(b.planned_amount || b.amount || 0);
+              totalPlafonDinamis += parseFloat(b.planned_amount) || 0;
             }
           });
         }
 
-        const saldoBersih = totalMasuk - totalKeluar;
+        // Total Pemasukan Terkumpul = Saldo Awal + Kas Masuk
+        const totalMasukTerkumpul = currentSaldoAwal + calcMasuk;
+        // Sisa Kas Bersih
+        const totalSaldoNet = totalMasukTerkumpul - calcKeluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: totalMasuk,
-          totalKeluar: totalKeluar,
-          saldoBersih: saldoBersih,
-          totalRencanaBudget: rencanaBudget
+          totalMasuk: totalMasukTerkumpul,
+          totalKeluar: calcKeluar,
+          saldoBersih: totalSaldoNet,
+          totalRencanaBudget: totalPlafonDinamis
         };
       });
 
@@ -137,7 +162,7 @@ export default function StatPage() {
     if (!found) return;
 
     const serapan = found.totalRencanaBudget > 0 
-      ? Math.round((found.totalKeluar / found.totalRencanaBudget) * 100) 
+      ? parseFloat(((found.totalKeluar / found.totalRencanaBudget) * 100).toFixed(1)) 
       : 0;
 
     setCurrentSummary({
@@ -152,7 +177,7 @@ export default function StatPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Menghitung seluruh data transaksi...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Menghitung statistik pencapaian...</div>;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
@@ -192,7 +217,7 @@ export default function StatPage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan</p>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Terkumpul)</p>
             <h4 className="text-base font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
           </div>
 
