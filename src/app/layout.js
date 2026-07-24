@@ -91,9 +91,9 @@ export default function RootLayout({ children }) {
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
-  // State Jadwal Sholat Cirebon (ID: 1219)
+  // State Jadwal Sholat & Alarm
   const [jadwalSholat, setJadwalSholat] = useState(null);
-  const [kotaSholat, setKotaSholat] = useState('Kab. Cirebon');
+  const [kotaSholat, setKotaSholat] = useState('Memuat lokasi...');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
   const lastTriggeredSholat = useRef('');
 
@@ -126,6 +126,62 @@ export default function RootLayout({ children }) {
     const timerId = setInterval(updateTime, 1000);
     return () => clearInterval(timerId);
   }, [pathname, jadwalSholat, isAlarmActive]);
+
+  // FUNGSI JADWAL SHOLAT OTOMATIS BERDASARKAN GPS/KOORDINAT + FALLBACK CIREBON
+  async function fetchJadwalSholat() {
+    try {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            try {
+              const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/koordinat/${lat}/${lon}/${yyyy}/${mm}/${dd}`);
+              const result = await res.json();
+              
+              if (result && result.status && result.data) {
+                setJadwalSholat(result.data.jadwal);
+                setKotaSholat(result.data.lokasi || 'Lokasi Anda');
+                return;
+              } else {
+                fetchCirebonDirect(yyyy, mm, dd);
+              }
+            } catch (e) {
+              fetchCirebonDirect(yyyy, mm, dd);
+            }
+          },
+          (error) => {
+            fetchCirebonDirect(yyyy, mm, dd);
+          },
+          { timeout: 5000 }
+        );
+      } else {
+        fetchCirebonDirect(yyyy, mm, dd);
+      }
+    } catch (err) {
+      console.error('Gagal mengambil jadwal sholat:', err);
+    }
+  }
+
+  // FALLBACK DIRECT KE KABUPATEN CIREBON (ID: 1219)
+  async function fetchCirebonDirect(yyyy, mm, dd) {
+    try {
+      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1219/${yyyy}/${mm}/${dd}`);
+      const result = await res.json();
+      if (result && result.status && result.data) {
+        setJadwalSholat(result.data.jadwal);
+        setKotaSholat(result.data.lokasi || 'KAB. CIREBON');
+      }
+    } catch (e) {
+      console.error('Gagal ambil data Cirebon:', e);
+    }
+  }
 
   const checkSholatAlarm = (currentHHMM) => {
     if (!jadwalSholat) return;
@@ -180,24 +236,6 @@ export default function RootLayout({ children }) {
       alert(`🕌 Waktu Sholat ${namaSholat} Telah Tiba!`);
     }
   };
-
-  async function fetchJadwalSholat() {
-    try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      
-      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1219/${yyyy}/${mm}/${dd}`);
-      const result = await res.json();
-      if (result && result.status && result.data) {
-        setJadwalSholat(result.data.jadwal);
-        setKotaSholat(result.data.lokasi);
-      }
-    } catch (err) {
-      console.error('Gagal mengambil jadwal sholat:', err);
-    }
-  }
 
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
@@ -297,7 +335,6 @@ export default function RootLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // DAFTAR MENU DRAWER (TERMASUK JADWAL SHOLAT)
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard, color: 'text-cyan-400 bg-cyan-500/20' },
@@ -396,7 +433,6 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            {/* TOMBOL UTAMA TENGAH */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
@@ -414,7 +450,7 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* 🕌 MODAL JADWAL SHOLAT DENGAN SWITCH ALARM */}
+        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC & DYNAMIC LOCATION */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -466,7 +502,7 @@ export default function RootLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono text-slate-400 animate-pulse">
-                  Memuat jadwal sholat Cirebon...
+                  Mendeteksi lokasi & jadwal sholat...
                 </div>
               )}
 
@@ -526,7 +562,7 @@ export default function RootLayout({ children }) {
           </div>
         )}
 
-        {/* 📱 DRAWER MENU (TERMASUK JADWAL SHOLAT) */}
+        {/* DRAWER MENU */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center" onClick={() => setShowMainMenuDrawer(false)}>
             <div className="w-full max-w-md bg-slate-900 border-t border-slate-700 rounded-t-3xl p-6 space-y-4 shadow-2xl text-white" onClick={(e) => e.stopPropagation()}>
