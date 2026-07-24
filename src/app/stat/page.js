@@ -53,11 +53,18 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Semua Data Transaksi dan Budgets
-      const { data: allTransactions } = await supabase.from('transactions').select('*');
-      const { data: allBudgets } = await supabase.from('budgets').select('*');
+      // 2. Ambil SELURUH Data Transaksi tanpa limit pagination (sampai 10.000 baris)
+      const { data: allTransactions } = await supabase
+        .from('transactions')
+        .select('*')
+        .range(0, 9999);
 
-      // 3. Mapping Statistik
+      const { data: allBudgets } = await supabase
+        .from('budgets')
+        .select('*')
+        .range(0, 9999);
+
+      // 3. Mapping Kalkulasi Statistik
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
         let totalMasuk = 0;
@@ -66,12 +73,12 @@ export default function StatPage() {
 
         if (allTransactions) {
           allTransactions.forEach(t => {
-            // Longgarkan matchPeriode agar ID bertipe String/Number atau ID=2/NULL tetap terbaca
+            // Pencocokan fleksibel periode_id (termasuk string/number atau NULL)
             const matchPeriode = 
               t.periode_id == pId || 
               !t.periode_id || 
               String(t.periode_id) === String(pId) || 
-              listPeriode.length === 1; // Jika hanya 1 periode aktif, hitung semua transaksi
+              listPeriode.length === 1;
 
             if (matchPeriode) {
               const typeVal = (t.type || '').toString().trim().toLowerCase();
@@ -89,10 +96,15 @@ export default function StatPage() {
           });
         }
 
-        // Hitung Rencana Anggaran (Budget)
+        // Hitung Total Rencana Anggaran (Budget)
         if (allBudgets) {
           allBudgets.forEach(b => {
-            const matchPeriode = b.periode_id == pId || !b.periode_id || String(b.periode_id) === String(pId) || listPeriode.length === 1;
+            const matchPeriode = 
+              b.periode_id == pId || 
+              !b.periode_id || 
+              String(b.periode_id) === String(pId) || 
+              listPeriode.length === 1;
+
             if (matchPeriode) {
               rencanaBudget += parseFloat(b.planned_amount || b.amount || 0);
             }
@@ -140,7 +152,7 @@ export default function StatPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Menghitung statistik pencapaian...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Menghitung seluruh data transaksi...</div>;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
