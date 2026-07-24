@@ -53,44 +53,31 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Data dari donation_details, transactions, dan budgets
-      const { data: allDonations } = await supabase.from('donation_details').select('*');
+      // 2. Ambil Data dari tabel transactions dan budgets
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Mapping Statistik per Periode (Sinkron persis dengan Home)
+      // 3. Mapping Statistik per Periode murni dari tabel transactions
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
-        let totalDonasi = 0;
+        let totalMasuk = 0;
         let totalKeluar = 0;
         let rencanaBudget = 0;
-        let saldoAwal = parseFloat(p.saldo_awal || 904000); // Saldo awal default sesuai sistem
 
-        // Hitung total uang masuk dari donation_details (mengabaikan admin fee)
-        if (allDonations) {
-          allDonations.forEach(d => {
-            const matchPeriode = d.periode_id === pId || !d.periode_id || d.periode_id === Number(pId);
-            if (matchPeriode) {
-              const nominal = Math.abs(parseFloat(d.amount || d.nominal || 0));
-              const donorName = (d.donor_name || '').toString();
-              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
-                totalDonasi += nominal;
-              }
-            }
-          });
-        }
-
-        // Total Pemasukan Terkumpul = Saldo Awal + Total Donasi Riil
-        const finalMasuk = saldoAwal + totalDonasi;
-
-        // Hitung total pengeluaran dari transactions (tipe 'keluar')
         if (allTransactions) {
           allTransactions.forEach(t => {
+            // Cocokkan periode_id (termasuk yang null/kosong agar tetap masuk ke periode aktif)
             const matchPeriode = t.periode_id === pId || !t.periode_id || t.periode_id === Number(pId);
             if (matchPeriode) {
               const typeVal = (t.type || '').toString().trim().toLowerCase();
               const nominal = Math.abs(parseFloat(t.amount || t.nominal || 0));
-              if (typeVal === 'keluar' || typeVal === 'pengeluaran' || typeVal === 'out') {
+
+              // Kondisi Pemasukan / Masuk
+              if (typeVal === 'pemasukan' || typeVal === 'masuk' || typeVal === 'in') {
+                totalMasuk += nominal;
+              } 
+              // Kondisi Keluar / Pengeluaran
+              else if (typeVal === 'keluar' || typeVal === 'pengeluaran' || typeVal === 'out') {
                 totalKeluar += nominal;
               }
             }
@@ -107,14 +94,14 @@ export default function StatPage() {
           });
         }
 
-        // Sisa Kas Bersih = Total Pemasukan Terkumpul - Total Pengeluaran
-        const saldoBersih = finalMasuk - totalKeluar;
+        // Sisa Kas Bersih = Total Masuk - Total Keluar
+        const saldoBersih = totalMasuk - totalKeluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: finalMasuk,
+          totalMasuk: totalMasuk,
           totalKeluar: totalKeluar,
           saldoBersih: saldoBersih,
           totalRencanaBudget: rencanaBudget
@@ -189,7 +176,7 @@ export default function StatPage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Terkumpul)</p>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Transaksi)</p>
             <h4 className="text-base font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
           </div>
 
