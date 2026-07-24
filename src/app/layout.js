@@ -75,7 +75,7 @@ export default function RootLayout({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false); 
-  const [showSholatModal, setShowSholatModal] = useState(false); // Modal Jadwal Sholat
+  const [showSholatModal, setShowSholatModal] = useState(false);
   const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -89,7 +89,7 @@ export default function RootLayout({ children }) {
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
-  // State Jadwal Sholat
+  // State Jadwal Sholat Cirebon
   const [jadwalSholat, setJadwalSholat] = useState(null);
   const [kotaSholat, setKotaSholat] = useState('Kab. Cirebon');
 
@@ -117,7 +117,7 @@ export default function RootLayout({ children }) {
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       
-      // ID Kota Cirebon di API Kemenag / MyQuran: 1219 (Kab. Cirebon)
+      // ID 1219 = KABUPATEN CIREBON (API Kemenag / MyQuran)
       const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1219/${yyyy}/${mm}/${dd}`);
       const result = await res.json();
       if (result && result.status && result.data) {
@@ -281,7 +281,7 @@ export default function RootLayout({ children }) {
                 </div>
               </div>
 
-              {/* LIVE CLOCK & TOMBOL SHOLAT RAPID */}
+              {/* LIVE CLOCK & TOMBOL SHOLAT */}
               <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0 relative z-10">
                 <button 
                   onClick={() => setShowSholatModal(true)} 
@@ -319,13 +319,11 @@ export default function RootLayout({ children }) {
               <span className="text-[8px] font-bold mt-0.5">Home</span>
             </Link>
 
-            {/* TOMBOL WIDGET SHOLAT */}
             <button onClick={() => setShowSholatModal(true)} className="relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl opacity-80 hover:opacity-100 transition-all">
               <Clock className="w-5 h-5 text-emerald-400" />
               <span className="text-[8px] font-bold mt-0.5 text-emerald-300">Sholat</span>
             </button>
 
-            {/* TOMBOL DONASI */}
             <button onClick={() => setShowDonationModal(true)} className="flex flex-col items-center justify-center w-13 h-13 rounded-2xl text-slate-950 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 hover:scale-110 shadow-lg shadow-cyan-400/30 transform active:scale-95 transition-all -mt-3 border-2 border-white/80">
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
@@ -343,7 +341,7 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC (MYQURAN API) */}
+        {/* 🕌 MODAL JADWAL SHOLAT AUTOMATIC (CIREBON & SEKITARNYA) */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
@@ -378,7 +376,7 @@ export default function RootLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono text-slate-400 animate-pulse">
-                  Memuat jadwal sholat...
+                  Memuat jadwal sholat Cirebon...
                 </div>
               )}
 
