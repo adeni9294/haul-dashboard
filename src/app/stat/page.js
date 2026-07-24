@@ -53,33 +53,45 @@ export default function StatPage() {
       setPeriodeList(listPeriode);
       setSelectedPeriodeId(listPeriode[0].id);
 
-      // 2. Ambil Semua Data Transactions dan Budgets
+      // 2. Ambil Data dari donation_details, transactions, dan budgets
+      const { data: allDonations } = await supabase.from('donation_details').select('*');
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Mapping Statistik per Periode
+      // 3. Mapping Statistik per Periode (Sama persis dengan logika Dashboard Home)
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
-
-        let masuk = 0;
-        let keluar = 0;
+        let totalDonasi = 0;
+        let totalKeluar = 0;
         let rencanaBudget = 0;
+        let saldoAwal = parseFloat(p.saldo_awal || 0);
 
-        // Hitung langsung dari tabel transactions secara fleksibel dan akurat
+        // Hitung total uang masuk dari donation_details (mengabaikan admin fee)
+        if (allDonations) {
+          allDonations.forEach(d => {
+            const matchPeriode = d.periode_id === pId || !d.periode_id || d.periode_id === Number(pId);
+            if (matchPeriode) {
+              const nominal = Math.abs(parseFloat(d.amount || d.nominal || 0));
+              const donorName = (d.donor_name || '').toString();
+              if (donorName !== '__ADMIN_FEE__' && donorName !== '__SALDO_MENGENDAP__') {
+                totalDonasi += nominal;
+              }
+            }
+          });
+        }
+
+        // Total Masuk Keseluruhan = Saldo Awal + Total Donasi
+        const finalMasuk = saldoAwal + totalDonasi;
+
+        // Hitung total pengeluaran dari transactions (tipe 'keluar')
         if (allTransactions) {
           allTransactions.forEach(t => {
             const matchPeriode = t.periode_id === pId || !t.periode_id || t.periode_id === Number(pId);
             if (matchPeriode) {
               const typeVal = (t.type || '').toString().trim().toLowerCase();
-              const nominal = Math.abs(parseFloat(t.amount || t.nominal || t.jumlah || 0));
-
-              // Menangkap semua variasi kata pemasukan / masuk / in
-              if (typeVal === 'pemasukan' || typeVal === 'masuk' || typeVal === 'in') {
-                masuk += nominal;
-              } 
-              // Menangkap semua variasi kata keluar / pengeluaran / out
-              else if (typeVal === 'keluar' || typeVal === 'pengeluaran' || typeVal === 'out') {
-                keluar += nominal;
+              const nominal = Math.abs(parseFloat(t.amount || t.nominal || 0));
+              if (typeVal === 'keluar' || typeVal === 'pengeluaran' || typeVal === 'out') {
+                totalKeluar += nominal;
               }
             }
           });
@@ -90,20 +102,21 @@ export default function StatPage() {
           allBudgets.forEach(b => {
             const matchPeriode = b.periode_id === pId || !b.periode_id || b.periode_id === Number(pId);
             if (matchPeriode) {
-              rencanaBudget += parseFloat(b.planned_amount || b.amount || 0);
+              rencanaBudget += parseFloat(b.planned_amount || 0);
             }
           });
         }
 
-        const saldo = masuk - keluar;
+        // Sisa Saldo Kas Bersih = Final Masuk - Total Keluar
+        const saldoBersih = finalMasuk - totalKeluar;
 
         return {
           id: pId,
           nama_periode: p.nama_periode,
           is_closed: p.is_closed,
-          totalMasuk: masuk,
-          totalKeluar: keluar,
-          saldoBersih: saldo,
+          totalMasuk: finalMasuk,
+          totalKeluar: totalKeluar,
+          saldoBersih: saldoBersih,
           totalRencanaBudget: rencanaBudget
         };
       });
@@ -176,7 +189,7 @@ export default function StatPage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Kas Masuk)</p>
+            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Uang Masuk)</p>
             <h4 className="text-lg font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
           </div>
 
