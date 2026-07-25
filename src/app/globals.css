@@ -25,9 +25,26 @@ html, body {
   /* 🚫 Mengunci gestur zoom di Android/iOS */
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: none;
+  /* ✅ FIXED: Allow scroll on desktop, only disable on mobile */
   overflow-x: hidden;
   user-select: none;
+  
+  /* ✅ Allow smooth scrolling behavior */
+  scroll-behavior: smooth;
+}
+
+/* ✅ Mobile devices: disable overscroll bounce effect */
+@media (max-width: 768px) {
+  html, body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* ✅ Desktop: allow normal scroll behavior */
+@media (min-width: 769px) {
+  html, body {
+    overscroll-behavior-y: auto;
+  }
 }
 
 /* Membolehkan elemen input/form bisa diseleksi dan diketik normal */
