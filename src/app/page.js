@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // Inisialisasi Supabase Client Tunggal di Luar Render Loop
@@ -39,7 +39,9 @@ const DICTIONARY = {
     selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Saldo Awal Kas',
     statusClosed: '(Selesai/Tutup Buku)',
-    statusActive: '(Berjalan)'
+    statusActive: '(Berjalan)',
+    errorLoading: 'Gagal memuat data. Silakan coba lagi.',
+    errorLoadingData: 'Error memuat data dashboard'
   },
   jv: { 
     loading: '⏳ Nembe ngebuka antarmuka Cirebonan Premium...',
@@ -70,7 +72,9 @@ const DICTIONARY = {
     selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Bondo Awal Kas',
     statusClosed: '(Rampung/Tutup Buku)',
-    statusActive: '(Mlaku)'
+    statusActive: '(Mlaku)',
+    errorLoading: 'Gagal memuat data. Coba maneh.',
+    errorLoadingData: 'Error memuat data dashboard'
   },
   en: {
     loading: '⏳ Loading Premium Interface...',
@@ -101,13 +105,16 @@ const DICTIONARY = {
     selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Opening Cash Balance',
     statusClosed: '(Closed)',
-    statusActive: '(Active)'
+    statusActive: '(Active)',
+    errorLoading: 'Failed to load data. Please try again.',
+    errorLoadingData: 'Error loading dashboard data'
   }
 };
 
 export default function DashboardPage() {
   const [lang, setLang] = useState('id'); 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [totals, setTotals] = useState({ total: 0, masuk: 0, keluar: 0, saldoAwal: 0 });
   const [progress, setProgress] = useState({ percent: 0, current: 0, target: 0 });
   const [rincianMasuk, setRincianMasuk] = useState([]);
@@ -119,13 +126,24 @@ export default function DashboardPage() {
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
   const [visitorStats, setVisitorStats] = useState({ totalViews: 0, uniqueCount: 0 });
+  
+  // Track if visitor log has been recorded this session
+  const visitorLogRecordedRef = useRef(false);
 
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
-  useEffect(() => { 
-    recordVisitorLog();
-    loadDashboardData(); 
-  }, [lang, selectedPeriodeId]);
+  // Record visitor log only once per session
+  useEffect(() => {
+    if (!visitorLogRecordedRef.current && supabase) {
+      visitorLogRecordedRef.current = true;
+      recordVisitorLog();
+    }
+  }, []);
+
+  // Load dashboard data when periode changes or page first loads
+  useEffect(() => {
+    loadDashboardData();
+  }, [selectedPeriodeId]);
 
   async function recordVisitorLog() {
     if (!supabase) return;
@@ -136,7 +154,7 @@ export default function DashboardPage() {
         const ipData = await res.json();
         ipAddress = ipData.ip;
       } catch (e) {
-        console.log('Gagal ambil IP');
+        console.log('IP fetch failed, using default');
       }
 
       await supabase.from('visitor_logs').insert({
@@ -145,22 +163,27 @@ export default function DashboardPage() {
         user_agent: typeof window !== 'undefined' ? window.navigator.userAgent || 'unknown' : 'unknown'
       });
     } catch (err) {
-      console.error('Error log:', err);
+      console.error('Visitor log error:', err);
     }
   }
 
   async function loadDashboardData() {
     if (!supabase) return;
+    
     try {
       setLoading(true);
+      setError(null);
 
       let activePeriodeId = selectedPeriodeId;
       let currentSaldoAwal = 0;
 
-      const { data: listPeriode } = await supabase
+      // Fetch periode list
+      const { data: listPeriode, error: periodeError } = await supabase
         .from('periode_haul')
-        .select('*')
+        .select('id, nama_periode, saldo_awal, is_closed, created_at')
         .order('created_at', { ascending: false });
+
+      if (periodeError) throw periodeError;
 
       if (listPeriode && listPeriode.length > 0) {
         setPeriodeList(listPeriode);
@@ -173,32 +196,50 @@ export default function DashboardPage() {
         currentSaldoAwal = parseFloat(selectedObj.saldo_awal || 0);
       }
 
-      const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main_config');
-      if (settingsData && settingsData.length > 0) {
-        setAnnouncement(settingsData[0].announcement || settingsData[0].banner_text || '');
+      // Fetch announcement/settings
+      const { data: settingsData } = await supabase
+        .from('settings')
+        .select('announcement, banner_text')
+        .eq('id', 'main_config')
+        .single();
+
+      if (settingsData) {
+        setAnnouncement(settingsData.announcement || settingsData.banner_text || '');
       }
 
+      // Fetch visitor stats (with error handling)
+      let visitorData = { totalViews: 0, uniqueCount: 0 };
       try {
-        const { count: countViews } = await supabase
+        const { count: countViews, error: countError } = await supabase
           .from('visitor_logs')
           .select('*', { count: 'exact', head: true });
 
-        const { data: listIps } = await supabase
-          .from('visitor_logs')
-          .select('ip_address');
+        if (!countError) {
+          const { data: listIps, error: ipsError } = await supabase
+            .from('visitor_logs')
+            .select('ip_address');
 
-        const uniqueIpsCount = listIps ? new Set(listIps.map(v => v.ip_address)).size : 0;
-        setVisitorStats({ totalViews: countViews || 0, uniqueCount: uniqueIpsCount });
+          const uniqueIpsCount = !ipsError && listIps ? new Set(listIps.map(v => v.ip_address)).size : 0;
+          visitorData = { totalViews: countViews || 0, uniqueCount: uniqueIpsCount };
+        }
       } catch (visErr) {
-        console.error('Gagal memuat analitik log:', visErr);
+        console.error('Visitor stats error:', visErr);
       }
+      setVisitorStats(visitorData);
 
-      const { data: budgetsData } = await supabase.from('budgets').select('planned_amount');
+      // Fetch budgets
+      const { data: budgetsData } = await supabase
+        .from('budgets')
+        .select('planned_amount');
+
       let totalPlafonDinamis = 0;
       if (budgetsData) {
-        budgetsData.forEach(b => { totalPlafonDinamis += parseFloat(b.planned_amount) || 0; });
+        budgetsData.forEach(b => {
+          totalPlafonDinamis += parseFloat(b.planned_amount) || 0;
+        });
       }
 
+      // Build queries with periode filter
       let donQuery = supabase.from('donation_details').select('*');
       let txQuery = supabase.from('transactions').select('*');
 
@@ -207,23 +248,28 @@ export default function DashboardPage() {
         txQuery = txQuery.eq('periode_id', activePeriodeId);
       }
 
-      const { data: donationsDb } = await donQuery;
-      const { data: transactionsDb } = await txQuery;
-        
-      let calcMasuk = 0; 
+      const { data: donationsDb, error: donError } = await donQuery;
+      const { data: transactionsDb, error: txError } = await txQuery;
+
+      if (donError) console.error('Donation fetch error:', donError);
+      if (txError) console.error('Transaction fetch error:', txError);
+
+      // Process donations and transactions
+      let calcMasuk = 0;
       let calcKeluar = 0;
-      const incomeMap = {}; 
+      const incomeMap = {};
       const expenseMap = {};
-      
+
       const listPemasukanGrup = {};
       const listPengeluaranGrup = [];
 
-      if (donationsDb) {
+      // Process donations
+      if (donationsDb && Array.isArray(donationsDb)) {
         donationsDb.forEach((item) => {
           const rawAmount = parseFloat(item.amount) || 0;
           const catName = (item.category || 'Lain-lain').toString().trim();
           const tgl = item.transaction_date || '';
-          
+
           if (!tgl) return;
 
           const donorNameClean = (item.donor_name || '').toString().trim();
@@ -234,7 +280,7 @@ export default function DashboardPage() {
             const nominalMinus = -Math.abs(rawAmount);
             calcMasuk += nominalMinus;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalMinus;
-            
+
             const keyFee = `${tgl}_FEE_SYSTEM_${item.id}`;
             listPemasukanGrup[keyFee] = {
               note: `${dict.systemFee} ${tgl?.substring(0, 7)}`,
@@ -245,7 +291,7 @@ export default function DashboardPage() {
             const nominalPositif = Math.abs(rawAmount);
             calcMasuk += nominalPositif;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalPositif;
-            
+
             const keySaldo = `${tgl}_SALDO_SYSTEM_${item.id}`;
             listPemasukanGrup[keySaldo] = {
               note: `${dict.settledBalance} ${tgl?.substring(0, 7)}`,
@@ -258,7 +304,7 @@ export default function DashboardPage() {
             incomeMap[catName] = (incomeMap[catName] || 0) + nominalPositif;
 
             const grupKey = `${tgl}_${catName.toLowerCase().replace(/\s+/g, '_')}_Donatur`;
-            
+
             if (!listPemasukanGrup[grupKey]) {
               listPemasukanGrup[grupKey] = {
                 note: '',
@@ -275,7 +321,8 @@ export default function DashboardPage() {
         });
       }
 
-      if (transactionsDb) {
+      // Process transactions
+      if (transactionsDb && Array.isArray(transactionsDb)) {
         transactionsDb.forEach((item) => {
           const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
           const rawType = (item.type || item.jenis || '').toString().toLowerCase().trim();
@@ -285,12 +332,13 @@ export default function DashboardPage() {
 
           if (!tgl) return;
 
+          // Skip invalid entries
           if (
-            noteText.includes('APLIKASI PEMASUKAN') || 
-            noteText.includes('DETAIL') || 
+            noteText.includes('APLIKASI PEMASUKAN') ||
+            noteText.includes('DETAIL') ||
             catName.toUpperCase().includes('DETAIL')
           ) {
-            return; 
+            return;
           }
 
           if (rawType === 'keluar' || rawType === 'pengeluaran') {
@@ -306,7 +354,7 @@ export default function DashboardPage() {
 
             calcMasuk += nominal;
             incomeMap[catName] = (incomeMap[catName] || 0) + nominal;
-            
+
             const keyManual = `MANUAL_${item.id}`;
             listPemasukanGrup[keyManual] = {
               note: item.note,
@@ -317,56 +365,107 @@ export default function DashboardPage() {
         });
       }
 
-      const arrayMasukFinal = Object.values(listPemasukanGrup).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
-      const arrayKeluarFinal = listPengeluaranGrup.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
+      // Sort and finalize data
+      const arrayMasukFinal = Object.values(listPemasukanGrup)
+        .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
+        .slice(0, 15);
 
-      const parseChart = (map, total) => Object.keys(map).map(key => ({
-        label: key, value: map[key], percentage: total > 0 ? parseFloat(((map[key] / total) * 100).toFixed(1)) : 0
-      })).sort((a, b) => b.value - a.value);
+      const arrayKeluarFinal = listPengeluaranGrup
+        .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
+        .slice(0, 15);
 
-      setCatSummaryMasuk(parseChart(incomeMap, calcMasuk));
-      setCatSummaryKeluar(parseChart(expenseMap, calcKeluar));
+      // Parse chart data
+      const parseChart = (map, total) =>
+        Object.keys(map)
+          .map(key => ({
+            label: key,
+            value: map[key],
+            percentage: total > 0 ? parseFloat(((map[key] / total) * 100).toFixed(1)) : 0
+          }))
+          .sort((a, b) => b.value - a.value);
 
+      const incomeSummary = parseChart(incomeMap, calcMasuk);
+      const expenseSummary = parseChart(expenseMap, calcKeluar);
+
+      // Calculate totals
       const totalSaldoNet = currentSaldoAwal + calcMasuk - calcKeluar;
-      setTotals({ 
-        total: totalSaldoNet, 
-        masuk: calcMasuk, 
-        keluar: calcKeluar, 
-        saldoAwal: currentSaldoAwal 
-      });
-      
-      setRincianMasuk(arrayMasukFinal.slice(0, 15)); 
-      setRincianKeluar(arrayKeluarFinal.slice(0, 15));
 
+      setTotals({
+        total: totalSaldoNet,
+        masuk: calcMasuk,
+        keluar: calcKeluar,
+        saldoAwal: currentSaldoAwal
+      });
+
+      setCatSummaryMasuk(incomeSummary);
+      setCatSummaryKeluar(expenseSummary);
+      setRincianMasuk(arrayMasukFinal);
+      setRincianKeluar(arrayKeluarFinal);
+
+      // Calculate progress
       let hitungPersen = 0;
       if (totalPlafonDinamis > 0) {
         hitungPersen = parseFloat((((calcMasuk + currentSaldoAwal) / totalPlafonDinamis) * 100).toFixed(1));
       }
-      setProgress({ percent: hitungPersen, current: calcMasuk + currentSaldoAwal, target: totalPlafonDinamis });
+      setProgress({
+        percent: hitungPersen,
+        current: calcMasuk + currentSaldoAwal,
+        target: totalPlafonDinamis
+      });
 
-    } catch (err) { 
-      console.error(err); 
-    } font-mono { 
-      setLoading(false); 
+    } catch (err) {
+      console.error('Dashboard load error:', err);
+      setError(dict.errorLoadingData);
+    } finally {
+      setLoading(false);
     }
   }
 
-  const formatRupiah = (angka) => {
+  const formatRupiah = useCallback((angka) => {
     const absValue = Math.abs(angka);
-    const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(absValue);
+    const formatted = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(absValue);
     return angka < 0 ? `-${formatted}` : formatted;
-  };
+  }, []);
 
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="p-12 text-center text-cyan-400 text-xs font-mono animate-pulse">
-        {dict.loading}
+      <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12">
+        {/* Loading state */}
+        <div className="p-12 text-center text-cyan-400 text-xs font-mono animate-pulse">
+          {dict.loading}
+        </div>
+
+        {/* Skeleton cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-40 bg-slate-900/50 rounded-3xl animate-pulse border border-slate-800" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-8 text-center space-y-4 max-w-5xl mx-auto">
+        <div className="text-red-400 text-sm font-mono">{error}</div>
+        <button
+          onClick={() => loadDashboardData()}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-mono text-xs transition-colors"
+        >
+          Coba Lagi
+        </button>
       </div>
     );
   }
 
   return (
-    /*  PENTING: Diubah ke max-w-5xl (sebelumnya max-w-xl) agar melebar sempurna di PC */
     <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 text-white">
       
       {/* 🌐 SELEKTOR PERIODE & BAHASA */}
@@ -394,8 +493,8 @@ export default function DashboardPage() {
           <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
             {dict.selectLanguage}
           </span>
-          <select 
-            value={lang} 
+          <select
+            value={lang}
             onChange={(e) => setLang(e.target.value)}
             className="bg-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer border border-slate-700"
           >
@@ -405,7 +504,7 @@ export default function DashboardPage() {
           </select>
         </div>
       </div>
-      
+
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
         <div className="w-full bg-slate-900/90 border border-amber-500/30 py-2.5 px-4 rounded-xl overflow-hidden flex items-center shadow-lg print:hidden">
@@ -415,12 +514,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 💳 3 KARTU KAS UTAMA MODERN (RESPONSIF DUA/TIGA KOLOM DI PC) */}
+      {/* 💳 3 KARTU KAS UTAMA MODERN */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        {/* CARD 1: KAS UTAMA HAUL (Mendapat porsi 1-2 kolom di desktop jika diinginkan, di sini set sejajar 3 kartu) */}
-        <div className="md:col-span-1 p-5 sm:p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/10 border border-cyan-200/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[170px]">
-          
+
+        {/* CARD 1: KAS UTAMA HAUL */}
+        <div className="md:col-span-1 p-5 sm:p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/10 border border-cyan-200/50 rounded-3xl relative overflow-hidden">
+
           {/* Target Pattern Rings Ornament */}
           <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-25 pointer-events-none select-none">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-950">
@@ -447,7 +546,7 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-5 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-3xl shadow-xl border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between min-h-[170px]">
+        <div className="p-5 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-3xl shadow-xl border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
@@ -457,7 +556,7 @@ export default function DashboardPage() {
               🟢
             </div>
           </div>
-          
+
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
             <p className="text-[10px] text-emerald-200/70 font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
@@ -465,7 +564,7 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-5 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-3xl shadow-xl border border-rose-500/30 relative overflow-hidden flex flex-col justify-between min-h-[170px]">
+        <div className="p-5 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-3xl shadow-xl border border-rose-500/30 relative overflow-hidden flex flex-col justify-between">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
@@ -484,10 +583,10 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS (GRID 2 KOLOM DI DESKTOP) */}
+      {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
-        
-        {/* LOG TRAFIK PENGUNJUNG (1 Kolom di Desktop) */}
+
+        {/* LOG TRAFIK PENGUNJUNG */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:col-span-1">
           <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
             <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-sm shrink-0">📈</div>
@@ -506,7 +605,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* TARGET PLAFON PROGRESS (2 Kolom di Desktop) */}
+        {/* TARGET PLAFON PROGRESS */}
         <div className="md:col-span-2 p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col justify-center space-y-3 shadow-md">
           <div className="flex justify-between items-center">
             <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 text-slate-200">
@@ -515,7 +614,10 @@ export default function DashboardPage() {
             <span className="text-cyan-400 font-mono text-xs font-black bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">{progress.percent}%</span>
           </div>
           <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
-            <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 rounded-full transition-all duration-500" style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
+            <div
+              className="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(progress.percent, 100)}%` }}
+            />
           </div>
           <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
             <span>{dict.collected}: <strong className="text-slate-200">{formatRupiah(progress.current)}</strong></span>
@@ -525,7 +627,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* REKAP KATEGORI (BERDAMPINGAN DI DESKTOP) */}
+      {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-3 shadow-md">
           <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b border-slate-800 pb-2">{dict.rekapIncome}</h4>
@@ -552,7 +654,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* MUTASI TERAKHIR (BERDAMPINGAN DI DESKTOP) */}
+      {/* MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-slate-900/80 border-l-4 border-l-emerald-400 border border-slate-800 rounded-2xl space-y-3 shadow-md">
           <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">{dict.lastIncome}</h5>
