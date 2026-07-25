@@ -95,31 +95,30 @@ export default function ClientLayout({ children }) {
   const [orgName, setOrgName] = useState('Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus');
   const [address, setAddress] = useState('Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon');
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
-const [logoUrl, setLogoUrl] = useState('');
-const [currentThemeKey, setCurrentThemeKey] = useState('default');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
-useEffect(() => {
-  const savedTheme = localStorage.getItem('app-theme');
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme');
+    if (savedTheme && THEME_STYLES[savedTheme]) {
+      setCurrentThemeKey(savedTheme);
+    }
+  }, []);
 
-  if (savedTheme && THEME_STYLES[savedTheme]) {
-    setCurrentThemeKey(savedTheme);
-  }
-}, []);
+  useEffect(() => {
+    document.body.className = document.body.className
+      .replace(/theme-[^\s]+/g, '')
+      .trim();
 
-useEffect(() => {
-  document.body.className = document.body.className
-    .replace(/theme-[^\s]+/g, '')
-    .trim();
+    document.body.classList.add(`theme-${currentThemeKey}`);
+  }, [currentThemeKey]);
 
-  document.body.classList.add(`theme-${currentThemeKey}`);
-}, [currentThemeKey]);
-
-const [timeString, setTimeString] = useState('');
-const [dateString, setDateString] = useState('');
+  const [timeString, setTimeString] = useState('');
+  const [dateString, setDateString] = useState('');
 
   const [jadwalSholat, setJadwalSholat] = useState(null);
-  const [kotaSholat, setKotaSholat] = useState('Memuat lokasi...');
-  const [selectedKotaId, setSelectedKotaId] = useState('');
+  const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
+  const [selectedKotaId, setSelectedKotaId] = useState('1202');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
   const lastTriggeredSholat = useRef('');
 
@@ -156,12 +155,16 @@ const [dateString, setDateString] = useState('');
     checkAdminSession();
     loadHeaderSettings();
 
-    const savedKotaId = localStorage.getItem('manual_kota_id');
-    if (savedKotaId) {
-      setSelectedKotaId(savedKotaId);
-      fetchJadwalSholat(savedKotaId);
+    // Membaca setting lokasi dari LocalStorage, jika kosong default ke 1202 (Kab. Cirebon)
+    const savedKotaId = localStorage.getItem('manual_kota_id') || '1202';
+    setSelectedKotaId(savedKotaId);
+
+    if (savedKotaId === 'auto') {
+      fetchJadwalAutoGPS();
     } else {
-      fetchJadwalSholat();
+      const foundKota = DAFTAR_KOTA.find(k => k.id === savedKotaId);
+      if (foundKota) setKotaSholat(foundKota.name.toUpperCase());
+      fetchJadwalSholatDirect(savedKotaId);
     }
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -191,86 +194,69 @@ const [dateString, setDateString] = useState('');
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  async function fetchJadwalSholat(forcedId = null) {
+  // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA (LANGSUNG & AKURAT)
+  async function fetchJadwalSholatDirect(idKota) {
     try {
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
 
-      if (forcedId) {
-        const resJadwal = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${forcedId}/${yyyy}/${mm}/${dd}`);
-        const resultJadwal = await resJadwal.json();
-        if (resultJadwal && resultJadwal.status && resultJadwal.data) {
-          setJadwalSholat(resultJadwal.data.jadwal);
-          setKotaSholat(resultJadwal.data.lokasi);
-        }
-        return;
-      }
-
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            
-            try {
-              const resCoord = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${lat}/${lon}`);
-              const resultCoord = await resCoord.json();
-              
-              if (resultCoord && resultCoord.status && resultCoord.data && resultCoord.data.id) {
-                const idKota = resultCoord.data.id;
-                const namaKota = resultCoord.data.lokasi;
-                
-                const resJadwal = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
-                const resultJadwal = await resJadwal.json();
-                
-                if (resultJadwal && resultJadwal.status && resultJadwal.data) {
-                  setJadwalSholat(resultJadwal.data.jadwal);
-                  setKotaSholat(namaKota);
-                  return;
-                }
-              }
-              fetchCirebonDirect(yyyy, mm, dd);
-            } catch (e) {
-              fetchCirebonDirect(yyyy, mm, dd);
-            }
-          },
-          (error) => {
-            fetchCirebonDirect(yyyy, mm, dd);
-          },
-          { timeout: 8000, enableHighAccuracy: false }
-        );
-      } else {
-        fetchCirebonDirect(yyyy, mm, dd);
-      }
-    } catch (err) {
-      console.error('Gagal mengambil jadwal sholat:', err);
-    }
-  }
-
-  async function fetchCirebonDirect(yyyy, mm, dd) {
-    try {
-      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/1202/${yyyy}/${mm}/${dd}`);
+      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
       const result = await res.json();
       if (result && result.status && result.data) {
         setJadwalSholat(result.data.jadwal);
-        setKotaSholat(result.data.lokasi || 'KAB. CIREBON');
+        if (result.data.lokasi) setKotaSholat(result.data.lokasi);
       }
     } catch (e) {
-      console.error('Gagal ambil data Cirebon:', e);
+      console.error('Gagal mengambil data jadwal sholat:', e);
+    }
+  }
+
+  // FUNGSI KHUSUS DETEKSI OTOMATIS GPS (HANYA DITRIGGER JIKA DIPILIH MANUAL)
+  async function fetchJadwalAutoGPS() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const resCoord = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${lat}/${lon}`);
+            const resultCoord = await resCoord.json();
+            if (resultCoord && resultCoord.status && resultCoord.data && resultCoord.data.id) {
+              setKotaSholat(resultCoord.data.lokasi);
+              fetchJadwalSholatDirect(resultCoord.data.id);
+              return;
+            }
+            fetchJadwalSholatDirect('1202');
+          } catch (e) {
+            fetchJadwalSholatDirect('1202');
+          }
+        },
+        () => fetchJadwalSholatDirect('1202'),
+        { timeout: 8000, enableHighAccuracy: false }
+      );
+    } else {
+      fetchJadwalSholatDirect('1202');
     }
   }
 
   const handleSelectKotaManual = (e) => {
     const id = e.target.value;
     setSelectedKotaId(id);
+    localStorage.setItem('manual_kota_id', id);
+
     if (id === 'auto') {
-      localStorage.removeItem('manual_kota_id');
-      fetchJadwalSholat();
+      fetchJadwalAutoGPS();
     } else {
-      localStorage.setItem('manual_kota_id', id);
-      fetchJadwalSholat(id);
+      const foundKota = DAFTAR_KOTA.find(k => k.id === id);
+      if (foundKota) setKotaSholat(foundKota.name.toUpperCase());
+      fetchJadwalSholatDirect(id);
     }
   };
   
@@ -436,7 +422,7 @@ const [dateString, setDateString] = useState('');
     <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
       <div className="w-full min-h-screen flex flex-col relative z-10">
         
-        {/* HEADER RESPONSIF (Mobile: max-w-xl, PC: max-w-5xl) */}
+        {/* HEADER RESPONSIF */}
         <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
           <div className="theme-bg-secondary theme-border p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300">
             
@@ -489,7 +475,7 @@ const [dateString, setDateString] = useState('');
           </div>
         </header>
 
-        {/* MAIN CONTENT RESPONSIF (Mobile: max-w-xl, PC: max-w-5xl) */}
+        {/* MAIN CONTENT RESPONSIF */}
         <main className="flex-1 max-w-xl md:max-w-5xl w-full mx-auto px-3 sm:px-6 pt-4 pb-6">
           {children}
         </main>
@@ -501,7 +487,7 @@ const [dateString, setDateString] = useState('');
 
       </div>
 
-      {/* 🎯 BOTTOM NAV BAR DOCK (Mobile: Floating Bottom, PC: max-w-5xl) */}
+      {/* 🎯 BOTTOM NAV BAR DOCK */}
       <div className="fixed bottom-0 left-0 right-0 w-full z-50 theme-bg-secondary/95 backdrop-blur-md border-t theme-border theme-shadow">
         <div className="w-full max-w-md md:max-w-xl mx-auto h-16 flex items-center justify-around px-3">
           <Link 
@@ -578,7 +564,7 @@ const [dateString, setDateString] = useState('');
                 <Compass className="w-6 h-6 animate-pulse" />
               </div>
               <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
-              <p className="text-[10px] font-mono text-emerald-200/80">📍 {kotaSholat} & Sekitarnya</p>
+              <p className="text-[10px] font-mono text-emerald-200/80 uppercase">📍 {kotaSholat} & Sekitarnya</p>
             </div>
 
             <div className="p-2.5 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-1">
@@ -590,10 +576,10 @@ const [dateString, setDateString] = useState('');
                 onChange={handleSelectKotaManual}
                 className="w-full theme-bg-secondary text-xs text-emerald-300 font-bold px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-400 cursor-pointer"
               >
-                <option value="auto">🌐 Deteksi Otomatis (GPS)</option>
                 {DAFTAR_KOTA.map((k) => (
                   <option key={k.id} value={k.id}>{k.name}</option>
                 ))}
+                <option value="auto">🌐 Deteksi Otomatis (GPS)</option>
               </select>
             </div>
 
