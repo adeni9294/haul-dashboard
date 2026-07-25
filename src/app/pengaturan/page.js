@@ -235,6 +235,32 @@ export default function PengaturanPage() {
     }
   };
 
+  const handleShareLocationGPS = () => {
+    if (!navigator.geolocation) {
+      showToast('error', 'Tidak Didukung', 'Browser Anda tidak mendukung fitur Geolocation.');
+      return;
+    }
+
+    showToast('info', 'Mendeteksi GPS', 'Mohon izinkan akses lokasi pada perangkat Anda...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        setMapLat(lat.toString());
+        setMapLon(lon.toString());
+        setMapEmbedUrl(`https://maps.google.com/maps?q=${lat},${lon}&z=15&output=embed`);
+        
+        showToast('success', 'Lokasi Didapat', `Koordinat GPS berhasil diset otomatis: ${lat}, ${lon}`);
+      },
+      (error) => {
+        showToast('error', 'Gagal Mendeteksi', 'Pastikan izin akses lokasi (GPS) pada browser/perangkat Anda aktif.');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const handleSaveMapConfig = async (e) => {
     e.preventDefault();
     if (!isAdmin) return showToast('error', 'Akses Ditolak', 'Aksi dibatasi khusus admin.');
@@ -426,7 +452,7 @@ export default function PengaturanPage() {
             Setelan Sistem & Antarmuka
           </h2>
           <p className="text-[11px] theme-text-secondary mt-1 font-medium">
-            Kelola tema tampilan global, identitas organisasi, koordinat peta lokasi, periode haul, dan kata sandi admin.
+            Kelola tema tampilan global, identitas organisasi, koordinat peta lokasi (ShareLoc), periode haul, dan kata sandi admin.
           </p>
         </div>
         <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -546,13 +572,23 @@ export default function PengaturanPage() {
             </form>
           </GlassCard>
 
-          {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL */}
+          {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL + SHARELOC GPS */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleSaveMapConfig} className="space-y-4">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-rose-400" />
-                Pengaturan Titik Peta Lokasi Haul
-              </h3>
+              <div className="border-b theme-border pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-rose-400" />
+                  Pengaturan Peta Lokasi Haul
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleShareLocationGPS}
+                  className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  title="Ambil titik koordinat otomatis dari GPS HP/Laptop Anda saat ini"
+                >
+                  📍 Ambil Lokasi Saat Ini (ShareLoc)
+                </button>
+              </div>
 
               <div className="space-y-3 text-xs">
                 <div>
@@ -568,7 +604,7 @@ export default function PengaturanPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Latitude (Garis Lintang)</label>
+                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Latitude</label>
                     <input 
                       type="text" 
                       value={mapLat} 
@@ -578,7 +614,7 @@ export default function PengaturanPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Longitude (Garis Bujur)</label>
+                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Longitude</label>
                     <input 
                       type="text" 
                       value={mapLon} 
@@ -590,7 +626,7 @@ export default function PengaturanPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">URL Embed Google Maps (Src Iframe)</label>
+                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">URL Embed Google Maps</label>
                   <input 
                     type="text" 
                     value={mapEmbedUrl} 
