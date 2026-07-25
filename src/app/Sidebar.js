@@ -40,11 +40,11 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 text-slate-100 min-h-screen p-5 flex flex-col justify-between shadow-xl">
+    <aside className="w-64 theme-bg-secondary border-r theme-border theme-text-primary min-h-screen p-5 flex flex-col justify-between shadow-xl transition-all duration-300">
       <div>
         <div className="mb-8 px-2">
-          <h1 className="text-lg font-black tracking-wider text-amber-500 font-mono">HAUL SYSTEM</h1>
-          <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-widest font-semibold">Workspace Management</p>
+          <h1 className="text-lg font-black tracking-wider theme-text-accent font-mono">HAUL SYSTEM</h1>
+          <p className="text-[10px] theme-text-secondary mt-0.5 uppercase tracking-widest font-semibold">Workspace Management</p>
         </div>
         
         <nav className="space-y-1.5">
@@ -54,10 +54,10 @@ export default function Sidebar() {
               <Link 
                 key={index} 
                 href={menu.slug}
-                className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                   isActive 
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? 'theme-gradient-main theme-text-primary font-bold shadow-lg' 
+                    : 'theme-text-secondary hover:theme-bg-tertiary hover:theme-text-primary'
                 }`}
               >
                 {menu.name}
@@ -67,12 +67,12 @@ export default function Sidebar() {
         </nav>
       </div>
       
-      <div className="pt-4 border-t border-slate-800 px-2">
+      <div className="pt-4 border-t theme-border px-2">
         {isAdmin ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              <span className="text-xs text-slate-400 font-medium font-mono">Mode: Admin</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-xs theme-text-secondary font-medium font-mono">Mode: Admin</span>
             </div>
             <button 
               onClick={handleLogout}
@@ -84,12 +84,12 @@ export default function Sidebar() {
         ) : (
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1 mb-1">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-              <span className="text-xs text-slate-400 font-medium font-mono">Mode: Publik</span>
+              <span className="w-2 h-2 rounded-full theme-text-accent animate-pulse"></span>
+              <span className="text-xs theme-text-secondary font-medium font-mono">Mode: Publik</span>
             </div>
             <Link 
               href="/login" 
-              className="block w-full text-center px-4 py-2.5 bg-slate-950 border border-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 rounded-xl text-xs font-bold transition-all duration-200"
+              className="block w-full text-center px-4 py-2.5 theme-bg-primary border theme-border hover:theme-gradient-main theme-text-secondary hover:theme-text-primary rounded-xl text-xs font-bold transition-all duration-300"
             >
               🔒 Masuk Admin
             </Link>
