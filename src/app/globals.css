@@ -544,12 +544,35 @@ aside.theme-sidebar .menu-item-active {
     position:relative;
 }
 
+.kb-glow{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    background:radial-gradient(circle,
+        rgba(255,215,0,.35),
+        rgba(0,229,168,.12),
+        transparent 70%);
+    filter:blur(30px);
+    animation:pulseGlow 3s ease-in-out infinite;
+}
+
 .kb-logo{
     width:140px;
     height:140px;
     object-fit:contain;
+    position:relative;
+    z-index:2;
+
+    filter:
+        drop-shadow(0 0 10px #FFD700)
+        drop-shadow(0 0 20px rgba(255,215,0,.5))
+        drop-shadow(0 0 40px rgba(0,229,168,.3));
+
     animation:floatLogo 3s ease-in-out infinite;
-    filter:drop-shadow(0 0 25px rgba(255,215,0,.6));
 }
 
 .kb-content h1{
@@ -580,8 +603,19 @@ aside.theme-sidebar .menu-item-active {
     height:100%;
     width:0%;
     border-radius:20px;
-    background:linear-gradient(90deg,#FFD700,#00E5A8,#FFD700);
-    animation:loading 2.5s linear forwards;
+
+    background:linear-gradient(
+        90deg,
+        #FFD700,
+        #00E5A8,
+        #FFD700
+    );
+
+    background-size:300% 100%;
+
+    animation:
+        loading 2.5s linear forwards,
+        shimmer 1.5s linear infinite;
 }
 
 @keyframes loading{
@@ -593,4 +627,31 @@ aside.theme-sidebar .menu-item-active {
     0%{transform:translateY(0);}
     50%{transform:translateY(-10px);}
     100%{transform:translateY(0);}
+}
+
+@keyframes pulseGlow{
+    0%{
+        transform:translate(-50%,-50%) scale(.9);
+        opacity:.5;
+    }
+
+    50%{
+        transform:translate(-50%,-50%) scale(1.15);
+        opacity:1;
+    }
+
+    100%{
+        transform:translate(-50%,-50%) scale(.9);
+        opacity:.5;
+    }
+}
+
+@keyframes shimmer{
+    from{
+        background-position:0%;
+    }
+
+    to{
+        background-position:300%;
+    }
 }
