@@ -406,11 +406,11 @@ export default function DashboardPage() {
       // Calculate progress
       let hitungPersen = 0;
       if (totalPlafonDinamis > 0) {
-        hitungPersen = parseFloat((((calcMasuk + currentSaldoAwal) / totalPlafonDinamis) * 100).toFixed(1));
+        hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
       }
       setProgress({
         percent: hitungPersen,
-        current: calcMasuk + currentSaldoAwal,
+        current: calcMasuk,
         target: totalPlafonDinamis
       });
 
