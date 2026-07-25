@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import GlassCard from '@/components/GlassCard';
 
 export default function StatPage() {
   const [loading, setLoading] = useState(true);
@@ -58,7 +59,7 @@ export default function StatPage() {
       const { data: allTransactions } = await supabase.from('transactions').select('*');
       const { data: allBudgets } = await supabase.from('budgets').select('*');
 
-      // 3. Mapping Statistik per Periode (Mengikuti Logika Dashboard 1:1)
+      // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
         let currentSaldoAwal = parseFloat(p.saldo_awal || 0);
@@ -105,7 +106,6 @@ export default function StatPage() {
 
             if (!tgl) return;
 
-            // Abaikan transaksi yang sudah direkap oleh aplikasi agar tidak duplikat
             if (
               noteText.includes('APLIKASI PEMASUKAN') || 
               noteText.includes('DETAIL') || 
@@ -133,9 +133,7 @@ export default function StatPage() {
           });
         }
 
-        // Total Pemasukan Terkumpul = Saldo Awal + Kas Masuk
         const totalMasukTerkumpul = currentSaldoAwal + calcMasuk;
-        // Sisa Kas Bersih
         const totalSaldoNet = totalMasukTerkumpul - calcKeluar;
 
         return {
@@ -177,85 +175,85 @@ export default function StatPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70">Menghitung statistik pencapaian...</div>;
+  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70 theme-text-primary">Menghitung statistik pencapaian...</div>;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white">
+    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary">
       
       {/* HEADER & SELECTOR PERIODE */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl">
+      <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+          <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
             <span>📈</span> Statistik & Pencapaian Finansial Haul
           </h2>
-          <p className="text-[10px] opacity-80 font-mono mt-0.5">Komparasi pencapaian antar periode & realisasi target anggaran</p>
+          <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">Komparasi pencapaian antar periode & realisasi target anggaran</p>
         </div>
 
         {periodeList.length > 0 && (
-          <div className="flex items-center bg-black/30 p-1 border border-white/20 rounded-xl">
-            <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">Fokus Periode:</span>
+          <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
+            <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Fokus Periode:</span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/40 border border-white/20 text-[10px] text-amber-300 rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
             >
               {periodeList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-zinc-900 text-white">
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
                   {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
                 </option>
               ))}
             </select>
           </div>
         )}
-      </div>
+      </GlassCard>
 
       {/* SECTION 1: INDIKATOR PENCAPAIAN UTAMA (5 CARDS) */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <span>🎯</span> Indikator Pencapaian Utama: <span className="text-amber-300 font-black">{currentSummary.namaPeriode}</span>
+        <h3 className="text-xs font-bold uppercase tracking-wider theme-text-secondary flex items-center gap-2">
+          <span>🎯</span> Indikator Pencapaian Utama: <span className="theme-text-accent font-black">{currentSummary.namaPeriode}</span>
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pemasukan (Terkumpul)</p>
+          <GlassCard className="p-4 space-y-1">
+            <p className="text-[10px] font-mono theme-text-tertiary uppercase">Total Pemasukan (Terkumpul)</p>
             <h4 className="text-base font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
-          </div>
+          </GlassCard>
 
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Total Pengeluaran</p>
+          <GlassCard className="p-4 space-y-1">
+            <p className="text-[10px] font-mono theme-text-tertiary uppercase">Total Pengeluaran</p>
             <h4 className="text-base font-black font-mono text-rose-300">{formatRupiah(currentSummary.totalKeluar)}</h4>
-          </div>
+          </GlassCard>
 
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Sisa Kas Bersih</p>
+          <GlassCard className="p-4 space-y-1">
+            <p className="text-[10px] font-mono theme-text-tertiary uppercase">Sisa Kas Bersih</p>
             <h4 className={`text-base font-black font-mono ${currentSummary.saldoBersih >= 0 ? 'text-blue-300' : 'text-rose-400'}`}>
               {formatRupiah(currentSummary.saldoBersih)}
             </h4>
-          </div>
+          </GlassCard>
 
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Target Anggaran</p>
-            <h4 className="text-base font-black font-mono text-amber-300">{formatRupiah(currentSummary.totalRencanaBudget)}</h4>
-          </div>
+          <GlassCard className="p-4 space-y-1">
+            <p className="text-[10px] font-mono theme-text-tertiary uppercase">Target Anggaran</p>
+            <h4 className="text-base font-black font-mono theme-text-accent">{formatRupiah(currentSummary.totalRencanaBudget)}</h4>
+          </GlassCard>
 
-          <div className="p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl space-y-1">
-            <p className="text-[10px] font-mono opacity-80 uppercase">Serapan Anggaran</p>
+          <GlassCard className="p-4 space-y-1">
+            <p className="text-[10px] font-mono theme-text-tertiary uppercase">Serapan Anggaran</p>
             <h4 className="text-base font-black font-mono text-purple-300">{currentSummary.persentaseSerapan}% <span className="text-[9px] font-normal opacity-70">terserap</span></h4>
-          </div>
+          </GlassCard>
         </div>
       </div>
 
       {/* SECTION 2: KOMPARASI ANTAR PERIODE */}
       <div className="space-y-3 pt-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider theme-text-secondary flex items-center gap-2">
           <span>📊</span> Komparasi Kinerja Keuangan Antar Periode Haul
         </h3>
 
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-xl">
+        <GlassCard className="p-0 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-black/40 text-slate-200 border-b border-white/20 font-mono uppercase text-[9px] tracking-wider">
+                <tr className="bg-black/40 theme-text-secondary border-b theme-border font-mono uppercase text-[9px] tracking-wider">
                   <th className="p-3">Periode Haul</th>
                   <th className="p-3 text-right">Total Pemasukan</th>
                   <th className="p-3 text-right">Total Pengeluaran</th>
@@ -264,13 +262,13 @@ export default function StatPage() {
                   <th className="p-3 text-center">Status Buku</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10 text-slate-100 font-mono text-[11px]">
+              <tbody className="divide-y theme-border font-mono text-[11px]">
                 {allPeriodeStats.map((stat) => (
-                  <tr key={stat.id} className="hover:bg-white/5 transition-all">
-                    <td className="p-3 font-bold font-sans text-white text-xs">{stat.nama_periode}</td>
+                  <tr key={stat.id} className="hover:bg-black/20 transition-all">
+                    <td className="p-3 font-bold font-sans theme-text-primary text-xs">{stat.nama_periode}</td>
                     <td className="p-3 text-right text-emerald-300 font-bold">{formatRupiah(stat.totalMasuk)}</td>
                     <td className="p-3 text-right text-rose-300 font-bold">{formatRupiah(stat.totalKeluar)}</td>
-                    <td className="p-3 text-right text-amber-300">{formatRupiah(stat.totalRencanaBudget)}</td>
+                    <td className="p-3 text-right theme-text-accent">{formatRupiah(stat.totalRencanaBudget)}</td>
                     <td className={`p-3 text-right font-black ${stat.saldoBersih >= 0 ? 'text-blue-300' : 'text-rose-400'}`}>
                       {formatRupiah(stat.saldoBersih)}
                     </td>
@@ -286,7 +284,7 @@ export default function StatPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </GlassCard>
       </div>
 
     </div>
