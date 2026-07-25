@@ -2,23 +2,52 @@
 
 import { useEffect, useState } from "react";
 
-export default function SplashScreen({ children }) {
-  const [loading, setLoading] = useState(true);
+export default function SplashScreen({
+  children,
+  appReady = false,
+}) {
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2500);
+    if (appReady) {
+      setFadeOut(true);
+    }
+  }, [appReady]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
+  if (appReady && fadeOut) {
     return (
-      <div className="kb-splash">
+      <div className="kb-splash fade-out">
+        <div className="kb-content">
+          <img
+            src="/icon-192.png"
+            alt="K&B"
+            className="kb-logo"
+          />
+
+          <h1>K & B</h1>
+
+          <p>Connecting Business, Building Trust</p>
+
+          <div className="kb-progress">
+            <div className="kb-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (appReady) {
+    return children;
+  }
+
+  return (
+    <div className="kb-splash">
+      <div className="kb-content">
+
+        <div className="kb-glow"></div>
 
         <img
-          src="/logo.png"
+          src="/icon-192.png"
           alt="K&B"
           className="kb-logo"
         />
@@ -27,13 +56,11 @@ export default function SplashScreen({ children }) {
 
         <p>Connecting Business, Building Trust</p>
 
-        <div className="loading-bar">
-          <div className="loading-fill"></div>
+        <div className="kb-progress">
+          <div className="kb-progress-fill"></div>
         </div>
 
       </div>
-    );
-  }
-
-  return children;
+    </div>
+  );
 }
