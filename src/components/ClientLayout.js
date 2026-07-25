@@ -31,7 +31,8 @@ import {
   MapPin,
   CheckCircle2,
   AlertCircle,
-  Info
+  Info,
+  BookOpen
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -118,7 +119,7 @@ export default function ClientLayout({ children }) {
 
   const [jadwalSholat, setJadwalSholat] = useState(null);
   const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
-  const [selectedKotaId, setSelectedKotaId] = useState('1202');
+  const [selectedKotaId, setSelectedKotaId] = useState('1219');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
   const lastTriggeredSholat = useRef('');
 
@@ -151,12 +152,12 @@ export default function ClientLayout({ children }) {
     };
   }, []);
 
-  // 1. INSIALISASI KOTA & FETCH JADWAL (Hanya terpicu jika ID Kota berubah)
+  // 1. INSIALISASI KOTA & FETCH JADWAL
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
 
-    const savedKotaId = localStorage.getItem('manual_kota_id') || '1202';
+    const savedKotaId = localStorage.getItem('manual_kota_id') || '1219';
     setSelectedKotaId(savedKotaId);
 
     if (savedKotaId === 'auto') {
@@ -174,7 +175,7 @@ export default function ClientLayout({ children }) {
     }
   }, [selectedKotaId]);
 
-  // 2. LIVE CLOCK & ALARM TIMER (Terpisah tanpa dependency jadwalSholat agar tidak memicu re-render loop)
+  // 2. LIVE CLOCK & ALARM TIMER
   useEffect(() => {
     const updateTime = () => {
       const sekarang = new Date();
@@ -197,34 +198,27 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA (DIRECT & STABIL)
- async function fetchJadwalSholatDirect(idKota) {
-  try {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
+  // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA
+  async function fetchJadwalSholatDirect(idKota) {
+    try {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
 
-    const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
-    const result = await res.json();
-    
-    if (result && result.status && result.data && result.data.jadwal) {
-      setJadwalSholat(result.data.jadwal);
-      // ❌ JANGAN GUNAKAN BARIS INI: if (result.data.lokasi) setKotaSholat(result.data.lokasi);
-      // Biarkan `kotaSholat` diatur oleh dropdown/DAFTAR_KOTA
+      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
+      const result = await res.json();
+      
+      if (result && result.status && result.data && result.data.jadwal) {
+        setJadwalSholat(result.data.jadwal);
+      }
+    } catch (e) {
+      console.error('Gagal mengambil data jadwal sholat:', e);
     }
-  } catch (e) {
-    console.error('Gagal mengambil data jadwal sholat:', e);
   }
-}
 
-  // FUNGSI KHUSUS DETEKSI GPS MANUAL
+  // FUNGSI DETEKSI GPS AUTOMATIS
   async function fetchJadwalAutoGPS() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -238,16 +232,16 @@ export default function ClientLayout({ children }) {
               fetchJadwalSholatDirect(resultCoord.data.id);
               return;
             }
-            fetchJadwalSholatDirect('1202');
+            fetchJadwalSholatDirect('1219');
           } catch (e) {
-            fetchJadwalSholatDirect('1202');
+            fetchJadwalSholatDirect('1219');
           }
         },
-        () => fetchJadwalSholatDirect('1202'),
+        () => fetchJadwalSholatDirect('1219'),
         { timeout: 8000, enableHighAccuracy: false }
       );
     } else {
-      fetchJadwalSholatDirect('1202');
+      fetchJadwalSholatDirect('1219');
     }
   }
 
@@ -414,8 +408,11 @@ export default function ClientLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
+  // 📖 DRAWER MENUS DENGAN FITUR YASIN & PETA LOKASI
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
+    { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
+    { name: 'Peta & Lokasi Haul', href: '/peta', icon: MapPin, color: 'text-rose-400 bg-rose-500/20' },
     { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard, color: 'text-cyan-400 bg-cyan-500/20' },
     { name: 'Jadwal Acara', href: '/acara', icon: Calendar, color: 'text-amber-400 bg-amber-500/20' },
     { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-400 bg-purple-500/20' },
