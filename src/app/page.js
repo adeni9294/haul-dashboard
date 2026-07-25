@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import GlassCard from "@/components/GlassCard";
 
 // Inisialisasi Supabase Client Tunggal di Luar Render Loop
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
