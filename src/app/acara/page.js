@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from '@/components/GlassCard';
 
@@ -13,6 +13,10 @@ export default function AcaraPage() {
   const [dateEvent, setDateEvent] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  // Reference DOM untuk area capture PDF/Gambar
+  const printRef = useRef(null);
 
   // ➕ State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
@@ -186,10 +190,103 @@ export default function AcaraPage() {
     );
   };
 
+  // Helper memuat Library CDN Eksternal secara Dinamis saat Mengunduh
+  const loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        return resolve();
+      }
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`Gagal memuat script: ${src}`));
+      document.head.appendChild(script);
+    });
+  };
+
+  // 📥 EKSPLORASI FITUR DOWNLOAD GAMBAR (JPG)
+  const handleDownloadImage = async () => {
+    if (!printRef.current) return;
+    try {
+      setDownloading(true);
+      showToast('⌛ Sedang memproses gambar rundown...', 'info');
+
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+
+      const element = printRef.current;
+      const canvas = await window.html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0f172a'
+      });
+
+      const image = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `Jadwal_Acara_Haul_${currentPeriodeObj?.nama_periode || 'Rundown'}.jpg`;
+      link.click();
+
+      showToast('🖼️ Berhasil mengunduh gambar rundown acara!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('❌ Gagal mengunduh gambar rundown.', 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // 📥 EKSPLORASI FITUR DOWNLOAD DOCUMENT PDF
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    try {
+      setDownloading(true);
+      showToast('⌛ Sedang menyusun dokumen PDF...', 'info');
+
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+      const element = printRef.current;
+      const canvas = await window.html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0f172a'
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const imgWidth = 210; // Lebar A4 dalam mm
+      const pageHeight = 297; // Tinggi A4 dalam mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || 'Terdaftar'}.pdf`);
+      showToast('📄 Berhasil mengunduh dokumen PDF!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('❌ Gagal mengunduh PDF.', 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     try {
-      const options = { day: 'numeric', month: 'short', year: 'numeric' };
+      const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
       return new Date(dateString).toLocaleDateString('id-ID', options);
     } catch (e) {
       return String(dateString);
@@ -238,7 +335,7 @@ export default function AcaraPage() {
         </div>
       )}
 
-      {/* HEADER PAGE STATUS & PERIODE SELECTOR (GLASSMORPISM) */}
+      {/* HEADER PAGE STATUS, PERIODE SELECTOR & DOWNLOAD BUTTONS */}
       <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
@@ -247,23 +344,41 @@ export default function AcaraPage() {
           <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
         </div>
 
-        {/* SELECTOR PERIODE */}
-        {periodeList.length > 0 && (
-          <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
-            <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode Haul:</span>
-            <select
-              value={selectedPeriodeId || ''}
-              onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
-            >
-              {periodeList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
-                  {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* SELECTOR PERIODE */}
+          {periodeList.length > 0 && (
+            <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
+              <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode:</span>
+              <select
+                value={selectedPeriodeId || ''}
+                onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+                className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              >
+                {periodeList.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                    {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 📥 TOMBOL FITUR UNDUH GAMBAR & PDF */}
+          <button
+            onClick={handleDownloadImage}
+            disabled={downloading}
+            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all disabled:opacity-50"
+          >
+            🖼️ Gambar (JPG)
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloading}
+            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all disabled:opacity-50"
+          >
+            📄 Dokumen PDF
+          </button>
+        </div>
       </GlassCard>
 
       {/* INDIKATOR TUTUP BUKU */}
@@ -282,34 +397,36 @@ export default function AcaraPage() {
             <h3 className="text-xs font-black theme-text-accent uppercase tracking-wider flex items-center gap-2">
               <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Acara' : 'Tambah Rundown Acara'}
             </h3>
-            <div>
-              <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Tanggal Acara</label>
-              <input type="date" required value={dateEvent} onChange={(e) => setDateEvent(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Mulai</label>
-                <input type="text" required value={timeStart} onChange={(e) => setTimeStart(e.target.value)} placeholder="08:00" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" />
+                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Tanggal Acara</label>
+                <input type="date" required value={dateEvent} onChange={(e) => setDateEvent(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Mulai</label>
+                  <input type="text" required value={timeStart} onChange={(e) => setTimeStart(e.target.value)} placeholder="08:00" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" />
+                </div>
+                <div>
+                  <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Selesai</label>
+                  <input type="text" value={timeEnd} onChange={(e) => setTimeEnd(e.target.value)} placeholder="09:30 / Selesai" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" />
+                </div>
               </div>
               <div>
-                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Selesai</label>
-                <input type="text" value={timeEnd} onChange={(e) => setTimeEnd(e.target.value)} placeholder="09:30 / Selesai" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" />
+                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Nama Kegiatan / Agenda</label>
+                <input type="text" required value={agenda} onChange={(e) => setAgenda(e.target.value)} placeholder="Contoh: Pembukaan & Tahlil" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" />
               </div>
-            </div>
-            <div>
-              <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Nama Kegiatan / Agenda</label>
-              <input type="text" required value={agenda} onChange={(e) => setAgenda(e.target.value)} placeholder="Contoh: Pembukaan & Tahlil" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" />
-            </div>
-            <div>
-              <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">PIC (Penanggung Jawab)</label>
-              <input type="text" value={pic} onChange={(e) => setPic(e.target.value)} placeholder="Contoh: Warya & Kurma" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" />
-            </div>
-            <button type="submit" className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md">
-              {editingId ? '💾 Simpan Perubahan' : 'Simpan Rundown'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setAgenda(''); setTimeStart(''); setTimeEnd(''); setPic(''); setDateEvent(''); }} className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border">Batal Edit</button>
-            )}
+              <div>
+                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">PIC (Penanggung Jawab)</label>
+                <input type="text" value={pic} onChange={(e) => setPic(e.target.value)} placeholder="Contoh: Warya & Kurma" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" />
+              </div>
+              <button type="submit" className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md">
+                {editingId ? '💾 Simpan Perubahan' : 'Simpan Rundown'}
+              </button>
+              {editingId && (
+                <button type="button" onClick={() => { setEditingId(null); setAgenda(''); setTimeStart(''); setTimeEnd(''); setPic(''); setDateEvent(''); }} className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border">Batal Edit</button>
+              )}
+            </form>
           </GlassCard>
         ) : (
           <GlassCard className="p-6 h-fit text-center space-y-2">
@@ -322,44 +439,52 @@ export default function AcaraPage() {
           </GlassCard>
         )}
 
-        {/* LIST DAFTAR RUNDOWN ACARA (GLASSMORPISM) */}
+        {/* LIST DAFTAR RUNDOWN ACARA (GLASSMORPISM & CAPTURE AREA) */}
         <GlassCard className="lg:col-span-2 p-6 space-y-3">
-          <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
-            <span>📋</span> Susunan Agenda Rundown ({scheduleList.length})
-          </h3>
-          <div className="space-y-2.5 max-h-[550px] overflow-y-auto pr-1">
-            {scheduleList.length === 0 ? (
-              <p className="text-xs theme-text-tertiary font-mono py-6 text-center">Belum ada jadwal rundown acara pada periode ini.</p>
-            ) : (
-              scheduleList.map((s) => (
-                <div key={s.id} className="p-3.5 bg-black/20 border theme-border rounded-xl flex justify-between items-center text-xs hover:border-white/30 transition-all">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="bg-black/40 theme-text-accent border theme-border px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                        🗓️ {formatDate(s.event_date)}
-                      </span>
-                      <span className="bg-black/20 theme-text-secondary px-2 py-0.5 rounded text-[10px] font-mono border theme-border">
-                        ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
-                      </span>
+          <div ref={printRef} className="space-y-3 p-2 rounded-xl">
+            <div className="flex justify-between items-center border-b theme-border pb-2">
+              <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
+                <span>📋</span> Susunan Agenda Rundown Haul ({scheduleList.length})
+              </h3>
+              <span className="text-[10px] font-mono theme-text-accent font-bold">
+                {currentPeriodeObj?.nama_periode || ''}
+              </span>
+            </div>
+
+            <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
+              {scheduleList.length === 0 ? (
+                <p className="text-xs theme-text-tertiary font-mono py-6 text-center">Belum ada jadwal rundown acara pada periode ini.</p>
+              ) : (
+                scheduleList.map((s) => (
+                  <div key={s.id} className="p-3.5 bg-black/20 border theme-border rounded-xl flex justify-between items-center text-xs hover:border-white/30 transition-all">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="bg-black/40 theme-text-accent border theme-border px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                          🗓️ {formatDate(s.event_date)}
+                        </span>
+                        <span className="bg-black/20 theme-text-secondary px-2 py-0.5 rounded text-[10px] font-mono border theme-border">
+                          ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
+                        </span>
+                      </div>
+                      <p className="font-bold theme-text-primary text-sm mt-1.5 tracking-wide">{s.agenda || 'Agenda Tanpa Nama'}</p>
+                      <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">PIC: {s.pic || '-'}</p>
                     </div>
-                    <p className="font-bold theme-text-primary text-sm mt-1.5 tracking-wide">{s.agenda || 'Agenda Tanpa Nama'}</p>
-                    <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">PIC: {s.pic || '-'}</p>
+                    {isAdmin && (
+                      <div className="flex gap-3 font-mono shrink-0 ml-2">
+                        {currentPeriodeObj?.is_closed ? (
+                          <span className="theme-text-accent italic text-[10px]">🔒 Terkunci</span>
+                        ) : (
+                          <>
+                            <button onClick={() => handleEdit(s)} className="theme-text-accent hover:underline font-bold">Edit</button>
+                            <button onClick={() => handleDelete(s.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {isAdmin && (
-                    <div className="flex gap-3 font-mono shrink-0 ml-2">
-                      {currentPeriodeObj?.is_closed ? (
-                        <span className="theme-text-accent italic text-[10px]">🔒 Terkunci</span>
-                      ) : (
-                        <>
-                          <button onClick={() => handleEdit(s)} className="theme-text-accent hover:underline font-bold">Edit</button>
-                          <button onClick={() => handleDelete(s.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </GlassCard>
 
