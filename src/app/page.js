@@ -389,7 +389,7 @@ export default function DashboardPage() {
       const expenseSummary = parseChart(expenseMap, calcKeluar);
 
       // Calculate totals
-      const totalSaldoNet = currentSaldoAwal + calcMasuk - calcKeluar;
+      const totalSaldoNet = calcMasuk - calcKeluar;
 
       setTotals({
         total: totalSaldoNet,
