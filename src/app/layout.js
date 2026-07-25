@@ -30,7 +30,8 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
-      <body className="bg-[#050b14] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] antialiased">
+      {/* ✅ UPDATED: Use CSS variables instead of hard-coded background */}
+      <body className="theme-bg-primary theme-text-primary font-['Plus_Jakarta_Sans',sans-serif] antialiased transition-colors duration-300">
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
