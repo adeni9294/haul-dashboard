@@ -145,6 +145,12 @@ export default function TransaksiPage() {
   const [allExpenses, setAllExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   
+  // 🔔 STATE NOTIFIKASI MODERN (TOAST)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+
+  // 🗑️ STATE MODAL KONFIRMASI HAPUS
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null, isExpenses: false });
+  
   // State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
@@ -175,6 +181,14 @@ export default function TransaksiPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
+
+  // 🛠️ HELPER MENGELUARKAN TOAST NOTIFIKASI
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'info' });
+    }, 4000);
+  };
 
   useEffect(() => {
     checkAdminSessionAndLoad();
@@ -214,7 +228,6 @@ export default function TransaksiPage() {
     try {
       setLoading(true);
 
-      // 1. MEMUAT DAFTAR PERIODE HAUL
       let activePeriodeId = selectedPeriodeId;
       const { data: listPeriode } = await supabase
         .from('periode_haul')
@@ -262,7 +275,6 @@ export default function TransaksiPage() {
         if (!formCategory) setFormCategory(catDb[0].name);
       }
 
-      // 2. QUERY TRANSAKSI BERDASARKAN PERIODE
       let donQuery = supabase.from('donation_details').select('*');
       let expQuery = supabase.from('transactions').select('*');
 
@@ -278,7 +290,7 @@ export default function TransaksiPage() {
       setAllExpenses(expensesDb || []);
     } catch (e) {
       console.error("Gagal load data: ", e);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }
@@ -287,7 +299,7 @@ export default function TransaksiPage() {
     e.preventDefault();
     if (!isAdmin) return;
     if (currentPeriodeObj?.is_closed) {
-      alert('🔒 Periode ini telah ditutup buku. Tidak dapat menambah atau mengubah transaksi.');
+      showToast('🔒 Periode ini telah ditutup buku. Tidak dapat menambah/mengubah data.', 'warning');
       return;
     }
     
@@ -308,16 +320,16 @@ export default function TransaksiPage() {
     try {
       if (isEditMode) {
         await supabase.from('transactions').update(payload).eq('id', selectedId);
-        alert('✏️ Data berhasil diperbarui.');
+        showToast('✏️ Transaksi berhasil diperbarui.', 'success');
       } else {
         await supabase.from('transactions').insert([payload]);
-        alert('➕ Data baru berhasil ditambahkan.');
+        showToast('➕ Transaksi baru berhasil ditambahkan.', 'success');
       }
       resetForm();
       await loadData();
     } catch (err) {
       console.error(err);
-      alert('❌ Gagal menyimpan transaksi.');
+      showToast('❌ Gagal menyimpan transaksi.', 'error');
     }
   };
 
@@ -325,7 +337,7 @@ export default function TransaksiPage() {
     e.preventDefault();
     if (!isAdmin || !selectedPeriodeId) return;
     if (!namaPeriodeBaruInput.trim()) {
-      alert('Harap isi nama periode baru!');
+      showToast('Harap isi nama periode baru!', 'warning');
       return;
     }
 
@@ -337,19 +349,19 @@ export default function TransaksiPage() {
 
       if (error) throw error;
 
-      alert('🎉 Tutup Buku Berhasil! Periode baru telah otomatis dibuat.');
+      showToast('🎉 Tutup Buku Berhasil! Periode baru otomatis terbentuk.', 'success');
       setShowModalTutupBuku(false);
       setNamaPeriodeBaruInput('');
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       console.error(err);
-      alert(`❌ Gagal Tutup Buku: ${err.message}`);
+      showToast(`❌ Gagal Tutup Buku: ${err.message}`, 'error');
     }
   };
 
   const triggerEdit = (item) => {
     if (currentPeriodeObj?.is_closed) {
-      alert('🔒 Periode ini sudah ditutup buku dan bersifat Read-Only!');
+      showToast('🔒 Periode ini sudah ditutup buku dan bersifat Read-Only!', 'warning');
       return;
     }
     setSelectedId(item.id);
@@ -362,21 +374,28 @@ export default function TransaksiPage() {
     setShowModal(true);
   };
 
-  const triggerHapus = async (id, isFromExpenses) => {
+  // 🗑️ MEMBUKA DIALOG KONFIRMASI HAPUS
+  const triggerHapus = (id, isFromExpenses) => {
     if (!isAdmin) return;
     if (currentPeriodeObj?.is_closed) {
-      alert('🔒 Periode ini telah ditutup buku!');
+      showToast('🔒 Periode ini telah ditutup buku!', 'warning');
       return;
     }
-    if (!confirm('Hapus permanen catatan transaksi internal ini?')) return;
+    setDeleteConfirm({ show: true, id, isExpenses: isFromExpenses });
+  };
+
+  // 🗑️ EKSEKUSI HAPUS DATA
+  const executeDelete = async () => {
+    const { id, isExpenses } = deleteConfirm;
+    setDeleteConfirm({ show: false, id: null, isExpenses: false });
     try {
-      const targetTable = isFromExpenses ? 'transactions' : 'donation_details';
+      const targetTable = isExpenses ? 'transactions' : 'donation_details';
       const { error } = await supabase.from(targetTable).delete().eq('id', id);
       if (error) throw error;
-      alert('🗑️ Catatan berhasil dihapus dari database.');
+      showToast('🗑️ Catatan berhasil dihapus.', 'success');
       await loadData();
     } catch (err) {
-      alert(`❌ Gagal hapus: ${err.message}`);
+      showToast(`❌ Gagal hapus: ${err.message}`, 'error');
     }
   };
 
@@ -520,8 +539,9 @@ export default function TransaksiPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      showToast('📊 Berhasil mengunduh file Excel/CSV.', 'success');
     } catch (err) {
-      alert('Gagal mengekspor file data: ' + err.message);
+      showToast('Gagal mengekspor data: ' + err.message, 'error');
     }
   };
 
@@ -530,16 +550,42 @@ export default function TransaksiPage() {
   return (
     <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white relative">
       
-      {/* 🛠️ PRINT STYLES (DIPERBAIKI UNTUK TAMPILAN FULL A4) */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN */}
+      {toast.show && (
+        <div className={`fixed top-5 right-5 z-[100] max-w-sm w-full px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-2xl border transition-all transform animate-bounce print:hidden flex items-center justify-between gap-3 ${
+          toast.type === 'success' ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200' :
+          toast.type === 'error' ? 'bg-rose-950/80 border-rose-500/50 text-rose-200' :
+          toast.type === 'warning' ? 'bg-amber-950/80 border-amber-500/50 text-amber-200' :
+          'bg-slate-900/80 border-slate-500/50 text-slate-200'
+        }`}>
+          <div className="font-semibold text-xs leading-snug">{toast.message}</div>
+          <button onClick={() => setToast({ ...toast, show: false })} className="opacity-60 hover:opacity-100 font-bold text-sm">✕</button>
+        </div>
+      )}
+
+      {/* 🗑️ MODAL DIALOG KONFIRMASI HAPUS MODERN */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden animate-fade-in">
+          <div className="bg-zinc-900/90 border border-white/20 p-6 rounded-2xl max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <div className="text-3xl">⚠️</div>
+            <h3 className="font-bold text-sm uppercase text-slate-100">Konfirmasi Hapus</h3>
+            <p className="text-xs text-slate-300">Apakah Anda yakin ingin menghapus catatan transaksi internal ini secara permanen?</p>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setDeleteConfirm({ show: false, id: null, isExpenses: false })} className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-slate-200 font-bold rounded-xl text-xs">Batal</button>
+              <button onClick={executeDelete} className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs uppercase shadow-lg">Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🛠️ PRINT STYLES */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* 1. Reset Ukuran Kertas Ke A4 Standar */
           @page {
             size: A4 portrait;
             margin: 12mm 15mm;
           }
 
-          /* 2. Normalkan elemen Root, Body, & Layout Next.js */
           html, body, main, #__next, #root-transaksi-container {
             width: 100% !important;
             height: auto !important;
@@ -549,15 +595,13 @@ export default function TransaksiPage() {
             overflow: visible !important;
             background: white !important;
             color: black !important;
-            position: static !important; /* Mencegah posisi absolute terpotong */
+            position: static !important;
           }
 
-          /* 3. Sembunyikan elemen UI Aplikasi */
           .print\\:hidden, nav, header, sidebar, button {
             display: none !important;
           }
 
-          /* 4. Pastikan Komponen Cetak LPJ Tampil Maksimal */
           .hidden.print\\:block {
             display: block !important;
             visibility: visible !important;
@@ -579,14 +623,12 @@ export default function TransaksiPage() {
             box-sizing: border-box !important;
           }
 
-          /* 5. Kelola Halaman dan Paginasi */
           .page-break {
             page-break-before: always !important;
             break-before: page !important;
             margin-top: 20px !important;
           }
 
-          /* Mencegah tabel atau baris tanda tangan terpotong secara janggal */
           table, tr, td, th, .break-inside-avoid {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
@@ -607,10 +649,7 @@ export default function TransaksiPage() {
             <p className="text-[10px] font-mono mt-0.5 opacity-80">{t.subtitle}</p>
           </div>
 
-          {/* ACTION BUTTONS & PERIODE SELECTOR */}
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            
-            {/* SELECTOR PERIODE HAUL */}
             {periodeList.length > 0 && (
               <div className="flex items-center bg-black/30 p-1 border border-white/20 rounded-xl mr-1">
                 <span className="text-[9px] font-mono font-bold text-slate-300 px-2 uppercase">{t.selectPeriod}</span>
@@ -628,14 +667,12 @@ export default function TransaksiPage() {
               </div>
             )}
 
-            {/* LANGUAGE SELECTOR */}
             <div className="flex bg-black/30 p-1 border border-white/20 rounded-xl mr-1">
               <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'id' ? 'bg-[#BFEC25] text-black font-black' : 'text-slate-200'}`}>ID 🇮🇩</button>
               <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'jv' ? 'bg-[#BFEC25] text-black font-black' : 'text-slate-200'}`}>JV 🎯</button>
               <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'en' ? 'bg-[#BFEC25] text-black font-black' : 'text-slate-200'}`}>EN 🇬🇧</button>
             </div>
 
-            {/* TOMBOL TUTUP BUKU */}
             {isAdmin && currentPeriodeObj && !currentPeriodeObj.is_closed && (
               <button 
                 onClick={() => setShowModalTutupBuku(true)} 
@@ -654,7 +691,6 @@ export default function TransaksiPage() {
           </div>
         </div>
 
-        {/* INDICATOR STATUS PERIODE CLOSED */}
         {currentPeriodeObj?.is_closed && (
           <div className="bg-amber-500/20 border border-amber-400/40 p-3 rounded-xl flex items-center justify-between text-amber-300 font-mono text-xs backdrop-blur-md">
             <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku pada {currentPeriodeObj.tanggal_selesai}. Data bersifat Read-Only.</span>
@@ -662,7 +698,6 @@ export default function TransaksiPage() {
           </div>
         )}
 
-        {/* SEARCH & FILTERS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-3 rounded-2xl">
           <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white placeholder:text-slate-400" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border border-white/20 rounded-xl text-white focus:outline-none cursor-pointer font-bold">
@@ -676,7 +711,6 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* DATA TABLE DISPLAY */}
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-x-auto max-h-[500px] overflow-y-auto shadow-xl relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
@@ -803,7 +837,7 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (BERSIH & FULL A4) */}
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL */}
       <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
         <div className="print-page-wrapper">
           <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6">
