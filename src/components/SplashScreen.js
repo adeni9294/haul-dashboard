@@ -30,7 +30,7 @@ export default function SplashScreen({ children }) {
         <div className="kb-glow"></div>
 
         <img
-          src="/icon-192.png"
+          src="/logo.png"
           alt="K&B"
           className="kb-logo"
         />
