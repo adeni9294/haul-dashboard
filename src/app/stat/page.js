@@ -133,7 +133,7 @@ export default function StatPage() {
           });
         }
 
-        const totalMasukTerkumpul = currentSaldoAwal + calcMasuk;
+        const totalMasukTerkumpul = calcMasuk;
         const totalSaldoNet = totalMasukTerkumpul - calcKeluar;
 
         return {
