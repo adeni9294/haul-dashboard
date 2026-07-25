@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import GlassCard from '@/components/GlassCard';
 
 export default function AcaraPage() {
   const [loading, setLoading] = useState(true);
