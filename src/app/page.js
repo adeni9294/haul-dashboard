@@ -1,6 +1,12 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+
+// Inisialisasi Supabase Client Tunggal di Luar Render Loop
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 // 🌐 KAMUS 3 BAHASA (ID / JV / EN)
 const DICTIONARY = {
@@ -30,6 +36,7 @@ const DICTIONARY = {
     totalKunjungan: 'Total Kunjungan Aplikasi',
     pengunjungUnik: 'Pengunjung Unik (IP)',
     selectPeriod: 'PILIH PERIODE HAUL:',
+    selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Saldo Awal Kas',
     statusClosed: '(Selesai/Tutup Buku)',
     statusActive: '(Berjalan)'
@@ -60,6 +67,7 @@ const DICTIONARY = {
     totalKunjungan: 'Kabeh Klik Sing Mlebu',
     pengunjungUnik: 'Wong Sing Deleng (IP)',
     selectPeriod: 'PILIH PERIODE HAUL:',
+    selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Bondo Awal Kas',
     statusClosed: '(Rampung/Tutup Buku)',
     statusActive: '(Mlaku)'
@@ -90,6 +98,7 @@ const DICTIONARY = {
     totalKunjungan: 'Total Hits / Pageviews',
     pengunjungUnik: 'Unique Visitors (IP)',
     selectPeriod: 'SELECT HAUL PERIOD:',
+    selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Opening Cash Balance',
     statusClosed: '(Closed)',
     statusActive: '(Active)'
@@ -119,8 +128,8 @@ export default function DashboardPage() {
   }, [lang, selectedPeriodeId]);
 
   async function recordVisitorLog() {
+    if (!supabase) return;
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
       let ipAddress = '127.0.0.1';
       try {
         const res = await fetch('https://api.ipify.org?format=json');
@@ -131,9 +140,9 @@ export default function DashboardPage() {
       }
 
       await supabase.from('visitor_logs').insert({
-        path: window.location.pathname || '/',
+        path: typeof window !== 'undefined' ? window.location.pathname || '/' : '/',
         ip_address: ipAddress,
-        user_agent: window.navigator.userAgent || 'unknown'
+        user_agent: typeof window !== 'undefined' ? window.navigator.userAgent || 'unknown' : 'unknown'
       });
     } catch (err) {
       console.error('Error log:', err);
@@ -141,9 +150,9 @@ export default function DashboardPage() {
   }
 
   async function loadDashboardData() {
+    if (!supabase) return;
     try {
       setLoading(true);
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
       let activePeriodeId = selectedPeriodeId;
       let currentSaldoAwal = 0;
@@ -350,27 +359,26 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center theme-text-accent text-xs font-mono animate-pulse">
+      <div className="p-12 text-center text-cyan-400 text-xs font-mono animate-pulse">
         {dict.loading}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 pb-12 -mt-1 text-xs transition-all duration-500">
+    <div className="space-y-4 max-w-xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 text-white">
       
-      {/* 🌐 SELEKTOR PERIODE & BAHASA */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden">
-        
+      {/* 🌐 SELEKTOR PERIODE & BAHASA (RESPONSIF DUA KOLOM DENGAN DESAIN BARU) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs print:hidden">
         {periodeList.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono tracking-wider text-slate-300 uppercase font-bold">
+          <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-slate-800 shadow-md">
+            <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
               {dict.selectPeriod}
             </span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-slate-800 border border-slate-700 theme-text-accent text-xs rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all shadow-md"
+              className="bg-slate-800 text-cyan-400 text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer border border-slate-700"
             >
               {periodeList.map((p) => (
                 <option key={p.id} value={p.id} className="bg-slate-900 text-white">
@@ -381,12 +389,14 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase">Select Language:</span>
+        <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-slate-800 shadow-md">
+          <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
+            {dict.selectLanguage}
+          </span>
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            className="bg-slate-800 border border-slate-700 theme-text-accent text-xs rounded-xl px-3 py-1.5 focus:outline-none font-mono font-bold cursor-pointer transition-all shadow-md"
+            className="bg-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer border border-slate-700"
           >
             <option value="id" className="bg-slate-900 text-white">🇮🇩 Indonesia</option>
             <option value="jv" className="bg-slate-900 text-white">🎯 Cirebonan</option>
@@ -397,19 +407,21 @@ export default function DashboardPage() {
       
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className="w-full theme-card py-2.5 px-4 rounded-2xl overflow-hidden flex items-center shadow-lg print:hidden">
+        <div className="w-full bg-slate-900/90 border border-amber-500/30 py-2 px-4 rounded-xl overflow-hidden flex items-center shadow-lg print:hidden">
           <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono text-amber-300">
             📢 {announcement}
           </div>
         </div>
       )}
 
-      {/* 💳 3 KARTU KAS UTAMA MODERN DENGAN GRADASI & ORNAMEN SVG ABSTRACT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* 💳 3 KARTU KAS UTAMA MODERN (CARD 1 MATCH SCREENSHOT) */}
+      <div className="space-y-4">
         
-        {/* CARD 1: KAS UTAMA */}
-        <div className="p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/20 border-2 border-white/80 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-52 transition-transform duration-300 hover:scale-[1.01]">
-          <div className="absolute top-0 right-0 w-48 h-48 opacity-25 pointer-events-none select-none">
+        {/* CARD 1: KAS UTAMA HAUL (Presisi Sesuai Screenshot) */}
+        <div className="p-5 sm:p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/10 border border-cyan-200/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+          
+          {/* Target Pattern Rings Ornament */}
+          <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-25 pointer-events-none select-none">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-950">
               <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.3" />
               <circle cx="100" cy="100" r="55" fill="none" stroke="currentColor" strokeWidth="10" opacity="0.5" />
@@ -421,119 +433,117 @@ export default function DashboardPage() {
             <span className="font-mono text-[10px] font-black uppercase tracking-widest text-slate-900/80">{dict.mainCash}</span>
             <p className="text-[11px] font-bold text-slate-900 mt-0.5">{dict.netBalance}</p>
           </div>
-          <div className="relative z-10 mt-3">
-            <h2 className="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none text-slate-950 drop-shadow-xs">
+
+          <div className="relative z-10 mt-4">
+            <h2 className="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none text-slate-950">
               {formatRupiah(totals.total)}
             </h2>
-            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider text-slate-900/90 font-bold">
+            <div className="flex justify-between items-center mt-6 font-mono text-[10px] tracking-wider text-slate-900/90 font-bold">
               <span>{dict.initialBalance}: {formatRupiah(totals.saldoAwal)}</span>
               <span className="font-extrabold uppercase">{dict.committee}</span>
             </div>
           </div>
         </div>
 
-        {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-6 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-[32px] shadow-xl border border-emerald-500/40 relative overflow-hidden flex flex-col justify-between h-52 transition-transform duration-300 hover:scale-[1.01]">
-          <div className="absolute inset-0 opacity-15 pointer-events-none select-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]" />
-
-          <div className="relative z-10 flex justify-between items-start">
-            <div>
-              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
-            </div>
-            <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-sm shadow-md">
-              🟢
-            </div>
-          </div>
+        {/* GRID UNTUK UANG MASUK & UANG BELANJA */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
-          <div className="relative z-10">
-            <h3 className="text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] text-emerald-200/80 font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
-          </div>
-        </div>
-
-        {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-6 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-[32px] shadow-xl border border-rose-500/40 relative overflow-hidden flex flex-col justify-between h-52 transition-transform duration-300 hover:scale-[1.01]">
-          <div className="absolute -bottom-10 -right-10 w-44 h-44 opacity-20 pointer-events-none select-none">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-rose-400">
-              <path fill="currentColor" d="M42.7,-62.9C54.2,-54.1,61.6,-40.4,66.8,-26.1C72,-11.8,75,3.1,72.2,17.4C69.4,31.7,60.8,45.4,48.9,54.8C37,64.2,21.8,69.3,5.8,68.5C-10.2,67.7,-27,61.1,-40.8,51.3C-54.6,41.5,-65.4,28.5,-70.2,13C-75,-2.5,-73.8,-20.5,-65.9,-34.8C-58,-49.1,-43.4,-59.7,-28.9,-66.6C-14.4,-73.5,-0.1,-76.7,13.6,-73.3C27.3,-69.9,31.2,-71.7,42.7,-62.9Z" transform="translate(100 100)" />
-            </svg>
-          </div>
-
-          <div className="relative z-10 flex justify-between items-start">
-            <div>
-              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] text-rose-200/80 font-medium mt-0.5">Realisasi Pengeluaran</p>
+          {/* CARD 2: TOTAL UANG MASUK */}
+          <div className="p-5 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-3xl shadow-xl border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between min-h-[150px]">
+            <div className="relative z-10 flex justify-between items-start">
+              <div>
+                <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
+                <p className="text-[10px] text-emerald-200/70 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              </div>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xs shadow-md">
+                🟢
+              </div>
             </div>
-            <div className="w-9 h-9 rounded-2xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-sm shadow-md">
-              🔴
+            
+            <div className="relative z-10 mt-3">
+              <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
+              <p className="text-[10px] text-emerald-200/70 font-mono mt-1 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
             </div>
           </div>
 
-          <div className="relative z-10">
-            <h3 className="text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] text-rose-200/80 font-mono mt-2 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
+          {/* CARD 3: TOTAL UANG BELANJA */}
+          <div className="p-5 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-3xl shadow-xl border border-rose-500/30 relative overflow-hidden flex flex-col justify-between min-h-[150px]">
+            <div className="relative z-10 flex justify-between items-start">
+              <div>
+                <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
+                <p className="text-[10px] text-rose-200/70 font-medium mt-0.5">Realisasi Pengeluaran</p>
+              </div>
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-xs shadow-md">
+                🔴
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-3">
+              <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
+              <p className="text-[10px] text-rose-200/70 font-mono mt-1 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
+            </div>
           </div>
+
         </div>
 
       </div>
 
       {/* LOG TRAFIK PENGUNJUNG */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 print:hidden">
-        <div className="p-4 theme-card rounded-2xl flex items-center gap-4 transition-all shadow-md">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-base shadow-sm">📈</div>
-          <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{dict.totalKunjungan}</p>
-            <h4 className="text-xl font-black font-mono mt-0.5">{visitorStats.totalViews} <span className="text-xs font-normal opacity-70">Kali</span></h4>
+      <div className="grid grid-cols-2 gap-3 print:hidden">
+        <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-sm">📈</div>
+          <div className="min-w-0">
+            <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.totalKunjungan}</p>
+            <h4 className="text-base font-black font-mono leading-tight">{visitorStats.totalViews}</h4>
           </div>
         </div>
 
-        <div className="p-4 theme-card rounded-2xl flex items-center gap-4 transition-all shadow-md">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-base shadow-sm">👥</div>
-          <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{dict.pengunjungUnik}</p>
-            <h4 className="text-xl font-black font-mono mt-0.5">{visitorStats.uniqueCount} <span className="text-xs font-normal opacity-70">Orang</span></h4>
+        <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+          <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-sm">👥</div>
+          <div className="min-w-0">
+            <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.pengunjungUnik}</p>
+            <h4 className="text-base font-black font-mono leading-tight">{visitorStats.uniqueCount}</h4>
           </div>
         </div>
       </div>
 
       {/* TARGET PLAFON PROGRESS */}
-      <div className="p-5 theme-card rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3 shadow-lg">
+      <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col justify-between space-y-2 shadow-md">
         <div className="flex justify-between items-center">
-          <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 text-slate-200">
             <span>🎯</span> {dict.progressTitle}
           </h3>
-          <span className="theme-text-accent font-mono text-xs font-black bg-white/10 px-2.5 py-1 rounded-md border border-white/20">{progress.percent}%</span>
+          <span className="text-cyan-400 font-mono text-xs font-black bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">{progress.percent}%</span>
         </div>
-        <div className="w-full h-3 bg-black/30 rounded-full overflow-hidden p-0.5 border border-white/20">
+        <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
           <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 rounded-full transition-all duration-500" style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
         </div>
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 pt-0.5">
-          <span>{dict.collected}: <strong>{formatRupiah(progress.current)}</strong></span>
-          <span>{dict.target}: <strong>{formatRupiah(progress.target)}</strong></span>
+        <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
+          <span>{dict.collected}: <strong className="text-slate-200">{formatRupiah(progress.current)}</strong></span>
+          <span>{dict.target}: <strong className="text-slate-200">{formatRupiah(progress.target)}</strong></span>
         </div>
       </div>
 
       {/* REKAP KATEGORI */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="p-5 theme-card rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg">
-          <h4 className="text-[10px] font-black theme-text-accent uppercase tracking-widest border-b border-white/15 pb-2">{dict.rekapIncome}</h4>
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+          <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b border-slate-800 pb-2">{dict.rekapIncome}</h4>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="p-2.5 bg-black/20 border border-white/10 rounded-xl flex justify-between items-center text-xs">
-                <span className="flex items-center gap-1 font-medium">🔹 {c.label}</span>
-                <span className={`font-mono font-bold ${c.value < 0 ? 'text-rose-400' : 'theme-text-accent'}`}>{formatRupiah(c.value)}</span>
+              <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                <span className="flex items-center gap-1 text-slate-300 font-medium">🔹 {c.label}</span>
+                <span className={`font-mono font-bold ${c.value < 0 ? 'text-rose-400' : 'text-cyan-400'}`}>{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="p-5 theme-card rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg">
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-white/15 pb-2">{dict.rekapExpense}</h4>
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+        <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-slate-800 pb-2">{dict.rekapExpense}</h4>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="p-2.5 bg-black/20 border border-white/10 rounded-xl flex justify-between items-center text-xs">
-                <span className="flex items-center gap-1 font-medium">🔸 {c.label}</span>
+              <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                <span className="flex items-center gap-1 text-slate-300 font-medium">🔸 {c.label}</span>
                 <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
             ))}
@@ -542,20 +552,20 @@ export default function DashboardPage() {
       </div>
 
       {/* MUTASI TERAKHIR */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="p-5 theme-card border-l-4 border-l-emerald-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg">
-          <h5 className="text-[10px] font-black theme-text-accent uppercase tracking-wider">{dict.lastIncome}</h5>
-          <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-slate-900/80 border-l-4 border-l-emerald-400 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+          <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">{dict.lastIncome}</h5>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
               <p className="text-xs text-slate-400 font-mono py-1">{dict.emptyMutationIn}</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="p-2.5 bg-black/20 border border-white/10 rounded-xl flex justify-between items-center text-xs">
+                <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold truncate uppercase tracking-wide">{t.note}</p>
+                    <p className="font-bold truncate uppercase text-slate-200">{t.note}</p>
                     <p className="text-[9px] text-slate-400 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <p className={`font-mono font-black shrink-0 ml-3 text-sm ${t.amount < 0 ? 'text-rose-400' : 'theme-text-accent'}`}>
+                  <p className={`font-mono font-black shrink-0 ml-2 text-xs ${t.amount < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {t.amount < 0 ? formatRupiah(t.amount) : `+${formatRupiah(t.amount)}`}
                   </p>
                 </div>
@@ -564,19 +574,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="p-5 theme-card border-l-4 border-l-rose-400 rounded-[28px] flex flex-col justify-between transition-all duration-300 space-y-3.5 shadow-lg">
+        <div className="p-4 bg-slate-900/80 border-l-4 border-l-rose-400 border border-slate-800 rounded-2xl space-y-3 shadow-md">
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
-          <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
               <p className="text-xs text-slate-400 font-mono py-1">{dict.emptyMutationOut}</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="p-2.5 bg-black/20 border border-white/10 rounded-xl flex justify-between items-center text-xs">
+                <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold truncate uppercase tracking-wide">{t.note}</p>
+                    <p className="font-bold truncate uppercase text-slate-200">{t.note}</p>
                     <p className="text-[9px] text-slate-400 font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
-                  <div className="font-mono font-black text-rose-400 shrink-0 ml-3 text-sm">-{formatRupiah(t.amount)}</div>
+                  <div className="font-mono font-black text-rose-400 shrink-0 ml-2 text-xs">-{formatRupiah(t.amount)}</div>
                 </div>
               ))
             )}
