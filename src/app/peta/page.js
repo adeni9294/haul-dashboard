@@ -1,96 +1,109 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Navigation, Compass, Phone, Shield, Car } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, ExternalLink, Loader2 } from 'lucide-react';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 export default function PetaPage() {
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=Blok+Cibogo+Kidul+Desa+Warujaya+Kecamatan+Depok+Kabupaten+Cirebon`;
+  const [mapData, setMapData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMapConfig() {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase
+          .from('map_settings')
+          .select('*')
+          .eq('id', 'main_map')
+          .single();
+
+        if (data) {
+          setMapData(data);
+        }
+      } catch (err) {
+        console.error('Gagal memuat pengaturan peta:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMapConfig();
+  }, []);
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Tombol Kembali */}
       <div className="flex items-center justify-between theme-bg-secondary theme-border p-4 rounded-2xl">
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold theme-text-accent hover:opacity-80">
           <ArrowLeft className="w-4 h-4" /> Kembali ke Utama
         </Link>
-        <span className="text-xs font-mono theme-text-secondary">📍 Panduan Lokasi Haul</span>
       </div>
 
-      <div className="theme-bg-secondary border theme-border p-5 rounded-3xl space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-2xl">
-            <MapPin className="w-6 h-6" />
+      {/* Header Judul */}
+      <div className="text-center space-y-1 py-2">
+        <h2 className="text-base font-black uppercase tracking-wider theme-text-primary flex items-center justify-center gap-2">
+          <MapPin className="w-5 h-5 text-rose-400" /> Peta & Lokasi Utama Haul
+        </h2>
+        <p className="text-xs theme-text-secondary font-medium">
+          Panduan arah dan titik lokasi ziarah akbar Maqbaroh Buyut Kepuh & Buyut Besus
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-16 space-y-3">
+          <Loader2 className="w-8 h-8 text-rose-400 animate-spin mx-auto" />
+          <p className="text-xs theme-text-secondary font-mono">Memuat titik koordinat lokasi...</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Kotak Informasi Lokasi */}
+          <div className="theme-bg-secondary border theme-border p-5 rounded-3xl space-y-3 shadow-md">
+            <h3 className="text-sm font-black theme-text-primary uppercase flex items-center gap-2">
+              <Navigation className="w-4 h-4 text-cyan-400" /> {mapData?.title || 'Lokasi Haul'}
+            </h3>
+            <p className="text-xs theme-text-secondary leading-relaxed">
+              {mapData?.address_detail || 'Alamat belum diatur oleh Admin.'}
+            </p>
+            {mapData?.embed_url && (
+              <div className="pt-2">
+                <a 
+                  href={`https://maps.google.com/?q=${mapData.latitude},${mapData.longitude}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black text-xs uppercase rounded-xl shadow-md hover:opacity-90 transition-all"
+                >
+                  <ExternalLink className="w-4 h-4" /> Buka di Google Maps Langsung
+                </a>
+              </div>
+            )}
           </div>
-          <div>
-            <h2 className="text-sm font-black uppercase theme-text-primary">Maqbaroh Buyut Kepuh & Buyut Besus</h2>
-            <p className="text-xs theme-text-secondary">Blok Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon</p>
+
+          {/* Frame Google Maps Embed */}
+          <div className="theme-bg-secondary border theme-border p-2 rounded-3xl overflow-hidden shadow-lg h-[400px]">
+            {mapData?.embed_url ? (
+              <iframe
+                title="Peta Lokasi Haul"
+                src={mapData.embed_url}
+                width="100%"
+                height="100%"
+                style={{ border: 0, borderRadius: '1.2rem' }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-xs theme-text-secondary font-mono">
+                URL Embed Peta belum dikonfigurasi.
+              </div>
+            )}
           </div>
         </div>
-
-        <a 
-          href={googleMapsUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all"
-        >
-          <Navigation className="w-4 h-4 fill-current" /> Buka di Google Maps / Waze Navigasi
-        </a>
-      </div>
-
-      {/* Peta Interactive Embed */}
-      <div className="theme-bg-secondary border theme-border p-2 rounded-3xl overflow-hidden shadow-lg">
-        <iframe
-          title="Peta Lokasi Haul"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15849.208154162817!2d108.44123125!3d-6.74581235!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6ee32961555555%3A0x1!2sWarujaya%2C%20Depok%2C%20Cirebon!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
-          className="w-full h-72 rounded-2xl border-0"
-          loading="lazy"
-          allowFullScreen
-        ></iframe>
-      </div>
-
-      {/* Panduan Fasilitas */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-black uppercase tracking-wider theme-text-secondary px-1">
-          🗺️ Panduan Akses & Fasilitas Jemaah
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="p-4 theme-bg-secondary border theme-border rounded-2xl space-y-1">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
-              <Car className="w-4 h-4" /> Parkir Mobil & Motor
-            </div>
-            <p className="text-xs theme-text-secondary leading-relaxed">
-              Area Lapangan Bola Desa Warujaya & Halaman SD Negeri Warujaya (Diarahkan Banser & Karang Taruna).
-            </p>
-          </div>
-
-          <div className="p-4 theme-bg-secondary border theme-border rounded-2xl space-y-1">
-            <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold">
-              <Compass className="w-4 h-4" /> Tempat Wudhu & Toilet
-            </div>
-            <p className="text-xs theme-text-secondary leading-relaxed">
-              Tersedia di Musholla Al-Barokah Cibogo Kidul dan Posko Utama Samping Maqbaroh.
-            </p>
-          </div>
-
-          <div className="p-4 theme-bg-secondary border theme-border rounded-2xl space-y-1">
-            <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
-              <Shield className="w-4 h-4" /> Posko Keamanan & Kesehatan
-            </div>
-            <p className="text-xs theme-text-secondary leading-relaxed">
-              Tim Medis Puskesmas Depok & Pengamanan Gabungan Polsek, Koramil, serta Banser NU.
-            </p>
-          </div>
-
-          <div className="p-4 theme-bg-secondary border theme-border rounded-2xl space-y-1">
-            <div className="flex items-center gap-2 text-rose-400 text-xs font-bold">
-              <Phone className="w-4 h-4" /> Call Center Panitia
-            </div>
-            <p className="text-xs theme-text-secondary leading-relaxed font-mono">
-              Hubungi Sekretariat Haul: +62 822-xxxx-xxxx (Posko Utama)
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
