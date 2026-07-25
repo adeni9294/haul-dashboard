@@ -151,11 +151,11 @@ export default function ClientLayout({ children }) {
     };
   }, []);
 
+  // 1. INSIALISASI KOTA & FETCH JADWAL (Hanya terpicu jika ID Kota berubah)
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
 
-    // Membaca setting lokasi dari LocalStorage, jika kosong default ke 1202 (Kab. Cirebon)
     const savedKotaId = localStorage.getItem('manual_kota_id') || '1202';
     setSelectedKotaId(savedKotaId);
 
@@ -172,7 +172,10 @@ export default function ClientLayout({ children }) {
         Notification.requestPermission();
       }
     }
+  }, [selectedKotaId]);
 
+  // 2. LIVE CLOCK & ALARM TIMER (Terpisah tanpa dependency jadwalSholat agar tidak memicu re-render loop)
+  useEffect(() => {
     const updateTime = () => {
       const sekarang = new Date();
       const jamMenitDetik = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -188,13 +191,13 @@ export default function ClientLayout({ children }) {
     updateTime();
     const timerId = setInterval(updateTime, 1000);
     return () => clearInterval(timerId);
-  }, [pathname, jadwalSholat, isAlarmActive]);
+  }, [jadwalSholat, isAlarmActive]);
 
   useEffect(() => {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA (LANGSUNG & AKURAT)
+  // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA (DIRECT & STABIL)
   async function fetchJadwalSholatDirect(idKota) {
     try {
       const today = new Date();
@@ -213,7 +216,7 @@ export default function ClientLayout({ children }) {
     }
   }
 
-  // FUNGSI KHUSUS DETEKSI OTOMATIS GPS (HANYA DITRIGGER JIKA DIPILIH MANUAL)
+  // FUNGSI KHUSUS DETEKSI GPS MANUAL
   async function fetchJadwalAutoGPS() {
     const today = new Date();
     const yyyy = today.getFullYear();
