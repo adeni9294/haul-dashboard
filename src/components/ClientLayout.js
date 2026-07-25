@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
@@ -17,8 +18,8 @@ import {
   Copy, 
   Check, 
   X,
-  CreditCard,   
-  Calendar,     
+  CreditCard,    
+  Calendar,      
   Images,        
   Users,        
   Settings,
@@ -32,23 +33,28 @@ import {
   Info
 } from 'lucide-react';
 
+// Inisialisasi Supabase Client tunggal
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
 const THEME_STYLES = {
-  'default': { name: 'Default Navy', accentBadge: 'bg-cyan-500 text-slate-950 font-black', accentText: 'text-cyan-400' },
-  'emerald-cyber': { name: 'Emerald Cyber', accentBadge: 'bg-emerald-400 text-black font-black', accentText: 'text-emerald-400' },
-  'velvet-rose': { name: 'Velvet Rose', accentBadge: 'bg-pink-500 text-white font-black', accentText: 'text-pink-400' },
-  'neon-sunset': { name: 'Neon Sunset', accentBadge: 'bg-orange-500 text-black font-black', accentText: 'text-orange-400' },
-  'nordic-frost': { name: 'Nordic Frost', accentBadge: 'bg-sky-400 text-slate-950 font-black', accentText: 'text-sky-400' },
-  'tokyo-night': { name: 'Tokyo Night', accentBadge: 'bg-purple-500 text-white font-black', accentText: 'text-purple-400' },
-  'amber-gold': { name: 'Amber Gold', accentBadge: 'bg-amber-400 text-black font-black', accentText: 'text-amber-400' },
-  'cyberpunk-2076': { name: 'Cyberpunk 2076', accentBadge: 'bg-yellow-400 text-black font-black', accentText: 'text-yellow-400' },
-  'ocean-deep': { name: 'Ocean Deep', accentBadge: 'bg-blue-600 text-white font-black', accentText: 'text-blue-400' },
-  'forest-moss': { name: 'Forest Moss', accentBadge: 'bg-emerald-600 text-white font-black', accentText: 'text-emerald-400' },
-  'crimson-tide': { name: 'Crimson Tide', accentBadge: 'bg-red-600 text-white font-black', accentText: 'text-red-400' },
-  'obsidian-stark': { name: 'Obsidian Stark', accentBadge: 'bg-slate-400 text-black font-black', accentText: 'text-slate-300' },
-  'dracula-vamp': { name: 'Dracula Vamp', accentBadge: 'bg-purple-600 text-white font-black', accentText: 'text-purple-400' },
-  'coffee-latte': { name: 'Coffee Latte', accentBadge: 'bg-amber-700 text-white font-black', accentText: 'text-amber-500' },
-  'mint-fresh': { name: 'Mint Fresh', accentBadge: 'bg-teal-400 text-slate-950 font-black', accentText: 'text-teal-300' },
-  'retro-wave': { name: 'Retro Wave', accentBadge: 'bg-rose-500 text-white font-black', accentText: 'text-rose-400' }
+  'default': { name: 'Default Navy', accentBadge: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold', accentText: 'text-cyan-400' },
+  'emerald-cyber': { name: 'Emerald Cyber', accentBadge: 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30 font-bold', accentText: 'text-emerald-400' },
+  'velvet-rose': { name: 'Velvet Rose', accentBadge: 'bg-pink-500/20 text-pink-400 border border-pink-500/30 font-bold', accentText: 'text-pink-400' },
+  'neon-sunset': { name: 'Neon Sunset', accentBadge: 'bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold', accentText: 'text-orange-400' },
+  'nordic-frost': { name: 'Nordic Frost', accentBadge: 'bg-sky-400/20 text-sky-400 border border-sky-400/30 font-bold', accentText: 'text-sky-400' },
+  'tokyo-night': { name: 'Tokyo Night', accentBadge: 'bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold', accentText: 'text-purple-400' },
+  'amber-gold': { name: 'Amber Gold', accentBadge: 'bg-amber-400/20 text-amber-400 border border-amber-400/30 font-bold', accentText: 'text-amber-400' },
+  'cyberpunk-2076': { name: 'Cyberpunk 2076', accentBadge: 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold', accentText: 'text-yellow-400' },
+  'ocean-deep': { name: 'Ocean Deep', accentBadge: 'bg-blue-600/20 text-blue-400 border border-blue-600/30 font-bold', accentText: 'text-blue-400' },
+  'forest-moss': { name: 'Forest Moss', accentBadge: 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 font-bold', accentText: 'text-emerald-400' },
+  'crimson-tide': { name: 'Crimson Tide', accentBadge: 'bg-red-600/20 text-red-400 border border-red-600/30 font-bold', accentText: 'text-red-400' },
+  'obsidian-stark': { name: 'Obsidian Stark', accentBadge: 'bg-slate-400/20 text-slate-300 border border-slate-400/30 font-bold', accentText: 'text-slate-300' },
+  'dracula-vamp': { name: 'Dracula Vamp', accentBadge: 'bg-purple-600/20 text-purple-400 border border-purple-600/30 font-bold', accentText: 'text-purple-400' },
+  'coffee-latte': { name: 'Coffee Latte', accentBadge: 'bg-amber-700/20 text-amber-500 border border-amber-700/30 font-bold', accentText: 'text-amber-500' },
+  'mint-fresh': { name: 'Mint Fresh', accentBadge: 'bg-teal-400/20 text-teal-300 border border-teal-400/30 font-bold', accentText: 'text-teal-300' },
+  'retro-wave': { name: 'Retro Wave', accentBadge: 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold', accentText: 'text-rose-400' }
 };
 
 const DAFTAR_KOTA = [
@@ -73,6 +79,7 @@ export default function ClientLayout({ children }) {
   const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
 
@@ -101,6 +108,7 @@ export default function ClientLayout({ children }) {
   const lastTriggeredSholat = useRef('');
 
   useEffect(() => {
+    setIsMounted(true);
     const handleTouchStart = (e) => {
       if (e.touches && e.touches.length > 1) {
         e.preventDefault();
@@ -307,9 +315,8 @@ export default function ClientLayout({ children }) {
 
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
-    if (!savedPassword) return setIsAdmin(false);
+    if (!savedPassword || !supabase) return setIsAdmin(false);
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
       const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
       setIsAdmin(!!isValid);
     } catch (err) {
@@ -318,8 +325,8 @@ export default function ClientLayout({ children }) {
   }
 
   async function loadHeaderSettings() {
+    if (!supabase) return;
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
       const { data } = await supabase.from('settings').select('*').eq('id', 'main_config');
 
       if (data && data.length > 0) {
@@ -374,8 +381,8 @@ export default function ClientLayout({ children }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (!supabase) return;
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
       const { data: isValid, error } = await supabase.rpc('verify_admin_password', { p_password: passwordInput });
 
       if (!error && isValid) {
@@ -411,77 +418,82 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
-    <div className={`theme-${currentThemeKey} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-32 transition-colors duration-300 antialiased relative overflow-x-hidden`}>
+    <div className={`theme-${currentThemeKey} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 transition-colors duration-300 antialiased relative overflow-x-hidden text-white bg-[#050b14]`}>
       <div className="w-full min-h-screen flex flex-col relative z-10">
         
-        {/* HEADER */}
-        <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 relative">
-          <div className="theme-card p-4 md:p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 shadow-2xl backdrop-blur-2xl">
+        {/* HEADER (Presisi & Rapi) */}
+        <header className="w-full max-w-xl mx-auto px-2 sm:px-4 pt-3 sm:pt-4 relative">
+          <div className="bg-[#0f172a] border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col gap-3.5 w-full relative overflow-hidden transition-all duration-300 shadow-xl">
             
-            <div className="flex flex-row items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10">
-              <div className="w-12 h-12 md:w-16 md:h-16 p-0.5 rounded-2xl shrink-0 shadow-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500">
-                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center overflow-hidden">
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
-                  )}
-                </div>
+            {/* Baris Atas: Logo, Nama Organisasi, Badge & Alamat */}
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-500/50 bg-slate-950 flex items-center justify-center shadow-md">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
+                )}
               </div>
-              
-              <div className="text-left space-y-1 min-w-0 flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-                  <h1 className="text-xs sm:text-sm font-black tracking-tight uppercase leading-tight text-white break-words">
+
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <h1 className="text-xs sm:text-sm font-bold tracking-wide uppercase leading-tight text-slate-100">
                     {orgName}
                   </h1>
-                  <span className={`w-fit px-2.5 py-0.5 text-[9px] rounded-full font-mono font-black uppercase ${currentStyle.accentBadge}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] ${currentStyle.accentBadge}`}>
                     {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                   </span>
                 </div>
-                <p className="text-[11px] theme-text-accent font-mono leading-normal break-words font-semibold opacity-90">
-                  📍 {address}
+
+                <p className="flex items-center gap-1 text-[11px] sm:text-xs text-cyan-400/90 truncate">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{address}</span>
                 </p>
               </div>
             </div>
 
-            {/* LIVE CLOCK & RAPID SHOLAT BUTTON */}
-            <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0 relative z-10">
+            {/* Baris Bawah: Tombol Sholat & Live Clock */}
+            <div className="pt-3 border-t border-slate-800/80 flex flex-row items-center justify-between gap-2 text-xs">
               <button 
                 onClick={() => setShowSholatModal(true)} 
-                className="flex items-center gap-1.5 text-xs font-black font-mono tracking-wider text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-500/40 backdrop-blur-md shadow-inner transition-all"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 rounded-full transition-colors text-xs font-medium"
               >
-                <Compass className="w-4 h-4 text-emerald-400" />
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Jadwal Sholat</span>
               </button>
-              {timeString && (
-                <span className="text-[10px] font-bold font-mono tracking-wide text-slate-300">{timeString} • {dateString}</span>
+
+              {isMounted && timeString && (
+                <div className="flex items-center gap-1.5 text-slate-400 text-[11px] sm:text-xs font-mono">
+                  <span>{timeString}</span>
+                  <span>•</span>
+                  <span>{dateString}</span>
+                </div>
               )}
             </div>
 
           </div>
-        </div>
+        </header>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 mb-8">
+        <main className="flex-1 max-w-xl w-full mx-auto px-2 sm:px-4 pt-2 pb-6">
           {children}
-          <div className="h-12 w-full pointer-events-none" />
         </main>
 
         {/* FOOTER */}
-        <footer className="py-6 border-t border-white/10 text-center text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-6">
+        <footer className="py-4 border-t border-slate-800/80 text-center text-[10px] text-slate-500 font-mono tracking-widest uppercase mb-4">
           Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
         </footer>
 
       </div>
 
       {/* 🎯 BOTTOM NAV BAR DOCK */}
-      <div className="fixed bottom-0 left-0 right-0 w-full z-50 theme-card border-t shadow-[0_-12px_30px_rgba(0,0,0,0.95)] transition-all duration-300">
+      <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-[#0f172a]/95 backdrop-blur-md border-t border-slate-800 shadow-[0_-12px_30px_rgba(0,0,0,0.8)]">
         <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
           <Link 
             href="/" 
             className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
               pathname === '/' 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                ? 'text-cyan-400 font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -493,7 +505,7 @@ export default function ClientLayout({ children }) {
             href="/stat" 
             className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
               pathname === '/stat' 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                ? 'text-cyan-400 font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -512,7 +524,7 @@ export default function ClientLayout({ children }) {
             href="/anggaran" 
             className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
               pathname === '/anggaran' 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                ? 'text-cyan-400 font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -527,7 +539,7 @@ export default function ClientLayout({ children }) {
             }} 
             className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
               showMainMenuDrawer 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                ? 'text-cyan-400 font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -541,7 +553,7 @@ export default function ClientLayout({ children }) {
       {/* 🕌 MODAL JADWAL SHOLAT */}
       {showSholatModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-gradient-to-b from-slate-900 to-emerald-950 border border-emerald-500/40 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
+          <div className="bg-slate-900 border border-emerald-500/40 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
             <button onClick={() => setShowSholatModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white">
               <X className="w-4 h-4" />
             </button>
@@ -554,7 +566,7 @@ export default function ClientLayout({ children }) {
               <p className="text-[10px] font-mono text-emerald-200/80">📍 {kotaSholat} & Sekitarnya</p>
             </div>
 
-            <div className="p-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl space-y-1">
+            <div className="p-2.5 bg-slate-950/80 border border-emerald-500/30 rounded-2xl space-y-1">
               <label className="text-[9px] font-bold text-slate-400 flex items-center gap-1 uppercase font-mono">
                 <MapPin className="w-3 h-3 text-cyan-400" /> Lokasi Kota / Wilayah:
               </label>
@@ -570,7 +582,7 @@ export default function ClientLayout({ children }) {
               </select>
             </div>
 
-            <div className="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
+            <div className="p-3 bg-slate-950/80 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
                 <span className="text-xs font-bold text-slate-200">Alarm Waktu Sholat</span>
@@ -597,9 +609,9 @@ export default function ClientLayout({ children }) {
                   { name: 'Maghrib', time: jadwalSholat.maghrib },
                   { name: 'Isya', time: jadwalSholat.isya }
                 ].map((s, idx) => (
-                  <div key={idx} className="p-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
+                  <div key={idx} className="p-2 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center">
                     <span className="text-[11px] font-bold text-slate-300">{s.name}</span>
-                    <span className="text-xs font-black font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-lg border border-emerald-800">{s.time} WIB</span>
+                    <span className="text-xs font-black font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">{s.time} WIB</span>
                   </div>
                 ))}
               </div>
@@ -609,7 +621,7 @@ export default function ClientLayout({ children }) {
               </div>
             )}
 
-            <button onClick={() => setShowSholatModal(false)} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-2xl transition-all font-mono uppercase shadow-lg shadow-emerald-600/30">
+            <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase shadow-lg">
               Tutup Jadwal
             </button>
           </div>
@@ -619,7 +631,7 @@ export default function ClientLayout({ children }) {
       {/* MODAL DONASI */}
       {showDonationModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative text-white">
             <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white">
               <X className="w-4 h-4" />
             </button>
@@ -636,21 +648,21 @@ export default function ClientLayout({ children }) {
             
             <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
               {listRekening.map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-between gap-3 shadow-md">
+                <div key={idx} className="p-3 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between gap-3 shadow-md">
                   <div className="min-w-0 flex-1 space-y-1">
-                    <span className="inline-block text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 uppercase border border-amber-300 shadow-xs">
+                    <span className="inline-block text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 uppercase border border-amber-300">
                       {item.bank}
                     </span>
                     <p className="text-xs font-black font-mono tracking-wider text-white select-all">
                       {item.number}
                     </p>
-                    <p className="text-[9px] text-slate-400 font-sans truncate font-medium">
+                    <p className="text-[9px] text-slate-400 truncate font-medium">
                       AN. <span className="font-bold text-slate-200">{item.name}</span>
                     </p>
                   </div>
                   <button 
                     onClick={() => handleCopy(item.number, idx)}
-                    className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-md' : 'bg-slate-700 hover:bg-slate-600 text-white border border-slate-600'}`}
+                    className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'}`}
                   >
                     {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
                   </button>
@@ -658,7 +670,7 @@ export default function ClientLayout({ children }) {
               ))}
             </div>
 
-            <button onClick={() => setShowDonationModal(false)} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-2xl transition-all font-mono uppercase border border-slate-700">
+            <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all font-mono uppercase border border-slate-700">
               Tutup Window
             </button>
           </div>
@@ -776,7 +788,7 @@ export default function ClientLayout({ children }) {
 
       {/* 🔔 CUSTOM MODAL TOAST DIALOG */}
       {toastConfig.show && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl text-white text-center relative overflow-hidden">
             <div className="mx-auto w-fit p-3 rounded-2xl border mb-1">
               {toastConfig.type === 'success' && (
