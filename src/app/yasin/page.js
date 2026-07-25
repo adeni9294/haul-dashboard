@@ -4,179 +4,173 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen } from 'lucide-react';
 
-// BACAAN TAHLIL KUBRO / PESANTREN LENGKAP UTUH
-const TAHLIL_PESANTREN = [
+// BACAAN TAHLIL KUBRO KASANAH GUNUNG JATI CIREBON
+const TAHLIL_GUNUNGJATI = [
   { 
     id: 1, 
     arab: "إِلَى حَضْرَةِ النَّبِيِّ الْمُصْطَفَى مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ وَآلِهِ وَأَزْوَاجِهِ وَذُرِّيَّاتِهِ وَأَهْلِ بَيْتِهِ الْكِرَامِ، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
     latin: "Ila hadhratin-nabiyyil musthafa muhammadin sallallahu 'alaihi wasallama wa alihi wa azwajihi wa dhurriyyatihi wa ahli baitihil kiram, syai'ul lillahi lahumul fatihah...", 
-    indo: "Tawasul 1: Kepada Nabi Agung Muhammad SAW, keluarga, istri-istri, putra-putri, dan ahli baitnya. (Membaca Al-Fatihah)" 
+    indo: "Tawasul 1: Kepada Baginda Nabi Agung Muhammad SAW, keluarga, dan ahli baitnya. (Al-Fatihah)" 
   },
   { 
     id: 2, 
     arab: "ثُمَّ إِلَى حَضَرَاتِ إِخْوَانِهِ مِنَ الأَنْبِيَاءِ وَالْمُرْسَلِيْنَ وَالأَوْلِيَاءِ وَالشُّهَدَاءِ وَالصَّالِحِيْنَ وَالصَّحَابَةِ وَالتَّابِعِيْنَ وَالْعُلَمَاءِ الْعَامِلِيْنَ وَالْمُصَنِّفِيْنَ الْمُخْلِصِيْنَ وَجَمِيْعِ الْمَلَائِكَةِ الْمُقَرَّبِيْنَ، خُصُوْصًا سَيِّدَنَا الشَّيْخَ عَبْدَ القَادِرِ الجَيْلَانِيّ، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
-    latin: "Thumma ila hadharati ikhwanihi minal anbiya'i wal mursalin wal auliya'i wash-shuhada'i wash-shalihin... khususan Sayyidanasy-Syaikh 'Abdul Qadir Al-Jilani...", 
-    indo: "Tawasul 2: Kepada para Nabi, Rasul, Wali, Syuhada, Shalihein, Ulama, dan Syekh Abdul Qadir Al-Jilani. (Membaca Al-Fatihah)" 
+    latin: "Thumma ila hadharati ikhwanihi minal anbiya'i wal mursalin... khususan Sayyidanasy-Syaikh 'Abdul Qadir Al-Jilani...", 
+    indo: "Tawasul 2: Para Nabi, Wali, Syuhada, dan Syekh Abdul Qadir Al-Jilani. (Al-Fatihah)" 
   },
   { 
     id: 3, 
-    arab: "ثُمَّ إِلَى أَرْوَاحِ جَمِيْعِ أَهْلِ القُبُوْرِ مِنَ المُسْلِمِيْنَ وَالمُسْلِمَاتِ وَالمُؤْمِنِيْنَ وَالمُؤْمِنَاتِ مِنْ مَشَارِقِ الأَرْضِ إِلَى مَغَارِبِهَا بَرِّهَا وَبَحْرِهَا، خُصُوْصًا إِلَى آبَائِنَا وَأُمَّهَاتِنَا وَأَجْدَادِنَا وَجَدَّاتِنَا وَمَشَايِخِنَا وَمَشَايِخِ مَشَايِخِنَا، وَخُصُوْصًا إِلَى صَاحِبِ هٰذِهِ المَقْبَرَةِ (بُويُوت كِبُوه وَبُويُوت بِسُوس) وَكَافَّةِ جَمِيْعِ أَهْلِ القُبُوْرِ مِنْ اَهْلِ هٰذِهِ القَرْيَةِ، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
-    latin: "Thumma ila arwahi jami'i ahlil quburi minal muslimina wal muslimat... wa khususan ila sahibi hadhihil maqbarah (Buyut Kepuh & Buyut Besus)... lahumul fatihah...", 
-    indo: "Tawasul 3: Khususon para leluhur, Masyayikh, Ahli Kubur Maqbaroh Buyut Kepuh & Buyut Besus, serta seluruh arwah warga desa. (Membaca Al-Fatihah)" 
+    arab: "ثُمَّ إِلَى حَضَرَاتِ أَوْلِيَاءِ اللّٰهِ التِّسْعَةِ (وَلِي سَڠَا)، وَخُصُوْصًا إِلَى حَضْرَةِ سُلْطَانِ أَوْلِيَاءِ كَارُبَانِ سَيِّدِنَا شَرِيْفِ هِدَايَتِ اللّٰهِ (سُنَنْ ݢُونُونْ ݢَاتِي) وَأُصُوْلِهِ وَفُرُوْعِهِ، وَسَيِّدِنَا شَيْخِ كَهْفِي (شَيْخِ ذَاتِي كُهْنِي)، وَسَيِّدِي الشَّيْخِ نُورِ الدِّينِ إِبْرَاهِيمَ (مَوْلَانَا بَاسَ بَانْتَن)، وَالْحَاجِّ تَنُوكَسُومَا، وَجَمِيْعِ مَشَايِخِ ثَغْرِ جِرِبُونَ، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
+    latin: "Thumma ila hadharati auliya'illahit-tis'ah (Wali Sanga), wa khususan ila hadhrati Sultani Auliya'i Karuban Sayyidina Syarif Hidayatullah (Sunan Gunung Jati)... wa Syekh Datul Kahfi... wa jami'i masyayikhi tsaghri Cirebon...", 
+    indo: "Tawasul Khusus Cirebon: Wali Sanga, Kanjeng Sunan Gunung Jati (Syarif Hidayatullah), Syekh Datul Kahfi, Sultan Banten, serta Seluruh Masyayikh Tanah Cirebon. (Al-Fatihah)" 
   },
   { 
     id: 4, 
-    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ هُوَ اللّٰهُ أَحَدٌ. اللّٰهُ الصَّمَدُ. لَمْ يَلِدْ وَلَمْ يُولَدْ. وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ (٣x)", 
-    latin: "Surah Al-Ikhlas (3x)", 
-    indo: "Membaca Surah Al-Ikhlas (3 kali)." 
+    arab: "ثُمَّ إِلَى أَرْوَاحِ جَمِيْعِ أَهْلِ القُبُوْرِ مِنَ المُسْلِمِيْنَ وَالمُسْلِمَاتِ وَالمُؤْمِنِيْنَ وَالمُؤْمِنَاتِ، خُصُوْصًا إِلَى آبَائِنَا وَأُمَّهَاتِنَا وَأَجْدَادِنَا وَجَدَّاتِنَا، وَخُصُوْصًا إِلَى صَاحِبِ هٰذِهِ المَقْبَرَةِ (بُويُوت كِبُوه وَبُويُوت بِسُوس) وَكَافَّةِ أَهْلِ القُبُوْرِ مِنْ اَهْلِ هٰذِهِ القَرْيَةِ (وَارُوْجَايَا/جِبُوغُوْ)، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
+    latin: "Thumma ila arwahi jami'i ahlil quburi... wa khususan ila sahibi hadhihil maqbarah (Buyut Kepuh & Buyut Besus)... lahumul fatihah...", 
+    indo: "Tawasul Ahli Kubur: Khususon Pembuka Maqbaroh Buyut Kepuh & Buyut Besus serta Leluhur Desa Warujaya/Cibogo. (Al-Fatihah)" 
   },
   { 
     id: 5, 
-    arab: "لَا إِلٰهَ إِلَّا اللّٰهُ وَاللّٰهُ أَكْبَرُ، وَلِلّٰهِ الْحَمْدُ", 
-    latin: "La ilaha illallahu wallahu akbar, walillahil hamd", 
-    indo: "Tahlil dan Takbir." 
+    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ هُوَ اللّٰهُ أَحَدٌ. اللّٰهُ الصَّمَدُ. لَمْ يَلِدْ وَلَمْ يُولَدْ. وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ (٣x)", 
+    latin: "Surah Al-Ikhlas (3x)", 
+    indo: "Surah Al-Ikhlas 3 kali." 
   },
   { 
     id: 6, 
-    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ. مِنْ شَرِّ مَا خَلَقَ. وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ. وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ. وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ", 
+    arab: "لَا إِلٰهَ إِلَّا اللّٰهُ وَاللّٰهُ أَكْبَرُ، وَلِلّٰهِ الْحَمْدُ", 
+    latin: "La ilaha illallahu wallahu akbar, walillahil hamd", 
+    indo: "Tahlil & Takbir." 
+  },
+  { 
+    id: 7, 
+    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ...", 
     latin: "Surah Al-Falaq", 
     indo: "Membaca Surah Al-Falaq." 
   },
   { 
-    id: 7, 
+    id: 8, 
     arab: "لَا إِلٰهَ إِلَّا اللّٰهُ وَاللّٰهُ أَكْبَرُ، وَلِلّٰهِ الْحَمْدُ", 
     latin: "La ilaha illallahu wallahu akbar, walillahil hamd", 
-    indo: "Tahlil dan Takbir." 
+    indo: "Tahlil & Takbir." 
   },
   { 
-    id: 8, 
-    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ. مَلِكِ النَّاسِ. إِلٰهِ النَّاسِ. مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ. الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ. مِنَ الْجِنَّةِ وَالنَّاسِ", 
+    id: 9, 
+    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ...", 
     latin: "Surah An-Nas", 
     indo: "Membaca Surah An-Nas." 
   },
   { 
-    id: 9, 
+    id: 10, 
     arab: "لَا إِلٰهَ إِلَّا اللّٰهُ وَاللّٰهُ أَكْبَرُ، وَلِلّٰهِ الْحَمْدُ", 
     latin: "La ilaha illallahu wallahu akbar, walillahil hamd", 
-    indo: "Tahlil dan Takbir." 
-  },
-  { 
-    id: 10, 
-    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِيْنَ...", 
-    latin: "Surah Al-Fatihah", 
-    indo: "Membaca Surah Al-Fatihah." 
+    indo: "Tahlil & Takbir." 
   },
   { 
     id: 11, 
-    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. الم. ذٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيْهِ ۛ هُدًى لِلْمُتَّقِيْنَ. الَّذِيْنَ يُؤْمِنُوْنَ بِالْغَيْبِ وَيُقِيْمُوْنَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنْفِقُوْنَ. وَالَّذِيْنَ يُؤْمِنُوْنَ بِمَا أُنْزِلَ إِلَيْكَ وَمَا أُنْزِلَ مِنْ قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوْقِنُوْنَ. أُولٰئِكَ عَلَىٰ هُدًى مِنْ رَبِّهِمْ ۖ وَأُولٰئِكَ هُمُ الْمُفْلِحُوْنَ", 
-    latin: "Surah Al-Baqarah: 1-5", 
-    indo: "Membaca Surah Al-Baqarah ayat 1-5." 
+    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِيْنَ. الرَّحْمٰنِ الرَّحِيْمِ. مَالِكِ يَوْمِ الدِّيْنِ. إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِيْنُ. اهْدِنَا الصِّرَاطَ الْمُسْتَقِيْمَ. صِرَاطَ الَّذِيْنَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوْبِ عَلَيْهِمْ وَلَا الضَّالِّيْنَ. آمِيْن", 
+    latin: "Surah Al-Fatihah", 
+    indo: "Surah Al-Fatihah." 
   },
   { 
     id: 12, 
-    arab: "وَإِلٰهُكُمْ إِلٰهٌ وَاحِدٌ ۖ لَا إِلٰهَ إِلَّا هُوَ الرَّحْمٰنُ الرَّحِيْمُ", 
-    latin: "Wa ilahukum ilahun wahid, la ilaha illa huwar-rahmanur-rahim", 
-    indo: "Ayat Tauhid (Al-Baqarah: 163)." 
+    arab: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. الم. ذٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيْهِ ۛ هُدًى لِلْمُتَّقِيْنَ...", 
+    latin: "Surah Al-Baqarah: 1-5", 
+    indo: "Awal Surah Al-Baqarah." 
   },
   { 
     id: 13, 
-    arab: "اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ", 
-    latin: "Ayat Kursi (Al-Baqarah: 255)", 
-    indo: "Membaca Ayat Kursi." 
+    arab: "وَإِلٰهُكُمْ إِلٰهٌ وَاحِدٌ ۖ لَا إِلٰهَ إِلَّا هُوَ الرَّحْمٰنُ الرَّحِيْمُ", 
+    latin: "Wa ilahukum ilahun wahid...", 
+    indo: "Ayat Tauhid." 
   },
   { 
     id: 14, 
-    arab: "لِلّٰهِ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ وَإِنْ تُبْدُوا مَا فِي أَنْفُسِكُمْ أَوْ تُخْفُوهُ يُحَاسِبْكُمْ بِهِ اللّٰهُ ۖ فَيَغْفِرُ لِمَنْ يَشَاءُ وَيُعَذِّبُ مَنْ يَشَاءُ ۗ وَاللّٰهُ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ. آمَنَ الرَّسُولُ بِمَا أُنْزِلَ إِلَيْهِ مِنْ رَبِّهِ وَالْمُؤْمِنُونَ ۚ كُلٌّ آمَنَ بِاللّٰهِ وَمَلَائِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِنْ رُسُلِهِ ۚ وَقَالُوا سَمِعْنَا وَأَطَعْنَا ۖ غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيرُ. لَا يُكَلِّفُ اللّٰهُ نَفْسًا إِلَّا وُسْعَهَا ۚ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَا إِنْ نَسِينَا أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِنْ قَبْلِنَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا (٧x) أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ", 
-    latin: "Lillahi ma fis-samawati wa ma fil-ard... Wa'fu 'anna waghfir lana warhamna (7x)", 
-    indo: "Membaca 3 Ayat Terakhir Al-Baqarah + Permohonan Ampunan (Diulang 7x)." 
+    arab: "اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...", 
+    latin: "Ayat Kursi (Al-Baqarah: 255)", 
+    indo: "Ayat Kursi." 
   },
   { 
     id: 15, 
-    arab: "إِرْحَمْنَا يَا أَرْحَمَ الرَّاحِمِيْنَ (٧x)", 
-    latin: "Irhamna ya arhamar-rahimin (7x)", 
-    indo: "Istighotsah Rahmat (Diulang 7 kali)." 
+    arab: "لِلّٰهِ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ... وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا (٧x) أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ", 
+    latin: "Lillahi ma fis-samawati... Wa'fu 'anna waghfir lana warhamna (7x)", 
+    indo: "Akhir Al-Baqarah & Permohonan Rahmat (7x)." 
   },
   { 
     id: 16, 
-    arab: "رَحْمَتُ اللّٰهِ وَبَرَكَاتُهُ عَلَيْكُمْ أَهْلَ الْبَيْتِ ۚ إِنَّهُ حَمِيدٌ مَجِيدٌ. إِنَّمَا يُرِيدُ اللّٰهُ لِيُذْهِبَ عَنْكُمُ الرِّجْسَ أَهْلَ الْبَيْتِ وَيُطَهِّرَكُمْ تَطْهِيرًا. إِنَّ اللّٰهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ ۚ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا", 
-    latin: "Rahmatullahi wa barakatuhu 'alaikum ahlal baiti...", 
-    indo: "Ayat Shalawat & Pembersihan Ahli Bait." 
+    arab: "يَا أَرْحَمَ الرَّاحِمِيْنَ إِرْحَمْنَا (٧x)", 
+    latin: "Ya Arhamar-rahimina irhamna (7x)", 
+    indo: "Istighotsah Rahmat khas Keraton Gunung Jati." 
   },
   { 
     id: 17, 
-    arab: "أَللّٰهُمَّ صَلِّ أَفْضَلَ الصَّلَاةِ عَلَى أَسْعَدِ مَخْلُوْقَاتِكَ سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِهِ وَصَحْبِهِ وَسَلِّمْ، عَدَدَ مَعْلُوْمَاتِكَ وَمِدَادَ كَلِمَاتِكَ كُلَّمَا ذَكَرَكَ الذَّاكِرُوْنَ وَغَفَلَ عَنْ ذِكْرِكَ الْغَافِلُوْنَ (٣x)", 
-    latin: "Allahumma salli afdhalas-salati 'ala as'adi makhluqatika sayyidina muhammadin...", 
-    indo: "Shalawat Kamaliyah (Dibaca 3 kali)." 
+    arab: "اللّٰهُمَّ صَلِّ صَلَاةً كَامِلَةً وَسَلِّمْ سَلَامًا تَامًّا عَلَى سَيِّدِنَا مُحَمَّدٍ الَّذِي تَنْحَلُّ بِهِ الْعُقَدُ وَتَنْفَرِجُ بِهِ الْكُرَبُ وَتُقْضَى بِهِ الْحَوَائِجُ وَتُنَالُ بِهِ الرَّغَائِبُ وَحُسْنُ الْخَوَاتِمِ وَيُسْتَسْقَى الْغَمَامُ بِوَجْهِهِ الْكَرِيْمِ وَعَلَى آلِهِ وَصَحْبِهِ فِي كُلِّ لَمْحَةٍ وَنَفَسٍ بِعَدَدِ كُلِّ مَعْلُوْمٍ لَكَ", 
+    latin: "Shalawat Nariyah / Tafrijiyyah", 
+    indo: "Membaca Shalawat Nariyah." 
   },
   { 
     id: 18, 
-    arab: "وَسَلِّمْ وَرَضِيَ اللّٰهُ تَبَارَكَ وَتَعَالَى عَنْ سَادَاتِنَا أَصْحَابِ رَسُوْلِ اللّٰهِ أَجْمَعِيْنَ. وَحَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيْلُ، نِعْمَ الْمَوْلَى وَنِعْمَ النَّصِيْرُ. وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ الْعَلِيِّ الْعَظِيْمِ", 
-    latin: "Wa sallim wa radhiyallahu tabaraka wa ta'ala 'an sadatina as-habi rasulillahi ajma'in...", 
-    indo: "Keridhaan Sahabat & Pasrah Diri (Hawqalah)." 
+    arab: "أَسْتَغْفِرُ اللّٰهَ الْعَظِيْمَ (٣٣x)", 
+    latin: "Astaghfirullahal 'Adzim (33x)", 
+    indo: "Istighfar." 
   },
   { 
     id: 19, 
-    arab: "أَسْتَغْفِرُ اللّٰهَ الْعَظِيْمَ (٣٣x)", 
-    latin: "Astaghfirullahal 'Adzim (33x)", 
-    indo: "Istighfar Agung (33 kali)." 
+    arab: "أَفْضَلُ الذِّكْرِ فَاعْلَمْ أَنَّهُ لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَوْجُوْدٌ. لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَعْبُوْدٌ. لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ بَاقٍ الَّذِي لَا يَمُوْتُ", 
+    latin: "Afdhaludz-dzikri fa'lam annahu la ilaha illallah...", 
+    indo: "Pengantar Tahlil Utama." 
   },
   { 
     id: 20, 
-    arab: "أَفْضَلُ الذِّكْرِ فَاعْلَمْ أَنَّهُ لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَوْجُوْدٌ. لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَعْبُوْدٌ. لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ بَاقٍ الَّذِي لَا يَمُوْتُ", 
-    latin: "Afdhaludz-dzikri fa'lam annahu la ilaha illallah, hayyun maujud...", 
-    indo: "Pengantar Tahlil Utama Pesantren." 
+    arab: "لَا إِلٰهَ إِلَّا اللهُ (١٠٠x)", 
+    latin: "Lā ilāha illallāh (100x / Berjamaah)", 
+    indo: "Dzikir Tahlil Utama." 
   },
   { 
     id: 21, 
-    arab: "لَا إِلٰهَ إِلَّا اللهُ (١٠٠x)", 
-    latin: "Lā ilāha illallāh (100x / Secukupnya)", 
-    indo: "Membaca Kalimat Tahlil (100 kali / Berjamaah)." 
-  },
-  { 
-    id: 22, 
     arab: "لَا إِلٰهَ إِلَّا اللهُ مُحَمَّدٌ رَسُوْلُ اللهِ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، كَلِمَةُ حَقٍّ عَلَيْهَا نَحْيَا وَعَلَيْهَا نَمُوْتُ وَبِهَا نُبْعَثُ إِنْ شَاءَ اللّٰهُ تَعَالَى مِنَ الْآمِنِيْنَ. بِرَحْمَتِكَ يَا أَرْحَمَ الرَّاحِمِيْنَ", 
     latin: "La ilaha illallahu muhammadur rasulullahi sallallahu 'alaihi wa sallam...", 
-    indo: "Kalimat Penutup Tahlil Pesantren." 
+    indo: "Penutup Tahlil Khas Gunung Jati." 
   }
 ];
 
-// DOA HAUL AKMAL / PESANTREN LENGKAP UTUH
-const DOA_PESANTREN = [
+// DOA HAUL KUBRO KERATON / GUNUNG JATI CIREBON
+const DOA_GUNUNGJATI = [
   { 
     id: 1, 
-    arab: "أَعُوْذُ بِاللهِ مِنَ الشَّيْطَانِ الرَّجِيْمِ. بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِيْنَ حَمْدَ الشَّاكِرِيْنَ حَمْدَ النَّاعِمِيْنَ حَمْدًا يُوَافِي نِعَمَهُ وَيُكَافِئُ مَزِيْدَهُ. يَا رَبَّنَا لَكَ الْحَمْدُ كَمَا يَنْبَغِي لِجَلَالِ وَجْهِكَ وَلِعَظِيْمِ سُلْطَانِكَ. أَللّٰهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ صَلَاةً تُنْجِيْنَا بِهَا مِنْ جَمِيْعِ الْأَهْوَالِ وَالْآفَاتِ، وَتَقْضِي لَنَا بِهَا جَمِيْعَ الْحَاجَاتِ، وَتُطَهِّرُنَا بِهَا مِنْ جَمِيْعِ السَّيِّئَاتِ، وَتَرْفَعُنَا بِهَا عِنْدَكَ أَعْلَى الدَّرَجَاتِ، وَتُبَلِّغُنَا بِهَا أَقْصَى الْغَايَاتِ مِنْ جَمِيْعِ الْخَيْرَاتِ فِي الْحَيَاةِ وَبَعْدَ الْمَمَاتِ", 
-    latin: "Alhamdulillahi rabbil 'alamin... Allahumma salli 'ala sayyidina muhammadin salatan tunjina biha min jami'il ahwali wal afat...", 
-    indo: "Pembukaan Doa: Mukadimah Hamdalah & Shalawat Munjiyat Pesantren." 
+    arab: "أَعُوْذُ بِاللهِ مِنَ الشَّيْطَانِ الرَّجِيْمِ. بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِيْنَ حَمْدَ الشَّاكِرِيْنَ حَمْدَ النَّاعِمِيْنَ حَمْدًا يُوَافِي نِعَمَهُ وَيُكَافِئُ مَزِيْدَهُ. يَا رَبَّنَا لَكَ الْحَمْدُ كَمَا يَنْبَغِي لِجَلَالِ وَجْهِكَ وَلِعَظِيْمِ سُلْطَانِكَ. أَللّٰهُمَّ صَلِّ وَسَلِّمْ عَلَى سَيِّدِنَا مُحَمَّدٍ فِي الْأَوَّلِيْنَ وَالْآخِرِيْنَ وَفِي الْمَلَإِ الْأَعْلَى إِلَى يَوْمِ الدِّيْنِ", 
+    latin: "Alhamdulillahi rabbil 'alamin... Allahumma salli wa sallim 'ala sayyidina muhammadin fil awwalina wal akhirin...", 
+    indo: "Mukadimah Hamdalah & Shalawat Agung." 
   },
   { 
     id: 2, 
-    arab: "أَللّٰهُمَّ تَقَبَّلْ وَأَوْصِلْ ثَوَابَ مَا قَرَأْنَاهُ مِنْ كِتَابِكَ الْعَظِيْمِ (سُوْرَةِ يس) وَمَا هَلَّلْنَاهُ وَمَا سَبَّحْنَاهُ وَمَا اسْتَغْفَرْنَاهُ وَمَا صَلَّيْنَاهُ عَلَى سَيِّدِنَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ هَدِيَّةً وَاصِلَةً وَرَحْمَةً نَازِلَةً وَبَرَكَةً شَامِلَةً إِلَى حَضَرَةِ حَبِيْبِنَا وَشَفِيْعِنَا وَقُرَّةِ أَعْيُنِنَا سَيِّدِنَا وَمَوْلَانَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، وَإِلَى أَرْوَاحِ جَمِيْعِ إِخْوَانِهِ مِنَ الْأَنْبِيَاءِ وَالْمُرْسَلِيْنَ وَالْأَوْلِيَاءِ وَالشُّهَدَاءِ وَالصَّالِحِيْنَ وَالصَّحَابَةِ وَالتَّابِعِيْنَ وَالْعُلَمَاءِ الْعَامِلِيْنَ وَالْمُصَنِّفِيْنَ الْمُخْلِصِيْنَ وَجَمِيْعِ الْمُجَاهِدِيْنَ فِي سَبِيْلِ اللّٰهِ رَبِّ الْعَالَمِيْنَ وَالْمَلَائِكَةِ الْمُقَرَّبِيْنَ", 
-    latin: "Allahumma taqabbal wa awsil thawaba ma qara'nahu min kitabikal 'adzim (Surah Yasin)...", 
-    indo: "Permohonan Hadiah Pahala Yasin & Tahlil kepada Nabi SAW & Seluruh Wali/Ulama." 
+    arab: "أَللّٰهُمَّ تَقَبَّلْ وَأَوْصِلْ ثَوَابَ مَا قَرَأْنَاهُ مِنْ كِتَابِكَ الْعَظِيْمِ (سُوْرَةِ يس) وَمَا هَلَّلْنَاهُ وَمَا سَبَّحْنَاهُ وَمَا اسْتَغْفَرْنَاهُ وَمَا صَلَّيْنَاهُ عَلَى سَيِّدِنَا مُحَمَّدٍ هَدِيَّةً مَقْبُوْلَةً وَرَحْمَةً نَازِلَةً وَبَرَكَةً شَامِلَةً إِلَى حَضَرَةِ النَّبِيِّ الْمُصْطَفَى مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، وَإِلَى أَرْوَاحِ أَوْلِيَاءِ اللّٰهِ كَافَّةً، وَخُصُوْصًا إِلَى حَضْرَةِ سُلْطَانِ أَوْلِيَاءِ كَارُبَانِ سَيِّدِنَا شَرِيْفِ هِدَايَتِ اللّٰهِ (سُنَنْ ݢُونُونْ ݢَاتِي) وَإِلَى أَرْوَاحِ سَائِرِ أَوْلِيَاءِ سَبْعَةِ وَأَوْلِيَاءِ تِسْعَةِ فِي طَبَقَاتِ هٰذِهِ الْأَرْضِ", 
+    latin: "Allahumma taqabbal wa awsil thawaba ma qara'nahu... khususan ila hadhrati Sultani Auliya'i Karuban Sayyidina Syarif Hidayatullah (Sunan Gunung Jati)...", 
+    indo: "Permohonan Sampainya Pahala Yasin & Tahlil Khususon Kanjeng Sunan Gunung Jati & Wali Sanga." 
   },
   { 
     id: 3, 
-    arab: "ثُمَّ إِلَى أَرْوَاحِ جَمِيْعِ أَهْلِ الْقُبُوْرِ مِنَ الْمُسْلِمِيْنَ وَالْمُسْلِمَاتِ وَالْمُؤْمِنِيْنَ وَالْمُؤْمِنَاتِ مِنْ مَشَارِقِ الْأَرْضِ إِلَى مَغَارِبِهَا بَرِّهَا وَبَحْرِهَا، وَخُصُوْصًا إِلَى أَرْوَاحِ صَاحِبِ هٰذِهِ الْمَقْبَرَةِ (بُويُوت كِبُوه وَبُويُوت بِسُوس) وَإِلَى أَرْوَاحِ آبَائِنَا وَأُمَّهَاتِنَا وَأَجْدَادِنَا وَجَدَّاتِنَا وَمَشَايِخِنَا وَمَشَايِخِ مَشَايِخِنَا وَأَسَاتِذَتِنَا وَأَسَاتِذَةِ أَسَاتِذَتِنَا وَلِمَنْ أَحْسَنَ إِلَيْنَا وَلِمَنْ حَضَرَ فِي هٰذَا الْجَمْعِ وَلِأُمَّهَاتِهِمْ وَآبَائِهِمْ وَأَقَارِبِهِمْ", 
-    latin: "Thumma ila arwahi jami'i ahlil quburi minal muslimina wal muslimat... wa khususan ila arwahi Buyut Kepuh & Buyut Besus...", 
-    indo: "Pengkhususan Doa untuk Ahli Kubur Maqbaroh Buyut Kepuh & Buyut Besus serta Seluruh Silsilah Masyayikh & Jemaah." 
+    arab: "ثُمَّ إِلَى أَرْوَاحِ جَمِيْعِ أَهْلِ الْقُبُوْرِ مِنَ الْمُسْلِمِيْنَ وَالْمُسْلِمَاتِ مِنْ مَشَارِقِ الْأَرْضِ إِلَى مَغَارِبِهَا، وَخُصُوْصًا إِلَى أَرْوَاحِ صَاحِبِ هٰذِهِ الْمَقْبَرَةِ الْمُبَارَكَةِ (بُويُوت كِبُوه وَبُويُوت بِسُوس) وَإِلَى أَرْوَاحِ آبَائِنَا وَأُمَّهَاتِنَا وَأَجْدَادِنَا وَجَدَّاتِنَا وَمَشَايِخِنَا وَأَهْلِ بَلَدَتِنَا هٰذِهِ", 
+    latin: "Thumma ila arwahi jami'i ahlil quburi... wa khususan ila arwahi Buyut Kepuh & Buyut Besus...", 
+    indo: "Pengkhususan Doa untuk Ahli Kubur Maqbaroh Buyut Kepuh & Buyut Besus serta Seluruh Leluhur Desa." 
   },
   { 
     id: 4, 
-    arab: "أَللّٰهُمَّ اغْفِرْ لَهُمْ وَارْحَمْهُمْ وَعَافِهِمْ وَاعْفُ عَنْهُمْ. أَللّٰهُمَّ أَنْزِلِ الرَّحْمَةَ وَالْمَغْفِرَةَ وَالرِّضْوَانَ عَلَى أَهْلِ الْقُبُوْرِ مِنْ أَهْلِ لَا إِلٰهَ إِلَّا اللّٰهُ مُحَمَّدٌ رَسُوْلُ اللّٰهِ. أَللّٰهُمَّ اجْعَلْ قُبُوْرَهُمْ رَوْضَةً مِنْ رِيَاضِ الْجِنَانِ وَلَا تَجْعَلْ قُبُوْرَهُمْ حُفْرَةً مِنْ حُفَرِ النِّيْرَانِ. أَللّٰهُمَّ يَمِّنْ كِتَابَهُمْ وَيَسِّرْ حِسَابَهُمْ وَثَقِّلْ بِمِيْزَانِ الْحَسَنَاتِ مَوَازِيْنَهُمْ وَثَبِّتْ عَلَى الصِّرَاطِ أَقْدَامَهُمْ وَأَسْكِنْهُمْ فِي وَسَطِ الْجَنَّةِ مَعَ النَّبِيِّيْنَ وَالصِّدِّيْقِيْنَ وَالشُّهَدَاءِ وَالصَّالِحِيْنَ", 
-    latin: "Allahummaghfir lahum warhamhum wa 'afihim wa'fu 'anhum... Allahummaj'al quburahum raudhatan min riyadhil jinan...", 
-    indo: "Permohonan Rahmah, Keleluasaan Kubur, Syafaat, dan Pengampunan Dosa Ahli Kubur." 
+    arab: "أَللّٰهُمَّ اغْفِرْ لَهُمْ وَارْحَمْهُمْ وَعَافِهِمْ وَاعْفُ عَنْهُمْ. أَللّٰهُمَّ أَنْزِلِ الرَّحْمَةَ وَالْمَغْفِرَةَ وَالرِّضْوَانَ عَلَى أَهْلِ الْقُبُوْرِ مِنْ أَهْلِ لَا إِلٰهَ إِلَّا اللّٰهُ مُحَمَّدٌ رَسُوْلُ اللّٰهِ. أَللّٰهُمَّ اجْعَلْ قُبُوْرَهُمْ رَوْضَةً مِنْ رِيَاضِ الْجِنَانِ وَلَا تَجْعَلْ قُبُوْرَهُمْ حُفْرَةً مِنْ حُفَرِ النِّيْرَانِ", 
+    latin: "Allahummaghfir lahum warhamhum... Allahummaj'al quburahum raudhatan min riyadhil jinan...", 
+    indo: "Doa Ampunan & Permohonan Taman Surga bagi Ahli Kubur." 
   },
   { 
     id: 5, 
-    arab: "أَللّٰهُمَّ ادْفَعْ عَنَّا الْبَلَاءَ وَالْوَبَاءَ وَالزَّلَازِلَ وَالْمِحَنَ وَسُوْءَ الْفِتْنَةِ مَا ظَهَرَ مِنْهَا وَمَا بَطَنَ عَنْ بَلَدِنَا هٰذَا خَاصَّةً وَعَنْ سَائِرِ بُلْدَانِ الْمُسْلِمِيْنَ عَامَّةً يَا رَبَّ الْعَالَمِيْنَ. أَللّٰهُمَّ أَصْلِحْ لَنَا دِيْنَنَا الَّذِي هُوَ عِصْمَةُ أَمْرِنَا، وَأَصْلِحْ لَنَا دُنْيَانَا الَّتِي فِيْهَا مَعَاشُنَا، وَأَصْلِحْ لَنَا آخِرَتَنَا الَّتِي فِيْهَا مَعَادُنَا، وَاجْعَلِ الْحَيَاةَ زِيَادَةً لَنَا فِي كُلِّ خَيْرٍ، وَاجْعَلِ الْمَوْتَ رَاحَةً لَنَا مِنْ كُلِّ شَرٍّ", 
-    latin: "Allahummadfa' 'annal bala'a wal waba'a wal zalazila... Allahumma aslih lana dinanal-ladhi huwa 'ismatu amrina...", 
-    indo: "Doa Keselamatan Desa/Masyarakat dari Bencana, Fitnah, serta Perbaikan Kehidupan Dunia-Akhirat." 
+    arab: "أَللّٰهُمَّ ادْفَعْ عَنَّا الْبَلَاءَ وَالْوَبَاءَ وَالزَّلَازِلَ وَالْمِحَنَ وَسُوْءَ الْفِتْنَةِ مَا ظَهَرَ مِنْهَا وَمَا بَطَنَ عَنْ بَلَدِنَا جِرِبُونَ خَاصَّةً وَعَنْ سَائِرِ بُلْدَانِ الْمُسْلِمِيْنَ عَامَّةً يَا رَبَّ الْعَالَمِيْنَ. أَللّٰهُمَّ اجْعَلْ بَلْدَتَنَا هٰذِهِ بَلْدَةً طَيِّبَةً آمِنَةً مُطْمَئِنَّةً وَسَائِرَ بِلَادِ الْمُسْلِمِيْنَ", 
+    latin: "Allahummadfa' 'annal bala'a... wa 'an baladina Cirebon khassatan...", 
+    indo: "Doa Penolak Bencana & Keselamatan untuk Wilayah Cirebon & Seluruh Jemaah." 
   },
   { 
     id: 6, 
     arab: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ. سُبْحَانَ رَبِّكَ رَبِّ الْعِزَّةِ عَمَّا يَصِفُونَ وَسَلَامٌ عَلَى الْمُرْسَلِينَ وَالْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ. سُوْرَةُ الْفَاتِحَة...", 
-    latin: "Rabbana atina fid-dunya hasanah wa fil-akhirati hasanah wa qina 'adhaban-nar. Walhamdulillahi rabbil 'alamin. Al-Fatihah...", 
-    indo: "Penutup Doa: Doa Sapu Jagat, Tasbih Keagungan Allah, Hamdalah, dan Fatihah Penutup." 
+    latin: "Rabbana atina fid-dunya hasanah... Walhamdulillahi rabbil 'alamin. Al-Fatihah...", 
+    indo: "Penutup Doa Sapu Jagat & Fatihah Penutup." 
   }
 ];
 
@@ -186,7 +180,7 @@ export default function YasinPage() {
   const [yasinAyat, setYasinAyat] = useState([]);
   const [loadingYasin, setLoadingYasin] = useState(true);
 
-  // Ambil 83 Ayat Yasin Lengkap dari API EQuran
+  // Fetch 83 Ayat Surah Yasin
   useEffect(() => {
     async function fetchYasinFull() {
       try {
@@ -250,7 +244,7 @@ export default function YasinPage() {
               : 'theme-text-secondary hover:theme-text-primary'
           }`}
         >
-          Tahlil Pesantren
+          Tahlil Gunung Jati
         </button>
         <button
           onClick={() => setActiveTab('doa')}
@@ -260,7 +254,7 @@ export default function YasinPage() {
               : 'theme-text-secondary hover:theme-text-primary'
           }`}
         >
-          Doa Haul Akmal
+          Doa Haul Cirebon
         </button>
       </div>
 
@@ -269,11 +263,11 @@ export default function YasinPage() {
         <h2 className="text-base font-black uppercase tracking-wider theme-text-primary flex items-center justify-center gap-2">
           <BookOpen className="w-5 h-5 text-emerald-400" />
           {activeTab === 'yasin' && 'Surah YaSiin (Lengkap 83 Ayat)'}
-          {activeTab === 'tahlil' && 'Tahlil Kubro Versi Pesantren / Pondok'}
-          {activeTab === 'doa' && 'Doa Khusus Haul Akmal & Istighotsah'}
+          {activeTab === 'tahlil' && 'Tahlil Kubro Versi Kanjeng Sunan Gunung Jati'}
+          {activeTab === 'doa' && 'Doa Haul Keraton / Masyayikh Cirebon'}
         </h2>
         <p className="text-xs theme-text-secondary font-medium">
-          Standar Majlis An-Nahdliyyah & Masyayikh Pesantren (Lengkap Teks Arab Utuh, Latin, & Terjemahan)
+          Tradisi Khas Pesantren & Keraton Cirebon (Teks Arab Utuh, Latin, & Terjemahan)
         </p>
       </div>
 
@@ -319,16 +313,16 @@ export default function YasinPage() {
         </div>
       )}
 
-      {/* TAB 2: TAHLIL LENGKAP UTUH PESANTREN */}
+      {/* TAB 2: TAHLIL KASANAH GUNUNG JATI */}
       {activeTab === 'tahlil' && (
         <div className="space-y-4">
-          {TAHLIL_PESANTREN.map((item) => (
+          {TAHLIL_GUNUNGJATI.map((item) => (
             <div key={item.id} className="theme-bg-secondary border theme-border p-5 rounded-3xl space-y-4 shadow-sm">
               <div className="flex justify-between items-center border-b theme-border pb-2">
                 <span className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono text-xs font-black flex items-center justify-center">
                   {item.id}
                 </span>
-                <span className="text-[10px] font-mono theme-text-tertiary">Urutan Tahlil Pesantren #{item.id}</span>
+                <span className="text-[10px] font-mono theme-text-tertiary">Urutan Tahlil Gunung Jati #{item.id}</span>
               </div>
 
               <p 
@@ -352,16 +346,16 @@ export default function YasinPage() {
         </div>
       )}
 
-      {/* TAB 3: DOA HAUL AKMAL PESANTREN */}
+      {/* TAB 3: DOA HAUL GUNUNG JATI CIREBON */}
       {activeTab === 'doa' && (
         <div className="space-y-4">
-          {DOA_PESANTREN.map((item) => (
+          {DOA_GUNUNGJATI.map((item) => (
             <div key={item.id} className="theme-bg-secondary border theme-border p-5 rounded-3xl space-y-4 shadow-sm">
               <div className="flex justify-between items-center border-b theme-border pb-2">
                 <span className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono text-xs font-black flex items-center justify-center">
                   {item.id}
                 </span>
-                <span className="text-[10px] font-mono theme-text-tertiary">Doa Haul Akmal #{item.id}</span>
+                <span className="text-[10px] font-mono theme-text-tertiary">Doa Haul Cirebon #{item.id}</span>
               </div>
 
               <p 
