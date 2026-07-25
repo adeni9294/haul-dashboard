@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <head>
-        <meta name="color-scheme" content="dark" />
+       <meta name="color-scheme" content="dark light" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
