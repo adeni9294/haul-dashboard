@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import SplashScreen from '@/components/SplashScreen';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -421,6 +422,7 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
+  <SplashScreen>
     <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
       <div className="w-full min-h-screen flex flex-col relative z-10">
         
@@ -827,5 +829,6 @@ export default function ClientLayout({ children }) {
       )}
 
     </div>
+</SplashScreen>
   );
 }
