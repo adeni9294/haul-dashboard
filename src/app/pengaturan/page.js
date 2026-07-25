@@ -572,10 +572,10 @@ export default function PengaturanPage() {
             </form>
           </GlassCard>
 
-          {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL + SHARELOC GPS */}
+        {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleSaveMapConfig} className="space-y-4">
-              <div className="border-b theme-border pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="border-b theme-border pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-rose-400" />
                   Pengaturan Peta Lokasi Haul
@@ -583,7 +583,7 @@ export default function PengaturanPage() {
                 <button
                   type="button"
                   onClick={handleShareLocationGPS}
-                  className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  className="px-3 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
                   title="Ambil titik koordinat otomatis dari GPS HP/Laptop Anda saat ini"
                 >
                   📍 Ambil Lokasi Saat Ini (ShareLoc)
@@ -604,7 +604,7 @@ export default function PengaturanPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Latitude</label>
+                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Latitude (Garis Lintang)</label>
                     <input 
                       type="text" 
                       value={mapLat} 
@@ -614,7 +614,7 @@ export default function PengaturanPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Longitude</label>
+                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Longitude (Garis Bujur)</label>
                     <input 
                       type="text" 
                       value={mapLon} 
@@ -626,7 +626,7 @@ export default function PengaturanPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">URL Embed Google Maps</label>
+                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">URL Embed Google Maps (Src Iframe)</label>
                   <input 
                     type="text" 
                     value={mapEmbedUrl} 
@@ -654,7 +654,6 @@ export default function PengaturanPage() {
               </button>
             </form>
           </GlassCard>
-
           {/* SEKSI 4: KELOLA PERIODE HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
