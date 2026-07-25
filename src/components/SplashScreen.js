@@ -2,47 +2,29 @@
 
 import { useEffect, useState } from "react";
 
-export default function SplashScreen({
-  children,
-  appReady = false,
-}) {
+export default function SplashScreen({ children }) {
+  const [loading, setLoading] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    if (appReady) {
+    const timer = setTimeout(() => {
       setFadeOut(true);
-    }
-  }, [appReady]);
 
-  if (appReady && fadeOut) {
-    return (
-      <div className="kb-splash fade-out">
-        <div className="kb-content">
-      <div className="kb-glow"></div>
-          <img
-            src="/icon-192.png"
-            alt="K&B"
-            className="kb-logo"
-          />
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
 
-          <h1>K & B</h1>
+    }, 1000); // tampil splash 1 detik
 
-          <p>Connecting Business, Building Trust</p>
+    return () => clearTimeout(timer);
+  }, []);
 
-          <div className="kb-progress">
-            <div className="kb-progress-fill"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (appReady) {
+  if (!loading) {
     return children;
   }
 
   return (
-    <div className="kb-splash">
+    <div className={`kb-splash ${fadeOut ? "fade-out" : ""}`}>
       <div className="kb-content">
 
         <div className="kb-glow"></div>
