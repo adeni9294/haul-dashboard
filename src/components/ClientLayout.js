@@ -21,7 +21,7 @@ import {
   CreditCard,    
   Calendar,      
   Images,        
-  Users,        
+  Users,         
   Settings,
   Clock,
   Compass,
@@ -33,7 +33,6 @@ import {
   Info
 } from 'lucide-react';
 
-// Inisialisasi Supabase Client tunggal
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
@@ -157,13 +156,12 @@ export default function ClientLayout({ children }) {
     const updateTime = () => {
       const sekarang = new Date();
       const jamMenitDetik = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-      const jamMenit = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
       
       setTimeString(jamMenitDetik);
       setDateString(sekarang.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
 
       if (jadwalSholat && isAlarmActive) {
-        checkSholatAlarm(jamMenit);
+        checkSholatAlarm(jamMenitDetik.slice(0, 5));
       }
     };
 
@@ -418,15 +416,15 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
-    <div className={`theme-${currentThemeKey} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 transition-colors duration-300 antialiased relative overflow-x-hidden text-white bg-[#050b14]`}>
+    <div className={`theme-${currentThemeKey} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-colors duration-300 antialiased relative overflow-x-hidden text-white bg-[#050b14]`}>
       <div className="w-full min-h-screen flex flex-col relative z-10">
         
-        {/* HEADER (Presisi & Rapi) */}
-        <header className="w-full max-w-xl mx-auto px-2 sm:px-4 pt-3 sm:pt-4 relative">
-          <div className="bg-[#0f172a] border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col gap-3.5 w-full relative overflow-hidden transition-all duration-300 shadow-xl">
+        {/* HEADER RESPONSIF (Mobile: max-w-xl, PC: max-w-5xl) */}
+        <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
+          <div className="bg-[#0f172a] border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 shadow-xl">
             
-            {/* Baris Atas: Logo, Nama Organisasi, Badge & Alamat */}
-            <div className="flex items-start gap-3 sm:gap-4">
+            {/* Sisi Kiri: Logo, Judul & Alamat */}
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-500/50 bg-slate-950 flex items-center justify-center shadow-md">
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
@@ -436,7 +434,7 @@ export default function ClientLayout({ children }) {
               </div>
 
               <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-xs sm:text-sm font-bold tracking-wide uppercase leading-tight text-slate-100">
                     {orgName}
                   </h1>
@@ -445,25 +443,25 @@ export default function ClientLayout({ children }) {
                   </span>
                 </div>
 
-                <p className="flex items-center gap-1 text-[11px] sm:text-xs text-cyan-400/90 truncate">
+                <p className="flex items-center gap-1.5 text-[11px] sm:text-xs text-cyan-400/90 md:whitespace-normal">
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{address}</span>
+                  <span className="truncate md:whitespace-normal">{address}</span>
                 </p>
               </div>
             </div>
 
-            {/* Baris Bawah: Tombol Sholat & Live Clock */}
-            <div className="pt-3 border-t border-slate-800/80 flex flex-row items-center justify-between gap-2 text-xs">
+            {/* Sisi Kanan: Sholat & Live Clock */}
+            <div className="pt-3 md:pt-0 border-t md:border-t-0 border-slate-800/80 flex flex-row items-center justify-between md:justify-end gap-3 text-xs shrink-0">
               <button 
                 onClick={() => setShowSholatModal(true)} 
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 rounded-full transition-colors text-xs font-medium"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 rounded-full transition-colors text-xs font-medium shrink-0"
               >
                 <Clock className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Jadwal Sholat</span>
               </button>
 
               {isMounted && timeString && (
-                <div className="flex items-center gap-1.5 text-slate-400 text-[11px] sm:text-xs font-mono">
+                <div className="flex items-center gap-1.5 text-slate-400 text-[11px] sm:text-xs font-mono shrink-0">
                   <span>{timeString}</span>
                   <span>•</span>
                   <span>{dateString}</span>
@@ -474,8 +472,8 @@ export default function ClientLayout({ children }) {
           </div>
         </header>
 
-        {/* MAIN CONTENT */}
-        <main className="flex-1 max-w-xl w-full mx-auto px-2 sm:px-4 pt-2 pb-6">
+        {/* MAIN CONTENT RESPONSIF (Mobile: max-w-xl, PC: max-w-5xl) */}
+        <main className="flex-1 max-w-xl md:max-w-5xl w-full mx-auto px-3 sm:px-6 pt-4 pb-6">
           {children}
         </main>
 
@@ -486,9 +484,9 @@ export default function ClientLayout({ children }) {
 
       </div>
 
-      {/* 🎯 BOTTOM NAV BAR DOCK */}
+      {/* 🎯 BOTTOM NAV BAR DOCK (Mobile: Floating Bottom, PC: max-w-5xl) */}
       <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-[#0f172a]/95 backdrop-blur-md border-t border-slate-800 shadow-[0_-12px_30px_rgba(0,0,0,0.8)]">
-        <div className="w-full max-w-md mx-auto h-16 flex items-center justify-around px-3">
+        <div className="w-full max-w-md md:max-w-xl mx-auto h-16 flex items-center justify-around px-3">
           <Link 
             href="/" 
             className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
