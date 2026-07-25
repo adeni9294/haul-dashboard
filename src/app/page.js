@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from "@/components/GlassCard";
 
@@ -436,15 +436,12 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12">
-        {/* Loading state */}
         <div className="p-12 text-center text-cyan-400 text-xs font-mono animate-pulse">
           {dict.loading}
         </div>
-
-        {/* Skeleton cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 bg-slate-900/50 rounded-3xl animate-pulse border border-slate-800" />
+            <div key={i} className="h-40 glass-card animate-pulse opacity-60" />
           ))}
         </div>
       </div>
@@ -458,7 +455,7 @@ export default function DashboardPage() {
         <div className="text-red-400 text-sm font-mono">{error}</div>
         <button
           onClick={() => loadDashboardData()}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-mono text-xs transition-colors"
+          className="px-4 py-2 btn-theme-primary rounded-lg font-mono text-xs transition-colors"
         >
           Coba Lagi
         </button>
@@ -467,19 +464,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 text-white">
+    <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 theme-text-primary">
       
       {/* 🌐 SELEKTOR PERIODE & BAHASA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs print:hidden">
         {periodeList.length > 0 && (
-          <div className="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 shadow-md">
-            <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
+          <GlassCard className="p-2.5 flex items-center justify-between">
+            <span className="text-[10px] font-mono tracking-wider theme-text-secondary uppercase font-bold px-1">
               {dict.selectPeriod}
             </span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-slate-800 text-cyan-400 text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer border border-slate-700"
+              className="bg-black/30 theme-text-accent text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer theme-border border"
             >
               {periodeList.map((p) => (
                 <option key={p.id} value={p.id} className="bg-slate-900 text-white">
@@ -487,41 +484,39 @@ export default function DashboardPage() {
                 </option>
               ))}
             </select>
-          </div>
+          </GlassCard>
         )}
 
-        <div className="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 shadow-md">
-          <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
+        <GlassCard className="p-2.5 flex items-center justify-between">
+          <span className="text-[10px] font-mono tracking-wider theme-text-secondary uppercase font-bold px-1">
             {dict.selectLanguage}
           </span>
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="bg-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer border border-slate-700"
+            className="bg-black/30 theme-text-primary text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer theme-border border"
           >
             <option value="id" className="bg-slate-900 text-white">🇮🇩 Indonesia</option>
             <option value="jv" className="bg-slate-900 text-white">🎯 Cirebonan</option>
             <option value="en" className="bg-slate-900 text-white">🇬🇧 English</option>
           </select>
-        </div>
+        </GlassCard>
       </div>
 
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className="w-full bg-slate-900/90 border border-amber-500/30 py-2.5 px-4 rounded-xl overflow-hidden flex items-center shadow-lg print:hidden">
-          <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono text-amber-300">
+        <GlassCard className="w-full py-2.5 px-4 overflow-hidden flex items-center print:hidden">
+          <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono theme-text-accent">
             📢 {announcement}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* 💳 3 KARTU KAS UTAMA MODERN */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* CARD 1: KAS UTAMA HAUL */}
-        <div className="md:col-span-1 p-5 sm:p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/10 border border-cyan-200/50 rounded-3xl relative overflow-hidden">
-
-          {/* Target Pattern Rings Ornament */}
+        <div className="md:col-span-1 p-5 sm:p-6 theme-gradient-main text-slate-950 shadow-xl border border-white/20 rounded-3xl relative overflow-hidden">
           <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-25 pointer-events-none select-none">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-950">
               <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.3" />
@@ -547,11 +542,11 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-5 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-3xl shadow-xl border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between">
+        <GlassCard className="p-5 flex flex-col justify-between border-emerald-500/30">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] text-emerald-200/70 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
             <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xs shadow-md">
               🟢
@@ -560,16 +555,16 @@ export default function DashboardPage() {
 
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] text-emerald-200/70 font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
+            <p className="text-[10px] theme-text-secondary font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
           </div>
-        </div>
+        </GlassCard>
 
         {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-5 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-3xl shadow-xl border border-rose-500/30 relative overflow-hidden flex flex-col justify-between">
+        <GlassCard className="p-5 flex flex-col justify-between border-rose-500/30">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] text-rose-200/70 font-medium mt-0.5">Realisasi Pengeluaran</p>
+              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
             <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-xs shadow-md">
               🔴
@@ -578,9 +573,9 @@ export default function DashboardPage() {
 
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] text-rose-200/70 font-mono mt-2 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
+            <p className="text-[10px] theme-text-secondary font-mono mt-2 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
           </div>
-        </div>
+        </GlassCard>
 
       </div>
 
@@ -589,85 +584,85 @@ export default function DashboardPage() {
 
         {/* LOG TRAFIK PENGUNJUNG */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:col-span-1">
-          <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+          <GlassCard className="p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-sm shrink-0">📈</div>
             <div className="min-w-0">
-              <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.totalKunjungan}</p>
+              <p className="text-[9px] font-mono theme-text-tertiary uppercase truncate">{dict.totalKunjungan}</p>
               <h4 className="text-base font-black font-mono leading-tight">{visitorStats.totalViews}</h4>
             </div>
-          </div>
+          </GlassCard>
 
-          <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+          <GlassCard className="p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-sm shrink-0">👥</div>
             <div className="min-w-0">
-              <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.pengunjungUnik}</p>
+              <p className="text-[9px] font-mono theme-text-tertiary uppercase truncate">{dict.pengunjungUnik}</p>
               <h4 className="text-base font-black font-mono leading-tight">{visitorStats.uniqueCount}</h4>
             </div>
-          </div>
+          </GlassCard>
         </div>
 
         {/* TARGET PLAFON PROGRESS */}
-        <div className="md:col-span-2 p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col justify-center space-y-3 shadow-md">
+        <GlassCard className="md:col-span-2 p-4 flex flex-col justify-center space-y-3">
           <div className="flex justify-between items-center">
-            <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 text-slate-200">
+            <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 theme-text-primary">
               <span>🎯</span> {dict.progressTitle}
             </h3>
-            <span className="text-cyan-400 font-mono text-xs font-black bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">{progress.percent}%</span>
+            <span className="theme-text-accent font-mono text-xs font-black bg-black/30 px-2 py-0.5 rounded theme-border border">{progress.percent}%</span>
           </div>
-          <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+          <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 theme-border border">
             <div
-              className="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 rounded-full transition-all duration-500"
+              className="h-full theme-gradient-main rounded-full transition-all duration-500"
               style={{ width: `${Math.min(progress.percent, 100)}%` }}
             />
           </div>
-          <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
-            <span>{dict.collected}: <strong className="text-slate-200">{formatRupiah(progress.current)}</strong></span>
-            <span>{dict.target}: <strong className="text-slate-200">{formatRupiah(progress.target)}</strong></span>
+          <div className="flex justify-between items-center text-[10px] font-mono theme-text-secondary">
+            <span>{dict.collected}: <strong className="theme-text-primary">{formatRupiah(progress.current)}</strong></span>
+            <span>{dict.target}: <strong className="theme-text-primary">{formatRupiah(progress.target)}</strong></span>
           </div>
-        </div>
+        </GlassCard>
 
       </div>
 
       {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-3 shadow-md">
-          <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b border-slate-800 pb-2">{dict.rekapIncome}</h4>
+        <GlassCard className="p-4 space-y-3">
+          <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b theme-border pb-2">{dict.rekapIncome}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <span className="flex items-center gap-1 text-slate-300 font-medium">🔹 {c.label}</span>
-                <span className={`font-mono font-bold ${c.value < 0 ? 'text-rose-400' : 'text-cyan-400'}`}>{formatRupiah(c.value)}</span>
+              <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
+                <span className="flex items-center gap-1 theme-text-secondary font-medium">🔹 {c.label}</span>
+                <span className={`font-mono font-bold ${c.value < 0 ? 'text-rose-400' : 'theme-text-accent'}`}>{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-3 shadow-md">
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b border-slate-800 pb-2">{dict.rekapExpense}</h4>
+        <GlassCard className="p-4 space-y-3">
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b theme-border pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                <span className="flex items-center gap-1 text-slate-300 font-medium">🔸 {c.label}</span>
+              <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
+                <span className="flex items-center gap-1 theme-text-secondary font-medium">🔸 {c.label}</span>
                 <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       </div>
 
       {/* MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-slate-900/80 border-l-4 border-l-emerald-400 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+        <GlassCard className="p-4 border-l-4 border-l-emerald-400 space-y-3">
           <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">{dict.lastIncome}</h5>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
-              <p className="text-xs text-slate-400 font-mono py-1">{dict.emptyMutationIn}</p>
+              <p className="text-xs theme-text-tertiary font-mono py-1">{dict.emptyMutationIn}</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold truncate uppercase text-slate-200">{t.note}</p>
-                    <p className="text-[9px] text-slate-400 font-mono mt-0.5">{t.transaction_date}</p>
+                    <p className="font-bold truncate uppercase theme-text-primary">{t.note}</p>
+                    <p className="text-[9px] theme-text-tertiary font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
                   <p className={`font-mono font-black shrink-0 ml-2 text-xs ${t.amount < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {t.amount < 0 ? formatRupiah(t.amount) : `+${formatRupiah(t.amount)}`}
@@ -676,26 +671,26 @@ export default function DashboardPage() {
               ))
             )}
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="p-4 bg-slate-900/80 border-l-4 border-l-rose-400 border border-slate-800 rounded-2xl space-y-3 shadow-md">
+        <GlassCard className="p-4 border-l-4 border-l-rose-400 space-y-3">
           <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
-              <p className="text-xs text-slate-400 font-mono py-1">{dict.emptyMutationOut}</p>
+              <p className="text-xs theme-text-tertiary font-mono py-1">{dict.emptyMutationOut}</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="p-2 bg-slate-950/60 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold truncate uppercase text-slate-200">{t.note}</p>
-                    <p className="text-[9px] text-slate-400 font-mono mt-0.5">{t.transaction_date}</p>
+                    <p className="font-bold truncate uppercase theme-text-primary">{t.note}</p>
+                    <p className="text-[9px] theme-text-tertiary font-mono mt-0.5">{t.transaction_date}</p>
                   </div>
                   <div className="font-mono font-black text-rose-400 shrink-0 ml-2 text-xs">-{formatRupiah(t.amount)}</div>
                 </div>
               ))
             )}
           </div>
-        </div>
+        </GlassCard>
       </div>
 
     </div>
