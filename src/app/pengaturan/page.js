@@ -21,7 +21,9 @@ import {
   Edit2, 
   Check, 
   X,
-  Sparkles
+  Sparkles,
+  Navigation,
+  Globe
 } from 'lucide-react';
 
 // 🎨 SINKRONISASI 16 TEMA RESMI CLIENTLAYOUT.JS
@@ -47,10 +49,10 @@ const THEME_OPTIONS = [
 export default function PengaturanPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+   
   // 🔔 State Toast Modal Dialog
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '' });
-  
+   
   // ❓ State Dialog Konfirmasi Aksi
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', action: null });
 
@@ -62,6 +64,13 @@ export default function PengaturanPage() {
   const [bannerText, setBannerText] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  // 🗺️ State Pengaturan Peta Lokasi
+  const [mapTitle, setMapTitle] = useState('');
+  const [mapLat, setMapLat] = useState('');
+  const [mapLon, setMapLon] = useState('');
+  const [mapEmbedUrl, setMapEmbedUrl] = useState('');
+  const [mapAddressDetail, setMapAddressDetail] = useState('');
 
   // 🔒 State Ubah Sandi
   const [currentPassword, setCurrentPassword] = useState('');
@@ -104,6 +113,7 @@ export default function PengaturanPage() {
       setLoading(true);
       await validateAdminFromSupabase();
       await loadSettings();
+      await loadMapSettings();
       await loadCategories();
       await loadPeriodeList();
     } finally {
@@ -137,6 +147,18 @@ export default function PengaturanPage() {
       setBannerText(c.announcement || c.banner_text || '');
       setLogoUrl(c.logo_url || '');
       setTheme(c.theme || 'default');
+    }
+  }
+
+  async function loadMapSettings() {
+    const supabase = getSupabase();
+    const { data } = await supabase.from('map_settings').select('*').eq('id', 'main_map').single();
+    if (data) {
+      setMapTitle(data.title || '');
+      setMapLat(data.latitude || '');
+      setMapLon(data.longitude || '');
+      setMapEmbedUrl(data.embed_url || '');
+      setMapAddressDetail(data.address_detail || '');
     }
   }
 
@@ -210,6 +232,31 @@ export default function PengaturanPage() {
     } else {
       console.error(error);
       showToast('error', 'Gagal Menyimpan', error.message || 'Terjadi kesalahan sistem.');
+    }
+  };
+
+  const handleSaveMapConfig = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) return showToast('error', 'Akses Ditolak', 'Aksi dibatasi khusus admin.');
+
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from('map_settings')
+      .upsert({
+        id: 'main_map',
+        title: mapTitle,
+        latitude: mapLat,
+        longitude: mapLon,
+        embed_url: mapEmbedUrl,
+        address_detail: mapAddressDetail,
+        updated_at: new Date()
+      });
+
+    if (!error) {
+      showToast('success', 'Peta Diperbarui', 'Titik koordinat dan pengaturan peta berhasil disimpan!');
+    } else {
+      console.error(error);
+      showToast('error', 'Gagal Simpan Peta', error.message || 'Terjadi kesalahan sistem.');
     }
   };
 
@@ -379,7 +426,7 @@ export default function PengaturanPage() {
             Setelan Sistem & Antarmuka
           </h2>
           <p className="text-[11px] theme-text-secondary mt-1 font-medium">
-            Kelola tema tampilan global, identitas organisasi, periode haul, dan kata sandi admin.
+            Kelola tema tampilan global, identitas organisasi, koordinat peta lokasi, periode haul, dan kata sandi admin.
           </p>
         </div>
         <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -389,7 +436,7 @@ export default function PengaturanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* KOLOM KIRI: FORM TEMA & KONFIGURASI APLIKASI */}
+        {/* KOLOM KIRI: FORM TEMA, IDENTITAS & PETA */}
         <div className="space-y-6">
           
           {/* SEKSI 1: TEMA GLOBAL */}
@@ -499,7 +546,80 @@ export default function PengaturanPage() {
             </form>
           </GlassCard>
 
-          {/* SEKSI 3: KELOLA PERIODE HAUL */}
+          {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL */}
+          <GlassCard className="p-5 sm:p-6 space-y-4">
+            <form onSubmit={handleSaveMapConfig} className="space-y-4">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-rose-400" />
+                Pengaturan Titik Peta Lokasi Haul
+              </h3>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">Judul Lokasi / Makam</label>
+                  <input 
+                    type="text" 
+                    value={mapTitle} 
+                    onChange={(e) => setMapTitle(e.target.value)} 
+                    placeholder="Contoh: Maqbaroh Buyut Kepuh & Buyut Besus"
+                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-rose-500 font-semibold text-xs" 
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Latitude (Garis Lintang)</label>
+                    <input 
+                      type="text" 
+                      value={mapLat} 
+                      onChange={(e) => setMapLat(e.target.value)} 
+                      placeholder="-6.6983"
+                      className="px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-xs w-full" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold theme-text-secondary mb-1">Longitude (Garis Bujur)</label>
+                    <input 
+                      type="text" 
+                      value={mapLon} 
+                      onChange={(e) => setMapLon(e.target.value)} 
+                      placeholder="108.4812"
+                      className="px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-xs w-full" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">URL Embed Google Maps (Src Iframe)</label>
+                  <input 
+                    type="text" 
+                    value={mapEmbedUrl} 
+                    onChange={(e) => setMapEmbedUrl(e.target.value)} 
+                    placeholder="https://www.google.com/maps/embed?pb=..."
+                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-[11px]" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold theme-text-secondary mb-1">Detail Alamat Lengkap Peta</label>
+                  <textarea 
+                    rows="2" 
+                    value={mapAddressDetail} 
+                    onChange={(e) => setMapAddressDetail(e.target.value)} 
+                    placeholder="Blok Cibogo Kidul RT/RW 002/003 Desa Warujaya..."
+                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none text-xs" 
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mt-2">
+                <Navigation className="w-4 h-4" />
+                Simpan Koordinat & Peta
+              </button>
+            </form>
+          </GlassCard>
+
+          {/* SEKSI 4: KELOLA PERIODE HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4 theme-text-accent" />
@@ -569,7 +689,7 @@ export default function PengaturanPage() {
         {/* KOLOM KANAN: KATEGORI POS & OTORISASI SANDI */}
         <div className="space-y-6">
           
-          {/* SEKSI 4: KATEGORI POS BUKU KAS */}
+          {/* SEKSI 5: KATEGORI POS BUKU KAS */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
               <FolderPlus className="w-4 h-4 theme-text-accent" />
@@ -625,7 +745,7 @@ export default function PengaturanPage() {
             </div>
           </GlassCard>
 
-          {/* SEKSI 5: UBAH SANDI OTORISASI */}
+          {/* SEKSI 6: UBAH SANDI OTORISASI */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
