@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
+import GlassCard from '@/components/GlassCard';
 
 // Inisialisasi Supabase Client di luar komponen
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
