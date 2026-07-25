@@ -58,10 +58,10 @@ const THEME_STYLES = {
 };
 
 const DAFTAR_KOTA = [
-  { id: '1202', name: 'Kab. Cirebon' },
-  { id: '1212', name: 'Kota Cirebon' },
+  { id: '1219', name: 'Kab. Cirebon' },
+  { id: '1220', name: 'Kota Cirebon' },
   { id: '1211', name: 'Kota Bandung' },
-  { id: '1219', name: 'Kab. Bandung Barat' },
+  { id: '1205', name: 'Kab. Bandung Barat' },
   { id: '1301', name: 'DKI Jakarta' },
   { id: '1214', name: 'Kab. Indramayu' },
   { id: '1215', name: 'Kab. Majalengka' },
