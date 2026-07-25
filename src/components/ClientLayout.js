@@ -94,22 +94,27 @@ export default function ClientLayout({ children }) {
   const [orgName, setOrgName] = useState('Panitia Haul Maqbaroh Buyut Kepuh dan Buyut Besus');
   const [address, setAddress] = useState('Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon');
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [currentThemeKey, setCurrentThemeKey] = useState('default');
-  useEffect(() => {
-  const body = document.body;
+const [logoUrl, setLogoUrl] = useState('');
+const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
-  // hapus semua class tema lama
-  Object.keys(THEME_STYLES).forEach((key) => {
-    body.classList.remove(`theme-${key}`);
-  });
+useEffect(() => {
+  const savedTheme = localStorage.getItem('app-theme');
 
-  // pasang tema aktif
-  body.classList.add(`theme-${currentThemeKey}`);
+  if (savedTheme && THEME_STYLES[savedTheme]) {
+    setCurrentThemeKey(savedTheme);
+  }
+}, []);
+
+useEffect(() => {
+  document.body.className = document.body.className
+    .replace(/theme-[^\s]+/g, '')
+    .trim();
+
+  document.body.classList.add(`theme-${currentThemeKey}`);
 }, [currentThemeKey]);
 
-  const [timeString, setTimeString] = useState('');
-  const [dateString, setDateString] = useState('');
+const [timeString, setTimeString] = useState('');
+const [dateString, setDateString] = useState('');
 
   const [jadwalSholat, setJadwalSholat] = useState(null);
   const [kotaSholat, setKotaSholat] = useState('Memuat lokasi...');
