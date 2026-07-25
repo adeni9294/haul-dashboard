@@ -18,6 +18,7 @@ export default function SplashScreen({
     return (
       <div className="kb-splash fade-out">
         <div className="kb-content">
+      <div className="kb-glow"></div>
           <img
             src="/icon-192.png"
             alt="K&B"
