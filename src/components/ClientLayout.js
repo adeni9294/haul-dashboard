@@ -96,6 +96,17 @@ export default function ClientLayout({ children }) {
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
+  useEffect(() => {
+  const body = document.body;
+
+  // hapus semua class tema lama
+  Object.keys(THEME_STYLES).forEach((key) => {
+    body.classList.remove(`theme-${key}`);
+  });
+
+  // pasang tema aktif
+  body.classList.add(`theme-${currentThemeKey}`);
+}, [currentThemeKey]);
 
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
