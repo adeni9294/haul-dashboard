@@ -346,7 +346,7 @@ export default function DashboardPage() {
 
     } catch (err) { 
       console.error(err); 
-    } finally { 
+    } font-mono { 
       setLoading(false); 
     }
   }
@@ -366,12 +366,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 text-white">
+    /*  PENTING: Diubah ke max-w-5xl (sebelumnya max-w-xl) agar melebar sempurna di PC */
+    <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 text-white">
       
-      {/* 🌐 SELEKTOR PERIODE & BAHASA (RESPONSIF DUA KOLOM DENGAN DESAIN BARU) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs print:hidden">
+      {/* 🌐 SELEKTOR PERIODE & BAHASA */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs print:hidden">
         {periodeList.length > 0 && (
-          <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-slate-800 shadow-md">
+          <div className="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 shadow-md">
             <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
               {dict.selectPeriod}
             </span>
@@ -389,7 +390,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-slate-800 shadow-md">
+        <div className="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 shadow-md">
           <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-bold px-1">
             {dict.selectLanguage}
           </span>
@@ -407,18 +408,18 @@ export default function DashboardPage() {
       
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <div className="w-full bg-slate-900/90 border border-amber-500/30 py-2 px-4 rounded-xl overflow-hidden flex items-center shadow-lg print:hidden">
+        <div className="w-full bg-slate-900/90 border border-amber-500/30 py-2.5 px-4 rounded-xl overflow-hidden flex items-center shadow-lg print:hidden">
           <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono text-amber-300">
             📢 {announcement}
           </div>
         </div>
       )}
 
-      {/* 💳 3 KARTU KAS UTAMA MODERN (CARD 1 MATCH SCREENSHOT) */}
-      <div className="space-y-4">
+      {/* 💳 3 KARTU KAS UTAMA MODERN (RESPONSIF DUA/TIGA KOLOM DI PC) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        {/* CARD 1: KAS UTAMA HAUL (Presisi Sesuai Screenshot) */}
-        <div className="p-5 sm:p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/10 border border-cyan-200/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+        {/* CARD 1: KAS UTAMA HAUL (Mendapat porsi 1-2 kolom di desktop jika diinginkan, di sini set sejajar 3 kartu) */}
+        <div className="md:col-span-1 p-5 sm:p-6 bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-300 text-slate-950 shadow-xl shadow-emerald-500/10 border border-cyan-200/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[170px]">
           
           {/* Target Pattern Rings Ornament */}
           <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-25 pointer-events-none select-none">
@@ -434,97 +435,97 @@ export default function DashboardPage() {
             <p className="text-[11px] font-bold text-slate-900 mt-0.5">{dict.netBalance}</p>
           </div>
 
-          <div className="relative z-10 mt-4">
-            <h2 className="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none text-slate-950">
+          <div className="relative z-10 mt-3">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono tracking-tight leading-none text-slate-950">
               {formatRupiah(totals.total)}
             </h2>
-            <div className="flex justify-between items-center mt-6 font-mono text-[10px] tracking-wider text-slate-900/90 font-bold">
+            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider text-slate-900/90 font-bold">
               <span>{dict.initialBalance}: {formatRupiah(totals.saldoAwal)}</span>
               <span className="font-extrabold uppercase">{dict.committee}</span>
             </div>
           </div>
         </div>
 
-        {/* GRID UNTUK UANG MASUK & UANG BELANJA */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* CARD 2: TOTAL UANG MASUK */}
+        <div className="p-5 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-3xl shadow-xl border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between min-h-[170px]">
+          <div className="relative z-10 flex justify-between items-start">
+            <div>
+              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
+              <p className="text-[10px] text-emerald-200/70 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+            </div>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xs shadow-md">
+              🟢
+            </div>
+          </div>
           
-          {/* CARD 2: TOTAL UANG MASUK */}
-          <div className="p-5 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-emerald-100 rounded-3xl shadow-xl border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between min-h-[150px]">
-            <div className="relative z-10 flex justify-between items-start">
-              <div>
-                <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-                <p className="text-[10px] text-emerald-200/70 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
-              </div>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xs shadow-md">
-                🟢
-              </div>
+          <div className="relative z-10 mt-3">
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
+            <p className="text-[10px] text-emerald-200/70 font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
+          </div>
+        </div>
+
+        {/* CARD 3: TOTAL UANG BELANJA */}
+        <div className="p-5 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-3xl shadow-xl border border-rose-500/30 relative overflow-hidden flex flex-col justify-between min-h-[170px]">
+          <div className="relative z-10 flex justify-between items-start">
+            <div>
+              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
+              <p className="text-[10px] text-rose-200/70 font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            
-            <div className="relative z-10 mt-3">
-              <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
-              <p className="text-[10px] text-emerald-200/70 font-mono mt-1 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
+            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-xs shadow-md">
+              🔴
             </div>
           </div>
 
-          {/* CARD 3: TOTAL UANG BELANJA */}
-          <div className="p-5 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-rose-100 rounded-3xl shadow-xl border border-rose-500/30 relative overflow-hidden flex flex-col justify-between min-h-[150px]">
-            <div className="relative z-10 flex justify-between items-start">
-              <div>
-                <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-                <p className="text-[10px] text-rose-200/70 font-medium mt-0.5">Realisasi Pengeluaran</p>
-              </div>
-              <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-xs shadow-md">
-                🔴
-              </div>
-            </div>
-
-            <div className="relative z-10 mt-3">
-              <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
-              <p className="text-[10px] text-rose-200/70 font-mono mt-1 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
-            </div>
+          <div className="relative z-10 mt-3">
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
+            <p className="text-[10px] text-rose-200/70 font-mono mt-2 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
           </div>
-
         </div>
 
       </div>
 
-      {/* LOG TRAFIK PENGUNJUNG */}
-      <div className="grid grid-cols-2 gap-3 print:hidden">
-        <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-sm">📈</div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.totalKunjungan}</p>
-            <h4 className="text-base font-black font-mono leading-tight">{visitorStats.totalViews}</h4>
+      {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS (GRID 2 KOLOM DI DESKTOP) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+        
+        {/* LOG TRAFIK PENGUNJUNG (1 Kolom di Desktop) */}
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:col-span-1">
+          <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-sm shrink-0">📈</div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.totalKunjungan}</p>
+              <h4 className="text-base font-black font-mono leading-tight">{visitorStats.totalViews}</h4>
+            </div>
+          </div>
+
+          <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-sm shrink-0">👥</div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.pengunjungUnik}</p>
+              <h4 className="text-base font-black font-mono leading-tight">{visitorStats.uniqueCount}</h4>
+            </div>
           </div>
         </div>
 
-        <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
-          <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-sm">👥</div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-mono text-slate-400 uppercase truncate">{dict.pengunjungUnik}</p>
-            <h4 className="text-base font-black font-mono leading-tight">{visitorStats.uniqueCount}</h4>
+        {/* TARGET PLAFON PROGRESS (2 Kolom di Desktop) */}
+        <div className="md:col-span-2 p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col justify-center space-y-3 shadow-md">
+          <div className="flex justify-between items-center">
+            <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 text-slate-200">
+              <span>🎯</span> {dict.progressTitle}
+            </h3>
+            <span className="text-cyan-400 font-mono text-xs font-black bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">{progress.percent}%</span>
+          </div>
+          <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+            <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 rounded-full transition-all duration-500" style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
+          </div>
+          <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
+            <span>{dict.collected}: <strong className="text-slate-200">{formatRupiah(progress.current)}</strong></span>
+            <span>{dict.target}: <strong className="text-slate-200">{formatRupiah(progress.target)}</strong></span>
           </div>
         </div>
+
       </div>
 
-      {/* TARGET PLAFON PROGRESS */}
-      <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col justify-between space-y-2 shadow-md">
-        <div className="flex justify-between items-center">
-          <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 text-slate-200">
-            <span>🎯</span> {dict.progressTitle}
-          </h3>
-          <span className="text-cyan-400 font-mono text-xs font-black bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">{progress.percent}%</span>
-        </div>
-        <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
-          <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 rounded-full transition-all duration-500" style={{ width: `${Math.min(progress.percent, 100)}%` }}></div>
-        </div>
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
-          <span>{dict.collected}: <strong className="text-slate-200">{formatRupiah(progress.current)}</strong></span>
-          <span>{dict.target}: <strong className="text-slate-200">{formatRupiah(progress.target)}</strong></span>
-        </div>
-      </div>
-
-      {/* REKAP KATEGORI */}
+      {/* REKAP KATEGORI (BERDAMPINGAN DI DESKTOP) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-3 shadow-md">
           <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b border-slate-800 pb-2">{dict.rekapIncome}</h4>
@@ -551,7 +552,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* MUTASI TERAKHIR */}
+      {/* MUTASI TERAKHIR (BERDAMPINGAN DI DESKTOP) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-slate-900/80 border-l-4 border-l-emerald-400 border border-slate-800 rounded-2xl space-y-3 shadow-md">
           <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">{dict.lastIncome}</h5>
