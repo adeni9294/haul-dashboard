@@ -427,7 +427,7 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
-    <div className={`theme-${currentThemeKey} font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden`}>
+    <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
       <div className="w-full min-h-screen flex flex-col relative z-10">
         
         {/* HEADER RESPONSIF (Mobile: max-w-xl, PC: max-w-5xl) */}
