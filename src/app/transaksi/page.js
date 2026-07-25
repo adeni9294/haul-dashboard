@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// 🌐 KAMUS MULTI-BAHASA (INDONESIA, REANG/CIREBON, ENGLISH)
+// 🌐 KAMUS MULTI-BAHASA
 const translations = {
   id: {
     title: "💰 Buku Kas & Transaksi Haul",
@@ -145,7 +145,7 @@ export default function TransaksiPage() {
   const [allExpenses, setAllExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  // ➕ State Periode Haul
+  // State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
   const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
@@ -278,7 +278,7 @@ export default function TransaksiPage() {
       setAllExpenses(expensesDb || []);
     } catch (e) {
       console.error("Gagal load data: ", e);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   }
@@ -530,33 +530,40 @@ export default function TransaksiPage() {
   return (
     <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs text-white relative">
       
-      {/* 🛠️ PRINT STYLES */}
+      {/* 🛠️ PRINT STYLES (DIPERBAIKI UNTUK TAMPILAN FULL A4) */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body * {
-            visibility: hidden !important;
+          /* 1. Reset Ukuran Kertas Ke A4 Standar */
+          @page {
+            size: A4 portrait;
+            margin: 12mm 15mm;
           }
-          #root-transaksi-container, #root-transaksi-container * {
-            visibility: visible !important;
-          }
-          #root-transaksi-container {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+
+          /* 2. Normalkan elemen Root, Body, & Layout Next.js */
+          html, body, main, #__next, #root-transaksi-container {
             width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
-            color: black !important;
-          }
-          .print\\:hidden, .print\\:hidden * {
-            display: none !important;
-            height: 0 !important;
-          }
-          body, html {
+            overflow: visible !important;
             background: white !important;
             color: black !important;
+            position: static !important; /* Mencegah posisi absolute terpotong */
           }
-          
+
+          /* 3. Sembunyikan elemen UI Aplikasi */
+          .print\\:hidden, nav, header, sidebar, button {
+            display: none !important;
+          }
+
+          /* 4. Pastikan Komponen Cetak LPJ Tampil Maksimal */
+          .hidden.print\\:block {
+            display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+          }
+
           .cetak-wrapper-logo, .cetak-wrapper-logo img {
             display: block !important;
             visibility: visible !important;
@@ -568,12 +575,21 @@ export default function TransaksiPage() {
           .print-page-wrapper {
             background: white !important;
             color: black !important;
-            page-break-inside: avoid !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
+
+          /* 5. Kelola Halaman dan Paginasi */
           .page-break {
             page-break-before: always !important;
             break-before: page !important;
-            margin-top: 10px !important;
+            margin-top: 20px !important;
+          }
+
+          /* Mencegah tabel atau baris tanda tangan terpotong secara janggal */
+          table, tr, td, th, .break-inside-avoid {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}} />
@@ -581,7 +597,7 @@ export default function TransaksiPage() {
       {/* AREA UTAMA INTERFACE */}
       <div className="print:hidden space-y-4">
         
-        {/* HEADER & TOP CONTROLS (GLASSMORPISM) */}
+        {/* HEADER & TOP CONTROLS */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl">
           <div>
             <div className="flex items-center gap-2">
@@ -646,7 +662,7 @@ export default function TransaksiPage() {
           </div>
         )}
 
-        {/* SEARCH & FILTERS (GLASS) */}
+        {/* SEARCH & FILTERS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-3 rounded-2xl">
           <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border border-white/20 rounded-xl focus:outline-none text-white placeholder:text-slate-400" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border border-white/20 rounded-xl text-white focus:outline-none cursor-pointer font-bold">
@@ -660,7 +676,7 @@ export default function TransaksiPage() {
           </select>
         </div>
 
-        {/* DATA TABLE DISPLAY (GLASS GlOW) */}
+        {/* DATA TABLE DISPLAY */}
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-x-auto max-h-[500px] overflow-y-auto shadow-xl relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
@@ -787,8 +803,8 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL */}
-      <div className="hidden print:block bg-white text-black p-2 font-serif text-[11px] leading-relaxed w-full">
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (BERSIH & FULL A4) */}
+      <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
         <div className="print-page-wrapper">
           <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6">
             <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
@@ -803,7 +819,7 @@ export default function TransaksiPage() {
               <h1 className="text-lg font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
               <p className="text-[9px] font-sans italic text-gray-700 mt-0.5">{metaOrg.address}</p>
             </div>
-            <div className="w-16 h-16 flex-shrink-0 print:hidden sm:block"></div>
+            <div className="w-16 h-16 flex-shrink-0"></div>
           </div>
           
           <div className="text-center mb-6">
