@@ -517,3 +517,80 @@ aside.theme-sidebar .menu-item-active {
   transform: translateY(-3px);
   box-shadow: 0 15px 35px var(--glass-shadow);
 }
+
+/* ===========================
+   K&B Splash Screen
+=========================== */
+
+.kb-splash{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(180deg,#061212,#000,#061212);
+    z-index:999999;
+    overflow:hidden;
+    transition:opacity .5s ease;
+}
+
+.kb-splash.fade-out{
+    opacity:0;
+}
+
+.kb-content{
+    text-align:center;
+    width:320px;
+    position:relative;
+}
+
+.kb-logo{
+    width:140px;
+    height:140px;
+    object-fit:contain;
+    animation:floatLogo 3s ease-in-out infinite;
+    filter:drop-shadow(0 0 25px rgba(255,215,0,.6));
+}
+
+.kb-content h1{
+    margin-top:20px;
+    color:#fff;
+    font-size:38px;
+    font-weight:800;
+    letter-spacing:3px;
+}
+
+.kb-content p{
+    color:#b8c7c7;
+    margin-top:10px;
+    font-size:15px;
+    line-height:24px;
+}
+
+.kb-progress{
+    width:100%;
+    height:8px;
+    margin-top:35px;
+    background:#143535;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.kb-progress-fill{
+    height:100%;
+    width:0%;
+    border-radius:20px;
+    background:linear-gradient(90deg,#FFD700,#00E5A8,#FFD700);
+    animation:loading 2.5s linear forwards;
+}
+
+@keyframes loading{
+    from{width:0;}
+    to{width:100%;}
+}
+
+@keyframes floatLogo{
+    0%{transform:translateY(0);}
+    50%{transform:translateY(-10px);}
+    100%{transform:translateY(0);}
+}
