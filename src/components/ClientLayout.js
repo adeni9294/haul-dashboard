@@ -198,23 +198,25 @@ export default function ClientLayout({ children }) {
   }, [pathname]);
 
   // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA (DIRECT & STABIL)
-  async function fetchJadwalSholatDirect(idKota) {
-    try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
+ async function fetchJadwalSholatDirect(idKota) {
+  try {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
 
-      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
-      const result = await res.json();
-      if (result && result.status && result.data) {
-        setJadwalSholat(result.data.jadwal);
-        if (result.data.lokasi) setKotaSholat(result.data.lokasi);
-      }
-    } catch (e) {
-      console.error('Gagal mengambil data jadwal sholat:', e);
+    const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
+    const result = await res.json();
+    
+    if (result && result.status && result.data && result.data.jadwal) {
+      setJadwalSholat(result.data.jadwal);
+      // ❌ JANGAN GUNAKAN BARIS INI: if (result.data.lokasi) setKotaSholat(result.data.lokasi);
+      // Biarkan `kotaSholat` diatur oleh dropdown/DAFTAR_KOTA
     }
+  } catch (e) {
+    console.error('Gagal mengambil data jadwal sholat:', e);
   }
+}
 
   // FUNGSI KHUSUS DETEKSI GPS MANUAL
   async function fetchJadwalAutoGPS() {
