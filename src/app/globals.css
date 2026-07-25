@@ -443,3 +443,11 @@ aside.theme-sidebar .menu-item-active {
 @layer base {
   .bg-zinc-950, .bg-neutral-950, .bg-stone-950, .bg-gray-950, .bg-slate-950 {}
 }
+
+.glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: all .3s ease;
+}
