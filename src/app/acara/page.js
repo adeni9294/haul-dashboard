@@ -15,7 +15,6 @@ export default function AcaraPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  // Reference DOM untuk area capture PDF/Gambar
   const printRef = useRef(null);
 
   // ➕ State Periode Haul
@@ -74,7 +73,6 @@ export default function AcaraPage() {
       setLoading(true);
       const supabase = getSupabase();
 
-      // 1. Memuat Daftar Periode
       let activePeriodeId = selectedPeriodeId;
       const { data: listPeriode } = await supabase
         .from('periode_haul')
@@ -91,7 +89,6 @@ export default function AcaraPage() {
         setCurrentPeriodeObj(found);
       }
 
-      // 2. Query Data Rundown Acara berdasarkan Periode
       let query = supabase
         .from('schedules')
         .select('*')
@@ -190,94 +187,55 @@ export default function AcaraPage() {
     );
   };
 
-  // Helper memuat Library CDN Eksternal secara Dinamis saat Mengunduh
-  const loadScript = (src) => {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) {
-        return resolve();
-      }
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Gagal memuat script: ${src}`));
-      document.head.appendChild(script);
-    });
+  // 🖨️ FITUR CETAK / SIMPAN PDF (NATIVE BROWSER PRINT - NATIVELY SUPPORTED EVERYWHERE)
+  const handlePrintPDF = () => {
+    window.print();
   };
 
-  // 📥 EKSPLORASI FITUR DOWNLOAD GAMBAR (JPG)
-  const handleDownloadImage = async () => {
-    if (!printRef.current) return;
+  // 🖼️ FITUR GENERATE GAMBAR VIA CANVAS NATIVE
+  const handleDownloadImageNative = async () => {
     try {
       setDownloading(true);
-      showToast('⌛ Sedang memproses gambar rundown...', 'info');
+      showToast('⌛ Mengkonversi jadwal ke Gambar...', 'info');
 
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-
-      const element = printRef.current;
-      const canvas = await window.html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#0f172a'
-      });
-
-      const image = canvas.toDataURL('image/jpeg', 0.95);
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `Jadwal_Acara_Haul_${currentPeriodeObj?.nama_periode || 'Rundown'}.jpg`;
-      link.click();
-
-      showToast('🖼️ Berhasil mengunduh gambar rundown acara!', 'success');
-    } catch (err) {
-      console.error(err);
-      showToast('❌ Gagal mengunduh gambar rundown.', 'error');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  // 📥 EKSPLORASI FITUR DOWNLOAD DOCUMENT PDF
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
-    try {
-      setDownloading(true);
-      showToast('⌛ Sedang menyusun dokumen PDF...', 'info');
-
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-
-      const element = printRef.current;
-      const canvas = await window.html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#0f172a'
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const imgWidth = 210; // Lebar A4 dalam mm
-      const pageHeight = 297; // Tinggi A4 dalam mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // Dynamic load html2canvas dengan fallback multi-CDN
+      if (!window.html2canvas) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+          script.onload = resolve;
+          script.onerror = () => {
+            const script2 = document.createElement('script');
+            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script2.onload = resolve;
+            script2.onerror = reject;
+            document.head.appendChild(script2);
+          };
+          document.head.appendChild(script);
+        });
       }
 
-      pdf.save(`Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || 'Terdaftar'}.pdf`);
-      showToast('📄 Berhasil mengunduh dokumen PDF!', 'success');
+      if (printRef.current && window.html2canvas) {
+        const canvas = await window.html2canvas(printRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#090d16',
+          logging: false
+        });
+
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || 'Jadwal'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('🖼️ Berhasil mengunduh gambar jadwal acara!', 'success');
+      }
     } catch (err) {
-      console.error(err);
-      showToast('❌ Gagal mengunduh PDF.', 'error');
+      console.error("Gambar download error:", err);
+      showToast('⚠️ Gagal unduh gambar. Gunakan fitur Cetak PDF/Screenshot.', 'error');
     } finally {
       setDownloading(false);
     }
@@ -298,9 +256,38 @@ export default function AcaraPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
 
+      {/* STYLES KHUSUS MENCEGAH CUT-OFF SAAT CETAK / CETAK PDF */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-area, #printable-area * {
+            visibility: visible;
+          }
+          #printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            color: black !important;
+            background: white !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          .print-card {
+            border: 1px solid #ccc !important;
+            background: #fff !important;
+            color: #000 !important;
+            margin-bottom: 8px !important;
+          }
+        }
+      `}} />
+
       {/* 🔔 FLOATING TOAST NOTIFICATION */}
       {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 animate-bounce print:hidden">
           <GlassCard className={`px-4 py-3 border flex items-center gap-3 shadow-2xl ${
             toast.type === 'error' ? 'border-rose-500/50 text-rose-300' : 'border-emerald-500/50 text-emerald-300'
           }`}>
@@ -312,7 +299,7 @@ export default function AcaraPage() {
 
       {/* ❓ CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
             <div className="text-3xl">❓</div>
             <h3 className="font-bold text-sm theme-text-primary uppercase tracking-wider">{confirmModal.title}</h3>
@@ -336,7 +323,7 @@ export default function AcaraPage() {
       )}
 
       {/* HEADER PAGE STATUS, PERIODE SELECTOR & DOWNLOAD BUTTONS */}
-      <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
+      <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 print:hidden">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
             <span>📅</span> Susunan Agenda & Rundown Acara
@@ -345,7 +332,6 @@ export default function AcaraPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {/* SELECTOR PERIODE */}
           {periodeList.length > 0 && (
             <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
               <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode:</span>
@@ -363,27 +349,26 @@ export default function AcaraPage() {
             </div>
           )}
 
-          {/* 📥 TOMBOL FITUR UNDUH GAMBAR & PDF */}
+          {/* 📥 TOMBOL CETAK PDF / UNDUH GAMBAR */}
           <button
-            onClick={handleDownloadImage}
+            onClick={handleDownloadImageNative}
             disabled={downloading}
             className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all disabled:opacity-50"
           >
-            🖼️ Gambar (JPG)
+            🖼️ Simpan Gambar
           </button>
           <button
-            onClick={handleDownloadPDF}
-            disabled={downloading}
-            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all disabled:opacity-50"
+            onClick={handlePrintPDF}
+            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all"
           >
-            📄 Dokumen PDF
+            🖨️ Cetak / PDF
           </button>
         </div>
       </GlassCard>
 
       {/* INDIKATOR TUTUP BUKU */}
       {currentPeriodeObj?.is_closed && (
-        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs">
+        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs print:hidden">
           <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Susunan acara bersifat Read-Only.</span>
           <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
         </GlassCard>
@@ -393,7 +378,7 @@ export default function AcaraPage() {
         
         {/* INTERFACE FORM INPUT (GLASSMORPISM) */}
         {isAdmin && !currentPeriodeObj?.is_closed ? (
-          <GlassCard className="p-6 h-fit space-y-4">
+          <GlassCard className="p-6 h-fit space-y-4 print:hidden">
             <h3 className="text-xs font-black theme-text-accent uppercase tracking-wider flex items-center gap-2">
               <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Acara' : 'Tambah Rundown Acara'}
             </h3>
@@ -429,7 +414,7 @@ export default function AcaraPage() {
             </form>
           </GlassCard>
         ) : (
-          <GlassCard className="p-6 h-fit text-center space-y-2">
+          <GlassCard className="p-6 h-fit text-center space-y-2 print:hidden">
             <p className="text-xs theme-text-secondary font-medium font-sans">
               {currentPeriodeObj?.is_closed ? '🔒 Periode ini sudah ditutup buku.' : '💡 Anda berada di Mode Publik (Read-Only).'}
             </p>
@@ -439,54 +424,56 @@ export default function AcaraPage() {
           </GlassCard>
         )}
 
-        {/* LIST DAFTAR RUNDOWN ACARA (GLASSMORPISM & CAPTURE AREA) */}
-        <GlassCard className="lg:col-span-2 p-6 space-y-3">
-          <div ref={printRef} className="space-y-3 p-2 rounded-xl">
-            <div className="flex justify-between items-center border-b theme-border pb-2">
-              <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
-                <span>📋</span> Susunan Agenda Rundown Haul ({scheduleList.length})
-              </h3>
-              <span className="text-[10px] font-mono theme-text-accent font-bold">
-                {currentPeriodeObj?.nama_periode || ''}
-              </span>
-            </div>
+        {/* LIST DAFTAR RUNDOWN ACARA (PRINTABLE & CAPTURE AREA) */}
+        <div id="printable-area" className="lg:col-span-2">
+          <GlassCard className="p-6 space-y-3">
+            <div ref={printRef} className="space-y-3 p-2 rounded-xl">
+              <div className="flex justify-between items-center border-b theme-border pb-2">
+                <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                  <span>📋</span> SUSUNAN AGENDA RUNDOWN HAUL ({scheduleList.length})
+                </h3>
+                <span className="text-[10px] font-mono font-bold">
+                  {currentPeriodeObj?.nama_periode || ''}
+                </span>
+              </div>
 
-            <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
-              {scheduleList.length === 0 ? (
-                <p className="text-xs theme-text-tertiary font-mono py-6 text-center">Belum ada jadwal rundown acara pada periode ini.</p>
-              ) : (
-                scheduleList.map((s) => (
-                  <div key={s.id} className="p-3.5 bg-black/20 border theme-border rounded-xl flex justify-between items-center text-xs hover:border-white/30 transition-all">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="bg-black/40 theme-text-accent border theme-border px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                          🗓️ {formatDate(s.event_date)}
-                        </span>
-                        <span className="bg-black/20 theme-text-secondary px-2 py-0.5 rounded text-[10px] font-mono border theme-border">
-                          ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
-                        </span>
+              <div className="space-y-2.5">
+                {scheduleList.length === 0 ? (
+                  <p className="text-xs font-mono py-6 text-center opacity-70">Belum ada jadwal rundown acara pada periode ini.</p>
+                ) : (
+                  scheduleList.map((s) => (
+                    <div key={s.id} className="print-card p-3.5 bg-black/20 border theme-border rounded-xl flex justify-between items-center text-xs">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="bg-black/40 border theme-border px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                            🗓️ {formatDate(s.event_date)}
+                          </span>
+                          <span className="bg-black/20 px-2 py-0.5 rounded text-[10px] font-mono border theme-border">
+                            ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
+                          </span>
+                        </div>
+                        <p className="font-bold text-sm mt-1.5 tracking-wide">{s.agenda || 'Agenda Tanpa Nama'}</p>
+                        <p className="text-[10px] opacity-80 font-mono mt-0.5">PIC: {s.pic || '-'}</p>
                       </div>
-                      <p className="font-bold theme-text-primary text-sm mt-1.5 tracking-wide">{s.agenda || 'Agenda Tanpa Nama'}</p>
-                      <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">PIC: {s.pic || '-'}</p>
+                      {isAdmin && (
+                        <div className="flex gap-3 font-mono shrink-0 ml-2 print:hidden">
+                          {currentPeriodeObj?.is_closed ? (
+                            <span className="italic text-[10px]">🔒 Terkunci</span>
+                          ) : (
+                            <>
+                              <button onClick={() => handleEdit(s)} className="hover:underline font-bold">Edit</button>
+                              <button onClick={() => handleDelete(s.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {isAdmin && (
-                      <div className="flex gap-3 font-mono shrink-0 ml-2">
-                        {currentPeriodeObj?.is_closed ? (
-                          <span className="theme-text-accent italic text-[10px]">🔒 Terkunci</span>
-                        ) : (
-                          <>
-                            <button onClick={() => handleEdit(s)} className="theme-text-accent hover:underline font-bold">Edit</button>
-                            <button onClick={() => handleDelete(s.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        </GlassCard>
+          </GlassCard>
+        </div>
 
       </div>
     </div>
