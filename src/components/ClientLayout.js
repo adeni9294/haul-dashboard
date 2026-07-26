@@ -426,49 +426,56 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER RESPONSIF */}
+{/* HEADER RESPONSIF NEON EMAS */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
-            <div className="theme-bg-secondary theme-border p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300">
+            <div 
+              style={{ 
+                backgroundColor: 'rgba(217, 119, 6, 0.12)', 
+                borderColor: 'rgba(245, 158, 11, 0.4)',
+                boxShadow: '0 0 25px -5px rgba(245, 158, 11, 0.25)' 
+              }} 
+              className="backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2"
+            >
               
               {/* Sisi Kiri: Logo, Judul & Alamat */}
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-500/50 theme-bg-tertiary flex items-center justify-center shadow-md">
+                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400/80 bg-amber-950/40 flex items-center justify-center shadow-lg shadow-amber-500/30">
                   {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
+                    <Building2 className="w-6 h-6 text-amber-400" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xs sm:text-sm font-bold tracking-wide uppercase leading-tight theme-text-primary">
+                    <h1 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-tight text-amber-300 drop-shadow-sm">
                       {orgName}
                     </h1>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] ${currentStyle.accentBadge}`}>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 font-black font-mono shadow-sm">
                       {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
 
-                  <p className="flex items-center gap-1.5 text-[11px] sm:text-xs theme-text-accent/90 md:whitespace-normal">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  <p className="flex items-center gap-1.5 text-[11px] sm:text-xs text-amber-200/80 font-medium md:whitespace-normal">
+                    <MapPin className="w-3.5 h-3.5 shrink-0 text-amber-400" />
                     <span className="truncate md:whitespace-normal">{address}</span>
                   </p>
                 </div>
               </div>
 
               {/* Sisi Kanan: Sholat & Live Clock */}
-              <div className="pt-3 md:pt-0 border-t md:border-t-0 theme-border flex flex-row items-center justify-between md:justify-end gap-3 text-xs shrink-0">
+              <div className="pt-3 md:pt-0 border-t md:border-t-0 border-amber-500/30 flex flex-row items-center justify-between md:justify-end gap-3 text-xs shrink-0">
                 <button 
                   onClick={() => setShowSholatModal(true)} 
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 rounded-full transition-all duration-300"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 rounded-full transition-all duration-300 font-bold shadow-sm"
                 >
-                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                  <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                   <span>Jadwal Sholat</span>
                 </button>
 
                 {isMounted && timeString && (
-                  <div className="flex items-center gap-1.5 theme-text-secondary text-[11px] sm:text-xs font-mono shrink-0">
+                  <div className="flex items-center gap-1.5 text-amber-300 text-[11px] sm:text-xs font-mono font-bold shrink-0">
                     <span>{timeString}</span>
                     <span>•</span>
                     <span>{dateString}</span>
