@@ -1,49 +1,74 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SplashScreen({ children }) {
   const [loading, setLoading] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
+    // Tampil splash selama 1 detik, lalu trigger selesai
     const timer = setTimeout(() => {
-      setFadeOut(true);
-
-      setTimeout(() => {
-        setLoading(false);
-      }, 300);
-
-    }, 1000); // tampil splash 1 detik
+      setLoading(false);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
 
-  if (!loading) {
-    return children;
-  }
-
   return (
-    <div className={`kb-splash ${fadeOut ? "fade-out" : ""}`}>
-      <div className="kb-content">
+    <>
+      <AnimatePresence mode="wait">
+        {loading && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="kb-splash"
+          >
+            <div className="kb-content">
+              <div className="kb-glow"></div>
 
-        <div className="kb-glow"></div>
+              {/* Animasi Logo */}
+              <motion.img
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                src="/logo.png"
+                alt="K&B"
+                className="kb-logo"
+              />
 
-        <img
-          src="/logo.png"
-          alt="K&B"
-          className="kb-logo"
-        />
+              <motion.h1
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+              >
+                K & B
+              </motion.h1>
 
-        <h1>K & B</h1>
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+              >
+                Connecting Business, Building Trust
+              </motion.p>
 
-        <p>Connecting Business, Building Trust</p>
+              <div className="kb-progress">
+                <motion.div
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "0%" }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  className="kb-progress-fill"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <div className="kb-progress">
-          <div className="kb-progress-fill"></div>
-        </div>
-
-      </div>
-    </div>
+      {!loading && children}
+    </>
   );
 }
