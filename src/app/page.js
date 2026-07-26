@@ -522,9 +522,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-       {/* CARD 2: TOTAL UANG MASUK */}
+        {/* CARD 2: TOTAL UANG MASUK (GAYA INLINE STYLING TEMBUS TEMA) */}
         <div 
-          style={{ backgroundColor: 'rgba(6, 78, 59, 0.4)', borderColor: 'rgba(16, 185, 129, 0.5)' }} 
+          style={{ backgroundColor: 'rgba(6, 78, 59, 0.45)', borderColor: 'rgba(16, 185, 129, 0.5)' }} 
           className="p-5 flex flex-col justify-between border-2 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden"
         >
           <div className="relative z-10 flex justify-between items-start">
@@ -543,9 +543,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 3: TOTAL UANG BELANJA */}
+        {/* CARD 3: TOTAL UANG BELANJA (GAYA INLINE STYLING TEMBUS TEMA) */}
         <div 
-          style={{ backgroundColor: 'rgba(136, 19, 55, 0.4)', borderColor: 'rgba(244, 63, 94, 0.5)' }} 
+          style={{ backgroundColor: 'rgba(136, 19, 55, 0.45)', borderColor: 'rgba(244, 63, 94, 0.5)' }} 
           className="p-5 flex flex-col justify-between border-2 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden"
         >
           <div className="relative z-10 flex justify-between items-start">
@@ -563,6 +563,8 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
+
+      </div>
 
       {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
