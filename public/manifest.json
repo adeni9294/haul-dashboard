@@ -1,38 +1,32 @@
 {
   "name": "Dashboard Panitia Haul Maqbaroh Buyut Kepuh",
-  "short_name": "Haul Cibogo",
-  "description": "Aplikasi resmi pengelolaan data kas, anggaran, dan jadwal acara Panitia Haul Maqbaroh Buyut Kepuh & Buyut Besus",
+  "short_name": "DB Haul",
+  "description": "Aplikasi resmi pengelolaan data kas, anggaran, dan jadwal acara Panitia Haul Maqbaroh Buyut Kepuh &amp; Buyut Besus",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050b14",
   "theme_color": "#050b14",
   "orientation": "portrait",
-  "categories": ["productivity", "utilities", "lifestyle"],
-  "id": "/",
+  "categories": [
+    "finance",
+    "lifestyle",
+    "productivity",
+    "utilities"
+  ],
+  "id": "/haul-dashboard-app",
   "icons": [
     {
       "src": "/icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "dir": "ltr"
 }
