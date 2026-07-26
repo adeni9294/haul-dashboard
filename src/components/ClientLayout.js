@@ -422,413 +422,413 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
-  <SplashScreen>
-    <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
-      <div className="w-full min-h-screen flex flex-col relative z-10">
-        
-        {/* HEADER RESPONSIF */}
-        <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
-          <div className="theme-bg-secondary theme-border p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300">
-            
-            {/* Sisi Kiri: Logo, Judul & Alamat */}
-            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-              <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-500/50 theme-bg-tertiary flex items-center justify-center shadow-md">
-                {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
+    <SplashScreen>
+      <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
+        <div className="w-full min-h-screen flex flex-col relative z-10">
+          
+          {/* HEADER RESPONSIF */}
+          <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
+            <div className="theme-bg-secondary theme-border p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300">
+              
+              {/* Sisi Kiri: Logo, Judul & Alamat */}
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-500/50 theme-bg-tertiary flex items-center justify-center shadow-md">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className={`w-6 h-6 ${currentStyle.accentText}`} />
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xs sm:text-sm font-bold tracking-wide uppercase leading-tight theme-text-primary">
+                      {orgName}
+                    </h1>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] ${currentStyle.accentBadge}`}>
+                      {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
+                    </span>
+                  </div>
+
+                  <p className="flex items-center gap-1.5 text-[11px] sm:text-xs theme-text-accent/90 md:whitespace-normal">
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate md:whitespace-normal">{address}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Sisi Kanan: Sholat & Live Clock */}
+              <div className="pt-3 md:pt-0 border-t md:border-t-0 theme-border flex flex-row items-center justify-between md:justify-end gap-3 text-xs shrink-0">
+                <button 
+                  onClick={() => setShowSholatModal(true)} 
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 rounded-full transition-all duration-300"
+                >
+                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Jadwal Sholat</span>
+                </button>
+
+                {isMounted && timeString && (
+                  <div className="flex items-center gap-1.5 theme-text-secondary text-[11px] sm:text-xs font-mono shrink-0">
+                    <span>{timeString}</span>
+                    <span>•</span>
+                    <span>{dateString}</span>
+                  </div>
                 )}
               </div>
 
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xs sm:text-sm font-bold tracking-wide uppercase leading-tight theme-text-primary">
-                    {orgName}
-                  </h1>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] ${currentStyle.accentBadge}`}>
-                    {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
-                  </span>
-                </div>
-
-                <p className="flex items-center gap-1.5 text-[11px] sm:text-xs theme-text-accent/90 md:whitespace-normal">
-                  <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate md:whitespace-normal">{address}</span>
-                </p>
-              </div>
             </div>
+          </header>
 
-            {/* Sisi Kanan: Sholat & Live Clock */}
-            <div className="pt-3 md:pt-0 border-t md:border-t-0 theme-border flex flex-row items-center justify-between md:justify-end gap-3 text-xs shrink-0">
-              <button 
-                onClick={() => setShowSholatModal(true)} 
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 rounded-full transition-all duration-300"
-              >
-                <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Jadwal Sholat</span>
+          {/* MAIN CONTENT RESPONSIF */}
+          <main className="flex-1 max-w-xl md:max-w-5xl w-full mx-auto px-3 sm:px-6 pt-4 pb-6">
+            {children}
+          </main>
+
+          {/* FOOTER */}
+          <footer className="py-4 border-t theme-border theme-text-tertiary text-center text-[10px] font-mono tracking-widest uppercase mb-4 transition-colors duration-300">
+            Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
+          </footer>
+
+        </div>
+
+        {/* 🎯 BOTTOM NAV BAR DOCK */}
+        <div className="fixed bottom-0 left-0 right-0 w-full z-50 theme-bg-secondary/95 backdrop-blur-md border-t theme-border theme-shadow">
+          <div className="w-full max-w-md md:max-w-xl mx-auto h-16 flex items-center justify-around px-3">
+            <Link 
+              href="/" 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                pathname === '/' 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'theme-text-secondary hover:theme-text-primary'
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Home</span>
+            </Link>
+
+            <Link 
+              href="/stat" 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                pathname === '/stat' 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'theme-text-secondary hover:theme-text-primary'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Stat</span>
+            </Link>
+
+            <button 
+              onClick={() => setShowDonationModal(true)} 
+              className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl theme-text-primary theme-gradient-main hover:scale-105 shadow-lg transition-all duration-300"
+            >
+              <Gift className="w-6 h-6 stroke-[2.5]" />
+            </button>
+
+            <Link 
+              href="/anggaran" 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                pathname === '/anggaran' 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'theme-text-secondary hover:theme-text-primary'
+              }`}
+            >
+              <ClipboardList className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Budget</span>
+            </Link>
+
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMainMenuDrawer((prev) => !prev);
+              }} 
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                showMainMenuDrawer 
+                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  : 'theme-text-secondary hover:theme-text-primary'
+              }`}
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[9px] font-bold mt-0.5">Menu</span>
+            </button>
+
+          </div>
+        </div>
+
+        {/* 🕌 MODAL JADWAL SHOLAT */}
+        {showSholatModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="theme-bg-secondary border border-emerald-500/40 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
+              <button onClick={() => setShowSholatModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary">
+                <X className="w-4 h-4" />
               </button>
+              
+              <div className="text-center space-y-1">
+                <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
+                  <Compass className="w-6 h-6 animate-pulse" />
+                </div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
+                <p className="text-[10px] font-mono text-emerald-200/80 uppercase">📍 {kotaSholat} & Sekitarnya</p>
+              </div>
 
-              {isMounted && timeString && (
-                <div className="flex items-center gap-1.5 theme-text-secondary text-[11px] sm:text-xs font-mono shrink-0">
-                  <span>{timeString}</span>
-                  <span>•</span>
-                  <span>{dateString}</span>
+              <div className="p-2.5 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-1">
+                <label className="text-[9px] font-bold theme-text-secondary flex items-center gap-1 uppercase font-mono">
+                  <MapPin className="w-3 h-3 text-cyan-400" /> Lokasi Kota / Wilayah:
+                </label>
+                <select
+                  value={selectedKotaId}
+                  onChange={handleSelectKotaManual}
+                  className="w-full theme-bg-secondary text-xs text-emerald-300 font-bold px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-400 cursor-pointer"
+                >
+                  {DAFTAR_KOTA.map((k) => (
+                    <option key={k.id} value={k.id}>{k.name}</option>
+                  ))}
+                  <option value="auto">🌐 Deteksi Otomatis (GPS)</option>
+                </select>
+              </div>
+
+              <div className="p-3 theme-bg-tertiary border border-emerald-500/30 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
+                  <span className="text-xs font-bold theme-text-primary">Alarm Waktu Sholat</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    setIsAlarmActive(!isAlarmActive);
+                    if (!isAlarmActive) playAlarmSound();
+                  }}
+                  className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'theme-bg-secondary theme-text-secondary'}`}
+                >
+                  {isAlarmActive ? 'Aktif 🔔' : 'Mute 🔕'}
+                </button>
+              </div>
+
+              {jadwalSholat ? (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {[
+                    { name: 'Imsak', time: jadwalSholat.imsak },
+                    { name: 'Subuh', time: jadwalSholat.subuh },
+                    { name: 'Terbit', time: jadwalSholat.terbit },
+                    { name: 'Dzuhur', time: jadwalSholat.dzuhur },
+                    { name: 'Ashar', time: jadwalSholat.ashar },
+                    { name: 'Maghrib', time: jadwalSholat.maghrib },
+                    { name: 'Isya', time: jadwalSholat.isya }
+                  ].map((s, idx) => (
+                    <div key={idx} className="p-2 theme-bg-tertiary border theme-border rounded-xl flex justify-between items-center">
+                      <span className="text-[11px] font-bold theme-text-secondary">{s.name}</span>
+                      <span className="text-xs font-black font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">{s.time} WIB</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-xs font-mono theme-text-secondary animate-pulse">
+                  Mendeteksi lokasi & jadwal sholat...
                 </div>
               )}
-            </div>
 
-          </div>
-        </header>
-
-        {/* MAIN CONTENT RESPONSIF */}
-        <main className="flex-1 max-w-xl md:max-w-5xl w-full mx-auto px-3 sm:px-6 pt-4 pb-6">
-          {children}
-        </main>
-
-        {/* FOOTER */}
-        <footer className="py-4 border-t theme-border theme-text-tertiary text-center text-[10px] font-mono tracking-widest uppercase mb-4 transition-colors duration-300">
-          Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
-        </footer>
-
-      </div>
-
-      {/* 🎯 BOTTOM NAV BAR DOCK */}
-      <div className="fixed bottom-0 left-0 right-0 w-full z-50 theme-bg-secondary/95 backdrop-blur-md border-t theme-border theme-shadow">
-        <div className="w-full max-w-md md:max-w-xl mx-auto h-16 flex items-center justify-around px-3">
-          <Link 
-            href="/" 
-            className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-              pathname === '/' 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
-                : 'theme-text-secondary hover:theme-text-primary'
-            }`}
-          >
-            <Home className="w-5 h-5" />
-            <span className="text-[9px] font-bold mt-0.5">Home</span>
-          </Link>
-
-          <Link 
-            href="/stat" 
-            className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-              pathname === '/stat' 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
-                : 'theme-text-secondary hover:theme-text-primary'
-            }`}
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-[9px] font-bold mt-0.5">Stat</span>
-          </Link>
-
-          <button 
-            onClick={() => setShowDonationModal(true)} 
-            className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl theme-text-primary theme-gradient-main hover:scale-105 shadow-lg transition-all duration-300"
-          >
-            <Gift className="w-6 h-6 stroke-[2.5]" />
-          </button>
-
-          <Link 
-            href="/anggaran" 
-            className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-              pathname === '/anggaran' 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
-                : 'theme-text-secondary hover:theme-text-primary'
-            }`}
-          >
-            <ClipboardList className="w-5 h-5" />
-            <span className="text-[9px] font-bold mt-0.5">Budget</span>
-          </Link>
-
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMainMenuDrawer((prev) => !prev);
-            }} 
-            className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
-              showMainMenuDrawer 
-                ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
-                : 'theme-text-secondary hover:theme-text-primary'
-            }`}
-          >
-            <Menu className="w-5 h-5" />
-            <span className="text-[9px] font-bold mt-0.5">Menu</span>
-          </button>
-
-        </div>
-      </div>
-
-      {/* 🕌 MODAL JADWAL SHOLAT */}
-      {showSholatModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="theme-bg-secondary border border-emerald-500/40 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
-            <button onClick={() => setShowSholatModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary">
-              <X className="w-4 h-4" />
-            </button>
-            
-            <div className="text-center space-y-1">
-              <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
-                <Compass className="w-6 h-6 animate-pulse" />
-              </div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
-              <p className="text-[10px] font-mono text-emerald-200/80 uppercase">📍 {kotaSholat} & Sekitarnya</p>
-            </div>
-
-            <div className="p-2.5 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-1">
-              <label className="text-[9px] font-bold theme-text-secondary flex items-center gap-1 uppercase font-mono">
-                <MapPin className="w-3 h-3 text-cyan-400" /> Lokasi Kota / Wilayah:
-              </label>
-              <select
-                value={selectedKotaId}
-                onChange={handleSelectKotaManual}
-                className="w-full theme-bg-secondary text-xs text-emerald-300 font-bold px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-400 cursor-pointer"
-              >
-                {DAFTAR_KOTA.map((k) => (
-                  <option key={k.id} value={k.id}>{k.name}</option>
-                ))}
-                <option value="auto">🌐 Deteksi Otomatis (GPS)</option>
-              </select>
-            </div>
-
-            <div className="p-3 theme-bg-tertiary border border-emerald-500/30 rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
-                <span className="text-xs font-bold theme-text-primary">Alarm Waktu Sholat</span>
-              </div>
-              <button 
-                onClick={() => {
-                  setIsAlarmActive(!isAlarmActive);
-                  if (!isAlarmActive) playAlarmSound();
-                }}
-                className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'theme-bg-secondary theme-text-secondary'}`}
-              >
-                {isAlarmActive ? 'Aktif 🔔' : 'Mute 🔕'}
+              <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase">
+                Tutup Jadwal
               </button>
             </div>
+          </div>
+        )}
 
-            {jadwalSholat ? (
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {[
-                  { name: 'Imsak', time: jadwalSholat.imsak },
-                  { name: 'Subuh', time: jadwalSholat.subuh },
-                  { name: 'Terbit', time: jadwalSholat.terbit },
-                  { name: 'Dzuhur', time: jadwalSholat.dzuhur },
-                  { name: 'Ashar', time: jadwalSholat.ashar },
-                  { name: 'Maghrib', time: jadwalSholat.maghrib },
-                  { name: 'Isya', time: jadwalSholat.isya }
-                ].map((s, idx) => (
-                  <div key={idx} className="p-2 theme-bg-tertiary border theme-border rounded-xl flex justify-between items-center">
-                    <span className="text-[11px] font-bold theme-text-secondary">{s.name}</span>
-                    <span className="text-xs font-black font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">{s.time} WIB</span>
+        {/* MODAL DONASI */}
+        {showDonationModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="theme-bg-secondary border theme-border p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
+              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary">
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="text-center space-y-1">
+                <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
+                  <Gift className="w-6 h-6" />
+                </div>
+                <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary">Rekening Donasi Jemaah</h3>
+                <p className="text-[10px] theme-text-secondary max-w-[280px] mx-auto font-medium">
+                  Salurkan infak & sedekah jariyah Anda melalui opsi rekening resmi berikut:
+                </p>
+              </div>
+              
+              <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
+                {listRekening.map((item, idx) => (
+                  <div key={idx} className="p-3 theme-bg-tertiary border theme-border rounded-2xl flex items-center justify-between gap-3 shadow-md">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <span className="inline-block text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 uppercase border border-amber-300">
+                        {item.bank}
+                      </span>
+                      <p className="text-xs font-black font-mono tracking-wider theme-text-primary select-all">
+                        {item.number}
+                      </p>
+                      <p className="text-[9px] theme-text-secondary truncate font-medium">
+                        AN. <span className="font-bold theme-text-primary">{item.name}</span>
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => handleCopy(item.number, idx)}
+                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-lg' : 'theme-bg-secondary theme-text-secondary border theme-border hover:theme-bg-tertiary'}`}
+                    >
+                      {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
+                    </button>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-6 text-xs font-mono theme-text-secondary animate-pulse">
-                Mendeteksi lokasi & jadwal sholat...
-              </div>
-            )}
 
-            <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase">
-              Tutup Jadwal
-            </button>
+              <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-xl transition-all font-mono uppercase border theme-border">
+                Tutup Window
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* MODAL DONASI */}
-      {showDonationModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="theme-bg-secondary border theme-border p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
-            <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary">
-              <X className="w-4 h-4" />
-            </button>
-            
-            <div className="text-center space-y-1">
-              <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
-                <Gift className="w-6 h-6" />
+        {/* 📱 DRAWER MENU */}
+        {showMainMenuDrawer && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
+            <div className="absolute inset-0 z-0" onClick={() => setShowMainMenuDrawer(false)} />
+            <div className="w-full max-w-md theme-bg-secondary border-t theme-border rounded-t-3xl p-6 space-y-4 shadow-2xl theme-text-primary relative z-10 transition-all duration-300" onClick={(e) => e.stopPropagation()}>
+              <div className="w-12 h-1.5 theme-bg-tertiary rounded-full mx-auto mb-2" />
+              <div className="text-center">
+                <h4 className="text-xs font-extrabold uppercase tracking-widest theme-text-secondary">Navigasi Halaman</h4>
               </div>
-              <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary">Rekening Donasi Jemaah</h3>
-              <p className="text-[10px] theme-text-secondary max-w-[280px] mx-auto font-medium">
-                Salurkan infak & sedekah jariyah Anda melalui opsi rekening resmi berikut:
-              </p>
-            </div>
-            
-            <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5">
-              {listRekening.map((item, idx) => (
-                <div key={idx} className="p-3 theme-bg-tertiary border theme-border rounded-2xl flex items-center justify-between gap-3 shadow-md">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <span className="inline-block text-[9px] font-black font-mono px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 uppercase border border-amber-300">
-                      {item.bank}
-                    </span>
-                    <p className="text-xs font-black font-mono tracking-wider theme-text-primary select-all">
-                      {item.number}
-                    </p>
-                    <p className="text-[9px] theme-text-secondary truncate font-medium">
-                      AN. <span className="font-bold theme-text-primary">{item.name}</span>
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => handleCopy(item.number, idx)}
-                    className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-lg' : 'theme-bg-secondary theme-text-secondary border theme-border hover:theme-bg-tertiary'}`}
-                  >
-                    {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-xl transition-all font-mono uppercase border theme-border">
-              Tutup Window
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 📱 DRAWER MENU */}
-      {showMainMenuDrawer && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-          <div className="absolute inset-0 z-0" onClick={() => setShowMainMenuDrawer(false)} />
-          <div className="w-full max-w-md theme-bg-secondary border-t theme-border rounded-t-3xl p-6 space-y-4 shadow-2xl theme-text-primary relative z-10 transition-all duration-300" onClick={(e) => e.stopPropagation()}>
-            <div className="w-12 h-1.5 theme-bg-tertiary rounded-full mx-auto mb-2" />
-            <div className="text-center">
-              <h4 className="text-xs font-extrabold uppercase tracking-widest theme-text-secondary">Navigasi Halaman</h4>
-            </div>
-            <div className="grid grid-cols-1 gap-2.5 pt-2">
-              {drawerMenus.map((dm, idx) => {
-                const IconComponent = dm.icon;
-                if (dm.action) {
+              <div className="grid grid-cols-1 gap-2.5 pt-2">
+                {drawerMenus.map((dm, idx) => {
+                  const IconComponent = dm.icon;
+                  if (dm.action) {
+                    return (
+                      <button 
+                        key={idx}
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          setShowMainMenuDrawer(false);
+                          dm.action(); 
+                        }}
+                        className="w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-xl ${dm.color}`}>
+                            <IconComponent className="w-4 h-4 shrink-0" />
+                          </div>
+                          <span>{dm.name}</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
+                      </button>
+                    );
+                  }
                   return (
-                    <button 
-                      key={idx}
-                      onClick={(e) => { 
+                    <Link 
+                      key={dm.href} 
+                      href={dm.href} 
+                      onClick={(e) => {
                         e.stopPropagation();
                         setShowMainMenuDrawer(false);
-                        dm.action(); 
                       }}
-                      className="w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border"
+                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all active:scale-95 ${
+                        pathname === dm.href 
+                          ? 'theme-gradient-main theme-text-primary shadow-lg' 
+                          : 'theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border'
+                      }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl ${dm.color}`}>
+                        <div className={`p-2 rounded-xl ${pathname === dm.href ? 'bg-white/20 text-white' : dm.color}`}>
                           <IconComponent className="w-4 h-4 shrink-0" />
                         </div>
                         <span>{dm.name}</span>
                       </div>
                       <ChevronRight className="w-4 h-4 opacity-50" />
-                    </button>
+                    </Link>
                   );
-                }
-                return (
-                  <Link 
-                    key={dm.href} 
-                    href={dm.href} 
-                    onClick={(e) => {
+                })}
+              </div>
+              <div className="pt-4 border-t theme-border">
+                {isAdmin ? (
+                  <button 
+                    onClick={(e) => { 
                       e.stopPropagation();
-                      setShowMainMenuDrawer(false);
-                    }}
-                    className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all active:scale-95 ${
-                      pathname === dm.href 
-                        ? 'theme-gradient-main theme-text-primary shadow-lg' 
-                        : 'theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border'
-                    }`}
+                      setShowMainMenuDrawer(false); 
+                      handleLogout(); 
+                    }} 
+                    className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-xl ${pathname === dm.href ? 'bg-white/20 text-white' : dm.color}`}>
-                        <IconComponent className="w-4 h-4 shrink-0" />
-                      </div>
-                      <span>{dm.name}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-50" />
-                  </Link>
-                );
-              })}
-            </div>
-            <div className="pt-4 border-t theme-border">
-              {isAdmin ? (
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    setShowMainMenuDrawer(false); 
-                    handleLogout(); 
-                  }} 
-                  className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all"
-                >
-                  <LogOut className="w-4 h-4" /> Keluar Mode Admin
-                </button>
-              ) : (
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    setShowMainMenuDrawer(false); 
-                    setShowLoginModal(true); 
-                  }} 
-                  className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/50 flex items-center justify-center gap-2 transition-all hover:shadow-lg"
-                >
-                  <Lock className="w-4 h-4" /> Otorisasi Login Admin
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL LOGIN */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="theme-bg-secondary border theme-border p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl theme-text-primary transition-all duration-300">
-            <div className="text-center">
-              <div className="p-3 bg-amber-500/20 text-amber-300 w-fit rounded-2xl mx-auto mb-2 border border-amber-400/30">
-                <Lock className="w-6 h-6" />
+                    <LogOut className="w-4 h-4" /> Keluar Mode Admin
+                  </button>
+                ) : (
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setShowMainMenuDrawer(false); 
+                      setShowLoginModal(true); 
+                    }} 
+                    className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/50 flex items-center justify-center gap-2 transition-all hover:shadow-lg"
+                  >
+                    <Lock className="w-4 h-4" /> Otorisasi Login Admin
+                  </button>
+                )}
               </div>
-              <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary">Otorisasi Sistem</h3>
-              <p className="text-xs theme-text-secondary mt-1 font-medium">Masukkan kata sandi untuk masuk ke Mode Admin</p>
             </div>
-            <form onSubmit={handleLogin} className="space-y-3">
-              <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full px-4 py-3 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl text-xs focus:outline-none focus:border-cyan-500 transition-all" />
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-2xl border theme-border transition-all">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-extrabold text-xs uppercase rounded-2xl shadow-md hover:shadow-lg transition-all">Masuk</button>
+          </div>
+        )}
+
+        {/* MODAL LOGIN */}
+        {showLoginModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="theme-bg-secondary border theme-border p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl theme-text-primary transition-all duration-300">
+              <div className="text-center">
+                <div className="p-3 bg-amber-500/20 text-amber-300 w-fit rounded-2xl mx-auto mb-2 border border-amber-400/30">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary">Otorisasi Sistem</h3>
+                <p className="text-xs theme-text-secondary mt-1 font-medium">Masukkan kata sandi untuk masuk ke Mode Admin</p>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 🔔 CUSTOM MODAL TOAST DIALOG */}
-      {toastConfig.show && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="theme-bg-secondary border theme-border p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl theme-text-primary text-center relative overflow-hidden transition-all duration-300">
-            <div className="mx-auto w-fit p-3 rounded-2xl border mb-1">
-              {toastConfig.type === 'success' && (
-                <div className="bg-emerald-500/20 text-emerald-400 border-emerald-400/30 p-2 rounded-xl border">
-                  <CheckCircle2 className="w-8 h-8" />
+              <form onSubmit={handleLogin} className="space-y-3">
+                <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full px-4 py-3 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl text-xs focus:outline-none focus:border-cyan-500 transition-all" />
+                <div className="flex gap-2 pt-2">
+                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-2xl border theme-border transition-all">Batal</button>
+                  <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-extrabold text-xs uppercase rounded-2xl shadow-md hover:shadow-lg transition-all">Masuk</button>
                 </div>
-              )}
-              {toastConfig.type === 'error' && (
-                <div className="bg-rose-500/20 text-rose-400 border-rose-400/30 p-2 rounded-xl border">
-                  <AlertCircle className="w-8 h-8" />
-                </div>
-              )}
-              {toastConfig.type === 'info' && (
-                <div className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 p-2 rounded-xl border">
-                  <Info className="w-8 h-8" />
-                </div>
-              )}
+              </form>
             </div>
-
-            <div className="space-y-1">
-              <h3 className="text-sm font-black uppercase tracking-wider theme-text-primary">{toastConfig.title}</h3>
-              <p className="text-xs theme-text-secondary leading-relaxed font-medium">{toastConfig.message}</p>
-            </div>
-
-            <button
-              onClick={closeToast}
-              className="w-full py-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs uppercase rounded-2xl shadow-lg transition-all"
-            >
-              Mengerti & Lanjutkan
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
-    </div>
-</SplashScreen>
+        {/* 🔔 CUSTOM MODAL TOAST DIALOG */}
+        {toastConfig.show && (
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="theme-bg-secondary border theme-border p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl theme-text-primary text-center relative overflow-hidden transition-all duration-300">
+              <div className="mx-auto w-fit p-3 rounded-2xl border mb-1">
+                {toastConfig.type === 'success' && (
+                  <div className="bg-emerald-500/20 text-emerald-400 border-emerald-400/30 p-2 rounded-xl border">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                )}
+                {toastConfig.type === 'error' && (
+                  <div className="bg-rose-500/20 text-rose-400 border-rose-400/30 p-2 rounded-xl border">
+                    <AlertCircle className="w-8 h-8" />
+                  </div>
+                )}
+                {toastConfig.type === 'info' && (
+                  <div className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 p-2 rounded-xl border">
+                    <Info className="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-sm font-black uppercase tracking-wider theme-text-primary">{toastConfig.title}</h3>
+                <p className="text-xs theme-text-secondary leading-relaxed font-medium">{toastConfig.message}</p>
+              </div>
+
+              <button
+                onClick={closeToast}
+                className="w-full py-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs uppercase rounded-2xl shadow-lg transition-all"
+              >
+                Mengerti & Lanjutkan
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </SplashScreen>
   );
 }
