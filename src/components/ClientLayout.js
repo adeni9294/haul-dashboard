@@ -622,7 +622,7 @@ export default function ClientLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono theme-text-secondary animate-pulse">
-                  Mendeteksi lokasi & jadwal sholat...
+                  Mndeteksi lokasi & jadwal sholat...
                 </div>
               )}
 
