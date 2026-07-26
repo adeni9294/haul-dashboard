@@ -16,8 +16,8 @@ const DICTIONARY = {
     mainCash: 'KAS UTAMA HAUL',
     netBalance: 'Sisa Saldo Kas Bersih',
     committee: 'PANITIA HAUL',
-    totalIncome: 'Total Uang Masuk',
-    totalExpense: 'Total Uang Belanja',
+    totalIncome: 'TOTAL UANG MASUK',
+    totalExpense: 'TOTAL UANG BELANJA',
     categories: 'Kategori Kontribusi',
     allocation: 'Pos Alokasi Terpakai',
     progressTitle: 'Progres Capaian Target Plafon Anggaran',
@@ -49,8 +49,8 @@ const DICTIONARY = {
     mainCash: 'KAS UTAMA HAUL',
     netBalance: 'Sisa Saldo Kas Bersih',
     committee: 'PANITIA HAUL',
-    totalIncome: 'Total Pragat Mlebu',
-    totalExpense: 'Total Pragat Blonjo',
+    totalIncome: 'TOTAL PRAGAT MLEBU',
+    totalExpense: 'TOTAL PRAGAT BLONJO',
     categories: 'Werna Sumbangan',
     allocation: 'Pos Alokasi Sing Dinggo',
     progressTitle: 'Progres Capaian Target Plafon Anggaran',
@@ -82,8 +82,8 @@ const DICTIONARY = {
     mainCash: 'HAUL MAIN CASH',
     netBalance: 'Net Cash Balance Remaining',
     committee: 'HAUL COMMITTEE',
-    totalIncome: 'Total Cash Inflow',
-    totalExpense: 'Total Expenditures',
+    totalIncome: 'TOTAL CASH INFLOW',
+    totalExpense: 'TOTAL EXPENDITURES',
     categories: 'Contribution Categories',
     allocation: 'Used Allocation Posts',
     progressTitle: 'Budget Ceiling Target Achievement Progress',
@@ -128,12 +128,9 @@ export default function DashboardPage() {
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
   const [visitorStats, setVisitorStats] = useState({ totalViews: 0, uniqueCount: 0 });
   
-  // Track if visitor log has been recorded this session
   const visitorLogRecordedRef = useRef(false);
-
   const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
-  // Record visitor log only once per session
   useEffect(() => {
     if (!visitorLogRecordedRef.current && supabase) {
       visitorLogRecordedRef.current = true;
@@ -141,7 +138,6 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Load dashboard data when periode changes or page first loads
   useEffect(() => {
     loadDashboardData();
   }, [selectedPeriodeId]);
@@ -178,7 +174,6 @@ export default function DashboardPage() {
       let activePeriodeId = selectedPeriodeId;
       let currentSaldoAwal = 0;
 
-      // Fetch periode list
       const { data: listPeriode, error: periodeError } = await supabase
         .from('periode_haul')
         .select('id, nama_periode, saldo_awal, is_closed, created_at')
@@ -197,7 +192,6 @@ export default function DashboardPage() {
         currentSaldoAwal = parseFloat(selectedObj.saldo_awal || 0);
       }
 
-      // Fetch announcement/settings
       const { data: settingsData } = await supabase
         .from('settings')
         .select('announcement, banner_text')
@@ -208,7 +202,6 @@ export default function DashboardPage() {
         setAnnouncement(settingsData.announcement || settingsData.banner_text || '');
       }
 
-      // Fetch visitor stats (with error handling)
       let visitorData = { totalViews: 0, uniqueCount: 0 };
       try {
         const { count: countViews, error: countError } = await supabase
@@ -228,7 +221,6 @@ export default function DashboardPage() {
       }
       setVisitorStats(visitorData);
 
-      // Fetch budgets
       const { data: budgetsData } = await supabase
         .from('budgets')
         .select('planned_amount');
@@ -240,7 +232,6 @@ export default function DashboardPage() {
         });
       }
 
-      // Build queries with periode filter
       let donQuery = supabase.from('donation_details').select('*');
       let txQuery = supabase.from('transactions').select('*');
 
@@ -255,7 +246,6 @@ export default function DashboardPage() {
       if (donError) console.error('Donation fetch error:', donError);
       if (txError) console.error('Transaction fetch error:', txError);
 
-      // Process donations and transactions
       let calcMasuk = 0;
       let calcKeluar = 0;
       const incomeMap = {};
@@ -264,7 +254,6 @@ export default function DashboardPage() {
       const listPemasukanGrup = {};
       const listPengeluaranGrup = [];
 
-      // Process donations
       if (donationsDb && Array.isArray(donationsDb)) {
         donationsDb.forEach((item) => {
           const rawAmount = parseFloat(item.amount) || 0;
@@ -322,7 +311,6 @@ export default function DashboardPage() {
         });
       }
 
-      // Process transactions
       if (transactionsDb && Array.isArray(transactionsDb)) {
         transactionsDb.forEach((item) => {
           const nominal = Math.abs(parseFloat(item.amount || item.nominal) || 0);
@@ -333,7 +321,6 @@ export default function DashboardPage() {
 
           if (!tgl) return;
 
-          // Skip invalid entries
           if (
             noteText.includes('APLIKASI PEMASUKAN') ||
             noteText.includes('DETAIL') ||
@@ -366,7 +353,6 @@ export default function DashboardPage() {
         });
       }
 
-      // Sort and finalize data
       const arrayMasukFinal = Object.values(listPemasukanGrup)
         .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
         .slice(0, 15);
@@ -375,7 +361,6 @@ export default function DashboardPage() {
         .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
         .slice(0, 15);
 
-      // Parse chart data
       const parseChart = (map, total) =>
         Object.keys(map)
           .map(key => ({
@@ -388,7 +373,6 @@ export default function DashboardPage() {
       const incomeSummary = parseChart(incomeMap, calcMasuk);
       const expenseSummary = parseChart(expenseMap, calcKeluar);
 
-      // Calculate totals
       const totalSaldoNet = calcMasuk - calcKeluar;
 
       setTotals({
@@ -403,7 +387,6 @@ export default function DashboardPage() {
       setRincianMasuk(arrayMasukFinal);
       setRincianKeluar(arrayKeluarFinal);
 
-      // Calculate progress
       let hitungPersen = 0;
       if (totalPlafonDinamis > 0) {
         hitungPersen = parseFloat(((calcMasuk / totalPlafonDinamis) * 100).toFixed(1));
@@ -432,7 +415,6 @@ export default function DashboardPage() {
     return angka < 0 ? `-${formatted}` : formatted;
   }, []);
 
-  // Loading skeleton
   if (loading) {
     return (
       <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12">
@@ -448,7 +430,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="p-8 text-center space-y-4 max-w-5xl mx-auto">
@@ -541,39 +522,39 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 2: TOTAL UANG MASUK */}
-        <GlassCard className="p-5 flex flex-col justify-between border-emerald-500/30">
+        {/* CARD 2: TOTAL UANG MASUK (EMERALD CYBER STYLE) */}
+        <GlassCard className="p-5 flex flex-col justify-between border-emerald-500/40 bg-emerald-950/30 hover:border-emerald-400/60 transition-all relative overflow-hidden group">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              <p className="text-[10px] text-emerald-300/70 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xs shadow-md">
-              🟢
-            </div>
+            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/50 mt-1" />
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] theme-text-secondary font-mono mt-2 font-semibold">✓ {catSummaryMasuk.length} {dict.categories}</p>
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-400 my-1">{formatRupiah(totals.masuk)}</h3>
+            <p className="text-[10px] font-bold text-emerald-300/80 font-mono mt-2 flex items-center gap-1">
+              <span>✓</span> {catSummaryMasuk.length} {dict.categories}
+            </p>
           </div>
         </GlassCard>
 
-        {/* CARD 3: TOTAL UANG BELANJA */}
-        <GlassCard className="p-5 flex flex-col justify-between border-rose-500/30">
+        {/* CARD 3: TOTAL UANG BELANJA (VELVET ROSE STYLE) */}
+        <GlassCard className="p-5 flex flex-col justify-between border-rose-500/40 bg-rose-950/30 hover:border-rose-400/60 transition-all relative overflow-hidden group">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Realisasi Pengeluaran</p>
+              <p className="text-[10px] text-rose-300/70 font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-xs shadow-md">
-              🔴
-            </div>
+            <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-lg shadow-rose-500/50 mt-1" />
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] theme-text-secondary font-mono mt-2 font-semibold">⚡ {catSummaryKeluar.length} {dict.allocation}</p>
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-400 my-1">{formatRupiah(totals.keluar)}</h3>
+            <p className="text-[10px] font-bold text-rose-300/80 font-mono mt-2 flex items-center gap-1">
+              <span>⚡</span> {catSummaryKeluar.length} {dict.allocation}
+            </p>
           </div>
         </GlassCard>
 
