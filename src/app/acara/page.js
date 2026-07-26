@@ -187,26 +187,26 @@ export default function AcaraPage() {
     );
   };
 
-  // 🖨️ FITUR CETAK / SIMPAN PDF (NATIVE BROWSER PRINT - NATIVELY SUPPORTED EVERYWHERE)
+  // 🖨️ FITUR CETAK / SIMPAN PDF (NATIVE BROWSER PRINT)
   const handlePrintPDF = () => {
     window.print();
   };
 
-  // 🖼️ FITUR GENERATE GAMBAR VIA CANVAS NATIVE
+  // 🖼️ FITUR GENERATE GAMBAR VIA CANVAS NATIVE DENGAN FALLBACK STABIL
   const handleDownloadImageNative = async () => {
     try {
       setDownloading(true);
       showToast('⌛ Mengkonversi jadwal ke Gambar...', 'info');
 
-      // Dynamic load html2canvas dengan fallback multi-CDN
+      // Dynamic load html2canvas
       if (!window.html2canvas) {
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
           script.onload = resolve;
           script.onerror = () => {
             const script2 = document.createElement('script');
-            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script2.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
             script2.onload = resolve;
             script2.onerror = reject;
             document.head.appendChild(script2);
@@ -220,7 +220,7 @@ export default function AcaraPage() {
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#090d16',
+          backgroundColor: '#050b14', // Warna dasar terikat variabel tema
           logging: false
         });
 
@@ -285,21 +285,21 @@ export default function AcaraPage() {
         }
       `}} />
 
-      {/* 🔔 FLOATING TOAST NOTIFICATION */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION (DIATAS NAV BAR) */}
       {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 animate-bounce print:hidden">
-          <GlassCard className={`px-4 py-3 border flex items-center gap-3 shadow-2xl ${
-            toast.type === 'error' ? 'border-rose-500/50 text-rose-300' : 'border-emerald-500/50 text-emerald-300'
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md print:hidden animate-in fade-in slide-in-from-top duration-300">
+          <div className={`px-4 py-3 border rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-md ${
+            toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-300' : 'bg-slate-900/90 border-emerald-500/50 text-emerald-300'
           }`}>
-            <span className="text-base">{toast.type === 'error' ? '⚠️' : '✅'}</span>
-            <span className="font-mono font-bold text-xs">{toast.message}</span>
-          </GlassCard>
+            <span className="text-base shrink-0">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            <span className="font-mono font-bold text-xs truncate">{toast.message}</span>
+          </div>
         </div>
       )}
 
       {/* ❓ CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
             <div className="text-3xl">❓</div>
             <h3 className="font-bold text-sm theme-text-primary uppercase tracking-wider">{confirmModal.title}</h3>
@@ -427,7 +427,7 @@ export default function AcaraPage() {
         {/* LIST DAFTAR RUNDOWN ACARA (PRINTABLE & CAPTURE AREA) */}
         <div id="printable-area" className="lg:col-span-2">
           <GlassCard className="p-6 space-y-3">
-            <div ref={printRef} className="space-y-3 p-2 rounded-xl">
+            <div ref={printRef} className="space-y-3 p-3 rounded-xl bg-slate-950/80">
               <div className="flex justify-between items-center border-b theme-border pb-2">
                 <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
                   <span>📋</span> SUSUNAN AGENDA RUNDOWN HAUL ({scheduleList.length})
@@ -442,7 +442,7 @@ export default function AcaraPage() {
                   <p className="text-xs font-mono py-6 text-center opacity-70">Belum ada jadwal rundown acara pada periode ini.</p>
                 ) : (
                   scheduleList.map((s) => (
-                    <div key={s.id} className="print-card p-3.5 bg-black/20 border theme-border rounded-xl flex justify-between items-center text-xs">
+                    <div key={s.id} className="print-card p-3.5 bg-black/40 border theme-border rounded-xl flex justify-between items-center text-xs">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="bg-black/40 border theme-border px-2 py-0.5 rounded text-[10px] font-mono font-bold">
