@@ -192,45 +192,36 @@ export default function AcaraPage() {
     window.print();
   };
 
-  // 🖼️ FITUR GENERATE GAMBAR VIA CANVAS NATIVE DENGAN FALLBACK STABIL
+  // 🖼️ FITUR GENERATE GAMBAR VIA HTML-TO-IMAGE (STABIL & SUPPORTS MODERN CSS)
   const handleDownloadImageNative = async () => {
     try {
       setDownloading(true);
       showToast('⌛ Mengkonversi jadwal ke Gambar...', 'info');
 
-      // Dynamic load html2canvas
-      if (!window.html2canvas) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-          script.onload = resolve;
-          script.onerror = () => {
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-            script2.onload = resolve;
-            script2.onerror = reject;
-            document.head.appendChild(script2);
-          };
-          document.head.appendChild(script);
-        });
-      }
+      // Import dinamis html-to-image
+      const { toPng } = await import('html-to-image');
 
-      if (printRef.current && window.html2canvas) {
-        const canvas = await window.html2canvas(printRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#050b14', // Warna dasar terikat variabel tema
-          logging: false
+      if (printRef.current) {
+        // Render DOM ke PNG Data URL
+        const dataUrl = await toPng(printRef.current, {
+          quality: 0.95,
+          pixelRatio: 2,
+          backgroundColor: '#050b14', // Warna background gelap agar tidak transparan
+          cacheBust: true,
+          filter: (node) => {
+            // Abaikan tombol-tombol action saat diunduh
+            return !node.classList?.contains('print:hidden');
+          }
         });
 
-        const image = canvas.toDataURL('image/png');
+        // Trigger Download File
         const link = document.createElement('a');
-        link.href = image;
-        link.download = `Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || 'Jadwal'}.png`;
+        link.download = `Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || '2026'}.png`;
+        link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
         showToast('🖼️ Berhasil mengunduh gambar jadwal acara!', 'success');
       }
     } catch (err) {
@@ -240,7 +231,7 @@ export default function AcaraPage() {
       setDownloading(false);
     }
   };
-
+  
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     try {
