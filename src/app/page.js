@@ -522,43 +522,47 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 2: TOTAL UANG MASUK (EMERALD CYBER STYLE) */}
-        <GlassCard className="p-5 flex flex-col justify-between border-emerald-500/40 bg-emerald-950/30 hover:border-emerald-400/60 transition-all relative overflow-hidden group">
+       {/* CARD 2: TOTAL UANG MASUK */}
+        <div 
+          style={{ backgroundColor: 'rgba(6, 78, 59, 0.4)', borderColor: 'rgba(16, 185, 129, 0.5)' }} 
+          className="p-5 flex flex-col justify-between border-2 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden"
+        >
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] text-emerald-300/70 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              <p className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
-            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/50 mt-1" />
+            <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/80 mt-1" />
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-400 my-1">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] font-bold text-emerald-300/80 font-mono mt-2 flex items-center gap-1">
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300 my-1">{formatRupiah(totals.masuk)}</h3>
+            <p className="text-[10px] font-bold text-emerald-300/90 font-mono mt-2 flex items-center gap-1">
               <span>✓</span> {catSummaryMasuk.length} {dict.categories}
             </p>
           </div>
-        </GlassCard>
+        </div>
 
-        {/* CARD 3: TOTAL UANG BELANJA (VELVET ROSE STYLE) */}
-        <GlassCard className="p-5 flex flex-col justify-between border-rose-500/40 bg-rose-950/30 hover:border-rose-400/60 transition-all relative overflow-hidden group">
+        {/* CARD 3: TOTAL UANG BELANJA */}
+        <div 
+          style={{ backgroundColor: 'rgba(136, 19, 55, 0.4)', borderColor: 'rgba(244, 63, 94, 0.5)' }} 
+          className="p-5 flex flex-col justify-between border-2 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden"
+        >
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] text-rose-300/70 font-medium mt-0.5">Realisasi Pengeluaran</p>
+              <p className="text-[10px] text-rose-200/80 font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-lg shadow-rose-500/50 mt-1" />
+            <div className="w-3 h-3 rounded-full bg-rose-400 animate-pulse shadow-lg shadow-rose-400/80 mt-1" />
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-400 my-1">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] font-bold text-rose-300/80 font-mono mt-2 flex items-center gap-1">
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300 my-1">{formatRupiah(totals.keluar)}</h3>
+            <p className="text-[10px] font-bold text-rose-300/90 font-mono mt-2 flex items-center gap-1">
               <span>⚡</span> {catSummaryKeluar.length} {dict.allocation}
             </p>
           </div>
-        </GlassCard>
-
-      </div>
+        </div>
 
       {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
