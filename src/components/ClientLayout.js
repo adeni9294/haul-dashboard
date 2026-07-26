@@ -153,7 +153,6 @@ export default function ClientLayout({ children }) {
     };
   }, []);
 
-  // 1. INSIALISASI KOTA & FETCH JADWAL
   useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
@@ -176,7 +175,6 @@ export default function ClientLayout({ children }) {
     }
   }, [selectedKotaId]);
 
-  // 2. LIVE CLOCK & ALARM TIMER
   useEffect(() => {
     const updateTime = () => {
       const sekarang = new Date();
@@ -199,7 +197,6 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // FUNGSI UTAMA AMBIL JADWAL BERDASARKAN ID KOTA
   async function fetchJadwalSholatDirect(idKota) {
     try {
       const today = new Date();
@@ -218,7 +215,6 @@ export default function ClientLayout({ children }) {
     }
   }
 
-  // FUNGSI DETEKSI GPS AUTOMATIS
   async function fetchJadwalAutoGPS() {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -426,7 +422,7 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-{/* HEADER RESPONSIF NEON EMAS */}
+          {/* HEADER RESPONSIF NEON EMAS */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
               style={{ 
@@ -689,65 +685,79 @@ export default function ClientLayout({ children }) {
           </div>
         )}
 
-        {/* 📱 DRAWER MENU */}
+        {/* 📱 DRAWER MENU (GRID 2 KOLOM RESPONSIF PC/DESKTOP) */}
         {showMainMenuDrawer && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="absolute inset-0 z-0" onClick={() => setShowMainMenuDrawer(false)} />
-            <div className="w-full max-w-md theme-bg-secondary border-t theme-border rounded-t-3xl p-6 space-y-4 shadow-2xl theme-text-primary relative z-10 transition-all duration-300" onClick={(e) => e.stopPropagation()}>
-              <div className="w-12 h-1.5 theme-bg-tertiary rounded-full mx-auto mb-2" />
-              <div className="text-center">
-                <h4 className="text-xs font-extrabold uppercase tracking-widest theme-text-secondary">Navigasi Halaman</h4>
+            <div 
+              className="w-full max-w-lg theme-bg-secondary border theme-border rounded-3xl p-5 shadow-2xl theme-text-primary relative z-10 transition-all duration-300 flex flex-col max-h-[85vh]" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header Modal */}
+              <div className="flex justify-between items-center pb-3 border-b theme-border shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">📌</span>
+                  <h4 className="text-xs font-black uppercase tracking-widest theme-text-secondary">Navigasi Halaman</h4>
+                </div>
+                <button 
+                  onClick={() => setShowMainMenuDrawer(false)} 
+                  className="p-1 rounded-xl theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary hover:theme-text-primary transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <div className="grid grid-cols-1 gap-2.5 pt-2">
-                {drawerMenus.map((dm, idx) => {
-                  const IconComponent = dm.icon;
-                  if (dm.action) {
+
+              {/* Grid 2 Kolom Menu Navigasi */}
+              <div className="overflow-y-auto my-3 pr-1 flex-1 scrollbar-thin">
+                <div className="grid grid-cols-2 gap-2.5">
+                  {drawerMenus.map((dm, idx) => {
+                    const IconComponent = dm.icon;
+                    
+                    if (dm.action) {
+                      return (
+                        <button 
+                          key={idx}
+                          onClick={(e) => { 
+                            e.stopPropagation();
+                            setShowMainMenuDrawer(false);
+                            dm.action(); 
+                          }}
+                          className="p-3 rounded-2xl font-bold text-xs text-left flex items-center gap-3 transition-all theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border group"
+                        >
+                          <div className={`p-2 rounded-xl shrink-0 ${dm.color}`}>
+                            <IconComponent className="w-4 h-4" />
+                          </div>
+                          <span className="leading-tight text-[11px]">{dm.name}</span>
+                        </button>
+                      );
+                    }
+
                     return (
-                      <button 
-                        key={idx}
-                        onClick={(e) => { 
+                      <Link 
+                        key={dm.href} 
+                        href={dm.href} 
+                        onClick={(e) => {
                           e.stopPropagation();
                           setShowMainMenuDrawer(false);
-                          dm.action(); 
                         }}
-                        className="w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border"
+                        className={`p-3 rounded-2xl font-bold text-xs text-left flex items-center gap-3 transition-all active:scale-95 group ${
+                          pathname === dm.href 
+                            ? 'theme-gradient-main theme-text-primary shadow-lg border border-white/20' 
+                            : 'theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border'
+                        }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-xl ${dm.color}`}>
-                            <IconComponent className="w-4 h-4 shrink-0" />
-                          </div>
-                          <span>{dm.name}</span>
+                        <div className={`p-2 rounded-xl shrink-0 ${pathname === dm.href ? 'bg-white/20 text-white' : dm.color}`}>
+                          <IconComponent className="w-4 h-4" />
                         </div>
-                        <ChevronRight className="w-4 h-4 opacity-50" />
-                      </button>
+                        <span className="leading-tight text-[11px]">{dm.name}</span>
+                      </Link>
                     );
-                  }
-                  return (
-                    <Link 
-                      key={dm.href} 
-                      href={dm.href} 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowMainMenuDrawer(false);
-                      }}
-                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs text-left flex justify-between items-center transition-all active:scale-95 ${
-                        pathname === dm.href 
-                          ? 'theme-gradient-main theme-text-primary shadow-lg' 
-                          : 'theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl ${pathname === dm.href ? 'bg-white/20 text-white' : dm.color}`}>
-                          <IconComponent className="w-4 h-4 shrink-0" />
-                        </div>
-                        <span>{dm.name}</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 opacity-50" />
-                    </Link>
-                  );
-                })}
+                  })}
+                </div>
               </div>
-              <div className="pt-4 border-t theme-border">
+
+              {/* Footer Otorisasi/Logout */}
+              <div className="pt-3 border-t theme-border shrink-0">
                 {isAdmin ? (
                   <button 
                     onClick={(e) => { 
@@ -755,7 +765,7 @@ export default function ClientLayout({ children }) {
                       setShowMainMenuDrawer(false); 
                       handleLogout(); 
                     }} 
-                    className="w-full py-3 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all"
+                    className="w-full py-2.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all shadow-md"
                   >
                     <LogOut className="w-4 h-4" /> Keluar Mode Admin
                   </button>
@@ -766,7 +776,7 @@ export default function ClientLayout({ children }) {
                       setShowMainMenuDrawer(false); 
                       setShowLoginModal(true); 
                     }} 
-                    className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/50 flex items-center justify-center gap-2 transition-all hover:shadow-lg"
+                    className="w-full py-3 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all hover:shadow-purple-600/50"
                   >
                     <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
