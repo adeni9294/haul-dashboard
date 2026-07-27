@@ -60,16 +60,16 @@ const THEME_STYLES = {
 };
 
 const DAFTAR_KOTA = [
-  { id: '1219', name: 'Kab. Cirebon' },
-  { id: '1220', name: 'Kota Cirebon' },
-  { id: '1211', name: 'Kota Bandung' },
-  { id: '1205', name: 'Kab. Bandung Barat' },
-  { id: '1301', name: 'DKI Jakarta' },
-  { id: '1214', name: 'Kab. Indramayu' },
-  { id: '1215', name: 'Kab. Majalengka' },
-  { id: '1213', name: 'Kab. Kuningan' },
-  { id: '1501', name: 'Kota Semarang' },
-  { id: '1609', name: 'Kota Surabaya' }
+  { id: '1219', name: 'Kab. Cirebon', city: 'Cirebon', country: 'Indonesia', lat: -6.7589, lng: 108.4812 },
+  { id: '1220', name: 'Kota Cirebon', city: 'Cirebon', country: 'Indonesia', lat: -6.7320, lng: 108.5523 },
+  { id: '1211', name: 'Kota Bandung', city: 'Bandung', country: 'Indonesia', lat: -6.9175, lng: 107.6191 },
+  { id: '1205', name: 'Kab. Bandung Barat', city: 'Ngamprah', country: 'Indonesia', lat: -6.8423, lng: 107.5028 },
+  { id: '1301', name: 'DKI Jakarta', city: 'Jakarta', country: 'Indonesia', lat: -6.2088, lng: 106.8456 },
+  { id: '1214', name: 'Kab. Indramayu', city: 'Indramayu', country: 'Indonesia', lat: -6.3263, lng: 108.3200 },
+  { id: '1215', name: 'Kab. Majalengka', city: 'Majalengka', country: 'Indonesia', lat: -6.8361, lng: 108.2278 },
+  { id: '1213', name: 'Kab. Kuningan', city: 'Kuningan', country: 'Indonesia', lat: -6.9760, lng: 108.4831 },
+  { id: '1501', name: 'Kota Semarang', city: 'Semarang', country: 'Indonesia', lat: -6.9667, lng: 110.4167 },
+  { id: '1609', name: 'Kota Surabaya', city: 'Surabaya', country: 'Indonesia', lat: -7.2575, lng: 112.7521 }
 ];
 
 export default function ClientLayout({ children }) {
@@ -119,6 +119,7 @@ export default function ClientLayout({ children }) {
   const [dateString, setDateString] = useState('');
 
   const [jadwalSholat, setJadwalSholat] = useState(null);
+  const [tanggalHijriah, setTanggalHijriah] = useState('');
   const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
   const [selectedKotaId, setSelectedKotaId] = useState('1219');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
@@ -197,24 +198,39 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
+  // ALADHAN API - FETCH MANUAL BERDASARKAN KOTA ATAU KOORDINAT KOTA
   async function fetchJadwalSholatDirect(idKota) {
     try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-
-      const res = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
+      const foundKota = DAFTAR_KOTA.find(k => k.id === idKota) || DAFTAR_KOTA[0];
+      
+      // Menggunakan koordinat lat/lng kota dari Aladhan API dengan method=20 (Kemenag)
+      const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${foundKota.lat}&longitude=${foundKota.lng}&method=20`);
       const result = await res.json();
       
-      if (result && result.status && result.data && result.data.jadwal) {
-        setJadwalSholat(result.data.jadwal);
+      if (result && result.code === 200 && result.data) {
+        const timings = result.data.timings;
+        const hijri = result.data.date.hijri;
+
+        setJadwalSholat({
+          imsak: timings.Imsak,
+          subuh: timings.Fajr,
+          terbit: timings.Sunrise,
+          dzuhur: timings.Dhuhr,
+          ashar: timings.Asr,
+          maghrib: timings.Maghrib,
+          isya: timings.Isha
+        });
+
+        if (hijri) {
+          setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
+        }
       }
     } catch (e) {
-      console.error('Gagal mengambil data jadwal sholat:', e);
+      console.error('Gagal mengambil data jadwal sholat Aladhan:', e);
     }
   }
 
+  // ALADHAN API - FETCH OTOMATIS BERDASARKAN LOKASI GPS USER
   async function fetchJadwalAutoGPS() {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -222,11 +238,27 @@ export default function ClientLayout({ children }) {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           try {
-            const resCoord = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${lat}/${lon}`);
-            const resultCoord = await resCoord.json();
-            if (resultCoord && resultCoord.status && resultCoord.data && resultCoord.data.id) {
-              setKotaSholat(resultCoord.data.lokasi);
-              fetchJadwalSholatDirect(resultCoord.data.id);
+            const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=20`);
+            const result = await res.json();
+            
+            if (result && result.code === 200 && result.data) {
+              const timings = result.data.timings;
+              const hijri = result.data.date.hijri;
+
+              setKotaSholat('LOKASI SAYA (GPS)');
+              setJadwalSholat({
+                imsak: timings.Imsak,
+                subuh: timings.Fajr,
+                terbit: timings.Sunrise,
+                dzuhur: timings.Dhuhr,
+                ashar: timings.Asr,
+                maghrib: timings.Maghrib,
+                isya: timings.Isha
+              });
+
+              if (hijri) {
+                setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
+              }
               return;
             }
             fetchJadwalSholatDirect('1219');
@@ -572,6 +604,11 @@ export default function ClientLayout({ children }) {
                 </div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
                 <p className="text-[10px] font-mono text-emerald-200/80 uppercase">📍 {kotaSholat} & Sekitarnya</p>
+                {tanggalHijriah && (
+                  <p className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/30 w-fit mx-auto mt-1">
+                    🌙 {tanggalHijriah}
+                  </p>
+                )}
               </div>
 
               <div className="p-2.5 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-1">
@@ -625,7 +662,7 @@ export default function ClientLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono theme-text-secondary animate-pulse">
-                  Mndeteksi lokasi & jadwal sholat...
+                  Mendeteksi lokasi & jadwal sholat...
                 </div>
               )}
 
