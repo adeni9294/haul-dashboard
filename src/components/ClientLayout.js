@@ -33,7 +33,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
-  BookOpen
+  BookOpen,
+  Volume2
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -203,7 +204,6 @@ export default function ClientLayout({ children }) {
     try {
       const foundKota = DAFTAR_KOTA.find(k => k.id === idKota) || DAFTAR_KOTA[0];
       
-      // Menggunakan koordinat lat/lng kota dari Aladhan API dengan method=20 (Kemenag)
       const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${foundKota.lat}&longitude=${foundKota.lng}&method=20`);
       const result = await res.json();
       
@@ -302,32 +302,27 @@ export default function ClientLayout({ children }) {
     daftarWaktu.forEach(s => {
       if (s.time === currentHHMM && lastTriggeredSholat.current !== `${s.name}_${currentHHMM}`) {
         lastTriggeredSholat.current = `${s.name}_${currentHHMM}`;
-        playAlarmSound();
+        playAlarmSound(s.name);
         triggerNotification(s.name);
       }
     });
   };
 
-  const playAlarmSound = () => {
+  // 🔊 PEMUTAR SUARA ADZAN (SUBUH VS BIASA)
+  const playAlarmSound = (namaSholat = 'Dzuhur') => {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      // Memilih file audio berdasarkan nama sholat
+      const isSubuh = namaSholat.toLowerCase() === 'subuh';
+      const audioFile = isSubuh ? '/audio/adzan-subuh.mp3' : '/audio/adzan-biasa.mp3';
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1.5);
+      const adzanAudio = new Audio(audioFile);
+      adzanAudio.volume = 1.0;
 
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 2);
+      adzanAudio.play().catch((err) => {
+        console.warn(`Autoplay adzan diblokir oleh browser. Klik area web terlebih dahulu:`, err);
+      });
     } catch (e) {
-      console.log('Audio error:', e);
+      console.error('Audio error:', e);
     }
   };
 
@@ -627,20 +622,39 @@ export default function ClientLayout({ children }) {
                 </select>
               </div>
 
-              <div className="p-3 theme-bg-tertiary border border-emerald-500/30 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
-                  <span className="text-xs font-bold theme-text-primary">Alarm Waktu Sholat</span>
+              {/* BARIS ALARM & TES TES SUARA ADZAN */}
+              <div className="p-3 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
+                    <span className="text-xs font-bold theme-text-primary">Adzan Otomatis</span>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setIsAlarmActive(!isAlarmActive);
+                      if (!isAlarmActive) playAlarmSound('Dzuhur');
+                    }}
+                    className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'theme-bg-secondary theme-text-secondary'}`}
+                  >
+                    {isAlarmActive ? 'Aktif 🔔' : 'Mute 🔕'}
+                  </button>
                 </div>
-                <button 
-                  onClick={() => {
-                    setIsAlarmActive(!isAlarmActive);
-                    if (!isAlarmActive) playAlarmSound();
-                  }}
-                  className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'theme-bg-secondary theme-text-secondary'}`}
-                >
-                  {isAlarmActive ? 'Aktif 🔔' : 'Mute 🔕'}
-                </button>
+
+                {/* TOMBOL TES AUDI0 ADZAN SUBUH & BIASA */}
+                <div className="flex gap-2 pt-1 border-t theme-border">
+                  <button 
+                    onClick={() => playAlarmSound('Subuh')}
+                    className="flex-1 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                  >
+                    <Volume2 className="w-3 h-3 text-emerald-400" /> Tes Subuh
+                  </button>
+                  <button 
+                    onClick={() => playAlarmSound('Dzuhur')}
+                    className="flex-1 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                  >
+                    <Volume2 className="w-3 h-3 text-cyan-400" /> Tes Dzuhur
+                  </button>
+                </div>
               </div>
 
               {jadwalSholat ? (
@@ -722,7 +736,7 @@ export default function ClientLayout({ children }) {
           </div>
         )}
 
-        {/* 📱 DRAWER MENU (GRID 2 KOLOM RESPONSIF PC/DESKTOP) */}
+        {/* 📱 DRAWER MENU */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="absolute inset-0 z-0" onClick={() => setShowMainMenuDrawer(false)} />
@@ -730,7 +744,6 @@ export default function ClientLayout({ children }) {
               className="w-full max-w-lg theme-bg-secondary border theme-border rounded-3xl p-5 shadow-2xl theme-text-primary relative z-10 transition-all duration-300 flex flex-col max-h-[85vh]" 
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header Modal */}
               <div className="flex justify-between items-center pb-3 border-b theme-border shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-base">📌</span>
@@ -744,7 +757,6 @@ export default function ClientLayout({ children }) {
                 </button>
               </div>
 
-              {/* Grid 2 Kolom Menu Navigasi */}
               <div className="overflow-y-auto my-3 pr-1 flex-1 scrollbar-thin">
                 <div className="grid grid-cols-2 gap-2.5">
                   {drawerMenus.map((dm, idx) => {
@@ -793,7 +805,6 @@ export default function ClientLayout({ children }) {
                 </div>
               </div>
 
-              {/* Footer Otorisasi/Logout */}
               <div className="pt-3 border-t theme-border shrink-0">
                 {isAdmin ? (
                   <button 
