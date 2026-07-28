@@ -34,7 +34,8 @@ import {
   AlertCircle,
   Info,
   BookOpen,
-  Volume2
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -124,6 +125,11 @@ export default function ClientLayout({ children }) {
   const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
   const [selectedKotaId, setSelectedKotaId] = useState('1219');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
+  
+  // 🔔 STATE ADZAN AUDIO CONTROL & POP-UP
+  const [isPlayingAdzan, setIsPlayingAdzan] = useState(false);
+  const [currentActiveSholat, setCurrentActiveSholat] = useState('');
+  const audioRef = useRef(null);
   const lastTriggeredSholat = useRef('');
 
   useEffect(() => {
@@ -308,22 +314,45 @@ export default function ClientLayout({ children }) {
     });
   };
 
-  // 🔊 PEMUTAR SUARA ADZAN (SUBUH VS BIASA)
+  // 🔊 PEMUTAR SUARA ADZAN DENGAN EVENT LISTENER & BISA DIHENTIKAN
   const playAlarmSound = (namaSholat = 'Dzuhur') => {
     try {
-      // Memilih file audio berdasarkan nama sholat
+      // Hentikan audio yang sedang berjalan jika ada
+      stopAdzanSound();
+
       const isSubuh = namaSholat.toLowerCase() === 'subuh';
       const audioFile = isSubuh ? '/audio/adzan-subuh.mp3' : '/audio/adzan-biasa.mp3';
 
-      const adzanAudio = new Audio(audioFile);
-      adzanAudio.volume = 1.0;
+      const audio = new Audio(audioFile);
+      audio.volume = 1.0;
+      audioRef.current = audio;
 
-      adzanAudio.play().catch((err) => {
+      setCurrentActiveSholat(namaSholat);
+      setIsPlayingAdzan(true);
+
+      audio.play().catch((err) => {
         console.warn(`Autoplay adzan diblokir oleh browser. Klik area web terlebih dahulu:`, err);
       });
+
+      // Otomatis tutup modal saat adzan selesai
+      audio.onended = () => {
+        setIsPlayingAdzan(false);
+        setCurrentActiveSholat('');
+      };
     } catch (e) {
       console.error('Audio error:', e);
     }
+  };
+
+  // ⏹️ FUNGSI MATIKAN ADZAN
+  const stopAdzanSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    setIsPlayingAdzan(false);
+    setCurrentActiveSholat('');
   };
 
   const triggerNotification = (namaSholat) => {
@@ -432,7 +461,7 @@ export default function ClientLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // 📖 DRAWER MENUS DENGAN FITUR YASIN & PETA LOKASI
+  // 📖 DRAWER MENUS
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
@@ -585,6 +614,36 @@ export default function ClientLayout({ children }) {
           </div>
         </div>
 
+        {/* 📢 POP-UP OTOMATIS SAAT ADZAN BERBUNYI (UNTUK MEMATIKAN SUARA) */}
+        {isPlayingAdzan && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md animate-bounce">
+            <GlassCard className="p-4 border-2 border-emerald-400 bg-emerald-950/90 backdrop-blur-xl rounded-3xl shadow-2xl flex items-center justify-between gap-3 text-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 rounded-2xl bg-emerald-500 text-slate-950 shrink-0 animate-pulse">
+                  <Volume2 className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-300 truncate">
+                    🕌 Adzan {currentActiveSholat}
+                  </h4>
+                  <p className="text-[10px] text-emerald-100 font-mono truncate">
+                    Telah masuk waktu sholat {currentActiveSholat}
+                  </p>
+                </div>
+              </div>
+
+              {/* TOMBOL UTAMA UNTUK MEMATIKAN ADZAN */}
+              <button
+                onClick={stopAdzanSound}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase rounded-2xl shadow-lg border border-rose-400 flex items-center gap-1.5 shrink-0 transition-all active:scale-95 cursor-pointer"
+              >
+                <VolumeX className="w-4 h-4" />
+                <span>Matikan</span>
+              </button>
+            </GlassCard>
+          </div>
+        )}
+
         {/* 🕌 MODAL JADWAL SHOLAT */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
@@ -640,20 +699,31 @@ export default function ClientLayout({ children }) {
                   </button>
                 </div>
 
-                {/* TOMBOL TES AUDI0 ADZAN SUBUH & BIASA */}
+                {/* TOMBOL TES AUDI0 ADZAN & STOP ADZAN */}
                 <div className="flex gap-2 pt-1 border-t theme-border">
-                  <button 
-                    onClick={() => playAlarmSound('Subuh')}
-                    className="flex-1 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
-                  >
-                    <Volume2 className="w-3 h-3 text-emerald-400" /> Tes Subuh
-                  </button>
-                  <button 
-                    onClick={() => playAlarmSound('Dzuhur')}
-                    className="flex-1 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
-                  >
-                    <Volume2 className="w-3 h-3 text-cyan-400" /> Tes Dzuhur
-                  </button>
+                  {isPlayingAdzan ? (
+                    <button 
+                      onClick={stopAdzanSound}
+                      className="w-full py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-all"
+                    >
+                      <VolumeX className="w-3.5 h-3.5" /> Hentikan Suara Adzan
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => playAlarmSound('Subuh')}
+                        className="flex-1 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                      >
+                        <Volume2 className="w-3 h-3 text-emerald-400" /> Tes Subuh
+                      </button>
+                      <button 
+                        onClick={() => playAlarmSound('Dzuhur')}
+                        className="flex-1 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                      >
+                        <Volume2 className="w-3 h-3 text-cyan-400" /> Tes Dzuhur
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
