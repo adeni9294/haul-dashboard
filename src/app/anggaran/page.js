@@ -5,6 +5,7 @@ import GlassCard from '@/components/GlassCard';
 
 export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [budgetList, setBudgetList] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   
@@ -17,12 +18,12 @@ export default function AnggaranPage() {
   const [editingId, setEditingId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ➕ State Periode Haul
+  // State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
   const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
 
-  // 🔔 Custom Toast & Confirm Modal States
+  // Custom Toast & Confirm Modal States
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
 
@@ -90,7 +91,7 @@ export default function AnggaranPage() {
         setCurrentPeriodeObj(found);
       }
 
-      // 2. Memuat Opsi Kategori dari tabel 'category'
+      // 2. Memuat Opsi Kategori
       const { data: catDb } = await supabase.from('category').select('*').order('name', { ascending: true });
       if (catDb && catDb.length > 0) {
         const catNames = catDb.map(c => c.name);
@@ -98,7 +99,7 @@ export default function AnggaranPage() {
         if (!category) setCategory(catNames[0]);
       }
 
-      // 3. Query Data Rencana Anggaran (budgets)
+      // 3. Query Data Rencana Anggaran
       let budgetQuery = supabase.from('budgets').select('*').order('id', { ascending: true });
       if (activePeriodeId) budgetQuery = budgetQuery.eq('periode_id', activePeriodeId);
       const { data: bData } = await budgetQuery;
@@ -115,7 +116,9 @@ export default function AnggaranPage() {
     e.preventDefault();
     if (!isAdmin) return showToast('Aksi ditolak. Anda belum login sebagai admin!', 'error');
     if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini telah ditutup buku!', 'error');
-    if (!allocationName.trim() || !plannedAmount) return;
+    if (!allocationName.trim() || !plannedAmount) {
+      return showToast('Harap isi Nama Alokasi dan Jumlah Rencana Anggaran!', 'error');
+    }
 
     const supabase = getSupabase();
     const cleanPlanned = parseFloat(plannedAmount.toString().replace(/[^0-9.-]/g, '')) || 0;
@@ -129,6 +132,7 @@ export default function AnggaranPage() {
     };
 
     try {
+      setSubmitting(true);
       if (editingId) {
         const { error } = await supabase.from('budgets').update(payload).eq('id', editingId);
         if (error) throw error;
@@ -148,6 +152,8 @@ export default function AnggaranPage() {
     } catch (err) {
       console.error(err);
       showToast(`❌ Gagal menyimpan: ${err?.message || err}`, 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -216,12 +222,14 @@ export default function AnggaranPage() {
             <p className="text-xs theme-text-secondary leading-relaxed">{confirmModal.message}</p>
             <div className="flex gap-3 justify-center pt-2">
               <button
+                type="button"
                 onClick={closeConfirm}
                 className="px-4 py-2 bg-black/30 hover:bg-black/50 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
               >
                 Batal
               </button>
               <button
+                type="button"
                 onClick={confirmModal.onConfirm}
                 className="px-4 py-2 bg-rose-500/80 hover:bg-rose-600 text-white font-mono font-bold rounded-xl transition-all shadow-md"
               >
@@ -232,7 +240,7 @@ export default function AnggaranPage() {
         </div>
       )}
 
-      {/* HEADER PAGE STATUS & PERIODE SELECTOR (GLASS) */}
+      {/* HEADER PAGE STATUS & PERIODE SELECTOR */}
       <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
@@ -294,50 +302,60 @@ export default function AnggaranPage() {
               <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Anggaran & Realisasi' : 'Tambah Anggaran Baru'}
             </h3>
             
-            {/* NAMA ALOKASI */}
-            <div>
-              <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Nama Alokasi</label>
-              <input 
-                type="text" 
-                required 
-                value={allocationName} 
-                onChange={(e) => setAllocationName(e.target.value)} 
-                placeholder="Contoh: Sewa Tenda Utama & Panggung" 
-                className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
-              />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Nama Alokasi</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={allocationName} 
+                  onChange={(e) => setAllocationName(e.target.value)} 
+                  placeholder="Contoh: Sewa Tenda Utama & Panggung" 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
+                />
+              </div>
 
-            {/* JUMLAH RENCANA ANGGARAN */}
-            <div>
-              <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Jumlah Rencana Anggaran (Rp)</label>
-              <input 
-                type="number" 
-                required 
-                value={plannedAmount} 
-                onChange={(e) => setPlannedAmount(e.target.value)} 
-                placeholder="Contoh: 5000000" 
-                className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-accent font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
-              />
-            </div>
+              <div>
+                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Jumlah Rencana Anggaran (Rp)</label>
+                <input 
+                  type="number" 
+                  required 
+                  value={plannedAmount} 
+                  onChange={(e) => setPlannedAmount(e.target.value)} 
+                  placeholder="Contoh: 5000000" 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-accent font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
+                />
+              </div>
 
-            {/* JUMLAH REALISASI */}
-            <div>
-              <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Jumlah Realisasi Belanja (Rp)</label>
-              <input 
-                type="number" 
-                value={realizedAmount} 
-                onChange={(e) => setRealizedAmount(e.target.value)} 
-                placeholder="Contoh: 4500000 (Opsional/Manual)" 
-                className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs text-rose-300 font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
-              />
-            </div>
+              <div>
+                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Jumlah Realisasi Belanja (Rp)</label>
+                <input 
+                  type="number" 
+                  value={realizedAmount} 
+                  onChange={(e) => setRealizedAmount(e.target.value)} 
+                  placeholder="Contoh: 4500000 (Opsional/Manual)" 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs text-rose-300 font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
+                />
+              </div>
 
-            <button type="submit" className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md">
-              {editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setAllocationName(''); setPlannedAmount(''); setRealizedAmount(''); }} className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border">Batal Edit</button>
-            )}
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md disabled:opacity-50 cursor-pointer"
+              >
+                {submitting ? '⏳ Menyimpan...' : editingId ? '💾 Simpan Perubahan' : 'Simpan Anggaran'}
+              </button>
+
+              {editingId && (
+                <button 
+                  type="button" 
+                  onClick={() => { setEditingId(null); setAllocationName(''); setPlannedAmount(''); setRealizedAmount(''); }} 
+                  className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl transition-all border theme-border"
+                >
+                  Batal Edit
+                </button>
+              )}
+            </form>
           </GlassCard>
         ) : (
           <GlassCard className="p-6 h-fit text-center space-y-2">
@@ -350,71 +368,99 @@ export default function AnggaranPage() {
           </GlassCard>
         )}
 
-        {/* LIST DAFTAR RENCANA ANGGARAN */}
-        <GlassCard className="lg:col-span-2 p-6 space-y-3">
+        {/* 📊 TABEL DAFTAR RENCANA ANGGARAN */}
+        <GlassCard className="lg:col-span-2 p-6 space-y-4">
           <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
             <span>📊</span> Rencana Anggaran vs Realisasi Belanja ({budgetList.length})
           </h3>
-          <div className="space-y-2.5 max-h-[550px] overflow-y-auto pr-1">
-            {budgetList.length === 0 ? (
-              <p className="text-xs theme-text-tertiary font-mono py-6 text-center">Belum ada daftar alokasi anggaran pada periode ini.</p>
-            ) : (
-              budgetList.map((b) => {
-                const plan = parseFloat(b.planned_amount) || 0;
-                const real = parseFloat(b.real_amount || b.realized_amount) || 0;
-                const selisih = plan - real;
-                const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
-                const titleName = b.category || b.category_name || b.name || b.title || 'Tanpa Nama Alokasi';
 
-                return (
-                  <div key={b.id} className="p-3.5 bg-black/20 border theme-border rounded-xl space-y-2 hover:border-white/30 transition-all">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold theme-text-primary text-sm tracking-wide uppercase">{titleName}</p>
-                      </div>
-                      {isAdmin && (
-                        <div className="flex gap-3 font-mono text-[11px] shrink-0 ml-2">
-                          {currentPeriodeObj?.is_closed ? (
-                            <span className="theme-text-accent italic text-[10px]">🔒 Terkunci</span>
-                          ) : (
-                            <>
-                              <button onClick={() => handleEdit(b)} className="theme-text-accent hover:underline font-bold">Edit</button>
-                              <button onClick={() => handleDelete(b.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+          <div className="overflow-x-auto max-h-[550px] overflow-y-auto pr-1 border theme-border rounded-xl">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-black/60 sticky top-0 backdrop-blur-md z-10 border-b theme-border font-mono text-[10px] uppercase theme-text-tertiary">
+                <tr>
+                  <th className="py-3 px-3">No</th>
+                  <th className="py-3 px-4">Nama Alokasi</th>
+                  <th className="py-3 px-4 text-right">Rencana</th>
+                  <th className="py-3 px-4 text-right">Realisasi</th>
+                  <th className="py-3 px-4 text-right">Sisa / Selisih</th>
+                  {isAdmin && <th className="py-3 px-3 text-center">Aksi</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y theme-border font-mono">
+                {budgetList.length === 0 ? (
+                  <tr>
+                    <td colSpan={isAdmin ? 6 : 5} className="py-8 text-center text-xs theme-text-tertiary">
+                      Belum ada daftar alokasi anggaran pada periode ini.
+                    </td>
+                  </tr>
+                ) : (
+                  budgetList.map((b, index) => {
+                    const plan = parseFloat(b.planned_amount) || 0;
+                    const real = parseFloat(b.real_amount || b.realized_amount) || 0;
+                    const selisih = plan - real;
+                    const percentUsed = plan > 0 ? Math.min(Math.round((real / plan) * 100), 100) : 0;
+                    const titleName = b.category || b.category_name || b.name || b.title || 'Tanpa Nama Alokasi';
 
-                    {/* RINCIAN NOMINAL 3 KOLOM */}
-                    <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-[10px] border-t theme-border">
-                      <div>
-                        <span className="theme-text-tertiary block text-[9px] uppercase">Rencana:</span>
-                        <strong className="theme-text-accent text-xs">{formatRupiah(plan)}</strong>
-                      </div>
-                      <div>
-                        <span className="theme-text-tertiary block text-[9px] uppercase">Realisasi (Manual):</span>
-                        <strong className="text-rose-300 text-xs">{formatRupiah(real)}</strong>
-                      </div>
-                      <div>
-                        <span className="theme-text-tertiary block text-[9px] uppercase">Sisa / Selisih:</span>
-                        <strong className={`text-xs ${selisih >= 0 ? 'text-emerald-300' : 'text-rose-400 font-black'}`}>
+                    return (
+                      <tr key={b.id} className="hover:bg-white/5 transition-all">
+                        {/* NO */}
+                        <td className="py-3 px-3 text-[10px] theme-text-tertiary">{index + 1}</td>
+
+                        {/* NAMA ALOKASI */}
+                        <td className="py-3 px-4 font-bold theme-text-primary font-sans uppercase">
+                          {titleName}
+                        </td>
+
+                        {/* RENCANA */}
+                        <td className="py-3 px-4 text-right theme-text-accent font-bold">
+                          {formatRupiah(plan)}
+                        </td>
+
+                        {/* REALISASI + PROGRESS BAR */}
+                        <td className="py-3 px-4 text-right text-rose-300">
+                          <div>{formatRupiah(real)}</div>
+                          <div className="w-full bg-black/40 h-1 rounded-full overflow-hidden mt-1 ml-auto max-w-[100px]">
+                            <div 
+                              className={`h-full ${real > plan ? 'bg-rose-500' : 'bg-emerald-400'}`}
+                              style={{ width: `${percentUsed}%` }}
+                            />
+                          </div>
+                        </td>
+
+                        {/* SISA / SELISIH */}
+                        <td className={`py-3 px-4 text-right font-bold ${selisih >= 0 ? 'text-emerald-300' : 'text-rose-400'}`}>
                           {formatRupiah(selisih)}
-                        </strong>
-                      </div>
-                    </div>
+                        </td>
 
-                    {/* PROGRESS BAR SERAPAN */}
-                    <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border theme-border">
-                      <div 
-                        className={`h-full transition-all duration-300 ${real > plan ? 'bg-rose-500' : 'bg-emerald-400'}`} 
-                        style={{ width: `${percentUsed}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                        {/* AKSI */}
+                        {isAdmin && (
+                          <td className="py-3 px-3 text-center">
+                            {currentPeriodeObj?.is_closed ? (
+                              <span className="theme-text-accent italic text-[10px]">🔒</span>
+                            ) : (
+                              <div className="flex items-center justify-center gap-2">
+                                <button 
+                                  onClick={() => handleEdit(b)} 
+                                  className="theme-text-accent hover:underline font-bold text-[11px]"
+                                >
+                                  Edit
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(b.id)} 
+                                  className="text-rose-400 hover:underline font-bold text-[11px]"
+                                >
+                                  Hapus
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </GlassCard>
 
