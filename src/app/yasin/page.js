@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen } from 'lucide-react';
 
-// BACAAN TAHLIL KUBRO KASANAH GUNUNG JATI CIREBON (Ayat-Ayat Pilihan Versi Lengkap)
+// BACAAN TAHLIL KUBRO SESUAI URUTAN MAJMU' SYARIF / PESANTREN
 const TAHLIL_GUNUNGJATI = [
+  // --- 1. TAWASSUL ---
   { 
     id: 1, 
     arab: "إِلَى حَضْرَةِ النَّبِيِّ الْمُصْطَفَى مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ وَآلِهِ وَأَزْوَاجِهِ وَذُرِّيَّاتِهِ وَأَهْلِ بَيْتِهِ الْكِرَامِ، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
@@ -30,6 +31,8 @@ const TAHLIL_GUNUNGJATI = [
     latin: "Thumma ila arwahi jami'i ahlil quburi... wa khususan ila sahibi hadhihil maqbarah (Buyut Kepuh & Buyut Besus)... lahumul fatihah...", 
     indo: "Tawasul Ahli Kubur: Khususon Pembuka Maqbaroh Buyut Kepuh & Buyut Besus serta Leluhur Desa Warujaya/Cibogo. (Al-Fatihah)" 
   },
+
+  // --- 2. AYAT-AYAT PILIHAN ---
   { 
     id: 5, 
     arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ \n قُلْ هُوَ اللّٰهُ أَحَدٌ ۚ اللّٰهُ الصَّمَدُ ۚ لَمْ يَلِدْ وَلَمْ يُولَدْ ۙ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ (٣x)", 
@@ -87,7 +90,7 @@ const TAHLIL_GUNUNGJATI = [
   { 
     id: 14, 
     arab: "اللّٰهُ لَآ إِلٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّوْمُ ۚ لَا تَأْخُذُهُ سِنَةٌ وََّلَا نَوْمٌ ۗ لَهُ مَا فِي السَّمٰوٰتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِيْ يَشْفَعُ عِنْدَهُ أِلَّا بِإِذْنِهِ ۗ يَعْلَمُ مَا بَيْنَ أَيْدِيْهِمْ وَمَا خَلْفَهُمْ ۚ وَلَا يُحِيْطُوْنَ بِشَيْءٍ مِّنْ عِلْمِهِ أِلَّا بِمَا شَآءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمٰوٰتِ وَالْأَرْضَ ۚ وَلَا يَؤُوْدُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيْمُ", 
-    latin: "Allahula ilaha illa huwal-hayyul-qayyum, la ta'khudzuhu sinatuw wa la naum, lahu ma fis-samawati wa ma fil-ardz, man dzalladzi yasyfa'u 'indahu illa bi'idznih, ya'lamu ma baina aidihim wa ma khalfahum, wa la yuhituna bisyai'im min 'ilmihi illa bima sya'a, wasi'a kursiyyuhus-samawati wal-ardz, wa la ya'uduhu hifdzuhuma, wa huwal-'aliyyul-'adzim.", 
+    latin: "Allahula ilaha illa huwal-hayyul-qayyum, la ta'khudzuhu sinatuw wa la naum...", 
     indo: "Ayat Kursi Lengkap (Al-Baqarah: 255)." 
   },
   { 
@@ -96,45 +99,53 @@ const TAHLIL_GUNUNGJATI = [
     latin: "Lillahi ma fis-samawati wa ma fil-ardz... Wa'fu 'anna waghfir lana warhamna (7x) anta maulana fansurna 'alal-qaumil-kafirin.", 
     indo: "Akhir Al-Baqarah (Ayat 284-286) & Permohonan Rahmat (7x)." 
   },
+
+  // --- 3. ISTIGHFAR ---
   { 
     id: 16, 
-    arab: "يَا أَرْحَمَ الرَّاحِمِيْنَ إِرْحَمْنَا (٧x)", 
-    latin: "Ya Arhamar-rahimina irhamna (7x)", 
-    indo: "Istighotsah Rahmat khas Keraton Gunung Jati." 
-  },
-  { 
-    id: 17, 
-    arab: "اللّٰهُمَّ صَلِّ صَلَاةً كَامِلَةً وَسَلِّمْ سَلَامًا تَامًّا عَلَى سَيِّدِنَا مُحَمَّدٍ الَّذِي تَنْحَلُّ بِهِ الْعُقَدُ وَتَنْفَرِجُ بِهِ الْكُرَبُ وَتُقْضَى بِهِ الْحَوَائِجُ وَتُنَالُ بِهِ الرَّغَائِبُ وَحُسْنُ الْخَوَاتِمِ وَيُسْتَسْقَى الْغَمَامُ بِوَجْهِهِ الْكَرِيْمِ وَعَلَى آلِهِ وَصَحْبِهِ فِي كُلِّ لَمْحَةٍ وَنَفَسٍ بِعَدَدِ كُلِّ مَعْلُوْمٍ لَكَ", 
-    latin: "Shalawat Nariyah / Tafrijiyyah", 
-    indo: "Membaca Shalawat Nariyah." 
-  },
-  { 
-    id: 18, 
     arab: "أَسْتَغْفِرُ اللّٰهَ الْعَظِيْمَ (٣٣x)", 
     latin: "Astaghfirullahal 'Adzim (33x)", 
-    indo: "Istighfar." 
+    indo: "Membaca Istighfar 33 kali." 
   },
+
+  // --- 4. SHOLAWAT ---
+  { 
+    id: 17, 
+    arab: "اللّٰهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِ سَيِّدِنَا مُحَمَّدٍ (٣x) \n\n اللّٰهُمَّ صَلِّ صَلَاةً كَامِلَةً وَسَلِّمْ سَلَامًا تَامًّا عَلَى سَيِّدِنَا مُحَمَّدٍ الَّذِي تَنْحَلُّ بِهِ الْعُقَدُ وَتَنْفَرِجُ بِهِ الْكُرَبُ وَتُقْضَى بِهِ الْحَوَائِجُ وَتُنَالُ بِهِ الرَّغَائِبُ وَحُسْنُ الْخَوَاتِمِ وَيُسْتَسْقَى الْغَمَامُ بِوَجْهِهِ الْكَرِيْمِ وَعَلَى آلِهِ وَصَحْبِهِ فِي كُلِّ لَمْحَةٍ وَنَفَسٍ بِعَدَدِ كُلِّ مَعْلُوْمٍ لَكَ", 
+    latin: "Allahumma shalli 'ala sayyidina muhammadin wa 'ala ali sayyidina muhammad (3x)... Shalawat Nariyah", 
+    indo: "Membaca Shalawat Nabi & Shalawat Nariyah." 
+  },
+
+  // --- 5. TASBIH ---
+  { 
+    id: 18, 
+    arab: "سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ سُبْحَانَ اللّٰهِ الْعَظِيْمِ (٣٣x)", 
+    latin: "Subhanallahi wa bihamdihi subhanallahil 'adzim (33x)", 
+    indo: "Membaca Tasbih 33 kali." 
+  },
+
+  // --- 6. MEMBACA KALIMAT THAYYIBAH (ZIKIR TAHLIL) ---
   { 
     id: 19, 
-    arab: "أَفْضَلُ الذِّكْرِ فَاعْلَمْ أَنَّهُ لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَوْجُوْدٌ. لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَعْبُوْدٌ. لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ بَاقٍ الَّذِي لَا يَمُوْتُ", 
-    latin: "Afdhaludz-dzikri fa'lam annahu la ilaha illallah...", 
+    arab: "أَفْضَلُ الذِّكْرِ فَاعْلَمْ أَنَّهُ لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَوْجُوْدٌ \n لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَعْبُوْدٌ \n لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ بَاقٍ الَّذِي لَا يَمُوْتُ", 
+    latin: "Afdhaludz-dzikri fa'lam annahu la ilaha illallah, hayyun maujud. La ilaha illallah, hayyun ma'bud. La ilaha illallah, hayyun baqin alladzi la yamut.", 
     indo: "Pengantar Tahlil Utama." 
   },
   { 
     id: 20, 
-    arab: "لَا إِلٰهَ إِلَّا اللهُ (١٠٠x)", 
-    latin: "Lā ilāha illallāh (100x / Berjamaah)", 
-    indo: "Dzikir Tahlil Utama." 
+    arab: "لَا إِلٰهَ إِلَّا اللهُ (٣٣x / ١٠٠x)", 
+    latin: "Laa ilaaha illallaah (33x / 100x)", 
+    indo: "Membaca Kalimat Thayyibah (Dzikir Tahlil)." 
   },
   { 
     id: 21, 
     arab: "لَا إِلٰهَ إِلَّا اللهُ مُحَمَّدٌ رَسُوْلُ اللهِ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، كَلِمَةُ حَقٍّ عَلَيْهَا نَحْيَا وَعَلَيْهَا نَمُوْتُ وَبِهَا نُبْعَثُ إِنْ شَاءَ اللّٰهُ تَعَالَى مِنَ الْآمِنِيْنَ. بِرَحْمَتِكَ يَا أَرْحَمَ الرَّاحِمِيْنَ", 
-    latin: "La ilaha illallahu muhammadur rasulullahi sallallahu 'alaihi wa sallam...", 
-    indo: "Penutup Tahlil Khas Gunung Jati." 
+    latin: "La ilaha illallahu muhammadur rasulullahi sallallahu 'alaihi wa sallam, kalimatuh haqqin 'alaiha nahya wa 'alaiha namutu...", 
+    indo: "Penutup Dzikir Tahlil." 
   }
 ];
 
-// DOA HAUL KUBRO KERATON / GUNUNG JATI CIREBON
+// --- 7. DOA TAHLIL LENGKAP KASANAH MAJMU' SYARIF / GUNUNG JATI CIREBON ---
 const DOA_GUNUNGJATI = [
   { 
     id: 1, 
@@ -175,12 +186,11 @@ const DOA_GUNUNGJATI = [
 ];
 
 export default function YasinPage() {
-  const [activeTab, setActiveTab] = useState('yasin'); // 'yasin' | 'tahlil' | 'doa'
+  const [activeTab, setActiveTab] = useState('yasin');
   const [fontSize, setFontSize] = useState(32);
   const [yasinAyat, setYasinAyat] = useState([]);
   const [loadingYasin, setLoadingYasin] = useState(true);
 
-  // Fetch 83 Ayat Surah Yasin
   useEffect(() => {
     async function fetchYasinFull() {
       try {
@@ -201,7 +211,7 @@ export default function YasinPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Dynamic Font Amiri (Khas Al-Qur'an) dari Google Fonts */}
+      {/* Font Amiri khas Mushaf Al-Qur'an */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
         .font-quran {
@@ -209,7 +219,7 @@ export default function YasinPage() {
         }
       `}</style>
 
-      {/* Top Header Navigation */}
+      {/* Navigation Header */}
       <div className="flex items-center justify-between theme-bg-secondary theme-border p-4 rounded-2xl">
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold theme-text-accent hover:opacity-80">
           <ArrowLeft className="w-4 h-4" /> Kembali ke Utama
@@ -232,7 +242,7 @@ export default function YasinPage() {
         </div>
       </div>
 
-      {/* Tab Selectors */}
+      {/* Tabs */}
       <div className="grid grid-cols-3 gap-2 p-1.5 theme-bg-secondary rounded-2xl theme-border">
         <button
           onClick={() => setActiveTab('yasin')}
@@ -266,20 +276,20 @@ export default function YasinPage() {
         </button>
       </div>
 
-      {/* Title Header */}
+      {/* Title */}
       <div className="text-center space-y-1 py-2">
         <h2 className="text-base font-black uppercase tracking-wider theme-text-primary flex items-center justify-center gap-2">
           <BookOpen className="w-5 h-5 text-emerald-400" />
           {activeTab === 'yasin' && 'Surah YaSiin (Lengkap 83 Ayat)'}
-          {activeTab === 'tahlil' && 'Tahlil Kubro Versi Kanjeng Sunan Gunung Jati'}
-          {activeTab === 'doa' && 'Doa Haul Keraton / Masyayikh Cirebon'}
+          {activeTab === 'tahlil' && 'Tahlil Kubro Versi Majmu\' Syarif / Sunan Gunung Jati'}
+          {activeTab === 'doa' && 'Doa Tahlil & Haul Keraton / Masyayikh Cirebon'}
         </h2>
         <p className="text-xs theme-text-secondary font-medium">
-          Tradisi Khas Pesantren & Keraton Cirebon (Teks Arab Utuh, Latin, & Terjemahan)
+          Susunan Resmi: Tawassul → Ayat Pilihan → Istighfar → Shalawat → Tasbih → Tahlil → Doa
         </p>
       </div>
 
-      {/* TAB 1: SURAH YASIN LENGKAP 83 AYAT */}
+      {/* TAB 1: YASIN */}
       {activeTab === 'yasin' && (
         <div className="space-y-4">
           {loadingYasin ? (
@@ -297,7 +307,6 @@ export default function YasinPage() {
                   <span className="text-[11px] font-mono font-bold text-emerald-800 uppercase tracking-wide">Surah YaSiin : Ayat {item.nomorAyat}</span>
                 </div>
 
-                {/* Teks Arab Khas Al-Qur'an (Sangat Jelas di Atas Warna Putih) */}
                 <p 
                   className="text-right font-quran text-slate-900 py-3 font-bold whitespace-pre-line"
                   style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
@@ -306,7 +315,6 @@ export default function YasinPage() {
                   {item.teksArab}
                 </p>
 
-                {/* Transliteration & Translation */}
                 <div className="space-y-1.5 pt-3 border-t border-slate-100">
                   <p className="text-xs font-bold text-emerald-700 italic font-mono">
                     {item.teksLatin}
@@ -321,7 +329,7 @@ export default function YasinPage() {
         </div>
       )}
 
-      {/* TAB 2: TAHLIL KASANAH GUNUNG JATI */}
+      {/* TAB 2: TAHLIL GUNUNG JATI (MAJMU' SYARIF) */}
       {activeTab === 'tahlil' && (
         <div className="space-y-4">
           {TAHLIL_GUNUNGJATI.map((item) => (
@@ -330,7 +338,7 @@ export default function YasinPage() {
                 <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
                   {item.id}
                 </span>
-                <span className="text-[11px] font-mono font-bold text-emerald-800 uppercase tracking-wide">Urutan Tahlil Gunung Jati #{item.id}</span>
+                <span className="text-[11px] font-mono font-bold text-emerald-800 uppercase tracking-wide">Urutan Tahlil #{item.id}</span>
               </div>
 
               <p 
@@ -354,7 +362,7 @@ export default function YasinPage() {
         </div>
       )}
 
-      {/* TAB 3: DOA HAUL GUNUNG JATI CIREBON */}
+      {/* TAB 3: DOA TAHLIL */}
       {activeTab === 'doa' && (
         <div className="space-y-4">
           {DOA_GUNUNGJATI.map((item) => (
