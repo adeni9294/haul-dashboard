@@ -1,5 +1,46 @@
 @import "tailwindcss";
 
+/* ==================== 1. DARK & LIGHT MODE VARIABLES ==================== */
+
+/* 🌙 TEMA GELAP / DARK MODE (DEFAULT) */
+:root,
+html.dark {
+  --theme-bg-primary: #030712;
+  --theme-bg-secondary: #0f172a;
+  --theme-bg-tertiary: #1e293b;
+  --theme-bg-card: #0f1e3a;
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #94a3b8;
+  --theme-text-tertiary: #64748b;
+  --theme-border: rgba(255, 255, 255, 0.1);
+  color-scheme: dark;
+}
+
+/* ☀️ TEMA TERANG / LIGHT MODE */
+html.light-mode,
+body.light-mode {
+  --bg-primary: #f8fafc !important;
+  --bg-secondary: #ffffff !important;
+  --bg-tertiary: #f1f5f9 !important;
+  --bg-card: #ffffff !important;
+  --border-color: rgba(0, 0, 0, 0.12) !important;
+  --text-primary: #0f172a !important;
+  --text-secondary: #475569 !important;
+  --text-tertiary: #94a3b8 !important;
+  --glass-bg: rgba(255, 255, 255, 0.85) !important;
+  --glass-border: rgba(0, 0, 0, 0.1) !important;
+  --glass-shadow: rgba(0, 0, 0, 0.05) !important;
+
+  --theme-bg-primary: #f8fafc !important;
+  --theme-bg-secondary: #ffffff !important;
+  --theme-bg-tertiary: #f1f5f9 !important;
+  --theme-text-primary: #0f172a !important;
+  --theme-text-secondary: #475569 !important;
+  --theme-text-tertiary: #94a3b8 !important;
+  --theme-border: rgba(0, 0, 0, 0.12) !important;
+  color-scheme: light;
+}
+
 /* ==================== COMPREHENSIVE THEME VARIABLES ==================== */
 
 :root {
@@ -389,36 +430,36 @@ input, textarea, select {
 
 /* ==================== THEME UTILITY CLASSES ==================== */
 .theme-bg-primary {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-primary) !important;
 }
 
 .theme-bg-secondary {
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-secondary) !important;
 }
 
 .theme-bg-tertiary {
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-tertiary) !important;
 }
 
 .theme-bg-card {
-  background-color: var(--bg-card);
-  border-color: var(--border-color);
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
 }
 
 .theme-text-primary {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
 }
 
 .theme-text-secondary {
-  color: var(--text-secondary);
+  color: var(--text-secondary) !important;
 }
 
 .theme-text-accent {
-  color: var(--accent-primary);
+  color: var(--accent-primary) !important;
 }
 
 .theme-border {
-  border-color: var(--border-color);
+  border-color: var(--border-color) !important;
 }
 
 .theme-gradient-main {
@@ -528,21 +569,15 @@ aside.theme-sidebar .menu-item-active {
   display: flex;
   justify-content: center;
   align-items: center;
-  
-  /* Menggunakan warna background tema dengan sedikit transparansi untuk efek kaca */
   background: var(--glass-bg, rgba(5, 11, 20, 0.75));
-  
-  /* Efek blur kaca (Glassmorphism) */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  
-  /* Garis border tipis khas efek glass */
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-  
   z-index: 999999;
   overflow: hidden;
   transition: opacity .5s ease;
 }
+
 .kb-splash.fade-out {
   opacity: 0;
 }
@@ -558,7 +593,6 @@ aside.theme-sidebar .menu-item-active {
   justify-content: center;
 }
 
-/* Glow berada di belakang logo menggunakan variabel accent */
 .kb-glow {
   position: absolute;
   top: 62px;
