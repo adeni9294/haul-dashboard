@@ -37,7 +37,8 @@ import {
   Volume2,
   VolumeX,
   Sun,
-  Moon
+  Moon,
+  RotateCcw
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -107,7 +108,6 @@ export default function ClientLayout({ children }) {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
-  // Load preferensi mode gelap/terang & tema global admin saat mount
   useEffect(() => {
     const savedMode = localStorage.getItem('app_mode') || 'dark';
     setAppMode(savedMode);
@@ -232,7 +232,50 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // ALADHAN API - FETCH MANUAL BERDASARKAN KOTA
+  // 🧹 FUNGSI HABIS / MEMBERSIHKAN CACHE PWA DI BROWSER
+  const handleClearPWACache = async () => {
+    try {
+      showToast('info', 'Pembersihan Dimulai', 'Sedang menghapus file temporary & cache PWA...');
+
+      // 1. Hapus Cache Storage
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      }
+
+      // 2. Unregister Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+      }
+
+      // 3. Simpan Sesi Admin & Mode Gelap
+      const savedAdminPassword = localStorage.getItem('admin_password_haul');
+      const savedThemeMode = localStorage.getItem('app_mode');
+      const savedAppTheme = localStorage.getItem('app-theme');
+
+      localStorage.clear();
+
+      if (savedAdminPassword) localStorage.setItem('admin_password_haul', savedAdminPassword);
+      if (savedThemeMode) localStorage.setItem('app_mode', savedThemeMode);
+      if (savedAppTheme) localStorage.setItem('app-theme', savedAppTheme);
+
+      showToast('success', 'Cache Dibersihkan!', 'PWA telah segar kembali. Memuat ulang aplikasi...');
+
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 1500);
+
+    } catch (error) {
+      console.error('Gagal menghapus cache:', error);
+      showToast('error', 'Gagal Hapus Cache', 'Terjadi kendala saat membersihkan memori PWA.');
+    }
+  };
+
   async function fetchJadwalSholatDirect(idKota) {
     try {
       const foundKota = DAFTAR_KOTA.find(k => k.id === idKota) || DAFTAR_KOTA[0];
@@ -263,7 +306,6 @@ export default function ClientLayout({ children }) {
     }
   }
 
-  // ALADHAN API - FETCH OTOMATIS GPS USER
   async function fetchJadwalAutoGPS() {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -356,7 +398,7 @@ export default function ClientLayout({ children }) {
       setIsPlayingAdzan(true);
 
       audio.play().catch((err) => {
-        console.warn(`Autoplay adzan diblokir oleh browser:`, err);
+        console.warn(`Autoplay adzan diblokir browser:`, err);
       });
 
       audio.onended = () => {
@@ -484,7 +526,7 @@ export default function ClientLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // 📖 DRAWER MENUS
+  // 📖 DRAWER MENUS (DENGAN TAMBAHAN FITUR HAPUS CACHE PWA)
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
@@ -493,6 +535,7 @@ export default function ClientLayout({ children }) {
     { name: 'Jadwal Acara', href: '/acara', icon: Calendar, color: 'text-amber-400 bg-amber-500/20' },
     { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-400 bg-purple-500/20' },
     { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users, color: 'text-blue-400 bg-blue-500/20' },
+    { name: 'Bersihkan Cache PWA', action: handleClearPWACache, icon: RotateCcw, color: 'text-amber-400 bg-amber-500/20' },
     ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings, color: 'text-rose-400 bg-rose-500/20' }] : [])
   ];
 
