@@ -35,7 +35,9 @@ import {
   Info,
   BookOpen,
   Volume2,
-  VolumeX
+  VolumeX,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -85,6 +87,9 @@ export default function ClientLayout({ children }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
 
+  // 🌙 / ☀️ STATE TOGGLE MODE GELAP / TERANG (LOKAL VISITOR)
+  const [appMode, setAppMode] = useState('dark');
+
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
 
   const showToast = (type, title, message, action = null) => {
@@ -102,12 +107,34 @@ export default function ClientLayout({ children }) {
   const [logoUrl, setLogoUrl] = useState('');
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
+  // Load preferensi mode gelap/terang & tema global admin saat mount
   useEffect(() => {
+    const savedMode = localStorage.getItem('app_mode') || 'dark';
+    setAppMode(savedMode);
+    applyAppMode(savedMode);
+
     const savedTheme = localStorage.getItem('app-theme');
     if (savedTheme && THEME_STYLES[savedTheme]) {
       setCurrentThemeKey(savedTheme);
     }
   }, []);
+
+  const applyAppMode = (mode) => {
+    if (mode === 'light') {
+      document.documentElement.classList.add('light-mode');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light-mode');
+    }
+  };
+
+  const toggleAppMode = () => {
+    const nextMode = appMode === 'dark' ? 'light' : 'dark';
+    setAppMode(nextMode);
+    localStorage.setItem('app_mode', nextMode);
+    applyAppMode(nextMode);
+  };
 
   useEffect(() => {
     document.body.className = document.body.className
@@ -205,7 +232,7 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // ALADHAN API - FETCH MANUAL BERDASARKAN KOTA ATAU KOORDINAT KOTA
+  // ALADHAN API - FETCH MANUAL BERDASARKAN KOTA
   async function fetchJadwalSholatDirect(idKota) {
     try {
       const foundKota = DAFTAR_KOTA.find(k => k.id === idKota) || DAFTAR_KOTA[0];
@@ -236,7 +263,7 @@ export default function ClientLayout({ children }) {
     }
   }
 
-  // ALADHAN API - FETCH OTOMATIS BERDASARKAN LOKASI GPS USER
+  // ALADHAN API - FETCH OTOMATIS GPS USER
   async function fetchJadwalAutoGPS() {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -314,10 +341,8 @@ export default function ClientLayout({ children }) {
     });
   };
 
-  // 🔊 PEMUTAR SUARA ADZAN DENGAN EVENT LISTENER & BISA DIHENTIKAN
   const playAlarmSound = (namaSholat = 'Dzuhur') => {
     try {
-      // Hentikan audio yang sedang berjalan jika ada
       stopAdzanSound();
 
       const isSubuh = namaSholat.toLowerCase() === 'subuh';
@@ -331,10 +356,9 @@ export default function ClientLayout({ children }) {
       setIsPlayingAdzan(true);
 
       audio.play().catch((err) => {
-        console.warn(`Autoplay adzan diblokir oleh browser. Klik area web terlebih dahulu:`, err);
+        console.warn(`Autoplay adzan diblokir oleh browser:`, err);
       });
 
-      // Otomatis tutup modal saat adzan selesai
       audio.onended = () => {
         setIsPlayingAdzan(false);
         setCurrentActiveSholat('');
@@ -344,7 +368,6 @@ export default function ClientLayout({ children }) {
     }
   };
 
-  // ⏹️ FUNGSI MATIKAN ADZAN
   const stopAdzanSound = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -478,7 +501,7 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER RESPONSIF NEON EMAS */}
+          {/* HEADER RESPONSIF NEON EMAS & TOGGLE MODE TEMA */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
               style={{ 
@@ -516,11 +539,32 @@ export default function ClientLayout({ children }) {
                 </div>
               </div>
 
-              {/* Sisi Kanan: Sholat & Live Clock */}
-              <div className="pt-3 md:pt-0 border-t md:border-t-0 border-amber-500/30 flex flex-row items-center justify-between md:justify-end gap-3 text-xs shrink-0">
+              {/* Sisi Kanan: Toggle Mode Gelap/Terang, Jadwal Sholat & Live Clock */}
+              <div className="pt-3 md:pt-0 border-t md:border-t-0 border-amber-500/30 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0">
+                
+                {/* 🌙 / ☀️ TOMBOL TOGGLE DARK & LIGHT MODE (PUBLIK LOKAL) */}
+                <button
+                  onClick={toggleAppMode}
+                  type="button"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/40 hover:bg-black/60 text-amber-300 border border-amber-400/40 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer"
+                  title={appMode === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                >
+                  {appMode === 'dark' ? (
+                    <>
+                      <Sun className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+                      <span className="text-[10px] font-mono hidden sm:inline uppercase">Light</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="text-[10px] font-mono hidden sm:inline uppercase">Dark</span>
+                    </>
+                  )}
+                </button>
+
                 <button 
                   onClick={() => setShowSholatModal(true)} 
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 rounded-full transition-all duration-300 font-bold shadow-sm"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer"
                 >
                   <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                   <span>Jadwal Sholat</span>
@@ -579,7 +623,7 @@ export default function ClientLayout({ children }) {
 
             <button 
               onClick={() => setShowDonationModal(true)} 
-              className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl theme-text-primary theme-gradient-main hover:scale-105 shadow-lg transition-all duration-300"
+              className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl theme-text-primary theme-gradient-main hover:scale-105 shadow-lg transition-all duration-300 cursor-pointer"
             >
               <Gift className="w-6 h-6 stroke-[2.5]" />
             </button>
@@ -601,7 +645,7 @@ export default function ClientLayout({ children }) {
                 e.stopPropagation();
                 setShowMainMenuDrawer((prev) => !prev);
               }} 
-              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 cursor-pointer ${
                 showMainMenuDrawer 
                   ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
                   : 'theme-text-secondary hover:theme-text-primary'
@@ -614,9 +658,9 @@ export default function ClientLayout({ children }) {
           </div>
         </div>
 
-        {/* 📢 POP-UP OTOMATIS SAAT ADZAN BERBUNYI (UNTUK MEMATIKAN SUARA) */}
+        {/* 📢 POP-UP OTOMATIS SAAT ADZAN BERBUNYI */}
         {isPlayingAdzan && (
-          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md animate-bounce">
+          <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md animate-bounce">
             <GlassCard className="p-4 border-2 border-emerald-400 bg-emerald-950/90 backdrop-blur-xl rounded-3xl shadow-2xl flex items-center justify-between gap-3 text-white">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="p-2.5 rounded-2xl bg-emerald-500 text-slate-950 shrink-0 animate-pulse">
@@ -632,7 +676,6 @@ export default function ClientLayout({ children }) {
                 </div>
               </div>
 
-              {/* TOMBOL UTAMA UNTUK MEMATIKAN ADZAN */}
               <button
                 onClick={stopAdzanSound}
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase rounded-2xl shadow-lg border border-rose-400 flex items-center gap-1.5 shrink-0 transition-all active:scale-95 cursor-pointer"
@@ -648,7 +691,7 @@ export default function ClientLayout({ children }) {
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="theme-bg-secondary border border-emerald-500/40 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
-              <button onClick={() => setShowSholatModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary">
+              <button onClick={() => setShowSholatModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
               
@@ -681,7 +724,6 @@ export default function ClientLayout({ children }) {
                 </select>
               </div>
 
-              {/* BARIS ALARM & TES TES SUARA ADZAN */}
               <div className="p-3 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -693,18 +735,17 @@ export default function ClientLayout({ children }) {
                       setIsAlarmActive(!isAlarmActive);
                       if (!isAlarmActive) playAlarmSound('Dzuhur');
                     }}
-                    className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'theme-bg-secondary theme-text-secondary'}`}
+                    className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase font-mono transition-all cursor-pointer ${isAlarmActive ? 'bg-emerald-500 text-slate-950' : 'theme-bg-secondary theme-text-secondary'}`}
                   >
                     {isAlarmActive ? 'Aktif 🔔' : 'Mute 🔕'}
                   </button>
                 </div>
 
-                {/* TOMBOL TES AUDI0 ADZAN & STOP ADZAN */}
                 <div className="flex gap-2 pt-1 border-t theme-border">
                   {isPlayingAdzan ? (
                     <button 
                       onClick={stopAdzanSound}
-                      className="w-full py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-all"
+                      className="w-full py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-all cursor-pointer"
                     >
                       <VolumeX className="w-3.5 h-3.5" /> Hentikan Suara Adzan
                     </button>
@@ -712,13 +753,13 @@ export default function ClientLayout({ children }) {
                     <>
                       <button 
                         onClick={() => playAlarmSound('Subuh')}
-                        className="flex-1 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                        className="flex-1 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                       >
                         <Volume2 className="w-3 h-3 text-emerald-400" /> Tes Subuh
                       </button>
                       <button 
                         onClick={() => playAlarmSound('Dzuhur')}
-                        className="flex-1 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                        className="flex-1 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                       >
                         <Volume2 className="w-3 h-3 text-cyan-400" /> Tes Dzuhur
                       </button>
@@ -750,7 +791,7 @@ export default function ClientLayout({ children }) {
                 </div>
               )}
 
-              <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase">
+              <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase cursor-pointer">
                 Tutup Jadwal
               </button>
             </div>
@@ -761,7 +802,7 @@ export default function ClientLayout({ children }) {
         {showDonationModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="theme-bg-secondary border theme-border p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
-              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary">
+              <button onClick={() => setShowDonationModal(false)} className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
               
@@ -791,7 +832,7 @@ export default function ClientLayout({ children }) {
                     </div>
                     <button 
                       onClick={() => handleCopy(item.number, idx)}
-                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-lg' : 'theme-bg-secondary theme-text-secondary border theme-border hover:theme-bg-tertiary'}`}
+                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 cursor-pointer ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-lg' : 'theme-bg-secondary theme-text-secondary border theme-border hover:theme-bg-tertiary'}`}
                     >
                       {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
                     </button>
@@ -799,7 +840,7 @@ export default function ClientLayout({ children }) {
                 ))}
               </div>
 
-              <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-xl transition-all font-mono uppercase border theme-border">
+              <button onClick={() => setShowDonationModal(false)} className="w-full py-2.5 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-xl transition-all font-mono uppercase border theme-border cursor-pointer">
                 Tutup Window
               </button>
             </div>
@@ -821,7 +862,7 @@ export default function ClientLayout({ children }) {
                 </div>
                 <button 
                   onClick={() => setShowMainMenuDrawer(false)} 
-                  className="p-1 rounded-xl theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary hover:theme-text-primary transition-colors"
+                  className="p-1 rounded-xl theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary hover:theme-text-primary transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -841,7 +882,7 @@ export default function ClientLayout({ children }) {
                             setShowMainMenuDrawer(false);
                             dm.action(); 
                           }}
-                          className="p-3 rounded-2xl font-bold text-xs text-left flex items-center gap-3 transition-all theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border group"
+                          className="p-3 rounded-2xl font-bold text-xs text-left flex items-center gap-3 transition-all theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border group cursor-pointer"
                         >
                           <div className={`p-2 rounded-xl shrink-0 ${dm.color}`}>
                             <IconComponent className="w-4 h-4" />
@@ -883,7 +924,7 @@ export default function ClientLayout({ children }) {
                       setShowMainMenuDrawer(false); 
                       handleLogout(); 
                     }} 
-                    className="w-full py-2.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all shadow-md"
+                    className="w-full py-2.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-2xl text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" /> Keluar Mode Admin
                   </button>
@@ -894,7 +935,7 @@ export default function ClientLayout({ children }) {
                       setShowMainMenuDrawer(false); 
                       setShowLoginModal(true); 
                     }} 
-                    className="w-full py-3 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all hover:shadow-purple-600/50"
+                    className="w-full py-3 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all hover:shadow-purple-600/50 cursor-pointer"
                   >
                     <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
@@ -918,47 +959,32 @@ export default function ClientLayout({ children }) {
               <form onSubmit={handleLogin} className="space-y-3">
                 <input type="password" placeholder="Password Admin" required autoFocus value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full px-4 py-3 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl text-xs focus:outline-none focus:border-cyan-500 transition-all" />
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-2xl border theme-border transition-all">Batal</button>
-                  <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-extrabold text-xs uppercase rounded-2xl shadow-md hover:shadow-lg transition-all">Masuk</button>
+                  <button type="button" onClick={() => { setShowLoginModal(false); setPasswordInput(''); }} className="flex-1 py-3 theme-bg-tertiary hover:theme-bg-tertiary theme-text-secondary text-xs font-bold rounded-2xl border theme-border transition-all cursor-pointer">Batal</button>
+                  <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-extrabold text-xs uppercase rounded-2xl shadow-md hover:shadow-lg transition-all cursor-pointer">Masuk</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* 🔔 CUSTOM MODAL TOAST DIALOG */}
+        {/* 🔔 CUSTOM FLOATING TOAST DIALOG (CENTER TOP) */}
         {toastConfig.show && (
-          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="theme-bg-secondary border theme-border p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl theme-text-primary text-center relative overflow-hidden transition-all duration-300">
-              <div className="mx-auto w-fit p-3 rounded-2xl border mb-1">
-                {toastConfig.type === 'success' && (
-                  <div className="bg-emerald-500/20 text-emerald-400 border-emerald-400/30 p-2 rounded-xl border">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                )}
-                {toastConfig.type === 'error' && (
-                  <div className="bg-rose-500/20 text-rose-400 border-rose-400/30 p-2 rounded-xl border">
-                    <AlertCircle className="w-8 h-8" />
-                  </div>
-                )}
-                {toastConfig.type === 'info' && (
-                  <div className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 p-2 rounded-xl border">
-                    <Info className="w-8 h-8" />
-                  </div>
-                )}
+          <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
+            <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
+              toastConfig.type === 'error' 
+                ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50' 
+                : toastConfig.type === 'info'
+                ? 'bg-cyan-950/90 border-cyan-500/80 text-cyan-200 shadow-cyan-950/50'
+                : 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50'
+            }`}>
+              <span className="text-lg shrink-0">
+                {toastConfig.type === 'error' ? '⚠️' : toastConfig.type === 'info' ? 'ℹ️' : '✅'}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-mono font-black text-xs uppercase">{toastConfig.title}</h4>
+                <p className="font-mono text-[11px] opacity-90 truncate">{toastConfig.message}</p>
               </div>
-
-              <div className="space-y-1">
-                <h3 className="text-sm font-black uppercase tracking-wider theme-text-primary">{toastConfig.title}</h3>
-                <p className="text-xs theme-text-secondary leading-relaxed font-medium">{toastConfig.message}</p>
-              </div>
-
-              <button
-                onClick={closeToast}
-                className="w-full py-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs uppercase rounded-2xl shadow-lg transition-all"
-              >
-                Mengerti & Lanjutkan
-              </button>
+              <button onClick={closeToast} className="text-xs font-bold hover:underline opacity-80 cursor-pointer">Tutup</button>
             </div>
           </div>
         )}
