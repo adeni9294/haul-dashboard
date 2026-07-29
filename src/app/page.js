@@ -23,8 +23,8 @@ const DICTIONARY = {
     progressTitle: 'Progres Capaian Target Plafon Anggaran',
     collected: 'Terkumpul',
     target: 'Plafon Target',
-    rekapIncome: '📊 Rekap Kategori Uang Masuk',
-    rekapExpense: '📊 Rekap Alokasi Anggaran Belanja',
+    rekapIncome: 'Rekap Kategori Uang Masuk',
+    rekapExpense: 'Rekap Alokasi Anggaran Belanja',
     lastIncome: 'Pemasukan Terakhir (Cash In)',
     lastExpense: 'Pengeluaran Terakhir (Cash Out)',
     emptyMutationIn: 'Belum ada mutasi masuk.',
@@ -56,8 +56,8 @@ const DICTIONARY = {
     progressTitle: 'Progres Capaian Target Plafon Anggaran',
     collected: 'Kekumpul',
     target: 'Plafon Target',
-    rekapIncome: '📊 Rekap Kategori Pragat Mlebu',
-    rekapExpense: '📊 Rekap Alokasi Anggaran Blonjo',
+    rekapIncome: 'Rekap Kategori Pragat Mlebu',
+    rekapExpense: 'Rekap Alokasi Anggaran Blonjo',
     lastIncome: 'Mutasi Mlebu Keri Jelas (Cash In)',
     lastExpense: 'Mutasi Blonjo Keri Jelas (Cash Out)',
     emptyMutationIn: 'Durung ana mutasi mlebu.',
@@ -89,8 +89,8 @@ const DICTIONARY = {
     progressTitle: 'Budget Ceiling Target Achievement Progress',
     collected: 'Collected',
     target: 'Target Ceiling',
-    rekapIncome: '📊 Cash Inflow Category Summary',
-    rekapExpense: '📊 Budgetary Allocation Summary',
+    rekapIncome: 'Cash Inflow Category Summary',
+    rekapExpense: 'Budgetary Allocation Summary',
     lastIncome: 'Latest Cash Inflows (Cash In)',
     lastExpense: 'Latest Expenditures (Cash Out)',
     emptyMutationIn: 'No incoming mutations yet.',
@@ -483,7 +483,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs print:hidden">
         {periodeList.length > 0 && (
           <GlassCard className="p-2.5 flex items-center justify-between">
-            <span className="text-[10px] font-mono tracking-wider theme-text-secondary uppercase font-bold px-1">
+            <span className="text-[10px] font-mono tracking-wider theme-text-secondary uppercase font-bold px-1 flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
               {dict.selectPeriod}
             </span>
             <select
@@ -501,7 +504,10 @@ export default function DashboardPage() {
         )}
 
         <GlassCard className="p-2.5 flex items-center justify-between">
-          <span className="text-[10px] font-mono tracking-wider theme-text-secondary uppercase font-bold px-1">
+          <span className="text-[10px] font-mono tracking-wider theme-text-secondary uppercase font-bold px-1 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 11.37 9.198 15.287 6 18.213"></path>
+            </svg>
             {dict.selectLanguage}
           </span>
           <select
@@ -518,9 +524,12 @@ export default function DashboardPage() {
 
       {/* 📢 ANNOUNCEMENT BANNER */}
       {announcement && (
-        <GlassCard className="w-full py-2.5 px-4 overflow-hidden flex items-center print:hidden">
+        <GlassCard className="w-full py-2.5 px-4 overflow-hidden flex items-center gap-2 print:hidden">
+          <svg className="w-4 h-4 theme-text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 000-6M5.436 13.683A4.001 4.001 0 017 6h1.832c.41 0 .789-.237.973-.603l1.082-2.165A1.8 1.8 0 0112.502 2h.001c.99 0 1.8.81 1.8 1.8v15.4c0 .99-.81 1.8-1.8 1.8h-.001a1.8 1.8 0 01-1.615-1.032l-1.082-2.165a1.182 1.182 0 00-.973-.603H7a4 4 0 01-1.564-.317z"></path>
+          </svg>
           <div className="animate-marquee inline-block font-bold text-[10px] sm:text-xs tracking-widest uppercase font-mono theme-text-accent">
-            📢 {announcement}
+            {announcement}
           </div>
         </GlassCard>
       )}
@@ -561,13 +570,20 @@ export default function DashboardPage() {
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
               <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
-            <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/80 mt-1" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+              </svg>
+            </div>
           </div>
 
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-400 my-1">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] font-bold text-emerald-400 font-mono mt-2 flex items-center gap-1">
-              <span>✓</span> {catSummaryMasuk.length} {dict.categories}
+            <p className="text-[10px] font-bold text-emerald-400 font-mono mt-2 flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              {catSummaryMasuk.length} {dict.categories}
             </p>
           </div>
         </div>
@@ -579,13 +595,20 @@ export default function DashboardPage() {
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
               <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="w-3 h-3 rounded-full bg-rose-400 animate-pulse shadow-lg shadow-rose-400/80 mt-1" />
+            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-400 shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+              </svg>
+            </div>
           </div>
 
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-400 my-1">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] font-bold text-rose-400 font-mono mt-2 flex items-center gap-1">
-              <span>⚡</span> {catSummaryKeluar.length} {dict.allocation}
+            <p className="text-[10px] font-bold text-rose-400 font-mono mt-2 flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              {catSummaryKeluar.length} {dict.allocation}
             </p>
           </div>
         </div>
@@ -598,7 +621,11 @@ export default function DashboardPage() {
         {/* LOG TRAFIK PENGUNJUNG */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:col-span-1">
           <GlassCard className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-sm shrink-0">📈</div>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
             <div className="min-w-0">
               <p className="text-[9px] font-mono theme-text-tertiary uppercase truncate">{dict.totalKunjungan}</p>
               <h4 className="text-base font-black font-mono leading-tight">{visitorStats.totalViews}</h4>
@@ -606,7 +633,11 @@ export default function DashboardPage() {
           </GlassCard>
 
           <GlassCard className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-sm shrink-0">👥</div>
+            <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-400 shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </div>
             <div className="min-w-0">
               <p className="text-[9px] font-mono theme-text-tertiary uppercase truncate">{dict.pengunjungUnik}</p>
               <h4 className="text-base font-black font-mono leading-tight">{visitorStats.uniqueCount}</h4>
@@ -618,7 +649,10 @@ export default function DashboardPage() {
         <GlassCard className="md:col-span-2 p-4 flex flex-col justify-center space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 theme-text-primary">
-              <span>🎯</span> {dict.progressTitle}
+              <svg className="w-4 h-4 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              {dict.progressTitle}
             </h3>
             <span className="theme-text-accent font-mono text-xs font-black theme-bg-tertiary px-2 py-0.5 rounded theme-border border">{progress.percent}%</span>
           </div>
@@ -639,11 +673,21 @@ export default function DashboardPage() {
       {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <GlassCard className="p-4 space-y-3">
-          <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b theme-border pb-2">{dict.rekapIncome}</h4>
+          <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b theme-border pb-2 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            {dict.rekapIncome}
+          </h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
               <div key={i} className="p-2 theme-bg-tertiary theme-border border rounded-xl flex justify-between items-center text-xs">
-                <span className="flex items-center gap-1 theme-text-secondary font-medium">🔹 {c.label}</span>
+                <span className="flex items-center gap-1.5 theme-text-secondary font-medium">
+                  <svg className="w-3 h-3 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h10M7 12h10m-8 5h8"></path>
+                  </svg>
+                  {c.label}
+                </span>
                 <span className={`font-mono font-bold ${c.value < 0 ? 'text-rose-400' : 'theme-text-accent'}`}>{formatRupiah(c.value)}</span>
               </div>
             ))}
@@ -651,11 +695,22 @@ export default function DashboardPage() {
         </GlassCard>
 
         <GlassCard className="p-4 space-y-3">
-          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b theme-border pb-2">{dict.rekapExpense}</h4>
+          <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b theme-border pb-2 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 30a1 1 0 000 2h2a1 1 0 000-2h-2z M16 8v8m-4-5h8m-8 0a3 3 0 106 0 3 3 0 00-6 0z"></path>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h1m4 0h1m-5 4h12a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            {dict.rekapExpense}
+          </h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
               <div key={i} className="p-2 theme-bg-tertiary theme-border border rounded-xl flex justify-between items-center text-xs">
-                <span className="flex items-center gap-1 theme-text-secondary font-medium">🔸 {c.label}</span>
+                <span className="flex items-center gap-1.5 theme-text-secondary font-medium">
+                  <svg className="w-3 h-3 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h10M7 12h10m-8 5h8"></path>
+                  </svg>
+                  {c.label}
+                </span>
                 <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
             ))}
@@ -666,7 +721,12 @@ export default function DashboardPage() {
       {/* MUTASI TERAKHIR */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <GlassCard className="p-4 border-l-4 border-l-emerald-400 space-y-3">
-          <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">{dict.lastIncome}</h5>
+          <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            {dict.lastIncome}
+          </h5>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {rincianMasuk.length === 0 ? (
               <p className="text-xs theme-text-tertiary font-mono py-1">{dict.emptyMutationIn}</p>
@@ -687,7 +747,12 @@ export default function DashboardPage() {
         </GlassCard>
 
         <GlassCard className="p-4 border-l-4 border-l-rose-400 space-y-3">
-          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider">{dict.lastExpense}</h5>
+          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path>
+            </svg>
+            {dict.lastExpense}
+          </h5>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {rincianKeluar.length === 0 ? (
               <p className="text-xs theme-text-tertiary font-mono py-1">{dict.emptyMutationOut}</p>
