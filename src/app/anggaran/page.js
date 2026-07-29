@@ -196,26 +196,54 @@ export default function AnggaranPage() {
   const totalRealisasi = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.real_amount || curr.realized_amount) || 0), 0);
   const totalSelisih = totalRencana - totalRealisasi;
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70 theme-text-primary">Memuat data anggaran...</div>;
+  // 🚀 TAMPILAN SKELETON LOADING MODERN
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
+        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
+          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="animate-pulse">Memuat Data Anggaran & Alokasi...</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 rounded-2xl bg-slate-900/40 border border-white/5 p-4 animate-pulse" />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+          <GlassCard className="lg:col-span-2 p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
 
-      {/* 🔔 FLOATING TOAST NOTIFICATION */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION (DI TENGAH ATAS LAYAR) */}
       {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 animate-bounce">
-          <GlassCard className={`px-4 py-3 border flex items-center gap-3 shadow-2xl ${
-            toast.type === 'error' ? 'border-rose-500/50 text-rose-300' : 'border-emerald-500/50 text-emerald-300'
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
+          <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
+            toast.type === 'error' 
+              ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50' 
+              : toast.type === 'info'
+              ? 'bg-cyan-950/90 border-cyan-500/80 text-cyan-200 shadow-cyan-950/50'
+              : 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50'
           }`}>
-            <span className="text-base">{toast.type === 'error' ? '⚠️' : '✅'}</span>
-            <span className="font-mono font-bold text-xs">{toast.message}</span>
-          </GlassCard>
+            <span className="text-lg shrink-0">{toast.type === 'error' ? '⚠️' : toast.type === 'info' ? 'ℹ️' : '✅'}</span>
+            <span className="font-mono font-bold text-xs leading-relaxed">{toast.message}</span>
+          </div>
         </div>
       )}
 
       {/* ❓ CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
             <div className="text-3xl">❓</div>
             <h3 className="font-bold text-sm theme-text-primary uppercase tracking-wider">{confirmModal.title}</h3>
@@ -224,14 +252,14 @@ export default function AnggaranPage() {
               <button
                 type="button"
                 onClick={closeConfirm}
-                className="px-4 py-2 bg-black/30 hover:bg-black/50 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
+                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-500/80 hover:bg-rose-600 text-white font-mono font-bold rounded-xl transition-all shadow-md"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md"
               >
                 Ya, Hapus
               </button>
