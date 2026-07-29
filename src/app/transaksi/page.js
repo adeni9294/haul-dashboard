@@ -2,6 +2,26 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from '@/components/GlassCard';
+import { 
+  Plus, 
+  FileSpreadsheet, 
+  Printer, 
+  Lock, 
+  Search, 
+  Filter, 
+  Trash2, 
+  Edit3, 
+  CheckCircle2, 
+  AlertCircle, 
+  Info, 
+  X, 
+  ArrowUpRight, 
+  ArrowDownLeft, 
+  Loader2,
+  Calendar as CalendarIcon,
+  DollarSign,
+  ShieldAlert
+} from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -10,16 +30,16 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 🌐 KAMUS MULTI-BAHASA
 const translations = {
   id: {
-    title: "💰 Buku Kas & Transaksi Haul",
+    title: "Buku Kas & Transaksi Haul",
     subtitle: "● Murni Grouping pertanggal & Integrasi Kas Keluar Aktif",
-    btnTambah: "➕ Tambah Kas",
-    btnExcel: "📊 Excel Data",
-    btnCetak: "🖨️ Cetak LPJ",
-    btnTutupBuku: "🔒 Tutup Buku Periode",
+    btnTambah: "Tambah Kas",
+    btnExcel: "Excel Data",
+    btnCetak: "Cetak LPJ",
+    btnTutupBuku: "Tutup Buku Periode",
     searchPlaceholder: "Cari uraian keterangan...",
     allCash: "Semua Aliran Kas",
-    onlyIn: "🟢 Hanya Kas Masuk",
-    onlyOut: "🔴 Hanya Kas Keluar",
+    onlyIn: "Hanya Kas Masuk",
+    onlyOut: "Hanya Kas Keluar",
     allCat: "Semua Kategori Pos",
     thDate: "Tanggal",
     thCat: "Pos Kategori",
@@ -52,16 +72,16 @@ const translations = {
     statusActive: "(Aktif)"
   },
   jv: { 
-    title: "💰 Buku Kas & Transaksi Haul",
+    title: "Buku Kas & Transaksi Haul",
     subtitle: "● Murni Grouping pertanggal & Integrasi Kas Keluar Aktif",
-    btnTambah: "➕ Tambah Kas",
-    btnExcel: "📊 Pragat Excel",
-    btnCetak: "🖨️ Cetak LPJ",
-    btnTutupBuku: "🔒 Tutup Buku Periode",
+    btnTambah: "Tambah Kas",
+    btnExcel: "Pragat Excel",
+    btnCetak: "Cetak LPJ",
+    btnTutupBuku: "Tutup Buku Periode",
     searchPlaceholder: "Goleki keterangan...",
     allCash: "Kabeh Aliran Kas",
-    onlyIn: "🟢 Pragat Mlebu Tok",
-    onlyOut: "🔴 Pragat Blonjo Tok",
+    onlyIn: "Pragat Mlebu Tok",
+    onlyOut: "Pragat Blonjo Tok",
     allCat: "Kabeh Werna Pos",
     thDate: "Tanggal",
     thCat: "Pos Kategori",
@@ -94,16 +114,16 @@ const translations = {
     statusActive: "(Mlaku)"
   },
   en: {
-    title: "💰 Cash Book & Haul Transactions",
+    title: "Cash Book & Haul Transactions",
     subtitle: "● Pure daily grouping & Active cash outflow integration",
-    btnTambah: "➕ Add Cash",
-    btnExcel: "📊 Export Excel",
-    btnCetak: "🖨️ Print Report",
-    btnTutupBuku: "🔒 Close Accounting Period",
+    btnTambah: "Add Cash",
+    btnExcel: "Export Excel",
+    btnCetak: "Print Report",
+    btnTutupBuku: "Close Accounting Period",
     searchPlaceholder: "Search description...",
     allCash: "All Cash Flows",
-    onlyIn: "🟢 Cash Inflow Only",
-    onlyOut: "🔴 Cash Outflow Only",
+    onlyIn: "Cash Inflow Only",
+    onlyOut: "Cash Outflow Only",
     allCat: "All Categories",
     thDate: "Date",
     thCat: "Category Pos",
@@ -146,7 +166,7 @@ export default function TransaksiPage() {
   const [allExpenses, setAllExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  // 🔔 STATE NOTIFIKASI MODERN (TOAST)
+  // 🔔 STATE NOTIFIKASI MODERN (TOAST POSISI ATAS)
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   // 🗑️ STATE MODAL KONFIRMASI HAPUS
@@ -300,7 +320,7 @@ export default function TransaksiPage() {
     e.preventDefault();
     if (!isAdmin) return;
     if (currentPeriodeObj?.is_closed) {
-      showToast('🔒 Periode ini telah ditutup buku. Tidak dapat menambah/mengubah data.', 'warning');
+      showToast('Periode ini telah ditutup buku. Tidak dapat menambah/mengubah data.', 'warning');
       return;
     }
     
@@ -321,16 +341,16 @@ export default function TransaksiPage() {
     try {
       if (isEditMode) {
         await supabase.from('transactions').update(payload).eq('id', selectedId);
-        showToast('✏️ Transaksi berhasil diperbarui.', 'success');
+        showToast('Transaksi berhasil diperbarui.', 'success');
       } else {
         await supabase.from('transactions').insert([payload]);
-        showToast('➕ Transaksi baru berhasil ditambahkan.', 'success');
+        showToast('Transaksi baru berhasil ditambahkan.', 'success');
       }
       resetForm();
       await loadData();
     } catch (err) {
       console.error(err);
-      showToast('❌ Gagal menyimpan transaksi.', 'error');
+      showToast('Gagal menyimpan transaksi.', 'error');
     }
   };
 
@@ -350,19 +370,19 @@ export default function TransaksiPage() {
 
       if (error) throw error;
 
-      showToast('🎉 Tutup Buku Berhasil! Periode baru otomatis terbentuk.', 'success');
+      showToast('Tutup Buku Berhasil! Periode baru otomatis terbentuk.', 'success');
       setShowModalTutupBuku(false);
       setNamaPeriodeBaruInput('');
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       console.error(err);
-      showToast(`❌ Gagal Tutup Buku: ${err.message}`, 'error');
+      showToast(`Gagal Tutup Buku: ${err.message}`, 'error');
     }
   };
 
   const triggerEdit = (item) => {
     if (currentPeriodeObj?.is_closed) {
-      showToast('🔒 Periode ini sudah ditutup buku dan bersifat Read-Only!', 'warning');
+      showToast('Periode ini sudah ditutup buku dan bersifat Read-Only!', 'warning');
       return;
     }
     setSelectedId(item.id);
@@ -379,7 +399,7 @@ export default function TransaksiPage() {
   const triggerHapus = (id, isFromExpenses) => {
     if (!isAdmin) return;
     if (currentPeriodeObj?.is_closed) {
-      showToast('🔒 Periode ini telah ditutup buku!', 'warning');
+      showToast('Periode ini telah ditutup buku!', 'warning');
       return;
     }
     setDeleteConfirm({ show: true, id, isExpenses: isFromExpenses });
@@ -393,10 +413,10 @@ export default function TransaksiPage() {
       const targetTable = isExpenses ? 'transactions' : 'donation_details';
       const { error } = await supabase.from(targetTable).delete().eq('id', id);
       if (error) throw error;
-      showToast('🗑️ Catatan berhasil dihapus.', 'success');
+      showToast('Catatan berhasil dihapus.', 'success');
       await loadData();
     } catch (err) {
-      showToast(`❌ Gagal hapus: ${err.message}`, 'error');
+      showToast(`Gagal hapus: ${err.message}`, 'error');
     }
   };
 
@@ -540,68 +560,83 @@ export default function TransaksiPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('📊 Berhasil mengunduh file Excel/CSV.', 'success');
+      showToast('Berhasil mengunduh file Excel/CSV.', 'success');
     } catch (err) {
       showToast('Gagal mengekspor data: ' + err.message, 'error');
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70 theme-text-primary">{t.syncData}</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-xs font-mono theme-text-primary">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <span>{t.syncData}</span>
+      </div>
+    );
+  }
 
   return (
     <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
       
-      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN (POSISI ATAS TENGAH) */}
       {toast.show && (
-        <div className="fixed top-5 right-5 z-[100] max-w-sm w-full print:hidden animate-bounce">
-          <GlassCard className={`px-4 py-3 flex items-center justify-between gap-3 shadow-2xl border ${
-            toast.type === 'success' ? 'border-emerald-500/50 text-emerald-300' :
-            toast.type === 'error' ? 'border-rose-500/50 text-rose-300' :
-            toast.type === 'warning' ? 'border-amber-500/50 text-amber-300' :
-            'theme-border theme-text-primary'
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] print:hidden animate-in fade-in slide-in-from-top duration-300">
+          <div className={`px-4 py-3 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl border-2 ${
+            toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200' :
+            toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/80 text-rose-200' :
+            toast.type === 'warning' ? 'bg-amber-950/90 border-amber-500/80 text-amber-200' :
+            'bg-slate-900/90 border-slate-700 text-white'
           }`}>
-            <div className="font-semibold text-xs leading-snug">{toast.message}</div>
-            <button onClick={() => setToast({ ...toast, show: false })} className="opacity-60 hover:opacity-100 font-bold text-sm">✕</button>
-          </GlassCard>
+            <div className="flex items-center gap-2.5 min-w-0">
+              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
+              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
+              {toast.type === 'warning' && <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />}
+              {toast.type === 'info' && <Info className="w-5 h-5 text-cyan-400 shrink-0" />}
+              <span className="font-semibold text-xs leading-snug truncate">{toast.message}</span>
+            </div>
+            <button onClick={() => setToast({ ...toast, show: false })} className="p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0">
+              <X className="w-4 h-4 opacity-80 hover:opacity-100" />
+            </button>
+          </div>
         </div>
       )}
 
       {/* 🗑️ MODAL DIALOG KONFIRMASI HAPUS MODERN */}
       {deleteConfirm.show && (
-        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden animate-fade-in">
+        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200">
           <GlassCard className="max-w-sm w-full text-center space-y-4 p-6 shadow-2xl border theme-border">
-            <div className="text-3xl">⚠️</div>
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-6 h-6" />
+            </div>
             <h3 className="font-bold text-sm uppercase theme-text-primary">Konfirmasi Hapus</h3>
-            <p className="text-xs theme-text-secondary">Apakah Anda yakin ingin menghapus catatan transaksi internal ini secara permanen?</p>
+            <p className="text-xs theme-text-secondary leading-relaxed">Apakah Anda yakin ingin menghapus catatan transaksi internal ini secara permanen?</p>
             <div className="flex gap-2 pt-2">
-              <button onClick={() => setDeleteConfirm({ show: false, id: null, isExpenses: false })} className="flex-1 py-2 bg-black/30 hover:bg-black/50 theme-text-secondary font-bold rounded-xl text-xs border theme-border">Batal</button>
-              <button onClick={executeDelete} className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs uppercase shadow-lg">Hapus</button>
+              <button onClick={() => setDeleteConfirm({ show: false, id: null, isExpenses: false })} className="flex-1 py-2.5 bg-black/30 hover:bg-black/50 theme-text-secondary font-bold rounded-xl text-xs border theme-border cursor-pointer">Batal</button>
+              <button onClick={executeDelete} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs uppercase shadow-lg cursor-pointer">Hapus</button>
             </div>
           </GlassCard>
         </div>
       )}
 
-      {/* 🛠️ PRINT STYLES */}
+      {/* 🛠️ PRINT STYLES UNTUK LPJ PROFESIONAL */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
             size: A4 portrait;
-            margin: 12mm 15mm;
+            margin: 10mm 12mm;
           }
 
-          html, body, main, #__next, #root-transaksi-container {
+          html, body, main, #root-transaksi-container {
             width: 100% !important;
             height: auto !important;
-            min-height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
             overflow: visible !important;
             background: white !important;
             color: black !important;
-            position: static !important;
           }
 
-          .print\\:hidden, nav, header, sidebar, button {
+          .print\\:hidden, nav, header, sidebar, button, .lucide {
             display: none !important;
           }
 
@@ -626,13 +661,7 @@ export default function TransaksiPage() {
             box-sizing: border-box !important;
           }
 
-          .page-break {
-            page-break-before: always !important;
-            break-before: page !important;
-            margin-top: 20px !important;
-          }
-
-          table, tr, td, th, .break-inside-avoid {
+          .break-inside-avoid {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
@@ -646,8 +675,19 @@ export default function TransaksiPage() {
         <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xs font-black uppercase tracking-wider theme-text-primary">{t.title}</h2>
-              {isAdmin ? <span className="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded font-mono uppercase">ADMIN</span> : <span className="bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[9px] font-bold px-2 py-0.5 rounded font-mono uppercase">PUBLIC</span>}
+              <h2 className="text-xs font-black uppercase tracking-wider theme-text-primary flex items-center gap-1.5">
+                <DollarSign className="w-4 h-4 text-emerald-400" />
+                {t.title}
+              </h2>
+              {isAdmin ? (
+                <span className="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase">
+                  ADMIN
+                </span>
+              ) : (
+                <span className="bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase">
+                  PUBLIC
+                </span>
+              )}
             </div>
             <p className="text-[10px] font-mono mt-0.5 theme-text-tertiary">{t.subtitle}</p>
           </div>
@@ -671,44 +711,65 @@ export default function TransaksiPage() {
             )}
 
             <div className="flex bg-black/30 p-1 border theme-border rounded-xl mr-1">
-              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'id' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>ID 🇮🇩</button>
-              <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'jv' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>JV 🎯</button>
-              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all ${lang === 'en' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>EN 🇬🇧</button>
+              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'id' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>ID 🇮🇩</button>
+              <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'jv' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>JV 🎯</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'en' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>EN 🇬🇧</button>
             </div>
 
             {isAdmin && currentPeriodeObj && !currentPeriodeObj.is_closed && (
               <button 
                 onClick={() => setShowModalTutupBuku(true)} 
-                className="flex-1 sm:flex-initial px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase rounded-xl shadow-md transition-all text-[10px]"
+                className="flex-1 sm:flex-initial px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase rounded-xl shadow-md transition-all text-[10px] flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                {t.btnTutupBuku}
+                <Lock className="w-3.5 h-3.5" />
+                <span>{t.btnTutupBuku}</span>
               </button>
             )}
 
             {isAdmin && !currentPeriodeObj?.is_closed && (
-              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 btn-theme-primary font-black uppercase rounded-xl shadow-md text-[10px]">{t.btnTambah}</button>
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 btn-theme-primary font-black uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t.btnTambah}</span>
+              </button>
             )}
             
-            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold uppercase rounded-xl shadow-md text-[10px]">{t.btnExcel}</button>
-            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black uppercase rounded-xl shadow-md text-[10px]">{t.btnCetak}</button>
+            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{t.btnExcel}</span>
+            </button>
+            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+              <Printer className="w-3.5 h-3.5" />
+              <span>{t.btnCetak}</span>
+            </button>
           </div>
         </GlassCard>
 
         {currentPeriodeObj?.is_closed && (
           <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs">
-            <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku pada {currentPeriodeObj.tanggal_selesai}. Data bersifat Read-Only.</span>
+            <span className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku pada {currentPeriodeObj.tanggal_selesai}. Data bersifat Read-Only.</span>
+            </span>
             <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
           </GlassCard>
         )}
 
         <GlassCard className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3">
-          <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary placeholder:theme-text-tertiary" />
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold">
-            <option value="all" className="bg-slate-900 text-white">{t.allCash}</option>
-            <option value="masuk" className="bg-slate-900 text-emerald-400">{t.onlyIn}</option>
-            <option value="keluar" className="bg-slate-900 text-rose-400">{t.onlyOut}</option>
-          </select>
-          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-1.5 bg-black/30 border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold">
+          <div className="relative flex items-center">
+            <Search className="w-4 h-4 absolute left-3 text-slate-400" />
+            <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary placeholder:theme-text-tertiary text-xs" />
+          </div>
+          
+          <div className="relative flex items-center">
+            <Filter className="w-4 h-4 absolute left-3 text-slate-400" />
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-black/30 border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold text-xs">
+              <option value="all" className="bg-slate-900 text-white">{t.allCash}</option>
+              <option value="masuk" className="bg-slate-900 text-emerald-400">{t.onlyIn}</option>
+              <option value="keluar" className="bg-slate-900 text-rose-400">{t.onlyOut}</option>
+            </select>
+          </div>
+
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold text-xs">
             <option value="all" className="bg-slate-900 text-white">{t.allCat}</option>
             {categories.map((c, i) => <option key={i} value={c.name} className="bg-slate-900 text-white">{c.name}</option>)}
           </select>
@@ -732,7 +793,8 @@ export default function TransaksiPage() {
                   <tr key={idx} className="hover:bg-black/20 transition-all">
                     <td className="p-3 font-mono theme-text-tertiary text-[10px] whitespace-nowrap">{tItem.transaction_date}</td>
                     <td className="p-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 border rounded font-mono text-[9px] uppercase font-bold ${!isKeluar ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-rose-500/20 border-rose-400/40 text-rose-300'}`}>
+                      <span className={`px-2 py-0.5 border rounded-full font-mono text-[9px] uppercase font-bold inline-flex items-center gap-1 ${!isKeluar ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-rose-500/20 border-rose-400/40 text-rose-300'}`}>
+                        {!isKeluar ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                         {tItem.category}
                       </span> 
                     </td>
@@ -745,14 +807,20 @@ export default function TransaksiPage() {
                     {isAdmin && (
                       <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
                         {currentPeriodeObj?.is_closed ? (
-                          <span className="theme-text-accent italic text-[10px]">🔒 Terkunci (Closed)</span>
+                          <span className="theme-text-accent italic text-[10px] flex items-center justify-center gap-1">
+                            <Lock className="w-3 h-3" /> Terkunci
+                          </span>
                         ) : tItem.isSystem ? (
-                          <>
+                          <div className="flex items-center justify-center gap-1">
                             {tItem.isFromExpenses && (
-                              <button type="button" onClick={() => triggerEdit(tItem)} className="theme-text-accent hover:underline font-bold px-1 py-0.5">Edit</button>
+                              <button type="button" onClick={() => triggerEdit(tItem)} className="p-1 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded transition-colors cursor-pointer" title="Edit">
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
                             )}
-                            <button type="button" onClick={() => triggerHapus(tItem.id, tItem.isFromExpenses)} className="text-rose-300 hover:underline font-bold px-1 py-0.5">Hapus</button>
-                          </>
+                            <button type="button" onClick={() => triggerHapus(tItem.id, tItem.isFromExpenses)} className="p-1 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded transition-colors cursor-pointer" title="Hapus">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         ) : (
                           <span className="theme-text-tertiary italic text-[10px]">🔒 Terkunci Privasi</span>
                         )}
@@ -774,7 +842,8 @@ export default function TransaksiPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
           <GlassCard className="p-6 w-full max-w-md space-y-4 shadow-2xl border theme-border">
             <h3 className="text-sm font-black uppercase tracking-wider text-purple-300 flex items-center gap-2">
-              <span>🔒</span> Konfirmasi Tutup Buku Periode
+              <Lock className="w-4 h-4" />
+              <span>Konfirmasi Tutup Buku Periode</span>
             </h3>
             <p className="text-xs theme-text-secondary leading-relaxed">
               Proses ini akan mengunci seluruh transaksi di <strong>{currentPeriodeObj?.nama_periode}</strong> dan membentuk Saldo Kas Akhir sebesar <strong className="text-emerald-300">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</strong> menjadi Saldo Kas Awal periode baru.
@@ -792,8 +861,8 @@ export default function TransaksiPage() {
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowModalTutupBuku(false)} className="flex-1 py-2 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs">Batal</button>
-                <button type="submit" className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl shadow-lg text-xs">Eksekusi Tutup Buku</button>
+                <button type="button" onClick={() => setShowModalTutupBuku(false)} className="flex-1 py-2.5 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl shadow-lg text-xs cursor-pointer">Eksekusi Tutup Buku</button>
               </div>
             </form>
           </GlassCard>
@@ -805,7 +874,8 @@ export default function TransaksiPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
           <GlassCard className="p-6 w-full max-w-md space-y-4 shadow-2xl border theme-border">
             <h3 className="text-sm font-black uppercase tracking-wider theme-text-accent flex items-center gap-2">
-              <span>{isEditMode ? '✏️' : '➕'}</span> {isEditMode ? 'Ubah Catatan Operasional' : 'Registrasi Catatan Kas Baru'}
+              {isEditMode ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />} 
+              <span>{isEditMode ? 'Ubah Catatan Operasional' : 'Registrasi Catatan Kas Baru'}</span>
             </h3>
             <form onSubmit={handleSaveTransaction} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -816,8 +886,8 @@ export default function TransaksiPage() {
                 <div>
                   <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Aliran Jenis</label>
                   <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary cursor-pointer text-xs">
-                    <option value="Pengeluaran" className="bg-slate-900 text-rose-400">🔴 Pengeluaran (Merah)</option>
-                    <option value="Pemasukan" className="bg-slate-900 text-emerald-400">🟢 Pemasukan (Hijau)</option>
+                    <option value="Pengeluaran" className="bg-slate-900 text-rose-400">Pengeluaran (Merah)</option>
+                    <option value="Pemasukan" className="bg-slate-900 text-emerald-400">Pemasukan (Hijau)</option>
                   </select>
                 </div>
               </div>
@@ -836,20 +906,20 @@ export default function TransaksiPage() {
                 <input type="text" placeholder="Misal: DP Sound System" required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary text-xs" />
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={resetForm} className="flex-1 py-2 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs">Batal</button>
-                <button type="submit" className="flex-1 py-2 btn-theme-primary font-black uppercase rounded-xl shadow-lg text-xs">Simpan Kas</button>
+                <button type="button" onClick={resetForm} className="flex-1 py-2.5 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-2.5 btn-theme-primary font-black uppercase rounded-xl shadow-lg text-xs cursor-pointer">Simpan Kas</button>
               </div>
             </form>
           </GlassCard>
         </div>
       )}
 
-     {/* 🖨️ AREA CETAK LPJ PROFESIONAL (FORMAL A4 PRINT OUT ONLY) */}
+      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (FORMAL A4 PRINT OUT ONLY) */}
       <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
         <div className="print-page-wrapper">
           
           {/* KOP SURAT FORMAL */}
-          <div className="flex items-center justify-between border-b-4 border-double border-black pb-3 mb-6">
+          <div className="flex items-center justify-between border-b-4 border-double border-black pb-3 mb-4">
             <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
                 src={`${supabaseUrl}/storage/v1/object/public/logos/logo_system.png`}
@@ -865,13 +935,13 @@ export default function TransaksiPage() {
             <div className="w-16 h-16 flex-shrink-0"></div>
           </div>
           
-          <div className="text-center mb-6">
+          <div className="text-center mb-5">
             <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">{t.lpjTitle}</h2>
-            <p className="text-[9px] text-gray-500 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="text-[9px] text-gray-600 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
 
           {/* TABEL 1: RINGKASAN UTAMA (IKHTISAR SALDO) */}
-          <table className="w-full border-collapse border-2 border-black text-[11px] mb-6 font-sans">
+          <table className="w-full border-collapse border-2 border-black text-[11px] mb-5 font-sans">
             <thead>
               <tr className="bg-gray-200 border-b-2 border-black uppercase text-[10px] tracking-wider text-center font-bold">
                 <th className="border-r-2 border-black py-2 px-3 text-left w-2/3">{t.tblHeaderDesc}</th>
@@ -881,11 +951,11 @@ export default function TransaksiPage() {
             <tbody className="font-medium divide-y divide-black">
               <tr className="border-b border-black">
                 <td className="border-r border-black py-2 px-3 text-left">{t.totalIn}</td>
-                <td className="py-2 px-3 text-right text-emerald-800 font-bold font-mono">{formatRupiah(totalLpjMasuk)}</td>
+                <td className="py-2 px-3 text-right text-emerald-900 font-bold font-mono">{formatRupiah(totalLpjMasuk)}</td>
               </tr>
               <tr className="border-b border-black">
                 <td className="border-r border-black py-2 px-3 text-left">{t.totalOut}</td>
-                <td className="py-2 px-3 text-right text-rose-800 font-bold font-mono">({formatRupiah(totalLpjKeluar)})</td>
+                <td className="py-2 px-3 text-right text-rose-900 font-bold font-mono">({formatRupiah(totalLpjKeluar)})</td>
               </tr>
               <tr className="bg-gray-100 font-bold text-sm">
                 <td className="border-r-2 border-black py-2 px-3 text-left uppercase">{t.netBalance}</td>
@@ -895,7 +965,7 @@ export default function TransaksiPage() {
           </table>
 
           {/* TABEL 2: REKAPITULASI TOTAL PER KATEGORI POS */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-2 mb-6">
             <h3 className="font-bold text-xs uppercase border-b-2 border-black pb-1 font-sans">{t.summarySect}</h3>
             <div className="grid grid-cols-2 gap-4">
               
@@ -904,15 +974,15 @@ export default function TransaksiPage() {
                 <table className="w-full text-left border-collapse border-2 border-black text-[10px] font-sans">
                   <thead>
                     <tr className="bg-gray-200 font-bold uppercase text-[8px] border-b-2 border-black">
-                      <th className="py-2 px-2 border-r border-black">🟢 {t.summaryCat} (In)</th>
-                      <th className="py-2 px-2 text-right">{t.summaryTotal}</th>
+                      <th className="py-1.5 px-2 border-r border-black">{t.summaryCat} (In)</th>
+                      <th className="py-1.5 px-2 text-right">{t.summaryTotal}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.keys(rekapKategoriMasuk).map((key, idx) => (
                       <tr key={idx} className="border-b border-black">
-                        <td className="py-1.5 px-2 uppercase border-r border-black font-medium">{key}</td>
-                        <td className="py-1.5 px-2 text-right font-mono text-emerald-800 font-bold">{formatRupiah(rekapKategoriMasuk[key])}</td>
+                        <td className="py-1 px-2 uppercase border-r border-black font-medium">{key}</td>
+                        <td className="py-1 px-2 text-right font-mono text-emerald-900 font-bold">{formatRupiah(rekapKategoriMasuk[key])}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -924,15 +994,15 @@ export default function TransaksiPage() {
                 <table className="w-full text-left border-collapse border-2 border-black text-[10px] font-sans">
                   <thead>
                     <tr className="bg-gray-200 font-bold uppercase text-[8px] border-b-2 border-black">
-                      <th className="py-2 px-2 border-r border-black">🔴 {t.summaryCat} (Out)</th>
-                      <th className="py-2 px-2 text-right">{t.summaryTotal}</th>
+                      <th className="py-1.5 px-2 border-r border-black">{t.summaryCat} (Out)</th>
+                      <th className="py-1.5 px-2 text-right">{t.summaryTotal}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.keys(rekapKategoriKeluar).map((key, idx) => (
                       <tr key={idx} className="border-b border-black">
-                        <td className="py-1.5 px-2 uppercase border-r border-black font-medium">{key}</td>
-                        <td className="py-1.5 px-2 text-right font-mono text-rose-800 font-bold">{formatRupiah(rekapKategoriKeluar[key])}</td>
+                        <td className="py-1 px-2 uppercase border-r border-black font-medium">{key}</td>
+                        <td className="py-1 px-2 text-right font-mono text-rose-900 font-bold">{formatRupiah(rekapKategoriKeluar[key])}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -942,20 +1012,13 @@ export default function TransaksiPage() {
             </div>
           </div>
           
-          <p className="text-[9px] text-gray-500 font-sans italic mt-6 text-center">
-            * Detail mutasi lengkap arus kas per tanggal dilampirkan pada halaman berikutnya.
-          </p>
-        </div>
-
-        {/* HALAMAN 2: LAMPIRAN MUTASI TABEL LENGKAP */}
-        <div className="page-break print-page-wrapper">
-          <h2 className="text-center font-sans font-bold text-xs uppercase underline tracking-wider mb-4">LAMPIRAN MUTASI PEMBUKUAN ALIRAN KAS</h2>
-          
-          <div className="space-y-6">
+          {/* TABEL MUTASI RINCIAN PEMASUKAN & PENGELUARAN LENGKAP */}
+          <div className="space-y-5 pt-2">
+            <h2 className="text-center font-sans font-bold text-xs uppercase underline tracking-wider">LAMPIRAN MUTASI PEMBUKUAN ALIRAN KAS</h2>
             
             {/* TABEL MUTASI KAS MASUK */}
             <div>
-              <h3 className="font-bold text-[10px] uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectIn}</h3>
+              <h3 className="font-bold text-[10px] uppercase mb-1 font-sans border-b border-black pb-0.5">{t.sectIn}</h3>
               <table className="w-full text-left border-collapse border-2 border-black text-[9px]">
                 <thead>
                   <tr className="border-b-2 border-black bg-gray-200 font-bold uppercase text-[8px]">
@@ -968,10 +1031,10 @@ export default function TransaksiPage() {
                 <tbody>
                   {dataTransaksiFinal.filter(x => x.aliranJenis === 'Masuk').map((tItem, idx) => (
                     <tr key={idx} className="border-b border-black">
-                      <td className="border-r border-black py-1.5 px-1.5 font-mono text-center text-gray-800">{tItem.transaction_date}</td>
-                      <td className="border-r border-black py-1.5 px-1.5 uppercase text-gray-800 font-sans">{tItem.category}</td>
-                      <td className="border-r border-black py-1.5 px-1.5 uppercase font-sans text-gray-900 font-medium tracking-wide">{tItem.uraian}</td>
-                      <td className="py-1.5 px-1.5 text-right font-mono font-bold text-emerald-800">{formatRupiah(tItem.amount)}</td>
+                      <td className="border-r border-black py-1 px-1.5 font-mono text-center text-gray-800">{tItem.transaction_date}</td>
+                      <td className="border-r border-black py-1 px-1.5 uppercase text-gray-800 font-sans">{tItem.category}</td>
+                      <td className="border-r border-black py-1 px-1.5 uppercase font-sans text-gray-900 font-medium tracking-wide">{tItem.uraian}</td>
+                      <td className="py-1 px-1.5 text-right font-mono font-bold text-emerald-900">{formatRupiah(tItem.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -980,7 +1043,7 @@ export default function TransaksiPage() {
 
             {/* TABEL MUTASI KAS KELUAR */}
             <div>
-              <h3 className="font-bold text-[10px] uppercase mb-1.5 font-sans border-b border-black pb-0.5">{t.sectOut}</h3>
+              <h3 className="font-bold text-[10px] uppercase mb-1 font-sans border-b border-black pb-0.5">{t.sectOut}</h3>
               <table className="w-full text-left border-collapse border-2 border-black text-[9px]">
                 <thead>
                   <tr className="border-b-2 border-black bg-gray-200 font-bold uppercase text-[8px]">
@@ -993,10 +1056,10 @@ export default function TransaksiPage() {
                 <tbody>
                   {dataTransaksiFinal.filter(x => x.aliranJenis === 'Keluar').map((tItem, idx) => (
                     <tr key={idx} className="border-b border-black">
-                      <td className="border-r border-black py-1.5 px-1.5 font-mono text-center text-gray-800">{tItem.transaction_date}</td>
-                      <td className="border-r border-black py-1.5 px-1.5 uppercase text-gray-800 font-sans">{tItem.category}</td>
-                      <td className="border-r border-black py-1.5 px-1.5 uppercase font-sans text-gray-900 font-medium tracking-wide">{tItem.uraian}</td>
-                      <td className="py-1.5 px-1.5 text-right font-mono font-bold text-rose-800">{formatRupiah(tItem.amount)}</td>
+                      <td className="border-r border-black py-1 px-1.5 font-mono text-center text-gray-800">{tItem.transaction_date}</td>
+                      <td className="border-r border-black py-1 px-1.5 uppercase text-gray-800 font-sans">{tItem.category}</td>
+                      <td className="border-r border-black py-1 px-1.5 uppercase font-sans text-gray-900 font-medium tracking-wide">{tItem.uraian}</td>
+                      <td className="py-1 px-1.5 text-right font-mono font-bold text-rose-900">{formatRupiah(tItem.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1025,8 +1088,8 @@ export default function TransaksiPage() {
           </div>
 
         </div>
-
       </div>
+
     </div>
   );
 }
