@@ -46,6 +46,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
+// Helper untuk konversi VAPID Key Public Base64 ke Uint8Array
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 const THEME_STYLES = {
   'default': { name: 'Default Navy', accentBadge: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold', accentText: 'text-cyan-400' },
   'emerald-cyber': { name: 'Emerald Cyber', accentBadge: 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30 font-bold', accentText: 'text-emerald-400' },
@@ -89,7 +101,7 @@ export default function ClientLayout({ children }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 🌙 / ☀️ STATE TOGGLE MODE GELAP / TERANG (LOKAL VISITOR)
+  // 🌙 / ☀️ STATE TOGGLE MODE GELAP / TERANG
   const [appMode, setAppMode] = useState('dark');
 
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
@@ -118,15 +130,78 @@ export default function ClientLayout({ children }) {
     if (savedTheme && THEME_STYLES[savedTheme]) {
       setCurrentThemeKey(savedTheme);
     }
+
+    // Registrasi Web Push Notification saat aplikasi pertama kali dimuat
+    subscribeUserToPush();
   }, []);
 
+  // 🔔 FUNGSI REGISTRASI SERVICE WORKER & WEB PUSH NOTIFICATIONS
+  const subscribeUserToPush = async () => {
+    if (typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.log('Push notification tidak didukung di browser ini.');
+      return;
+    }
+
+    try {
+      // 1. Register Service Worker sw.js dari folder public/
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+
+      // 2. Minta Izin Notifikasi Sistem ke Pengguna
+      if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+
+      if (Notification.permission !== 'granted') {
+        console.log('Izin notifikasi belum diberikan atau ditolak.');
+        return;
+      }
+
+      // 3. Konversi / Ambil VAPID Key jika tersedia
+      const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''; 
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription && PUBLIC_VAPID_KEY) {
+        const convertedVapidKey = urlBase64ToUint8Array(PUBLIC_VAPID_KEY);
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey
+        });
+      }
+
+      // 4. Simpan/Update data subscription ke database Supabase
+      if (subscription && supabase) {
+        const subJson = subscription.toJSON();
+        await supabase.from('push_subscriptions').upsert(
+          {
+            endpoint: subJson.endpoint,
+            keys_p256dh: subJson.keys?.p256dh || '',
+            keys_auth: subJson.keys?.auth || ''
+          },
+          { onConflict: 'endpoint' }
+        );
+        console.log('Berhasil terdaftar untuk Web Push Notification!');
+      }
+    } catch (err) {
+      console.error('Gagal meregister Web Push:', err);
+    }
+  };
+
   const applyAppMode = (mode) => {
+    const root = document.documentElement;
+    const body = document.body;
+
     if (mode === 'light') {
-      document.documentElement.classList.add('light-mode');
-      document.documentElement.classList.remove('dark');
+      root.classList.add('light-mode');
+      root.classList.remove('dark');
+      body.classList.add('light-mode');
+      body.classList.remove('dark');
     } else {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light-mode');
+      root.classList.add('dark');
+      root.classList.remove('light-mode');
+      body.classList.add('dark');
+      body.classList.remove('light-mode');
     }
   };
 
@@ -203,12 +278,6 @@ export default function ClientLayout({ children }) {
       if (foundKota) setKotaSholat(foundKota.name.toUpperCase());
       fetchJadwalSholatDirect(savedKotaId);
     }
-
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-    }
   }, [selectedKotaId]);
 
   useEffect(() => {
@@ -238,7 +307,6 @@ export default function ClientLayout({ children }) {
     try {
       showToast('info', 'Pembersihan Dimulai', 'Sedang menghapus file temporary & cache PWA...');
 
-      // 1. Hapus Cache Storage
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(
@@ -246,7 +314,6 @@ export default function ClientLayout({ children }) {
         );
       }
 
-      // 2. Unregister Service Worker
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (let registration of registrations) {
@@ -254,7 +321,6 @@ export default function ClientLayout({ children }) {
         }
       }
 
-      // 3. Simpan Sesi Admin & Mode Gelap
       const savedAdminPassword = localStorage.getItem('admin_password_haul');
       const savedThemeMode = localStorage.getItem('app_mode');
       const savedAppTheme = localStorage.getItem('app-theme');
@@ -612,7 +678,7 @@ export default function ClientLayout({ children }) {
               {/* Sisi Kanan: Toggle Mode Gelap/Terang, Jadwal Sholat & Live Clock */}
               <div className="pt-3 md:pt-0 border-t md:border-t-0 border-amber-500/30 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0">
                 
-                {/* 🌙 / ☀️ TOMBOL TOGGLE DARK & LIGHT MODE (PUBLIK LOKAL) */}
+                {/* 🌙 / ☀️ TOMBOL TOGGLE DARK & LIGHT MODE */}
                 <button
                   onClick={toggleAppMode}
                   type="button"
