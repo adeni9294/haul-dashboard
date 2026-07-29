@@ -135,6 +135,20 @@ export default function ClientLayout({ children }) {
     subscribeUserToPush();
   }, []);
 
+  // 📱 PENANGANAN TOMBOL BACK HP DI PWABUILDER / TWA
+  useEffect(() => {
+    if (pathname === '/') {
+      window.history.pushState(null, '', window.location.href);
+      const handlePopState = () => {
+        // Saat tombol Back HP ditekan di halaman Home, langsung keluar dari aplikasi PWABuilder
+        window.location.replace('about:blank');
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, [pathname]);
+
   // 🔔 FUNGSI REGISTRASI SERVICE WORKER & WEB PUSH NOTIFICATIONS
   const subscribeUserToPush = async () => {
     if (typeof window === 'undefined') return;
@@ -144,11 +158,9 @@ export default function ClientLayout({ children }) {
     }
 
     try {
-      // 1. Register Service Worker sw.js dari folder public/
       const registration = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
 
-      // 2. Minta Izin Notifikasi Sistem ke Pengguna
       if (Notification.permission === 'default') {
         await Notification.requestPermission();
       }
@@ -158,7 +170,6 @@ export default function ClientLayout({ children }) {
         return;
       }
 
-      // 3. Konversi / Ambil VAPID Key jika tersedia
       const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''; 
       let subscription = await registration.pushManager.getSubscription();
       
@@ -170,7 +181,6 @@ export default function ClientLayout({ children }) {
         });
       }
 
-      // 4. Simpan/Update data subscription ke database Supabase
       if (subscription && supabase) {
         const subJson = subscription.toJSON();
         await supabase.from('push_subscriptions').upsert(
@@ -229,7 +239,6 @@ export default function ClientLayout({ children }) {
   const [selectedKotaId, setSelectedKotaId] = useState('1219');
   const [isAlarmActive, setIsAlarmActive] = useState(true);
   
-  // 🔔 STATE ADZAN AUDIO CONTROL & POP-UP
   const [isPlayingAdzan, setIsPlayingAdzan] = useState(false);
   const [currentActiveSholat, setCurrentActiveSholat] = useState('');
   const audioRef = useRef(null);
@@ -343,29 +352,22 @@ export default function ClientLayout({ children }) {
     }
   };
 
-  // 🚪 FUNGSI KELUAR DARI APLIKASI (EXIT PWA / CLOSE TAB)
+  // 🚪 FUNGSI KELUAR DARI APLIKASI (OPTIMAL UNTUK PWABUILDER / TWA APK)
   const handleExitApp = () => {
     setShowMainMenuDrawer(false);
 
-    try {
-      window.close();
-      if (window.opener) {
-        window.opener = null;
-        window.open('', '_self', '');
+    if (typeof window !== 'undefined') {
+      // 1. Coba window.close() standar
+      try {
         window.close();
+      } catch (e) {
+        console.log('window.close diblokir browser:', e);
       }
-    } catch (e) {
-      console.log('Metode window.close diblokir browser:', e);
-    }
 
-    setTimeout(() => {
-      showToast('info', 'Aplikasi Selesai', 'Silakan usap/tutup aplikasi dari daftar Recent Apps HP Anda.');
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.location.href = 'about:blank';
-      }
-    }, 300);
+      // 2. Trik langsung memutus history stack di TWA/PWABuilder Android
+      // Mengarahkan ke about:blank memicu sistem Android memutus activity PWA
+      window.location.replace('about:blank');
+    }
   };
 
   async function fetchJadwalSholatDirect(idKota) {
@@ -618,7 +620,7 @@ export default function ClientLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // 📖 DRAWER MENUS (BERSIHKAN CACHE & KELUAR APLIKASI)
+  // 📖 DRAWER MENUS (DENGAN ACTION & LINK REPLACE UNTUK TWA)
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
@@ -758,6 +760,7 @@ export default function ClientLayout({ children }) {
           <div className="w-full max-w-md md:max-w-xl mx-auto h-16 flex items-center justify-around px-3">
             <Link 
               href="/" 
+              replace
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                 pathname === '/' 
                   ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
@@ -770,6 +773,7 @@ export default function ClientLayout({ children }) {
 
             <Link 
               href="/stat" 
+              replace
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                 pathname === '/stat' 
                   ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
@@ -789,6 +793,7 @@ export default function ClientLayout({ children }) {
 
             <Link 
               href="/anggaran" 
+              replace
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                 pathname === '/anggaran' 
                   ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
@@ -1055,6 +1060,7 @@ export default function ClientLayout({ children }) {
                       <Link 
                         key={dm.href} 
                         href={dm.href} 
+                        replace
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowMainMenuDrawer(false);
