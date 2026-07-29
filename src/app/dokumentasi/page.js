@@ -94,7 +94,7 @@ export default function DokumentasiPage() {
       setPhotos(data || []);
     } catch (e) {
       console.error(e);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }
