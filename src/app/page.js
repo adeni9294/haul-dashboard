@@ -420,8 +420,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6 max-w-5xl mx-auto px-2 sm:px-4 pb-12 animate-fadeIn">
         {/* Loading Indicator Modern */}
-        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
-          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div className="flex items-center justify-center gap-3 py-6 theme-text-accent font-mono text-xs tracking-widest uppercase">
+          <svg className="animate-spin h-5 w-5 theme-text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -430,8 +430,8 @@ export default function DashboardPage() {
 
         {/* Top Selectors Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="h-10 rounded-2xl bg-gradient-to-r from-slate-800/40 via-slate-700/20 to-slate-800/40 animate-pulse border border-white/5" />
-          <div className="h-10 rounded-2xl bg-gradient-to-r from-slate-800/40 via-slate-700/20 to-slate-800/40 animate-pulse border border-white/5" />
+          <div className="h-10 rounded-2xl theme-bg-tertiary animate-pulse theme-border border" />
+          <div className="h-10 rounded-2xl theme-bg-tertiary animate-pulse theme-border border" />
         </div>
 
         {/* 3 Main Cards Skeleton */}
@@ -439,17 +439,15 @@ export default function DashboardPage() {
           {[1, 2, 3].map((i) => (
             <div 
               key={i} 
-              className="h-44 rounded-3xl bg-slate-900/40 border border-amber-500/10 p-5 flex flex-col justify-between relative overflow-hidden shadow-xl"
+              className="h-44 rounded-3xl theme-bg-secondary theme-border border p-5 flex flex-col justify-between relative overflow-hidden shadow-xl"
             >
-              {/* Shimmer Overlay */}
-              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
               <div className="space-y-3">
-                <div className="h-3 w-1/3 bg-slate-800 rounded" />
-                <div className="h-2 w-1/2 bg-slate-800/60 rounded" />
+                <div className="h-3 w-1/3 theme-bg-tertiary rounded" />
+                <div className="h-2 w-1/2 theme-bg-tertiary opacity-60 rounded" />
               </div>
               <div className="space-y-2">
-                <div className="h-8 w-3/4 bg-slate-800 rounded-lg" />
-                <div className="h-2 w-1/3 bg-slate-800/60 rounded" />
+                <div className="h-8 w-3/4 theme-bg-tertiary rounded-lg" />
+                <div className="h-2 w-1/3 theme-bg-tertiary opacity-60 rounded" />
               </div>
             </div>
           ))}
@@ -457,8 +455,8 @@ export default function DashboardPage() {
 
         {/* Middle Stats Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-28 rounded-2xl bg-slate-900/40 border border-white/5 p-4 animate-pulse" />
-          <div className="md:col-span-2 h-28 rounded-2xl bg-slate-900/40 border border-white/5 p-4 animate-pulse" />
+          <div className="h-28 rounded-2xl theme-bg-secondary theme-border border p-4 animate-pulse" />
+          <div className="md:col-span-2 h-28 rounded-2xl theme-bg-secondary theme-border border p-4 animate-pulse" />
         </div>
       </div>
     );
@@ -467,10 +465,10 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="p-8 text-center space-y-4 max-w-5xl mx-auto">
-        <div className="text-red-400 text-sm font-mono">{error}</div>
+        <div className="text-rose-400 text-sm font-mono">{error}</div>
         <button
           onClick={() => loadDashboardData()}
-          className="px-4 py-2 btn-theme-primary rounded-lg font-mono text-xs transition-colors"
+          className="px-4 py-2 theme-gradient-main theme-text-primary rounded-lg font-mono text-xs transition-all shadow-md cursor-pointer"
         >
           Coba Lagi
         </button>
@@ -491,10 +489,10 @@ export default function DashboardPage() {
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/30 theme-text-accent text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer theme-border border"
+              className="theme-bg-tertiary theme-text-accent text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer theme-border border"
             >
               {periodeList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                   {p.nama_periode} {p.is_closed ? dict.statusClosed : dict.statusActive}
                 </option>
               ))}
@@ -509,11 +507,11 @@ export default function DashboardPage() {
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="bg-black/30 theme-text-primary text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer theme-border border"
+            className="theme-bg-tertiary theme-text-primary text-xs rounded-lg px-2.5 py-1 focus:outline-none font-mono font-bold cursor-pointer theme-border border"
           >
-            <option value="id" className="bg-slate-900 text-white">🇮🇩 Indonesia</option>
-            <option value="jv" className="bg-slate-900 text-white">🎯 Cirebonan</option>
-            <option value="en" className="bg-slate-900 text-white">🇬🇧 English</option>
+            <option value="id" className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">🇮🇩 Indonesia</option>
+            <option value="jv" className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">🎯 Cirebonan</option>
+            <option value="en" className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">🇬🇧 English</option>
           </select>
         </GlassCard>
       </div>
@@ -556,43 +554,37 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 2: TOTAL UANG MASUK (GAYA INLINE STYLING TEMBUS TEMA) */}
-        <div 
-          style={{ backgroundColor: 'rgba(6, 78, 59, 0.45)', borderColor: 'rgba(16, 185, 129, 0.5)' }} 
-          className="p-5 flex flex-col justify-between border-2 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden"
-        >
+        {/* CARD 2: TOTAL UANG MASUK */}
+        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/50 bg-emerald-950/30 dark:bg-emerald-950/40 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] text-emerald-200/80 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
             <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/80 mt-1" />
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300 my-1">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] font-bold text-emerald-300/90 font-mono mt-2 flex items-center gap-1">
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-400 my-1">{formatRupiah(totals.masuk)}</h3>
+            <p className="text-[10px] font-bold text-emerald-400 font-mono mt-2 flex items-center gap-1">
               <span>✓</span> {catSummaryMasuk.length} {dict.categories}
             </p>
           </div>
         </div>
 
-        {/* CARD 3: TOTAL UANG BELANJA (GAYA INLINE STYLING TEMBUS TEMA) */}
-        <div 
-          style={{ backgroundColor: 'rgba(136, 19, 55, 0.45)', borderColor: 'rgba(244, 63, 94, 0.5)' }} 
-          className="p-5 flex flex-col justify-between border-2 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden"
-        >
+        {/* CARD 3: TOTAL UANG BELANJA */}
+        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/50 bg-rose-950/30 dark:bg-rose-950/40 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] text-rose-200/80 font-medium mt-0.5">Realisasi Pengeluaran</p>
+              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
             <div className="w-3 h-3 rounded-full bg-rose-400 animate-pulse shadow-lg shadow-rose-400/80 mt-1" />
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-300 my-1">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] font-bold text-rose-300/90 font-mono mt-2 flex items-center gap-1">
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-400 my-1">{formatRupiah(totals.keluar)}</h3>
+            <p className="text-[10px] font-bold text-rose-400 font-mono mt-2 flex items-center gap-1">
               <span>⚡</span> {catSummaryKeluar.length} {dict.allocation}
             </p>
           </div>
@@ -628,9 +620,9 @@ export default function DashboardPage() {
             <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 theme-text-primary">
               <span>🎯</span> {dict.progressTitle}
             </h3>
-            <span className="theme-text-accent font-mono text-xs font-black bg-black/30 px-2 py-0.5 rounded theme-border border">{progress.percent}%</span>
+            <span className="theme-text-accent font-mono text-xs font-black theme-bg-tertiary px-2 py-0.5 rounded theme-border border">{progress.percent}%</span>
           </div>
-          <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 theme-border border">
+          <div className="w-full h-3 theme-bg-tertiary rounded-full overflow-hidden p-0.5 theme-border border">
             <div
               className="h-full theme-gradient-main rounded-full transition-all duration-500"
               style={{ width: `${Math.min(progress.percent, 100)}%` }}
@@ -650,7 +642,7 @@ export default function DashboardPage() {
           <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest border-b theme-border pb-2">{dict.rekapIncome}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryMasuk.map((c, i) => (
-              <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
+              <div key={i} className="p-2 theme-bg-tertiary theme-border border rounded-xl flex justify-between items-center text-xs">
                 <span className="flex items-center gap-1 theme-text-secondary font-medium">🔹 {c.label}</span>
                 <span className={`font-mono font-bold ${c.value < 0 ? 'text-rose-400' : 'theme-text-accent'}`}>{formatRupiah(c.value)}</span>
               </div>
@@ -662,7 +654,7 @@ export default function DashboardPage() {
           <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest border-b theme-border pb-2">{dict.rekapExpense}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {catSummaryKeluar.map((c, i) => (
-              <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
+              <div key={i} className="p-2 theme-bg-tertiary theme-border border rounded-xl flex justify-between items-center text-xs">
                 <span className="flex items-center gap-1 theme-text-secondary font-medium">🔸 {c.label}</span>
                 <span className="font-mono font-bold text-rose-400">{formatRupiah(c.value)}</span>
               </div>
@@ -680,7 +672,7 @@ export default function DashboardPage() {
               <p className="text-xs theme-text-tertiary font-mono py-1">{dict.emptyMutationIn}</p>
             ) : (
               rincianMasuk.map((t, i) => (
-                <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
+                <div key={i} className="p-2 theme-bg-tertiary theme-border border rounded-xl flex justify-between items-center text-xs">
                   <div className="min-w-0 flex-1">
                     <p className="font-bold truncate uppercase theme-text-primary">{t.note}</p>
                     <p className="text-[9px] theme-text-tertiary font-mono mt-0.5">{t.transaction_date}</p>
@@ -701,7 +693,7 @@ export default function DashboardPage() {
               <p className="text-xs theme-text-tertiary font-mono py-1">{dict.emptyMutationOut}</p>
             ) : (
               rincianKeluar.map((t, i) => (
-                <div key={i} className="p-2 bg-black/20 theme-border border rounded-xl flex justify-between items-center text-xs">
+                <div key={i} className="p-2 theme-bg-tertiary theme-border border rounded-xl flex justify-between items-center text-xs">
                   <div className="min-w-0 flex-1">
                     <p className="font-bold truncate uppercase theme-text-primary">{t.note}</p>
                     <p className="text-[9px] theme-text-tertiary font-mono mt-0.5">{t.transaction_date}</p>
