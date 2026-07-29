@@ -108,7 +108,7 @@ export default function AcaraPage() {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState([]);
   
-  // 🔔 STATE NOTIFIKASI MODERN (TOAST POSISI ATAS)
+  // 🔔 STATE NOTIFIKASI MODERN
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   // 🗑️ STATE MODAL KONFIRMASI HAPUS
@@ -198,17 +198,39 @@ export default function AcaraPage() {
         }));
       }
 
+      // 🛡️ AMBIL DATA DENGAN QUERY SAFETY (TANPA ORDER STRICT SUPABAS KARENA NAMA FIELD BISA BEDA)
       const { data: eventsDb, error } = await supabase
         .from('events')
-        .select('*')
-        .order('event_date', { ascending: true })
-        .order('event_time', { ascending: true });
+        .select('*');
 
-      if (error) throw error;
-      setEvents(eventsDb || []);
+      if (error) {
+        console.error("Error fetching events:", error);
+        setEvents([]);
+      } else {
+        // Normalisasi data jika nama kolom di DB berbeda
+        const normalized = (eventsDb || []).map(item => ({
+          id: item.id,
+          title: item.title || item.nama_acara || item.name || 'Agenda Acara',
+          event_date: item.event_date || item.date || item.tanggal || new Date().toISOString().split('T')[0],
+          event_time: item.event_time || item.time || item.jam || '08:00',
+          location: item.location || item.lokasi || item.tempat || '',
+          speaker: item.speaker || item.penceramah || item.pengisi_acara || '',
+          description: item.description || item.keterangan || item.note || ''
+        }));
+
+        // Sort lokal berdasarkan tanggal & jam
+        normalized.sort((a, b) => {
+          const dateA = `${a.event_date} ${a.event_time}`;
+          const dateB = `${b.event_date} ${b.event_time}`;
+          return dateA.localeCompare(dateB);
+        });
+
+        setEvents(normalized);
+      }
     } catch (e) {
       console.error("Gagal load acara:", e);
-    } finally {
+      setEvents([]);
+    } fontally {
       setLoading(false);
     }
   }
@@ -322,7 +344,7 @@ export default function AcaraPage() {
   return (
     <div id="root-acara-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
       
-      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN (POSISI ATAS TENGAH) */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN */}
       {toast.show && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] print:hidden animate-in fade-in slide-in-from-top duration-300">
           <div className={`px-4 py-3 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl border-2 ${
@@ -362,7 +384,7 @@ export default function AcaraPage() {
         </div>
       )}
 
-      {/* 🛠️ PRINT STYLES UNTUK CETAK JADWAL ACARA */}
+      {/* 🛠️ PRINT STYLES */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
@@ -546,7 +568,7 @@ export default function AcaraPage() {
           ))}
 
           {filteredEvents.length === 0 && (
-            <div className="col-span-1 md:col-span-2 p-8 text-center theme-text-tertiary font-mono">
+            <div className="col-span-1 md:col-span-2 p-8 text-center theme-text-tertiary font-mono border theme-border rounded-2xl bg-black/20">
               <CalendarDays className="w-10 h-10 mx-auto opacity-40 mb-2" />
               <p>{t.noData}</p>
             </div>
@@ -640,11 +662,10 @@ export default function AcaraPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK JADWAL ACARA (FORMAL A4 PRINT OUT ONLY) */}
+      {/* 🖨️ AREA CETAK JADWAL ACARA */}
       <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
         <div className="print-page-wrapper">
           
-          {/* KOP SURAT FORMAL */}
           <div className="flex items-center justify-between border-b-4 border-double border-black pb-3 mb-4">
             <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
@@ -666,7 +687,6 @@ export default function AcaraPage() {
             <p className="text-[9px] text-gray-600 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
 
-          {/* TABEL JADWAL ACARA FORMAL */}
           <table className="w-full border-collapse border-2 border-black text-[10px] mb-6 font-sans">
             <thead>
               <tr className="bg-gray-200 border-b-2 border-black uppercase text-[9px] tracking-wider text-center font-bold">
@@ -694,7 +714,6 @@ export default function AcaraPage() {
             </tbody>
           </table>
 
-          {/* AREA TANDA TANGAN FORMAL */}
           <div className="mt-8 break-inside-avoid">
             <p className="text-right text-[10px] text-gray-800 italic mb-8 font-sans">
               {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
