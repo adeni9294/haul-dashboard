@@ -16,35 +16,10 @@ html.dark {
   color-scheme: dark;
 }
 
-/* ☀️ TEMA TERANG / LIGHT MODE */
-html.light-mode,
-body.light-mode {
-  --bg-primary: #f8fafc !important;
-  --bg-secondary: #ffffff !important;
-  --bg-tertiary: #f1f5f9 !important;
-  --bg-card: #ffffff !important;
-  --border-color: rgba(0, 0, 0, 0.12) !important;
-  --text-primary: #0f172a !important;
-  --text-secondary: #475569 !important;
-  --text-tertiary: #94a3b8 !important;
-  --glass-bg: rgba(255, 255, 255, 0.85) !important;
-  --glass-border: rgba(0, 0, 0, 0.1) !important;
-  --glass-shadow: rgba(0, 0, 0, 0.05) !important;
-
-  --theme-bg-primary: #f8fafc !important;
-  --theme-bg-secondary: #ffffff !important;
-  --theme-bg-tertiary: #f1f5f9 !important;
-  --theme-text-primary: #0f172a !important;
-  --theme-text-secondary: #475569 !important;
-  --theme-text-tertiary: #94a3b8 !important;
-  --theme-border: rgba(0, 0, 0, 0.12) !important;
-  color-scheme: light;
-}
-
 /* ==================== COMPREHENSIVE THEME VARIABLES ==================== */
 
 :root {
-  /* Default Navy Theme */
+  /* Default Navy Theme Fallback */
   --bg-primary: #050b14;
   --bg-secondary: #0f172a;
   --bg-tertiary: #1e293b;
@@ -689,4 +664,80 @@ aside.theme-sidebar .menu-item-active {
 @keyframes shimmer {
   from { background-position: 0% 0; }
   to { background-position: 300% 0; }
+}
+
+/* ==========================================================
+   FORCE LIGHT MODE OVERRIDE (DITARUH DI PALING BAWAH)
+   ========================================================== */
+
+html.light-mode,
+body.light-mode,
+html.light-mode body {
+  /* Override CSS Variables Utama */
+  --bg-primary: #f8fafc !important;
+  --bg-secondary: #ffffff !important;
+  --bg-tertiary: #f1f5f9 !important;
+  --bg-card: #ffffff !important;
+  --border-color: rgba(0, 0, 0, 0.12) !important;
+  --text-primary: #0f172a !important;
+  --text-secondary: #475569 !important;
+  --text-tertiary: #94a3b8 !important;
+
+  /* Glass Card Override */
+  --glass-bg: rgba(255, 255, 255, 0.85) !important;
+  --glass-border: rgba(0, 0, 0, 0.1) !important;
+  --glass-shadow: rgba(0, 0, 0, 0.05) !important;
+
+  /* Theme Namespace Fallback */
+  --theme-bg-primary: #f8fafc !important;
+  --theme-bg-secondary: #ffffff !important;
+  --theme-bg-tertiary: #f1f5f9 !important;
+  --theme-text-primary: #0f172a !important;
+  --theme-text-secondary: #475569 !important;
+  --theme-text-tertiary: #94a3b8 !important;
+  --theme-border: rgba(0, 0, 0, 0.12) !important;
+
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+/* Force Elemen Kelas Khusus di Mode Terang */
+html.light-mode .theme-bg-primary,
+body.light-mode .theme-bg-primary {
+  background-color: #f8fafc !important;
+}
+
+html.light-mode .theme-bg-secondary,
+body.light-mode .theme-bg-secondary {
+  background-color: #ffffff !important;
+}
+
+html.light-mode .theme-bg-tertiary,
+body.light-mode .theme-bg-tertiary {
+  background-color: #f1f5f9 !important;
+}
+
+html.light-mode .theme-bg-card,
+body.light-mode .theme-bg-card,
+html.light-mode .theme-card,
+body.light-mode .theme-card {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+}
+
+html.light-mode .theme-text-primary,
+body.light-mode .theme-text-primary {
+  color: #0f172a !important;
+}
+
+html.light-mode .theme-text-secondary,
+body.light-mode .theme-text-secondary {
+  color: #475569 !important;
+}
+
+html.light-mode .theme-border,
+body.light-mode .theme-border {
+  border-color: rgba(0, 0, 0, 0.12) !important;
 }
