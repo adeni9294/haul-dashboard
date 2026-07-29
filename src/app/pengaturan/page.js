@@ -421,10 +421,22 @@ export default function PengaturanPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
+  // 🚀 SKELETON LOADING STATE
   if (loading) {
     return (
-      <div className="text-center py-16 text-xs font-mono theme-text-secondary animate-pulse">
-        Mendeteksi otorisasi & memuat pengaturan...
+      <div className="space-y-6 max-w-5xl mx-auto pb-12">
+        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
+          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="animate-pulse">Memuat Pengaturan Sistem & Otorisasi...</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+        </div>
       </div>
     );
   }
@@ -442,8 +454,30 @@ export default function PengaturanPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary relative">
       
+      {/* 🔔 FLOATING TOAST NOTIFICATION (POSISI CENTER ATAS MENCOLOK) */}
+      {toastConfig.show && (
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
+          <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
+            toastConfig.type === 'error' 
+              ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50' 
+              : toastConfig.type === 'info'
+              ? 'bg-cyan-950/90 border-cyan-500/80 text-cyan-200 shadow-cyan-950/50'
+              : 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50'
+          }`}>
+            <span className="text-lg shrink-0">
+              {toastConfig.type === 'error' ? '⚠️' : toastConfig.type === 'info' ? 'ℹ️' : '✅'}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h4 className="font-mono font-black text-xs uppercase">{toastConfig.title}</h4>
+              <p className="font-mono text-[11px] opacity-90 truncate">{toastConfig.message}</p>
+            </div>
+            <button onClick={closeToast} className="text-xs font-bold hover:underline opacity-80">Tutup</button>
+          </div>
+        </div>
+      )}
+
       {/* HEADER PAGE */}
       <GlassCard className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -480,7 +514,7 @@ export default function PengaturanPage() {
                     key={th.key}
                     type="button"
                     onClick={() => handleThemeChange(th.key)}
-                    className={`p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-1.5 ${
+                    className={`p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-1.5 cursor-pointer ${
                       isSelected 
                         ? 'bg-black/30 border-cyan-400 shadow-md scale-[1.02]' 
                         : 'bg-black/10 theme-border opacity-70 hover:opacity-100'
@@ -565,14 +599,14 @@ export default function PengaturanPage() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-3 btn-theme-primary font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mt-2">
+              <button type="submit" className="w-full py-3 btn-theme-primary font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer">
                 <Save className="w-4 h-4" />
                 Simpan Konfigurasi & Tema
               </button>
             </form>
           </GlassCard>
 
-        {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL */}
+          {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleSaveMapConfig} className="space-y-4">
               <div className="border-b theme-border pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -583,7 +617,7 @@ export default function PengaturanPage() {
                 <button
                   type="button"
                   onClick={handleShareLocationGPS}
-                  className="px-3 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  className="px-3 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
                   title="Ambil titik koordinat otomatis dari GPS HP/Laptop Anda saat ini"
                 >
                   📍 Ambil Lokasi Saat Ini (ShareLoc)
@@ -648,12 +682,13 @@ export default function PengaturanPage() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mt-2">
+              <button type="submit" className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer">
                 <Navigation className="w-4 h-4" />
                 Simpan Koordinat & Peta
               </button>
             </form>
           </GlassCard>
+
           {/* SEKSI 4: KELOLA PERIODE HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
@@ -680,11 +715,11 @@ export default function PengaturanPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-md text-xs uppercase font-mono">
+                <button type="submit" className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-md text-xs uppercase font-mono cursor-pointer">
                   {editingPeriodeId ? '💾 Perbarui Periode' : '➕ Tambah Periode Baru'}
                 </button>
                 {editingPeriodeId && (
-                  <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-4 py-2.5 bg-black/30 border theme-border theme-text-secondary rounded-2xl text-xs">Batal</button>
+                  <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-4 py-2.5 bg-black/30 border theme-border theme-text-secondary rounded-2xl text-xs cursor-pointer">Batal</button>
                 )}
               </div>
             </form>
@@ -703,12 +738,12 @@ export default function PengaturanPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => handleEditPeriode(p)} className="p-1.5 theme-text-accent hover:opacity-100"><Edit2 className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => handleEditPeriode(p)} className="p-1.5 theme-text-accent hover:opacity-100 cursor-pointer"><Edit2 className="w-3.5 h-3.5" /></button>
                     {!p.is_closed && (
                       <button 
                         type="button" 
                         onClick={() => handleTutupBuku(p)} 
-                        className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-400 border border-amber-400/40 text-amber-300 hover:text-black font-mono font-bold rounded-xl text-[9px] transition-all"
+                        className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-400 border border-amber-400/40 text-amber-300 hover:text-black font-mono font-bold rounded-xl text-[9px] transition-all cursor-pointer"
                       >
                         🔒 Tutup Buku
                       </button>
@@ -748,7 +783,7 @@ export default function PengaturanPage() {
                 <option value="pemasukan" className="bg-zinc-900 text-emerald-400">📥 Pemasukan</option>
                 <option value="pengeluaran" className="bg-zinc-900 text-rose-400">📤 Pengeluaran</option>
               </select>
-              <button type="submit" className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl transition-all shrink-0 shadow-md uppercase font-mono">
+              <button type="submit" className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl transition-all shrink-0 shadow-md uppercase font-mono cursor-pointer">
                 Tambah
               </button>
             </form>
@@ -774,7 +809,7 @@ export default function PengaturanPage() {
                       <option value="pengeluaran" className="text-rose-400 bg-zinc-900">📤 Pengeluaran</option>
                     </select>
                   </div>
-                  <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-rose-400 hover:text-rose-300 ml-2 shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-rose-400 hover:text-rose-300 ml-2 shrink-0 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               ))}
             </div>
@@ -803,7 +838,7 @@ export default function PengaturanPage() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
+              <button type="submit" className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
                 <Lock className="w-4 h-4" />
                 Perbarui Sandi Admin
               </button>
@@ -814,46 +849,9 @@ export default function PengaturanPage() {
 
       </div>
 
-      {/* 🔔 CUSTOM MODAL TOAST DIALOG */}
-      {toastConfig.show && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <GlassCard className="p-6 max-w-sm w-full space-y-4 shadow-2xl text-center relative overflow-hidden">
-            <div className="mx-auto w-fit p-3 rounded-2xl border mb-1">
-              {toastConfig.type === 'success' && (
-                <div className="bg-emerald-500/20 text-emerald-400 border-emerald-400/30 p-2 rounded-xl border">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-              )}
-              {toastConfig.type === 'error' && (
-                <div className="bg-rose-500/20 text-rose-400 border-rose-400/30 p-2 rounded-xl border">
-                  <AlertCircle className="w-8 h-8" />
-                </div>
-              )}
-              {toastConfig.type === 'info' && (
-                <div className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 p-2 rounded-xl border">
-                  <Info className="w-8 h-8" />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-sm font-black uppercase tracking-wider theme-text-primary">{toastConfig.title}</h3>
-              <p className="text-xs theme-text-secondary leading-relaxed font-medium">{toastConfig.message}</p>
-            </div>
-
-            <button
-              onClick={closeToast}
-              className="w-full py-3 btn-theme-primary font-black text-xs uppercase rounded-2xl shadow-lg transition-all"
-            >
-              Mengerti & Lanjutkan
-            </button>
-          </GlassCard>
-        </div>
-      )}
-
-      {/* ❓ MODAL KONFIRMASI AKSI */}
+      {/* ❓ MODAL KONFIRMASI AKSI (TENGAH LAYAR) */}
       {confirmModal.show && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <GlassCard className="p-6 max-w-sm w-full space-y-4 shadow-2xl text-center relative overflow-hidden">
             <div className="mx-auto w-fit p-3 rounded-2xl border mb-1 bg-amber-500/20 text-amber-300 border-amber-400/30">
               <AlertCircle className="w-8 h-8" />
@@ -868,7 +866,7 @@ export default function PengaturanPage() {
               <button
                 type="button"
                 onClick={() => setConfirmModal({ show: false, title: '', message: '', action: null })}
-                className="flex-1 py-3 bg-black/30 border theme-border theme-text-secondary font-bold text-xs uppercase rounded-2xl"
+                className="flex-1 py-3 bg-black/40 border theme-border theme-text-secondary font-bold text-xs uppercase rounded-2xl cursor-pointer"
               >
                 Batal
               </button>
@@ -879,7 +877,7 @@ export default function PengaturanPage() {
                   setConfirmModal({ show: false, title: '', message: '', action: null });
                   if (act) act();
                 }}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase rounded-2xl shadow-lg transition-all"
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase rounded-2xl shadow-lg transition-all cursor-pointer"
               >
                 Ya, Lanjutkan
               </button>
