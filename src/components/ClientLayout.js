@@ -38,7 +38,8 @@ import {
   VolumeX,
   Sun,
   Moon,
-  RotateCcw
+  RotateCcw,
+  Power
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -232,7 +233,7 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // 🧹 FUNGSI HABIS / MEMBERSIHKAN CACHE PWA DI BROWSER
+  // 🧹 FUNGSI MEMBERSIHKAN CACHE PWA DI BROWSER
   const handleClearPWACache = async () => {
     try {
       showToast('info', 'Pembersihan Dimulai', 'Sedang menghapus file temporary & cache PWA...');
@@ -274,6 +275,31 @@ export default function ClientLayout({ children }) {
       console.error('Gagal menghapus cache:', error);
       showToast('error', 'Gagal Hapus Cache', 'Terjadi kendala saat membersihkan memori PWA.');
     }
+  };
+
+  // 🚪 FUNGSI KELUAR DARI APLIKASI (EXIT PWA / CLOSE TAB)
+  const handleExitApp = () => {
+    setShowMainMenuDrawer(false);
+
+    try {
+      window.close();
+      if (window.opener) {
+        window.opener = null;
+        window.open('', '_self', '');
+        window.close();
+      }
+    } catch (e) {
+      console.log('Metode window.close diblokir browser:', e);
+    }
+
+    setTimeout(() => {
+      showToast('info', 'Aplikasi Selesai', 'Silakan usap/tutup aplikasi dari daftar Recent Apps HP Anda.');
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = 'about:blank';
+      }
+    }, 300);
   };
 
   async function fetchJadwalSholatDirect(idKota) {
@@ -526,7 +552,7 @@ export default function ClientLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // 📖 DRAWER MENUS (DENGAN TAMBAHAN FITUR HAPUS CACHE PWA)
+  // 📖 DRAWER MENUS (BERSIHKAN CACHE & KELUAR APLIKASI)
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
@@ -536,6 +562,7 @@ export default function ClientLayout({ children }) {
     { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-400 bg-purple-500/20' },
     { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users, color: 'text-blue-400 bg-blue-500/20' },
     { name: 'Bersihkan Cache PWA', action: handleClearPWACache, icon: RotateCcw, color: 'text-amber-400 bg-amber-500/20' },
+    { name: 'Keluar Aplikasi', action: handleExitApp, icon: Power, color: 'text-rose-400 bg-rose-500/20' },
     ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings, color: 'text-rose-400 bg-rose-500/20' }] : [])
   ];
 
