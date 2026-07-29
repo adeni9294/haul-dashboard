@@ -135,13 +135,12 @@ export default function ClientLayout({ children }) {
     subscribeUserToPush();
   }, []);
 
-  // 📱 PENANGANAN TOMBOL BACK HP DI PWABUILDER / TWA
+  // 📱 PENANGANAN TOMBOL BACK HP DI HOME (TANPA BLANK PUTIH)
   useEffect(() => {
     if (pathname === '/') {
       window.history.pushState(null, '', window.location.href);
       const handlePopState = () => {
-        // Saat tombol Back HP ditekan di halaman Home, langsung keluar dari aplikasi PWABuilder
-        window.location.replace('about:blank');
+        showToast('info', 'Aplikasi Selesai', 'Silakan usap/tutup aplikasi dari daftar Recent Apps HP Anda.');
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -352,21 +351,21 @@ export default function ClientLayout({ children }) {
     }
   };
 
-  // 🚪 FUNGSI KELUAR DARI APLIKASI (OPTIMAL UNTUK PWABUILDER / TWA APK)
+  // 🚪 FUNGSI KELUAR DARI APLIKASI (AMAK TANPA LAYAR BLANK PUTIH)
   const handleExitApp = () => {
     setShowMainMenuDrawer(false);
 
-    if (typeof window !== 'undefined') {
-      // 1. Coba window.close() standar
-      try {
-        window.close();
-      } catch (e) {
-        console.log('window.close diblokir browser:', e);
-      }
+    try {
+      window.close();
+    } catch (e) {
+      console.log('window.close diblokir browser:', e);
+    }
 
-      // 2. Trik langsung memutus history stack di TWA/PWABuilder Android
-      // Mengarahkan ke about:blank memicu sistem Android memutus activity PWA
-      window.location.replace('about:blank');
+    if (typeof window !== 'undefined') {
+      if (window.history.length > 1) {
+        window.history.go(-(window.history.length - 1));
+      }
+      showToast('info', 'Aplikasi Selesai', 'Silakan usap/tutup aplikasi dari daftar Recent Apps HP Anda.');
     }
   };
 
@@ -620,7 +619,7 @@ export default function ClientLayout({ children }) {
   const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // 📖 DRAWER MENUS (DENGAN ACTION & LINK REPLACE UNTUK TWA)
+  // 📖 DRAWER MENUS (RESPONSIF DENGAN REPLACE LINK)
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
@@ -951,7 +950,7 @@ export default function ClientLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono theme-text-secondary animate-pulse">
-                  Mendeteksi lokasi & jadwal sholat...
+                  Mndeteksi lokasi & jadwal sholat...
                 </div>
               )}
 
