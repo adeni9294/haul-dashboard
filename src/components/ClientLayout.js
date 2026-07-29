@@ -637,52 +637,69 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER RESPONSIF NEON EMAS & TOGGLE MODE TEMA */}
+          {/* HEADER RESPONSIF ADAPTIF MODE DARK/LIGHT */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
-              style={{ 
-                backgroundColor: 'rgba(217, 119, 6, 0.12)', 
-                borderColor: 'rgba(245, 158, 11, 0.4)',
-                boxShadow: '0 0 25px -5px rgba(245, 158, 11, 0.25)' 
-              }} 
-              className="backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2"
+              className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 ${
+                appMode === 'light'
+                  ? 'bg-amber-100/80 border-amber-400/60 shadow-lg shadow-amber-500/10'
+                  : 'bg-amber-500/10 border-amber-500/40 shadow-xl shadow-amber-500/20'
+              }`}
             >
               
               {/* Sisi Kiri: Logo, Judul & Alamat */}
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400/80 bg-amber-950/40 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-lg ${
+                  appMode === 'light'
+                    ? 'border-amber-600/80 bg-amber-200/60 shadow-amber-600/20'
+                    : 'border-amber-400/80 bg-amber-950/40 shadow-amber-500/30'
+                }`}>
                   {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <Building2 className="w-6 h-6 text-amber-400" />
+                    <Building2 className={`w-6 h-6 ${appMode === 'light' ? 'text-amber-700' : 'text-amber-400'}`} />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-tight text-amber-300 drop-shadow-sm">
+                    <h1 className={`text-xs sm:text-sm font-black tracking-wide uppercase leading-tight ${
+                      appMode === 'light' ? 'text-amber-900' : 'text-amber-300 drop-shadow-sm'
+                    }`}>
                       {orgName}
                     </h1>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 font-black font-mono shadow-sm">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black font-mono shadow-sm ${
+                      appMode === 'light'
+                        ? 'bg-amber-500/20 text-amber-900 border border-amber-500/40'
+                        : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
+                    }`}>
                       {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
 
-                  <p className="flex items-center gap-1.5 text-[11px] sm:text-xs text-amber-200/80 font-medium md:whitespace-normal">
-                    <MapPin className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                  <p className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-medium md:whitespace-normal ${
+                    appMode === 'light' ? 'text-slate-700' : 'text-amber-200/80'
+                  }`}>
+                    <MapPin className={`w-3.5 h-3.5 shrink-0 ${appMode === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
                     <span className="truncate md:whitespace-normal">{address}</span>
                   </p>
                 </div>
               </div>
 
               {/* Sisi Kanan: Toggle Mode Gelap/Terang, Jadwal Sholat & Live Clock */}
-              <div className="pt-3 md:pt-0 border-t md:border-t-0 border-amber-500/30 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0">
+              <div className={`pt-3 md:pt-0 border-t md:border-t-0 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0 ${
+                appMode === 'light' ? 'border-amber-300/60' : 'border-amber-500/30'
+              }`}>
                 
                 {/* 🌙 / ☀️ TOMBOL TOGGLE DARK & LIGHT MODE */}
                 <button
                   onClick={toggleAppMode}
                   type="button"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/40 hover:bg-black/60 text-amber-300 border border-amber-400/40 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer border ${
+                    appMode === 'light'
+                      ? 'bg-white/80 hover:bg-white text-slate-800 border-amber-400/50'
+                      : 'bg-black/40 hover:bg-black/60 text-amber-300 border-amber-400/40'
+                  }`}
                   title={appMode === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
                 >
                   {appMode === 'dark' ? (
@@ -692,7 +709,7 @@ export default function ClientLayout({ children }) {
                     </>
                   ) : (
                     <>
-                      <Moon className="w-3.5 h-3.5 text-cyan-400" />
+                      <Moon className="w-3.5 h-3.5 text-indigo-600" />
                       <span className="text-[10px] font-mono hidden sm:inline uppercase">Dark</span>
                     </>
                   )}
@@ -700,14 +717,20 @@ export default function ClientLayout({ children }) {
 
                 <button 
                   onClick={() => setShowSholatModal(true)} 
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer"
+                  className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer border ${
+                    appMode === 'light'
+                      ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 border-amber-500/40'
+                      : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-400/40'
+                  }`}
                 >
-                  <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <Clock className={`w-3.5 h-3.5 animate-pulse ${appMode === 'light' ? 'text-amber-700' : 'text-amber-400'}`} />
                   <span>Jadwal Sholat</span>
                 </button>
 
                 {isMounted && timeString && (
-                  <div className="flex items-center gap-1.5 text-amber-300 text-[11px] sm:text-xs font-mono font-bold shrink-0">
+                  <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold shrink-0 ${
+                    appMode === 'light' ? 'text-amber-900' : 'text-amber-300'
+                  }`}>
                     <span>{timeString}</span>
                     <span>•</span>
                     <span>{dateString}</span>
@@ -737,7 +760,7 @@ export default function ClientLayout({ children }) {
               href="/" 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                 pathname === '/' 
-                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
                   : 'theme-text-secondary hover:theme-text-primary'
               }`}
             >
@@ -749,7 +772,7 @@ export default function ClientLayout({ children }) {
               href="/stat" 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                 pathname === '/stat' 
-                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
                   : 'theme-text-secondary hover:theme-text-primary'
               }`}
             >
@@ -768,7 +791,7 @@ export default function ClientLayout({ children }) {
               href="/anggaran" 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                 pathname === '/anggaran' 
-                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
                   : 'theme-text-secondary hover:theme-text-primary'
               }`}
             >
@@ -783,7 +806,7 @@ export default function ClientLayout({ children }) {
               }} 
               className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 cursor-pointer ${
                 showMainMenuDrawer 
-                  ? 'theme-text-accent font-black bg-white/10 scale-105 border border-white/20 shadow-md' 
+                  ? 'theme-text-accent font-black bg-black/10 dark:bg-white/10 scale-105 border border-slate-300 dark:border-white/20 shadow-md' 
                   : 'theme-text-secondary hover:theme-text-primary'
               }`}
             >
@@ -835,10 +858,10 @@ export default function ClientLayout({ children }) {
                 <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
                   <Compass className="w-6 h-6 animate-pulse" />
                 </div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">Jadwal Sholat Hari Ini</h3>
-                <p className="text-[10px] font-mono text-emerald-200/80 uppercase">📍 {kotaSholat} & Sekitarnya</p>
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-300">Jadwal Sholat Hari Ini</h3>
+                <p className="text-[10px] font-mono theme-text-secondary uppercase">📍 {kotaSholat} & Sekitarnya</p>
                 {tanggalHijriah && (
-                  <p className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/30 w-fit mx-auto mt-1">
+                  <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/30 w-fit mx-auto mt-1">
                     🌙 {tanggalHijriah}
                   </p>
                 )}
@@ -846,12 +869,12 @@ export default function ClientLayout({ children }) {
 
               <div className="p-2.5 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-1">
                 <label className="text-[9px] font-bold theme-text-secondary flex items-center gap-1 uppercase font-mono">
-                  <MapPin className="w-3 h-3 text-cyan-400" /> Lokasi Kota / Wilayah:
+                  <MapPin className="w-3 h-3 text-cyan-500 dark:text-cyan-400" /> Lokasi Kota / Wilayah:
                 </label>
                 <select
                   value={selectedKotaId}
                   onChange={handleSelectKotaManual}
-                  className="w-full theme-bg-secondary text-xs text-emerald-300 font-bold px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-400 cursor-pointer"
+                  className="w-full theme-bg-secondary text-xs theme-text-primary font-bold px-3 py-2 rounded-xl border theme-border focus:outline-none focus:border-emerald-400 cursor-pointer"
                 >
                   {DAFTAR_KOTA.map((k) => (
                     <option key={k.id} value={k.id}>{k.name}</option>
@@ -863,7 +886,7 @@ export default function ClientLayout({ children }) {
               <div className="p-3 theme-bg-tertiary border border-emerald-500/30 rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
+                    {isAlarmActive ? <Bell className="w-4 h-4 text-emerald-500 dark:text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4 text-rose-400" />}
                     <span className="text-xs font-bold theme-text-primary">Adzan Otomatis</span>
                   </div>
                   <button 
@@ -889,15 +912,15 @@ export default function ClientLayout({ children }) {
                     <>
                       <button 
                         onClick={() => playAlarmSound('Subuh')}
-                        className="flex-1 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        className="flex-1 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                       >
-                        <Volume2 className="w-3 h-3 text-emerald-400" /> Tes Subuh
+                        <Volume2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> Tes Subuh
                       </button>
                       <button 
                         onClick={() => playAlarmSound('Dzuhur')}
-                        className="flex-1 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        className="flex-1 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-600 dark:text-cyan-300 border border-cyan-500/40 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                       >
-                        <Volume2 className="w-3 h-3 text-cyan-400" /> Tes Dzuhur
+                        <Volume2 className="w-3 h-3 text-cyan-500 dark:text-cyan-400" /> Tes Dzuhur
                       </button>
                     </>
                   )}
@@ -917,7 +940,7 @@ export default function ClientLayout({ children }) {
                   ].map((s, idx) => (
                     <div key={idx} className="p-2 theme-bg-tertiary border theme-border rounded-xl flex justify-between items-center">
                       <span className="text-[11px] font-bold theme-text-secondary">{s.name}</span>
-                      <span className="text-xs font-black font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">{s.time} WIB</span>
+                      <span className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-500/30 dark:border-emerald-800">{s.time} WIB</span>
                     </div>
                   ))}
                 </div>
@@ -927,7 +950,7 @@ export default function ClientLayout({ children }) {
                 </div>
               )}
 
-              <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase cursor-pointer">
+              <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white dark:text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase cursor-pointer">
                 Tutup Jadwal
               </button>
             </div>
@@ -943,7 +966,7 @@ export default function ClientLayout({ children }) {
               </button>
               
               <div className="text-center space-y-1">
-                <div className="p-3 bg-emerald-500/20 text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
+                <div className="p-3 bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 w-fit rounded-2xl mx-auto mb-2 border border-emerald-400/30">
                   <Gift className="w-6 h-6" />
                 </div>
                 <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary">Rekening Donasi Jemaah</h3>
@@ -968,7 +991,7 @@ export default function ClientLayout({ children }) {
                     </div>
                     <button 
                       onClick={() => handleCopy(item.number, idx)}
-                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 cursor-pointer ${copiedIndex === idx ? 'bg-emerald-500 text-black shadow-lg' : 'theme-bg-secondary theme-text-secondary border theme-border hover:theme-bg-tertiary'}`}
+                      className={`px-3 py-2 rounded-xl font-mono text-[9px] font-bold uppercase transition-all shrink-0 flex items-center gap-1 cursor-pointer ${copiedIndex === idx ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'theme-bg-secondary theme-text-secondary border theme-border hover:theme-bg-tertiary'}`}
                     >
                       {copiedIndex === idx ? <><Check className="w-3.5 h-3.5" /> Disalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
                     </button>
@@ -1038,7 +1061,7 @@ export default function ClientLayout({ children }) {
                         }}
                         className={`p-3 rounded-2xl font-bold text-xs text-left flex items-center gap-3 transition-all active:scale-95 group ${
                           pathname === dm.href 
-                            ? 'theme-gradient-main theme-text-primary shadow-lg border border-white/20' 
+                            ? 'theme-gradient-main text-white shadow-lg border border-white/20' 
                             : 'theme-bg-tertiary hover:theme-bg-tertiary theme-text-primary border theme-border'
                         }`}
                       >
@@ -1071,7 +1094,7 @@ export default function ClientLayout({ children }) {
                       setShowMainMenuDrawer(false); 
                       setShowLoginModal(true); 
                     }} 
-                    className="w-full py-3 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 theme-text-primary rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all hover:shadow-purple-600/50 cursor-pointer"
+                    className="w-full py-3 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-cyan-500 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all hover:shadow-purple-600/50 cursor-pointer"
                   >
                     <Lock className="w-4 h-4" /> Otorisasi Login Admin
                   </button>
@@ -1086,7 +1109,7 @@ export default function ClientLayout({ children }) {
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="theme-bg-secondary border theme-border p-6 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl theme-text-primary transition-all duration-300">
               <div className="text-center">
-                <div className="p-3 bg-amber-500/20 text-amber-300 w-fit rounded-2xl mx-auto mb-2 border border-amber-400/30">
+                <div className="p-3 bg-amber-500/20 text-amber-500 dark:text-amber-300 w-fit rounded-2xl mx-auto mb-2 border border-amber-400/30">
                   <Lock className="w-6 h-6" />
                 </div>
                 <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary">Otorisasi Sistem</h3>
