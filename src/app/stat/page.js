@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from '@/components/GlassCard';
@@ -17,6 +18,16 @@ export default function StatPage() {
     saldoBersih: 0,
     persentaseSerapan: 0
   });
+
+  // 🔔 Custom Toast State (Center Top)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3500);
+  };
 
   const getSupabase = () => {
     return createClient(
@@ -41,10 +52,12 @@ export default function StatPage() {
       const supabase = getSupabase();
 
       // 1. Ambil Periode Haul
-      const { data: listPeriode } = await supabase
+      const { data: listPeriode, error: periodeErr } = await supabase
         .from('periode_haul')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (periodeErr) throw periodeErr;
 
       if (!listPeriode || listPeriode.length === 0) {
         setLoading(false);
@@ -62,7 +75,6 @@ export default function StatPage() {
       // 3. Mapping Statistik per Periode
       const statsMap = listPeriode.map(p => {
         const pId = p.id;
-        let currentSaldoAwal = parseFloat(p.saldo_awal || 0);
 
         let calcMasuk = 0;
         let calcKeluar = 0;
@@ -150,6 +162,7 @@ export default function StatPage() {
       setAllPeriodeStats(statsMap);
     } catch (err) {
       console.error("Gagal kalkulasi statistik:", err);
+      showToast('Gagal memuat statistik kalkulasi keuangan', 'error');
     } finally {
       setLoading(false);
     }
@@ -175,11 +188,49 @@ export default function StatPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70 theme-text-primary">Menghitung statistik pencapaian...</div>;
+  // 🚀 TAMPILAN SKELETON LOADING MODERN
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
+        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
+          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="animate-pulse">Kalkulasi Statistik & Capaian Finansial...</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <GlassCard key={i} className="p-4 space-y-2 animate-pulse bg-slate-900/40 border border-white/5">
+              <div className="h-3 w-3/4 bg-slate-800/80 rounded" />
+              <div className="h-6 w-1/2 bg-slate-800/80 rounded" />
+            </GlassCard>
+          ))}
+        </div>
+
+        <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary">
-      
+    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
+
+      {/* 🔔 FLOATING TOAST NOTIFICATION (POSISI CENTER ATAS) */}
+      {toast.show && (
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
+          <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
+            toast.type === 'error' 
+              ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50' 
+              : 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50'
+          }`}>
+            <span className="text-lg shrink-0">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            <span className="font-mono font-bold text-xs leading-relaxed">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* HEADER & SELECTOR PERIODE */}
       <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
         <div>
