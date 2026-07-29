@@ -240,22 +240,25 @@ export default function AnggaranPage() {
         if (!formCategory) setFormCategory(catDb[0].name);
       }
 
-      // Load Budgets & Transaksi Realisasi
-      let budgetQuery = supabase.from('budgets').select('*');
-      let expQuery = supabase.from('transactions').select('*');
+      // 🛡️ LOAD BUDGETS & TRANSAKSI DENGAN FALLBACK UNTUK DATA TANPA PERIODE_ID (NULL)
+      const { data: budgetDb } = await supabase.from('budgets').select('*');
+      const { data: expensesDb } = await supabase.from('transactions').select('*');
 
-      if (activePeriodeId) {
-        budgetQuery = budgetQuery.eq('periode_id', activePeriodeId);
-        expQuery = expQuery.eq('periode_id', activePeriodeId);
-      }
+      // Filter lokal untuk menangani data anggaran lama yang `periode_id`-nya NULL
+      const filteredBudgetDb = (budgetDb || []).filter(b => {
+        if (!activePeriodeId) return true;
+        return !b.periode_id || b.periode_id === activePeriodeId || b.periode_id === Number(activePeriodeId);
+      });
 
-      const { data: budgetDb } = await budgetQuery;
-      const { data: expensesDb } = await expQuery;
+      const filteredExpensesDb = (expensesDb || []).filter(e => {
+        if (!activePeriodeId) return true;
+        return !e.periode_id || e.periode_id === activePeriodeId || e.periode_id === Number(activePeriodeId);
+      });
 
-      // Calculate Realization per Category
+      // Kalkulasi Realisasi per Kategori
       const mapRealisasi = {};
-      if (expensesDb) {
-        expensesDb.forEach(item => {
+      if (filteredExpensesDb) {
+        filteredExpensesDb.forEach(item => {
           const type = (item.type || '').toLowerCase().trim();
           if (type === 'keluar' || type === 'pengeluaran') {
             const cat = item.category || 'Lain-lain';
@@ -264,15 +267,19 @@ export default function AnggaranPage() {
         });
       }
 
-      const budgetMerged = (budgetDb || []).map(b => {
-        const real = mapRealisasi[b.category_name] || 0;
-        const target = parseFloat(b.planned_amount) || 0;
+      const budgetMerged = filteredBudgetDb.map(b => {
+        const catName = b.category_name || b.category || b.kategori || 'Lain-lain';
+        const target = parseFloat(b.planned_amount || b.amount || b.nominal) || 0;
+        const real = mapRealisasi[catName] || 0;
         const serapan = target > 0 ? parseFloat(((real / target) * 100).toFixed(1)) : 0;
 
         return {
           ...b,
+          category_name: catName,
+          planned_amount: target,
           actual_realized: real,
-          percent_absorbed: serapan
+          percent_absorbed: serapan,
+          note: b.note || b.keterangan || ''
         };
       });
 
@@ -400,7 +407,7 @@ export default function AnggaranPage() {
   return (
     <div id="root-anggaran-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
       
-      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN (POSISI ATAS TENGAH) */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN */}
       {toast.show && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] print:hidden animate-in fade-in slide-in-from-top duration-300">
           <div className={`px-4 py-3 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl border-2 ${
@@ -440,7 +447,7 @@ export default function AnggaranPage() {
         </div>
       )}
 
-      {/* 🛠️ PRINT STYLES UNTUK CETAK ANGGARAN */}
+      {/* 🛠️ PRINT STYLES */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
@@ -737,11 +744,10 @@ export default function AnggaranPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK ANGGARAN (FORMAL A4 PRINT OUT ONLY) */}
+      {/* 🖨️ AREA CETAK ANGGARAN */}
       <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
         <div className="print-page-wrapper">
           
-          {/* KOP SURAT FORMAL */}
           <div className="flex items-center justify-between border-b-4 border-double border-black pb-3 mb-4">
             <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
               <img 
@@ -763,7 +769,6 @@ export default function AnggaranPage() {
             <p className="text-[9px] text-gray-600 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
 
-          {/* TABEL ANGGARAN FORMAL */}
           <table className="w-full border-collapse border-2 border-black text-[10px] mb-6 font-sans">
             <thead>
               <tr className="bg-gray-200 border-b-2 border-black uppercase text-[9px] tracking-wider text-center font-bold">
@@ -796,7 +801,6 @@ export default function AnggaranPage() {
             </tbody>
           </table>
 
-          {/* AREA TANDA TANGAN FORMAL */}
           <div className="mt-8 break-inside-avoid">
             <p className="text-right text-[10px] text-gray-800 italic mb-8 font-sans">
               {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
