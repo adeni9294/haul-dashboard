@@ -230,7 +230,7 @@ export default function AcaraPage() {
     } catch (e) {
       console.error("Gagal load acara:", e);
       setEvents([]);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }
