@@ -252,7 +252,7 @@ export default function YasinPage() {
               : 'theme-text-secondary hover:theme-text-primary'
           }`}
         >
-          Surah Yasin (83)
+          Surat Yasin (83)
         </button>
         <button
           onClick={() => setActiveTab('tahlil')}
@@ -262,7 +262,7 @@ export default function YasinPage() {
               : 'theme-text-secondary hover:theme-text-primary'
           }`}
         >
-          Tahlil Gunung Jati
+          Tahlil
         </button>
         <button
           onClick={() => setActiveTab('doa')}
@@ -272,7 +272,7 @@ export default function YasinPage() {
               : 'theme-text-secondary hover:theme-text-primary'
           }`}
         >
-          Doa Haul Cirebon
+          Doa
         </button>
       </div>
 
