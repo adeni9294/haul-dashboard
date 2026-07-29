@@ -667,7 +667,7 @@ aside.theme-sidebar .menu-item-active {
 }
 
 /* ==========================================================
-   FORCE LIGHT MODE OVERRIDE (MODERN UI & PRESERVE ICONS FIX)
+   FORCE LIGHT MODE OVERRIDE (FIX MODERN VIBRANT ICONS & UI)
    ========================================================== */
 
 html.light-mode,
@@ -734,7 +734,6 @@ html.light-mode .theme-text-primary {
   color: #020617 !important; /* Hitam Pekat */
 }
 
-/* Pengecualian span/p agar tidak merusak elemen SVG di dalamnya */
 html.light-mode p, 
 html.light-mode span:not(:has(svg)), 
 html.light-mode label, 
@@ -767,23 +766,39 @@ html.light-mode .theme-border {
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
-/* 💎 AMANKAN TAMPILAN MODERN IKON LUCIDE & SVG */
+/* ==========================================================
+   ✨ TRANSFORMASI IKON MENU JADI MODERN & TAMPIL ELEGAN (LIGHT MODE)
+   ========================================================== */
+
+/* 1. Paksa Warna Latar Belakang Soft Pastel Modern pada Wadah Ikon */
+html.light-mode [class*="bg-emerald-500/"] { background-color: rgba(16, 185, 129, 0.12) !important; border-color: rgba(16, 185, 129, 0.25) !important; }
+html.light-mode [class*="bg-cyan-500/"] { background-color: rgba(6, 182, 212, 0.12) !important; border-color: rgba(6, 182, 212, 0.25) !important; }
+html.light-mode [class*="bg-amber-500/"] { background-color: rgba(245, 158, 11, 0.12) !important; border-color: rgba(245, 158, 11, 0.25) !important; }
+html.light-mode [class*="bg-rose-500/"] { background-color: rgba(244, 63, 94, 0.12) !important; border-color: rgba(244, 63, 94, 0.25) !important; }
+html.light-mode [class*="bg-purple-500/"] { background-color: rgba(168, 85, 247, 0.12) !important; border-color: rgba(168, 85, 247, 0.25) !important; }
+html.light-mode [class*="bg-blue-500/"] { background-color: rgba(59, 130, 246, 0.12) !important; border-color: rgba(59, 130, 246, 0.25) !important; }
+html.light-mode [class*="bg-teal-500/"] { background-color: rgba(20, 184, 166, 0.12) !important; border-color: rgba(20, 184, 166, 0.25) !important; }
+html.light-mode [class*="bg-orange-500/"] { background-color: rgba(249, 115, 22, 0.12) !important; border-color: rgba(249, 115, 22, 0.25) !important; }
+html.light-mode [class*="bg-red-500/"] { background-color: rgba(239, 68, 68, 0.12) !important; border-color: rgba(239, 68, 68, 0.25) !important; }
+
+/* 2. Tingkatkan Kontras Warna Garis Ikon Lucide Agar Sangat Tajam & Modern */
+html.light-mode .text-emerald-400 { color: #059669 !important; } /* Emerald 600 */
+html.light-mode .text-cyan-400 { color: #0891b2 !important; }    /* Cyan 600 */
+html.light-mode .text-amber-400 { color: #d97706 !important; }   /* Amber 600 */
+html.light-mode .text-rose-400 { color: #e11d48 !important; }    /* Rose 600 */
+html.light-mode .text-purple-400 { color: #9333ea !important; }  /* Purple 600 */
+html.light-mode .text-blue-400 { color: #2563eb !important; }    /* Blue 600 */
+html.light-mode .text-teal-400 { color: #0d9488 !important; }    /* Teal 600 */
+html.light-mode .text-orange-400 { color: #ea580c !important; }  /* Orange 600 */
+html.light-mode .text-red-400 { color: #dc2626 !important; }     /* Red 600 */
+
+/* 3. Amankan Rendering SVG & Tambahkan Efek Sizing Modern */
 html.light-mode svg,
 html.light-mode svg.lucide,
 html.light-mode .lucide {
   background-color: transparent !important;
   display: inline-block !important;
-}
-
-/* Jaga Wadah/Badge Transparan Berwarna pada Ikon di Menu Drawer & Header */
-html.light-mode [class*="bg-emerald-500/"],
-html.light-mode [class*="bg-cyan-500/"],
-html.light-mode [class*="bg-amber-500/"],
-html.light-mode [class*="bg-rose-500/"],
-html.light-mode [class*="bg-purple-500/"],
-html.light-mode [class*="bg-blue-500/"] {
-  background-color: inherit !important;
-  opacity: 1 !important;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
 }
 
 /* 🛡️ PENGECUALIAN: Tombol & Badge Berwarna Tetap Memiliki Teks & Ikon Putih */
