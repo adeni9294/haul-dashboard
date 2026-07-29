@@ -107,7 +107,7 @@ export default function AnggaranPage() {
       setBudgetList(bData || []);
     } catch (e) {
       console.error(e);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }
