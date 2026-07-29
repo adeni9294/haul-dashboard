@@ -1,67 +1,163 @@
 'use client';
-
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from '@/components/GlassCard';
+import { 
+  Calendar as CalendarIcon, 
+  Clock, 
+  MapPin, 
+  User, 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  Search, 
+  FileSpreadsheet, 
+  Printer, 
+  CheckCircle2, 
+  AlertCircle, 
+  Info, 
+  X, 
+  Loader2, 
+  Sparkles,
+  ShieldAlert,
+  CalendarDays,
+  AlignLeft
+} from 'lucide-react';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// 🌐 KAMUS MULTI-BAHASA
+const translations = {
+  id: {
+    title: "Jadwal & Agenda Acara Haul",
+    subtitle: "● Susunan Acara, Waktu, Lokasi & Penceramah/Pengisi Acara",
+    btnTambah: "Tambah Acara",
+    btnExcel: "Excel Data",
+    btnCetak: "Cetak Jadwal",
+    searchPlaceholder: "Cari nama acara, lokasi, atau penceramah...",
+    thDate: "Waktu & Tanggal",
+    thTitle: "Nama Agenda Acara",
+    thLocation: "Lokasi / Tempat",
+    thSpeaker: "Pengisi Acara / Penceramah",
+    thAction: "Aksi",
+    noData: "Belum ada agenda acara yang dijadwalkan.",
+    syncData: "Memuat susunan acara haul...",
+    lpjTitle: "SUSUNAN JADWAL & AGENDA ACARA HAUL",
+    lpjPeriod: "Dicetak pada:",
+    signKnow: "Mengetahui,",
+    signChair: "Ketua Panitia",
+    signMade: "Dibuat Oleh,",
+    signSecretary: "Sekretaris",
+    signGroup: "PANITIA HAUL 2026",
+    city: "Cirebon"
+  },
+  jv: { 
+    title: "Jadwal & Agenda Acara Haul",
+    subtitle: "● Rintikan Acara, Waktu, Panggonan & Penceramah",
+    btnTambah: "Tambah Acara",
+    btnExcel: "Pragat Excel",
+    btnCetak: "Cetak Jadwal",
+    searchPlaceholder: "Goleki acara, panggonan, utawa penceramah...",
+    thDate: "Waktu & Tanggal",
+    thTitle: "Arane Acara",
+    thLocation: "Panggonan",
+    thSpeaker: "Penceramah / Pengisi Acara",
+    thAction: "Aksi",
+    noData: "Durung ana jadwal acara.",
+    syncData: "Nembe ngebuka rintikan acara haul...",
+    lpjTitle: "RINTIKAN JADWAL ACARA HAUL",
+    lpjPeriod: "Maca dina:",
+    signKnow: "Weruh,",
+    signChair: "Ketua Panitia",
+    signMade: "Sing Gawe,",
+    signSecretary: "Sekretaris",
+    signGroup: "PANITIA HAUL 2026",
+    city: "Cirebon"
+  },
+  en: {
+    title: "Haul Event Schedule & Agenda",
+    subtitle: "● Event rundown, time, location & speakers",
+    btnTambah: "Add Event",
+    btnExcel: "Export Excel",
+    btnCetak: "Print Rundown",
+    searchPlaceholder: "Search event, location, or speaker...",
+    thDate: "Date & Time",
+    thTitle: "Event Name",
+    thLocation: "Location / Venue",
+    thSpeaker: "Speaker / Performer",
+    thAction: "Action",
+    noData: "No event schedules found.",
+    syncData: "Loading event rundown...",
+    lpjTitle: "HAUL EVENT RUNDOWN SCHEDULE",
+    lpjPeriod: "Printed as of:",
+    signKnow: "Approved By,",
+    signChair: "Committee Chairman",
+    signMade: "Prepared By,",
+    signSecretary: "Secretary",
+    signGroup: "2026 HAUL COMMITTEE",
+    city: "Cirebon"
+  }
+};
 
 export default function AcaraPage() {
+  const [lang, setLang] = useState('id');
+  const t = translations[lang] || translations['id'];
+
   const [loading, setLoading] = useState(true);
-  const [scheduleList, setScheduleList] = useState([]);
-  const [agenda, setAgenda] = useState('');
-  const [timeStart, setTimeStart] = useState('');
-  const [timeEnd, setTimeEnd] = useState('');
-  const [pic, setPic] = useState('');
-  const [dateEvent, setDateEvent] = useState('');
-  const [editingId, setEditingId] = useState(null);
+  const [events, setEvents] = useState([]);
+  
+  // 🔔 STATE NOTIFIKASI MODERN (TOAST POSISI ATAS)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+
+  // 🗑️ STATE MODAL KONFIRMASI HAPUS
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+
   const [isAdmin, setIsAdmin] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [metaOrg, setMetaOrg] = useState({ 
+    name: 'PANITIA HAUL MAQBAROH BUYUT KEPUH & BUYUT BESUS', 
+    address: 'Blok Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon',
+    ketua: '....................',
+    sekretaris: '....................'
+  });
 
-  const printRef = useRef(null);
+  const [showModal, setShowModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  
+  // Form State
+  const [formTitle, setFormTitle] = useState('');
+  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formTime, setFormTime] = useState('08:00');
+  const [formLocation, setFormLocation] = useState('');
+  const [formSpeaker, setFormSpeaker] = useState('');
+  const [formDescription, setFormDescription] = useState('');
 
-  // ➕ State Periode Haul
-  const [periodeList, setPeriodeList] = useState([]);
-  const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
-  const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
-
-  // 🔔 Custom Toast & Modal Alert States
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+  const [search, setSearch] = useState('');
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' });
-    }, 3500);
-  };
-
-  const showConfirm = (title, message, onConfirm) => {
-    setConfirmModal({ show: true, title, message, onConfirm });
-  };
-
-  const closeConfirm = () => {
-    setConfirmModal({ show: false, title: '', message: '', onConfirm: null });
-  };
-
-  const getSupabase = () => {
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '', 
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    );
+      setToast({ show: false, message: '', type: 'info' });
+    }, 4000);
   };
 
   useEffect(() => {
-    checkAdminSession();
-    loadSchedules();
+    checkAdminSessionAndLoad();
+    loadData();
 
-    const interval = setInterval(checkAdminSession, 1000);
+    const interval = setInterval(checkAdminSessionOnly, 1000);
     return () => clearInterval(interval);
-  }, [selectedPeriodeId]);
+  }, []);
 
-  async function checkAdminSession() {
+  async function checkAdminSessionAndLoad() {
     const savedPassword = localStorage.getItem('admin_password_haul');
-    if (!savedPassword) return setIsAdmin(false);
+    if (!savedPassword) {
+      setIsAdmin(false);
+      return;
+    }
     try {
-      const supabase = getSupabase();
       const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
       setIsAdmin(!!isValid);
     } catch (err) {
@@ -69,503 +165,557 @@ export default function AcaraPage() {
     }
   }
 
-  async function loadSchedules() {
+  async function checkAdminSessionOnly() {
+    const savedPassword = localStorage.getItem('admin_password_haul');
+    if (!savedPassword) return setIsAdmin(false);
+    try {
+      const { data: isValid } = await supabase.rpc('verify_admin_password', { p_password: savedPassword });
+      setIsAdmin(!!isValid);
+    } catch (err) {
+      setIsAdmin(false);
+    }
+  }
+
+  async function loadData() {
     try {
       setLoading(true);
-      const supabase = getSupabase();
 
-      let activePeriodeId = selectedPeriodeId;
-      const { data: listPeriode } = await supabase
-        .from('periode_haul')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (listPeriode && listPeriode.length > 0) {
-        setPeriodeList(listPeriode);
-        if (!activePeriodeId) {
-          activePeriodeId = listPeriode[0].id;
-          setSelectedPeriodeId(activePeriodeId);
-        }
-        const found = listPeriode.find(p => p.id === activePeriodeId) || listPeriode[0];
-        setCurrentPeriodeObj(found);
+      const { data: setDb } = await supabase.from('settings').select('*').eq('id', 'main_config');
+      if (setDb && setDb.length > 0) {
+        setMetaOrg(prev => ({
+          ...prev,
+          name: setDb[0].org_name || prev.name,
+          address: setDb[0].address || prev.address
+        }));
       }
 
-      let query = supabase
-        .from('schedules')
+      const { data: committeeDb } = await supabase.from('committee').select('*');
+      if (committeeDb && committeeDb.length > 0) {
+        setMetaOrg(prev => ({
+          ...prev,
+          ketua: committeeDb.find(c => c.position?.toLowerCase() === 'ketua')?.name || prev.ketua,
+          sekretaris: committeeDb.find(c => c.position?.toLowerCase() === 'sekretaris')?.name || prev.sekretaris
+        }));
+      }
+
+      const { data: eventsDb, error } = await supabase
+        .from('events')
         .select('*')
         .order('event_date', { ascending: true })
-        .order('time_start', { ascending: true });
+        .order('event_time', { ascending: true });
 
-      if (activePeriodeId) {
-        query = query.eq('periode_id', activePeriodeId);
-      }
-
-      const { data, error } = await query;
-
-      if (!error && data) {
-        setScheduleList(data);
-      }
+      if (error) throw error;
+      setEvents(eventsDb || []);
     } catch (e) {
-      console.error(e);
+      console.error("Gagal load acara:", e);
     } finally {
       setLoading(false);
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSaveEvent = async (e) => {
     e.preventDefault();
-    if (!isAdmin) return showToast('Aksi ditolak. Anda belum login sebagai admin!', 'error');
-    if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini telah ditutup buku. Tidak dapat merubah jadwal.', 'error');
-    if (!agenda.trim() || !timeStart.trim() || !dateEvent) return;
-
-    const supabase = getSupabase();
+    if (!isAdmin) return;
     
-    const payload = { 
-      agenda: agenda.trim(),
-      time_start: timeStart.trim(),
-      time_end: timeEnd.trim() || 'S.D Selesai',
-      pic: pic.trim() || '-',
-      event_date: dateEvent,
-      periode_id: selectedPeriodeId
+    const payload = {
+      title: formTitle.trim(),
+      event_date: formDate,
+      event_time: formTime,
+      location: formLocation.trim(),
+      speaker: formSpeaker.trim(),
+      description: formDescription.trim()
     };
 
     try {
-      if (editingId) {
-        const { error } = await supabase.from('schedules').update(payload).eq('id', editingId);
-        if (error) throw error;
-        showToast('🟢 Jadwal acara berhasil diperbarui!', 'success');
+      if (isEditMode) {
+        await supabase.from('events').update(payload).eq('id', selectedId);
+        showToast('Agenda acara berhasil diperbarui.', 'success');
       } else {
-        const { error } = await supabase.from('schedules').insert([payload]);
-        if (error) throw error;
-        showToast('🟢 Jadwal acara baru berhasil ditambahkan!', 'success');
+        await supabase.from('events').insert([payload]);
+        showToast('Agenda acara baru berhasil ditambahkan.', 'success');
       }
-
-      setAgenda('');
-      setTimeStart('');
-      setTimeEnd('');
-      setPic('');
-      setDateEvent('');
-      setEditingId(null);
-      await loadSchedules();
+      resetForm();
+      await loadData();
     } catch (err) {
       console.error(err);
-      showToast(`❌ Gagal menyimpan: ${err?.message || err}`, 'error');
+      showToast('Gagal menyimpan agenda acara.', 'error');
     }
   };
 
-  const handleEdit = (s) => {
-    if (!isAdmin) return showToast('Aksi ditolak. Anda bukan admin!', 'error');
-    if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini sudah ditutup buku!', 'error');
-    setEditingId(s.id);
-    setAgenda(s.agenda || '');
-    setTimeStart(s.time_start || '');
-    setTimeEnd(s.time_end || '');
-    setPic(s.pic || '');
-    setDateEvent(s.event_date || '');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const triggerEdit = (item) => {
+    setSelectedId(item.id);
+    setIsEditMode(true);
+    setFormTitle(item.title || '');
+    setFormDate(item.event_date || new Date().toISOString().split('T')[0]);
+    setFormTime(item.event_time || '08:00');
+    setFormLocation(item.location || '');
+    setFormSpeaker(item.speaker || '');
+    setFormDescription(item.description || '');
+    setShowModal(true);
   };
 
-  const handleDelete = (id) => {
-    if (!isAdmin) return showToast('Aksi ditolak. Anda bukan admin!', 'error');
-    if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini sudah ditutup buku!', 'error');
-
-    showConfirm(
-      'Hapus Jadwal Acara',
-      'Apakah Anda yakin ingin menghapus jadwal agenda ini dari rundown?',
-      async () => {
-        try {
-          const supabase = getSupabase();
-          const { error } = await supabase.from('schedules').delete().eq('id', id);
-          if (error) throw error;
-          showToast('🗑️ Acara berhasil dihapus.', 'success');
-          await loadSchedules();
-        } catch (err) {
-          showToast(`❌ Gagal menghapus: ${err?.message || err}`, 'error');
-        } finally {
-          closeConfirm();
-        }
-      }
-    );
-  };
-
-  const handlePrintPDF = () => {
-    window.print();
-  };
-
-  const handleDownloadImageNative = async () => {
+  const executeDelete = async () => {
+    const { id } = deleteConfirm;
+    setDeleteConfirm({ show: false, id: null });
     try {
-      setDownloading(true);
-      showToast('⌛ Mengkonversi jadwal ke Gambar...', 'info');
-
-      const { toPng } = await import('html-to-image');
-
-      if (printRef.current) {
-        const dataUrl = await toPng(printRef.current, {
-          quality: 0.95,
-          pixelRatio: 2,
-          backgroundColor: '#050b14',
-          cacheBust: true,
-          filter: (node) => {
-            return !node.classList?.contains('print:hidden');
-          }
-        });
-
-        const link = document.createElement('a');
-        link.download = `Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || '2026'}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        showToast('🖼️ Berhasil mengunduh gambar jadwal acara!', 'success');
-      }
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw error;
+      showToast('Agenda acara berhasil dihapus.', 'success');
+      await loadData();
     } catch (err) {
-      console.error("Gambar download error:", err);
-      showToast('⚠️ Gagal unduh gambar. Gunakan fitur Cetak PDF/Screenshot.', 'error');
-    } finally {
-      setDownloading(false);
+      showToast(`Gagal hapus: ${err.message}`, 'error');
     }
   };
-  
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
+
+  const resetForm = () => {
+    setIsEditMode(false);
+    setSelectedId(null);
+    setFormTitle('');
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormTime('08:00');
+    setFormLocation('');
+    setFormSpeaker('');
+    setFormDescription('');
+    setShowModal(false);
+  };
+
+  const filteredEvents = events.filter(item => {
+    const matchSearch = 
+      (item.title || '').toLowerCase().includes(search.toLowerCase()) ||
+      (item.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (item.speaker || '').toLowerCase().includes(search.toLowerCase());
+    return matchSearch;
+  });
+
+  const handleExportExcelManual = () => {
     try {
-      const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-      return new Date(dateString).toLocaleDateString('id-ID', options);
-    } catch (e) {
-      return String(dateString);
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Tanggal,Jam,Nama Acara,Lokasi,Penceramah/Pengisi,Keterangan\n";
+      
+      filteredEvents.forEach(e => {
+        const row = `"${e.event_date}","${e.event_time}","${e.title}","${e.location}","${e.speaker}","${e.description}"\n`;
+        csvContent += row;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `JADWAL_ACARA_HAUL_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Berhasil mengunduh Jadwal Acara ke Excel/CSV.', 'success');
+    } catch (err) {
+      showToast('Gagal mengekspor data: ' + err.message, 'error');
     }
   };
 
-  // 💡 LOGIKA STATUS JADWAL ACARA (COMING SOON / SEDANG BERLANGSUNG / SELESAI)
-  const getEventStatus = (eventDateStr, timeStartStr, timeEndStr) => {
-    if (!eventDateStr) return { label: 'Coming Soon', style: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' };
-    
-    const now = new Date();
-    
-    // Parse tanggal acara (Format YYYY-MM-DD)
-    const [year, month, day] = eventDateStr.split('-').map(Number);
-    
-    // Default Waktu jika format string jam
-    let startHour = 0, startMin = 0;
-    if (timeStartStr && timeStartStr.includes(':')) {
-      const [h, m] = timeStartStr.split(':').map(Number);
-      startHour = h || 0;
-      startMin = m || 0;
-    }
-
-    let endHour = 23, endMin = 59;
-    if (timeEndStr && timeEndStr.includes(':')) {
-      const [h, m] = timeEndStr.split(':').map(Number);
-      endHour = h || 23;
-      endMin = m || 59;
-    }
-
-    const startDate = new Date(year, month - 1, day, startHour, startMin);
-    const endDate = new Date(year, month - 1, day, endHour, endMin);
-
-    if (now < startDate) {
-      return { 
-        label: '⏳ Coming Soon', 
-        style: 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/50 shadow-sm shadow-cyan-500/20' 
-      };
-    } else if (now >= startDate && now <= endDate) {
-      return { 
-        label: '🔴 Live Now', 
-        style: 'bg-rose-500/20 text-rose-300 border-rose-500/60 animate-pulse font-black' 
-      };
-    } else {
-      return { 
-        label: '✅ Selesai', 
-        style: 'bg-slate-800/60 text-slate-400 border-slate-700/50' 
-      };
-    }
-  };
-
-  // 🚀 SKELETON LOADING STATE
   if (loading) {
     return (
-      <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
-        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
-          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span className="animate-pulse">Memuat Susunan Agenda Acara...</span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <GlassCard className="p-6 h-48 animate-pulse bg-slate-900/40 border border-white/5" />
-          <div className="lg:col-span-2 space-y-3">
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="h-20 rounded-xl bg-slate-900/40 border border-amber-500/10 p-4 animate-pulse" />
-            ))}
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-xs font-mono theme-text-primary">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+        <span>{t.syncData}</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
-
-      {/* STYLES KHUSUS MENCEGAH CUT-OFF SAAT CETAK */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-area, #printable-area * {
-            visibility: visible;
-          }
-          #printable-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            color: black !important;
-            background: white !important;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          .print-card {
-            border: 1px solid #ccc !important;
-            background: #fff !important;
-            color: #000 !important;
-            margin-bottom: 8px !important;
-          }
-        }
-      `}} />
-
-      {/* 🔔 FLOATING TOAST NOTIFICATION (DI TENGAH ATAS LAYAR) */}
+    <div id="root-acara-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
+      
+      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN (POSISI ATAS TENGAH) */}
       {toast.show && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md print:hidden transition-all duration-300">
-          <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
-            toast.type === 'error' 
-              ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50' 
-              : toast.type === 'info'
-              ? 'bg-cyan-950/90 border-cyan-500/80 text-cyan-200 shadow-cyan-950/50'
-              : 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50'
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] print:hidden animate-in fade-in slide-in-from-top duration-300">
+          <div className={`px-4 py-3 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl border-2 ${
+            toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200' :
+            toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/80 text-rose-200' :
+            toast.type === 'warning' ? 'bg-amber-950/90 border-amber-500/80 text-amber-200' :
+            'bg-slate-900/90 border-slate-700 text-white'
           }`}>
-            <span className="text-lg shrink-0">{toast.type === 'error' ? '⚠️' : toast.type === 'info' ? 'ℹ️' : '✅'}</span>
-            <span className="font-mono font-bold text-xs leading-relaxed">{toast.message}</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
+              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
+              {toast.type === 'warning' && <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />}
+              {toast.type === 'info' && <Info className="w-5 h-5 text-cyan-400 shrink-0" />}
+              <span className="font-semibold text-xs leading-snug truncate">{toast.message}</span>
+            </div>
+            <button onClick={() => setToast({ ...toast, show: false })} className="p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0">
+              <X className="w-4 h-4 opacity-80 hover:opacity-100" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* ❓ CUSTOM CONFIRMATION MODAL */}
-      {confirmModal.show && (
-        <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
-          <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
-            <div className="text-3xl">❓</div>
-            <h3 className="font-bold text-sm theme-text-primary uppercase tracking-wider">{confirmModal.title}</h3>
-            <p className="text-xs theme-text-secondary leading-relaxed">{confirmModal.message}</p>
-            <div className="flex gap-3 justify-center pt-2">
-              <button
-                onClick={closeConfirm}
-                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md"
-              >
-                Ya, Hapus
-              </button>
+      {/* 🗑️ MODAL DIALOG KONFIRMASI HAPUS MODERN */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200">
+          <GlassCard className="max-w-sm w-full text-center space-y-4 p-6 shadow-2xl border theme-border">
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-sm uppercase theme-text-primary">Konfirmasi Hapus Agenda</h3>
+            <p className="text-xs theme-text-secondary leading-relaxed">Apakah Anda yakin ingin menghapus agenda acara ini secara permanen?</p>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setDeleteConfirm({ show: false, id: null })} className="flex-1 py-2.5 bg-black/30 hover:bg-black/50 theme-text-secondary font-bold rounded-xl text-xs border theme-border cursor-pointer">Batal</button>
+              <button onClick={executeDelete} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs uppercase shadow-lg cursor-pointer">Hapus</button>
             </div>
           </GlassCard>
         </div>
       )}
 
-      {/* HEADER PAGE STATUS, PERIODE SELECTOR & DOWNLOAD BUTTONS */}
-      <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 print:hidden">
-        <div>
-          <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
-            <span>📅</span> Susunan Agenda & Rundown Acara
-          </h2>
-          <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">Mode: {isAdmin ? '🟢 Admin Kontrol Penuh' : '🔵 Public Read-Only'}</p>
-        </div>
+      {/* 🛠️ PRINT STYLES UNTUK CETAK JADWAL ACARA */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 10mm 12mm;
+          }
 
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {periodeList.length > 0 && (
-            <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
-              <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode:</span>
-              <select
-                value={selectedPeriodeId || ''}
-                onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
-              >
-                {periodeList.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-white">
-                    {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
-                  </option>
-                ))}
-              </select>
+          html, body, main, #root-acara-container {
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            background: white !important;
+            color: black !important;
+          }
+
+          .print\\:hidden, nav, header, sidebar, button, .lucide {
+            display: none !important;
+          }
+
+          .hidden.print\\:block {
+            display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+          }
+
+          .cetak-wrapper-logo, .cetak-wrapper-logo img {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-page-wrapper {
+            background: white !important;
+            color: black !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+
+          .break-inside-avoid {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+        }
+      `}} />
+
+      {/* AREA UTAMA INTERFACE */}
+      <div className="print:hidden space-y-4">
+        
+        {/* HEADER & TOP CONTROLS */}
+        <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-black uppercase tracking-wider theme-text-primary flex items-center gap-1.5">
+                <CalendarDays className="w-4 h-4 text-amber-400" />
+                {t.title}
+              </h2>
+              {isAdmin ? (
+                <span className="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase">
+                  ADMIN
+                </span>
+              ) : (
+                <span className="bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase">
+                  PUBLIC
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] font-mono mt-0.5 theme-text-tertiary">{t.subtitle}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex bg-black/30 p-1 border theme-border rounded-xl mr-1">
+              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'id' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>ID 🇮🇩</button>
+              <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'jv' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>JV 🎯</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'en' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>EN 🇬🇧</button>
+            </div>
+
+            {isAdmin && (
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t.btnTambah}</span>
+              </button>
+            )}
+            
+            <button onClick={handleExportExcelManual} className="flex-1 sm:flex-initial px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{t.btnExcel}</span>
+            </button>
+            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+              <Printer className="w-3.5 h-3.5" />
+              <span>{t.btnCetak}</span>
+            </button>
+          </div>
+        </GlassCard>
+
+        {/* SEARCH BAR */}
+        <GlassCard className="p-3">
+          <div className="relative flex items-center">
+            <Search className="w-4 h-4 absolute left-3 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder={t.searchPlaceholder} 
+              value={search} 
+              onChange={e => setSearch(e.target.value)} 
+              className="w-full pl-9 pr-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary placeholder:theme-text-tertiary text-xs" 
+            />
+          </div>
+        </GlassCard>
+
+        {/* LIST EVENT CARDS / GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filteredEvents.map((item, idx) => (
+            <GlassCard key={idx} className="p-4 relative group hover:border-amber-500/50 transition-all flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                
+                {/* Header Card: Tanggal & Waktu */}
+                <div className="flex items-center justify-between gap-2 border-b theme-border pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                      <CalendarIcon className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="font-mono font-bold text-xs theme-text-accent">{item.event_date}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold theme-text-secondary bg-black/20 px-2 py-1 rounded-lg border theme-border">
+                    <Clock className="w-3 h-3 text-cyan-400" />
+                    <span>{item.event_time} WIB</span>
+                  </div>
+                </div>
+
+                {/* Judul Acara */}
+                <h3 className="font-extrabold text-sm theme-text-primary uppercase tracking-wide leading-snug pt-1 flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span>{item.title}</span>
+                </h3>
+
+                {/* Info Lokasi & Penceramah */}
+                <div className="space-y-1.5 pt-1 text-xs">
+                  {item.location && (
+                    <div className="flex items-center gap-2 theme-text-secondary">
+                      <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="truncate">{item.location}</span>
+                    </div>
+                  )}
+                  {item.speaker && (
+                    <div className="flex items-center gap-2 theme-text-secondary font-semibold">
+                      <User className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                      <span className="truncate">{item.speaker}</span>
+                    </div>
+                  )}
+                  {item.description && (
+                    <div className="flex items-start gap-2 theme-text-tertiary pt-1 italic text-[11px] leading-relaxed">
+                      <AlignLeft className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                      <span>{item.description}</span>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Action Bar Admin */}
+              {isAdmin && (
+                <div className="pt-2 border-t theme-border flex items-center justify-end gap-2 font-mono">
+                  <button 
+                    onClick={() => triggerEdit(item)} 
+                    className="px-2.5 py-1 text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/20 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[10px]"
+                  >
+                    <Edit3 className="w-3 h-3" /> Edit
+                  </button>
+                  <button 
+                    onClick={() => setDeleteConfirm({ show: true, id: item.id })} 
+                    className="px-2.5 py-1 text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[10px]"
+                  >
+                    <Trash2 className="w-3 h-3" /> Hapus
+                  </button>
+                </div>
+              )}
+            </GlassCard>
+          ))}
+
+          {filteredEvents.length === 0 && (
+            <div className="col-span-1 md:col-span-2 p-8 text-center theme-text-tertiary font-mono">
+              <CalendarDays className="w-10 h-10 mx-auto opacity-40 mb-2" />
+              <p>{t.noData}</p>
             </div>
           )}
-
-          {/* 📥 TOMBOL CETAK PDF / UNDUH GAMBAR */}
-          <button
-            onClick={handleDownloadImageNative}
-            disabled={downloading}
-            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all disabled:opacity-50"
-          >
-            🖼️ Simpan Gambar
-          </button>
-          <button
-            onClick={handlePrintPDF}
-            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md text-[10px] flex items-center gap-1 transition-all"
-          >
-            🖨️ Cetak / PDF
-          </button>
         </div>
-      </GlassCard>
+      </div>
 
-      {/* INDIKATOR TUTUP BUKU */}
-      {currentPeriodeObj?.is_closed && (
-        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs print:hidden">
-          <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Susunan acara bersifat Read-Only.</span>
-          <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
-        </GlassCard>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* INTERFACE FORM INPUT (GLASSMORPISM) */}
-        {isAdmin && !currentPeriodeObj?.is_closed ? (
-          <GlassCard className="p-6 h-fit space-y-4 print:hidden">
-            <h3 className="text-xs font-black theme-text-accent uppercase tracking-wider flex items-center gap-2">
-              <span>{editingId ? '🔄' : '➕'}</span> {editingId ? 'Perbarui Acara' : 'Tambah Rundown Acara'}
+      {/* REGISTRASI MODAL INPUT ACARA */}
+      {showModal && isAdmin && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
+          <GlassCard className="p-6 w-full max-w-md space-y-4 shadow-2xl border theme-border">
+            <h3 className="text-sm font-black uppercase tracking-wider theme-text-accent flex items-center gap-2">
+              {isEditMode ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />} 
+              <span>{isEditMode ? 'Ubah Agenda Acara' : 'Registrasi Agenda Acara Baru'}</span>
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSaveEvent} className="space-y-3.5">
               <div>
-                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Tanggal Acara</label>
-                <input type="date" required value={dateEvent} onChange={(e) => setDateEvent(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono" />
+                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Nama Agenda Acara</label>
+                <input 
+                  type="text" 
+                  placeholder="Misal: Pembacaan Yasin & Tahlil" 
+                  required 
+                  value={formTitle} 
+                  onChange={e => setFormTitle(e.target.value)} 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary text-xs font-bold" 
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Mulai</label>
-                  <input type="text" required value={timeStart} onChange={(e) => setTimeStart(e.target.value)} placeholder="08:00" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" />
+                  <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Tanggal</label>
+                  <input 
+                    type="date" 
+                    required 
+                    value={formDate} 
+                    onChange={e => setFormDate(e.target.value)} 
+                    className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none text-center font-mono theme-text-primary text-xs" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Selesai</label>
-                  <input type="text" value={timeEnd} onChange={(e) => setTimeEnd(e.target.value)} placeholder="09:30 / Selesai" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" />
+                  <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Waktu / Jam (WIB)</label>
+                  <input 
+                    type="time" 
+                    required 
+                    value={formTime} 
+                    onChange={e => setFormTime(e.target.value)} 
+                    className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none text-center font-mono theme-text-primary text-xs" 
+                  />
                 </div>
               </div>
+
               <div>
-                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">Nama Kegiatan / Agenda</label>
-                <input type="text" required value={agenda} onChange={(e) => setAgenda(e.target.value)} placeholder="Contoh: Pembukaan & Tahlil" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" />
+                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Lokasi / Tempat Acara</label>
+                <input 
+                  type="text" 
+                  placeholder="Misal: Panggung Utama Maqbaroh" 
+                  value={formLocation} 
+                  onChange={e => setFormLocation(e.target.value)} 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary text-xs" 
+                />
               </div>
+
               <div>
-                <label className="block text-[11px] theme-text-secondary mb-1 font-semibold">PIC (Penanggung Jawab)</label>
-                <input type="text" value={pic} onChange={(e) => setPic(e.target.value)} placeholder="Contoh: Warya & Kurma" className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" />
+                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Penceramah / Pengisi Acara</label>
+                <input 
+                  type="text" 
+                  placeholder="Misal: KH. Hasanuddin" 
+                  value={formSpeaker} 
+                  onChange={e => setFormSpeaker(e.target.value)} 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary text-xs" 
+                />
               </div>
-              <button type="submit" className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md">
-                {editingId ? '💾 Simpan Perubahan' : 'Simpan Rundown'}
-              </button>
-              {editingId && (
-                <button type="button" onClick={() => { setEditingId(null); setAgenda(''); setTimeStart(''); setTimeEnd(''); setPic(''); setDateEvent(''); }} className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border">Batal Edit</button>
-              )}
+
+              <div>
+                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Keterangan Tambahan</label>
+                <textarea 
+                  rows={2} 
+                  placeholder="Catatan tambahan (Opsional)" 
+                  value={formDescription} 
+                  onChange={e => setFormDescription(e.target.value)} 
+                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary text-xs resize-none" 
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={resetForm} className="flex-1 py-2.5 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase rounded-xl shadow-lg text-xs cursor-pointer">Simpan Agenda</button>
+              </div>
             </form>
           </GlassCard>
-        ) : (
-          <GlassCard className="p-6 h-fit text-center space-y-2 print:hidden">
-            <p className="text-xs theme-text-secondary font-medium font-sans">
-              {currentPeriodeObj?.is_closed ? '🔒 Periode ini sudah ditutup buku.' : '💡 Anda berada di Mode Publik (Read-Only).'}
-            </p>
-            <p className="text-[10px] theme-text-tertiary font-mono">
-              {currentPeriodeObj?.is_closed ? 'Susunan agenda kegiatan telah dikunci.' : 'Gunakan login admin untuk mengelola manajemen jadwal rundown.'}
-            </p>
-          </GlassCard>
-        )}
+        </div>
+      )}
 
-        {/* LIST DAFTAR RUNDOWN ACARA MODERN */}
-        <div id="printable-area" className="lg:col-span-2">
-          <GlassCard className="p-6 space-y-3">
-            <div ref={printRef} className="space-y-4 p-3 rounded-xl bg-slate-950/80">
-              <div className="flex justify-between items-center border-b theme-border pb-3">
-                <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
-                  <span>📋</span> SUSUNAN AGENDA RUNDOWN HAUL ({scheduleList.length})
-                </h3>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg">
-                  {currentPeriodeObj?.nama_periode || ''}
-                </span>
+      {/* 🖨️ AREA CETAK JADWAL ACARA (FORMAL A4 PRINT OUT ONLY) */}
+      <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
+        <div className="print-page-wrapper">
+          
+          {/* KOP SURAT FORMAL */}
+          <div className="flex items-center justify-between border-b-4 border-double border-black pb-3 mb-4">
+            <div className="cetak-wrapper-logo w-16 h-16 flex-shrink-0 flex items-center justify-center">
+              <img 
+                src={`${supabaseUrl}/storage/v1/object/public/logos/logo_system.png`}
+                alt="Logo Resmi" 
+                className="w-16 h-16 object-contain"
+                crossOrigin="anonymous"
+              />
+            </div>
+            <div className="text-center flex-1 px-2">
+              <h1 className="text-lg font-bold uppercase font-sans tracking-wide leading-tight">{metaOrg.name}</h1>
+              <p className="text-[9px] font-sans italic text-gray-700 mt-0.5">{metaOrg.address}</p>
+            </div>
+            <div className="w-16 h-16 flex-shrink-0"></div>
+          </div>
+          
+          <div className="text-center mb-5">
+            <h2 className="text-sm font-bold uppercase underline tracking-widest font-sans">{t.lpjTitle}</h2>
+            <p className="text-[9px] text-gray-600 mt-0.5">{t.lpjPeriod} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          </div>
+
+          {/* TABEL JADWAL ACARA FORMAL */}
+          <table className="w-full border-collapse border-2 border-black text-[10px] mb-6 font-sans">
+            <thead>
+              <tr className="bg-gray-200 border-b-2 border-black uppercase text-[9px] tracking-wider text-center font-bold">
+                <th className="border-r border-black py-2 px-2 w-28">{t.thDate}</th>
+                <th className="border-r border-black py-2 px-2">{t.thTitle}</th>
+                <th className="border-r border-black py-2 px-2 w-36">{t.thLocation}</th>
+                <th className="py-2 px-2 w-40">{t.thSpeaker}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black">
+              {filteredEvents.map((item, idx) => (
+                <tr key={idx} className="border-b border-black">
+                  <td className="border-r border-black py-2 px-2 text-center font-mono font-semibold">
+                    {item.event_date}<br />
+                    <span className="text-[9px] text-gray-700">{item.event_time} WIB</span>
+                  </td>
+                  <td className="border-r border-black py-2 px-2 uppercase font-bold text-gray-900">
+                    {item.title}
+                    {item.description && <p className="text-[8px] font-normal normal-case italic text-gray-600 mt-0.5">{item.description}</p>}
+                  </td>
+                  <td className="border-r border-black py-2 px-2">{item.location || '-'}</td>
+                  <td className="py-2 px-2 font-medium">{item.speaker || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* AREA TANDA TANGAN FORMAL */}
+          <div className="mt-8 break-inside-avoid">
+            <p className="text-right text-[10px] text-gray-800 italic mb-8 font-sans">
+              {t.city}, {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'jv' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <div className="grid grid-cols-2 gap-8 text-center text-[10px] font-sans">
+              <div>
+                <p className="font-bold uppercase tracking-wider mb-14 text-gray-800">{t.signKnow}<br />{t.signChair}</p>
+                <p className="font-bold underline uppercase text-black">{metaOrg.ketua}</p>
+                <p className="text-[8px] text-gray-600 font-medium mt-0.5">{t.signGroup}</p>
               </div>
-
-              {/* TIMELINE RUNDOWN CONTAINER */}
-              <div className="space-y-3 relative pl-2 sm:pl-4 border-l-2 border-slate-800/80 my-2">
-                {scheduleList.length === 0 ? (
-                  <p className="text-xs font-mono py-6 text-center opacity-70">Belum ada jadwal rundown acara pada periode ini.</p>
-                ) : (
-                  scheduleList.map((s) => {
-                    const status = getEventStatus(s.event_date, s.time_start, s.time_end);
-
-                    return (
-                      <div 
-                        key={s.id} 
-                        className="print-card relative p-4 bg-slate-900/40 hover:bg-slate-900/60 border border-white/10 hover:border-amber-500/30 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs transition-all shadow-md group"
-                      >
-                        {/* Dot Timeline Visual Indicator */}
-                        <div className="absolute -left-[15px] sm:-left-[23px] top-6 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-950 shadow-sm shadow-amber-400/50 print:hidden" />
-
-                        <div className="space-y-1.5 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="bg-black/40 border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold text-slate-300">
-                              🗓️ {formatDate(s.event_date)}
-                            </span>
-                            <span className="bg-black/30 border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-amber-300 font-semibold">
-                              ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
-                            </span>
-
-                            {/* 🏷️ STATUS BADGE (COMING SOON / LIVE / SELESAI) */}
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold border ${status.style}`}>
-                              {status.label}
-                            </span>
-                          </div>
-
-                          <p className="font-extrabold text-sm sm:text-base tracking-wide text-slate-100 group-hover:text-amber-300 transition-colors">
-                            {s.agenda || 'Agenda Tanpa Nama'}
-                          </p>
-                          <p className="text-[10px] opacity-80 font-mono text-slate-400 flex items-center gap-1">
-                            <span>👤 PIC:</span> <strong className="text-slate-300">{s.pic || '-'}</strong>
-                          </p>
-                        </div>
-
-                        {/* TOMBOL AKSI ADMIN */}
-                        {isAdmin && (
-                          <div className="flex gap-3 font-mono shrink-0 ml-auto sm:ml-2 print:hidden pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
-                            {currentPeriodeObj?.is_closed ? (
-                              <span className="italic text-[10px] text-slate-500">🔒 Terkunci</span>
-                            ) : (
-                              <>
-                                <button 
-                                  onClick={() => handleEdit(s)} 
-                                  className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 transition-all font-bold text-[10px]"
-                                >
-                                  Edit
-                                </button>
-                                <button 
-                                  onClick={() => handleDelete(s.id)} 
-                                  className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg border border-rose-500/30 transition-all font-bold text-[10px]"
-                                >
-                                  Hapus
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
+              <div>
+                <p className="font-bold uppercase tracking-wider mb-14 text-gray-800">{t.signMade}<br />{t.signSecretary}</p>
+                <p className="font-bold underline uppercase text-black">{metaOrg.sekretaris}</p>
+                <p className="text-[8px] text-gray-600 font-medium mt-0.5">{t.signGroup}</p>
               </div>
             </div>
-          </GlassCard>
-        </div>
+          </div>
 
+        </div>
       </div>
+
     </div>
   );
 }
