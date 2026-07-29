@@ -667,7 +667,7 @@ aside.theme-sidebar .menu-item-active {
 }
 
 /* ==========================================================
-   FORCE LIGHT MODE OVERRIDE (KONTRAS TEKS & MENU ACARA FIX)
+   FORCE LIGHT MODE OVERRIDE (MODERN UI & PRESERVE ICONS FIX)
    ========================================================== */
 
 html.light-mode,
@@ -678,7 +678,7 @@ html.light-mode body {
   --bg-secondary: #ffffff !important;
   --bg-tertiary: #f1f5f9 !important;
   --bg-card: #ffffff !important;
-  --border-color: rgba(15, 23, 42, 0.15) !important;
+  --border-color: rgba(15, 23, 42, 0.12) !important;
   
   /* Teks Hitam Pekat untuk Kontras Maksimal */
   --text-primary: #020617 !important;
@@ -697,7 +697,7 @@ html.light-mode body {
   --theme-text-primary: #020617 !important;
   --theme-text-secondary: #1e293b !important;
   --theme-text-tertiary: #475569 !important;
-  --theme-border: rgba(15, 23, 42, 0.15) !important;
+  --theme-border: rgba(15, 23, 42, 0.12) !important;
 
   background-color: #f8fafc !important;
   color: #020617 !important;
@@ -705,76 +705,55 @@ html.light-mode body {
 }
 
 /* Force Warna Latar & Border Universal */
-html.light-mode .theme-bg-primary,
-body.light-mode .theme-bg-primary {
-  background-color: #f8fafc !important;
-}
-
-html.light-mode .theme-bg-secondary,
-body.light-mode .theme-bg-secondary {
-  background-color: #ffffff !important;
-}
-
-html.light-mode .theme-bg-tertiary,
-body.light-mode .theme-bg-tertiary {
-  background-color: #f1f5f9 !important;
-}
+html.light-mode .theme-bg-primary { background-color: #f8fafc !important; }
+html.light-mode .theme-bg-secondary { background-color: #ffffff !important; }
+html.light-mode .theme-bg-tertiary { background-color: #f1f5f9 !important; }
 
 html.light-mode .theme-bg-card,
-body.light-mode .theme-bg-card,
 html.light-mode .theme-card,
-body.light-mode .theme-card,
-html.light-mode .glass-card,
-body.light-mode .glass-card {
+html.light-mode .glass-card {
   background-color: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.15) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
   color: #020617 !important;
 }
 
-/* 🎯 FORCE OVERRIDE LATAR BELAKANG STATIS (TERMASUK HALAMAN ACARA) */
-html.light-mode [class*="bg-slate-900"],
-html.light-mode [class*="bg-slate-950"],
-html.light-mode [class*="bg-slate-800"],
-html.light-mode [class*="bg-black"],
-html.light-mode [class*="bg-zinc-900"],
-html.light-mode [class*="bg-zinc-950"],
-html.light-mode [class*="bg-neutral-900"] {
+/* 🎯 FORCE OVERRIDE LATAR BELAKANG STATIS (HALAMAN ACARA & MODAL) */
+html.light-mode div[class*="bg-slate-9"],
+html.light-mode div[class*="bg-slate-8"],
+html.light-mode div[class*="bg-black"]:not(.fixed),
+html.light-mode div[class*="bg-zinc-"],
+html.light-mode div[class*="bg-neutral-"] {
   background-color: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.15) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
 /* 🎯 FORCE WARNA TEKS SANGAT KONTRAS & JELAS */
-html.light-mode .theme-text-primary,
-body.light-mode .theme-text-primary,
-html.light-mode h1, body.light-mode h1,
-html.light-mode h2, body.light-mode h2,
-html.light-mode h3, body.light-mode h3,
-html.light-mode h4, body.light-mode h4,
-html.light-mode h5, body.light-mode h5,
-html.light-mode h6, body.light-mode h6 {
+html.light-mode h1, html.light-mode h2, html.light-mode h3, 
+html.light-mode h4, html.light-mode h5, html.light-mode h6,
+html.light-mode .theme-text-primary {
   color: #020617 !important; /* Hitam Pekat */
 }
 
-html.light-mode .theme-text-secondary,
-body.light-mode .theme-text-secondary,
-html.light-mode p, body.light-mode p,
-html.light-mode span, body.light-mode span,
-html.light-mode label, body.light-mode label {
+/* Pengecualian span/p agar tidak merusak elemen SVG di dalamnya */
+html.light-mode p, 
+html.light-mode span:not(:has(svg)), 
+html.light-mode label, 
+html.light-mode .theme-text-secondary {
   color: #1e293b !important; /* Slate 800 */
 }
 
-html.light-mode .theme-text-tertiary,
-body.light-mode .theme-text-tertiary {
+html.light-mode .theme-text-tertiary {
   color: #475569 !important; /* Slate 600 */
 }
 
-/* Force Teks Bawaan Tailwind yang Beredar di Komponen Acara/Stat/Lainnya */
-html.light-mode .text-white,
+/* Force Teks Bawaan Tailwind */
+html.light-mode .text-white:not(button *):not([class*="bg-gradient"] *) {
+  color: #020617 !important;
+}
+
 html.light-mode .text-slate-100,
 html.light-mode .text-slate-200,
-html.light-mode .text-slate-300,
-html.light-mode .text-gray-100,
-html.light-mode .text-gray-200 {
+html.light-mode .text-slate-300 {
   color: #020617 !important;
 }
 
@@ -784,12 +763,30 @@ html.light-mode .text-gray-400 {
   color: #334155 !important;
 }
 
-html.light-mode .theme-border,
-body.light-mode .theme-border {
-  border-color: rgba(15, 23, 42, 0.15) !important;
+html.light-mode .theme-border {
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
-/* 🛡️ PENGECUALIAN: Tombol & Badge Berwarna Tetap Memiliki Teks Putih Tajam */
+/* 💎 AMANKAN TAMPILAN MODERN IKON LUCIDE & SVG */
+html.light-mode svg,
+html.light-mode svg.lucide,
+html.light-mode .lucide {
+  background-color: transparent !important;
+  display: inline-block !important;
+}
+
+/* Jaga Wadah/Badge Transparan Berwarna pada Ikon di Menu Drawer & Header */
+html.light-mode [class*="bg-emerald-500/"],
+html.light-mode [class*="bg-cyan-500/"],
+html.light-mode [class*="bg-amber-500/"],
+html.light-mode [class*="bg-rose-500/"],
+html.light-mode [class*="bg-purple-500/"],
+html.light-mode [class*="bg-blue-500/"] {
+  background-color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* 🛡️ PENGECUALIAN: Tombol & Badge Berwarna Tetap Memiliki Teks & Ikon Putih */
 html.light-mode .bg-emerald-500,
 html.light-mode .bg-emerald-600,
 html.light-mode .bg-rose-600,
