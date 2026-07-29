@@ -12,7 +12,7 @@ const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supaba
 // 🌐 KAMUS 3 BAHASA (ID / JV / EN)
 const DICTIONARY = {
   id: {
-    loading: '⏳ Memuat antarmuka Cirebonan Premium...',
+    loading: 'Memuat Antarmuka Cirebonan Premium...',
     mainCash: 'KAS UTAMA HAUL',
     netBalance: 'Sisa Saldo Kas Bersih',
     committee: 'PANITIA HAUL',
@@ -45,7 +45,7 @@ const DICTIONARY = {
     errorLoadingData: 'Error memuat data dashboard'
   },
   jv: { 
-    loading: '⏳ Nembe ngebuka antarmuka Cirebonan Premium...',
+    loading: 'Nembe ngebuka antarmuka Cirebonan Premium...',
     mainCash: 'KAS UTAMA HAUL',
     netBalance: 'Sisa Saldo Kas Bersih',
     committee: 'PANITIA HAUL',
@@ -78,7 +78,7 @@ const DICTIONARY = {
     errorLoadingData: 'Error memuat data dashboard'
   },
   en: {
-    loading: '⏳ Loading Premium Interface...',
+    loading: 'Loading Premium Interface...',
     mainCash: 'HAUL MAIN CASH',
     netBalance: 'Net Cash Balance Remaining',
     committee: 'HAUL COMMITTEE',
@@ -415,16 +415,50 @@ export default function DashboardPage() {
     return angka < 0 ? `-${formatted}` : formatted;
   }, []);
 
+  // 🚀 TAMPILAN LOADING MODERN (SKELETON SHIMMER UI)
   if (loading) {
     return (
-      <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12">
-        <div className="p-12 text-center text-cyan-400 text-xs font-mono animate-pulse">
-          {dict.loading}
+      <div className="space-y-6 max-w-5xl mx-auto px-2 sm:px-4 pb-12 animate-fadeIn">
+        {/* Loading Indicator Modern */}
+        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
+          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="animate-pulse">{dict.loading}</span>
         </div>
+
+        {/* Top Selectors Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="h-10 rounded-2xl bg-gradient-to-r from-slate-800/40 via-slate-700/20 to-slate-800/40 animate-pulse border border-white/5" />
+          <div className="h-10 rounded-2xl bg-gradient-to-r from-slate-800/40 via-slate-700/20 to-slate-800/40 animate-pulse border border-white/5" />
+        </div>
+
+        {/* 3 Main Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 glass-card animate-pulse opacity-60" />
+            <div 
+              key={i} 
+              className="h-44 rounded-3xl bg-slate-900/40 border border-amber-500/10 p-5 flex flex-col justify-between relative overflow-hidden shadow-xl"
+            >
+              {/* Shimmer Overlay */}
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+              <div className="space-y-3">
+                <div className="h-3 w-1/3 bg-slate-800 rounded" />
+                <div className="h-2 w-1/2 bg-slate-800/60 rounded" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-8 w-3/4 bg-slate-800 rounded-lg" />
+                <div className="h-2 w-1/3 bg-slate-800/60 rounded" />
+              </div>
+            </div>
           ))}
+        </div>
+
+        {/* Middle Stats Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="h-28 rounded-2xl bg-slate-900/40 border border-white/5 p-4 animate-pulse" />
+          <div className="md:col-span-2 h-28 rounded-2xl bg-slate-900/40 border border-white/5 p-4 animate-pulse" />
         </div>
       </div>
     );
