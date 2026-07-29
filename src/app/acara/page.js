@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from '@/components/GlassCard';
@@ -187,34 +188,28 @@ export default function AcaraPage() {
     );
   };
 
-  // 🖨️ FITUR CETAK / SIMPAN PDF (NATIVE BROWSER PRINT)
   const handlePrintPDF = () => {
     window.print();
   };
 
-  // 🖼️ FITUR GENERATE GAMBAR VIA HTML-TO-IMAGE (STABIL & SUPPORTS MODERN CSS)
   const handleDownloadImageNative = async () => {
     try {
       setDownloading(true);
       showToast('⌛ Mengkonversi jadwal ke Gambar...', 'info');
 
-      // Import dinamis html-to-image
       const { toPng } = await import('html-to-image');
 
       if (printRef.current) {
-        // Render DOM ke PNG Data URL
         const dataUrl = await toPng(printRef.current, {
           quality: 0.95,
           pixelRatio: 2,
-          backgroundColor: '#050b14', // Warna background gelap agar tidak transparan
+          backgroundColor: '#050b14',
           cacheBust: true,
           filter: (node) => {
-            // Abaikan tombol-tombol action saat diunduh
             return !node.classList?.contains('print:hidden');
           }
         });
 
-        // Trigger Download File
         const link = document.createElement('a');
         link.download = `Rundown_Acara_Haul_${currentPeriodeObj?.nama_periode || '2026'}.png`;
         link.href = dataUrl;
@@ -242,12 +237,79 @@ export default function AcaraPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-xs font-mono opacity-70 theme-text-primary">Memuat susunan acara...</div>;
+  // 💡 LOGIKA STATUS JADWAL ACARA (COMING SOON / SEDANG BERLANGSUNG / SELESAI)
+  const getEventStatus = (eventDateStr, timeStartStr, timeEndStr) => {
+    if (!eventDateStr) return { label: 'Coming Soon', style: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' };
+    
+    const now = new Date();
+    
+    // Parse tanggal acara (Format YYYY-MM-DD)
+    const [year, month, day] = eventDateStr.split('-').map(Number);
+    
+    // Default Waktu jika format string jam
+    let startHour = 0, startMin = 0;
+    if (timeStartStr && timeStartStr.includes(':')) {
+      const [h, m] = timeStartStr.split(':').map(Number);
+      startHour = h || 0;
+      startMin = m || 0;
+    }
+
+    let endHour = 23, endMin = 59;
+    if (timeEndStr && timeEndStr.includes(':')) {
+      const [h, m] = timeEndStr.split(':').map(Number);
+      endHour = h || 23;
+      endMin = m || 59;
+    }
+
+    const startDate = new Date(year, month - 1, day, startHour, startMin);
+    const endDate = new Date(year, month - 1, day, endHour, endMin);
+
+    if (now < startDate) {
+      return { 
+        label: '⏳ Coming Soon', 
+        style: 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/50 shadow-sm shadow-cyan-500/20' 
+      };
+    } else if (now >= startDate && now <= endDate) {
+      return { 
+        label: '🔴 Live Now', 
+        style: 'bg-rose-500/20 text-rose-300 border-rose-500/60 animate-pulse font-black' 
+      };
+    } else {
+      return { 
+        label: '✅ Selesai', 
+        style: 'bg-slate-800/60 text-slate-400 border-slate-700/50' 
+      };
+    }
+  };
+
+  // 🚀 SKELETON LOADING STATE
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
+        <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
+          <svg className="animate-spin h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="animate-pulse">Memuat Susunan Agenda Acara...</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <GlassCard className="p-6 h-48 animate-pulse bg-slate-900/40 border border-white/5" />
+          <div className="lg:col-span-2 space-y-3">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="h-20 rounded-xl bg-slate-900/40 border border-amber-500/10 p-4 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
 
-      {/* STYLES KHUSUS MENCEGAH CUT-OFF SAAT CETAK / CETAK PDF */}
+      {/* STYLES KHUSUS MENCEGAH CUT-OFF SAAT CETAK */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           body * {
@@ -276,21 +338,25 @@ export default function AcaraPage() {
         }
       `}} />
 
-      {/* 🔔 FLOATING TOAST NOTIFICATION (DIATAS NAV BAR) */}
+      {/* 🔔 FLOATING TOAST NOTIFICATION (DI TENGAH ATAS LAYAR) */}
       {toast.show && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md print:hidden animate-in fade-in slide-in-from-top duration-300">
-          <div className={`px-4 py-3 border rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-md ${
-            toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-300' : 'bg-slate-900/90 border-emerald-500/50 text-emerald-300'
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md print:hidden transition-all duration-300">
+          <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
+            toast.type === 'error' 
+              ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50' 
+              : toast.type === 'info'
+              ? 'bg-cyan-950/90 border-cyan-500/80 text-cyan-200 shadow-cyan-950/50'
+              : 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50'
           }`}>
-            <span className="text-base shrink-0">{toast.type === 'error' ? '⚠️' : '✅'}</span>
-            <span className="font-mono font-bold text-xs truncate">{toast.message}</span>
+            <span className="text-lg shrink-0">{toast.type === 'error' ? '⚠️' : toast.type === 'info' ? 'ℹ️' : '✅'}</span>
+            <span className="font-mono font-bold text-xs leading-relaxed">{toast.message}</span>
           </div>
         </div>
       )}
 
       {/* ❓ CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+        <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
             <div className="text-3xl">❓</div>
             <h3 className="font-bold text-sm theme-text-primary uppercase tracking-wider">{confirmModal.title}</h3>
@@ -298,13 +364,13 @@ export default function AcaraPage() {
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={closeConfirm}
-                className="px-4 py-2 bg-black/30 hover:bg-black/50 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
+                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
               >
                 Batal
               </button>
               <button
                 onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-500/80 hover:bg-rose-600 text-white font-mono font-bold rounded-xl transition-all shadow-md"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md"
               >
                 Ya, Hapus
               </button>
@@ -415,51 +481,84 @@ export default function AcaraPage() {
           </GlassCard>
         )}
 
-        {/* LIST DAFTAR RUNDOWN ACARA (PRINTABLE & CAPTURE AREA) */}
+        {/* LIST DAFTAR RUNDOWN ACARA MODERN */}
         <div id="printable-area" className="lg:col-span-2">
           <GlassCard className="p-6 space-y-3">
-            <div ref={printRef} className="space-y-3 p-3 rounded-xl bg-slate-950/80">
-              <div className="flex justify-between items-center border-b theme-border pb-2">
+            <div ref={printRef} className="space-y-4 p-3 rounded-xl bg-slate-950/80">
+              <div className="flex justify-between items-center border-b theme-border pb-3">
                 <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
                   <span>📋</span> SUSUNAN AGENDA RUNDOWN HAUL ({scheduleList.length})
                 </h3>
-                <span className="text-[10px] font-mono font-bold">
+                <span className="text-[10px] font-mono font-bold px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg">
                   {currentPeriodeObj?.nama_periode || ''}
                 </span>
               </div>
 
-              <div className="space-y-2.5">
+              {/* TIMELINE RUNDOWN CONTAINER */}
+              <div className="space-y-3 relative pl-2 sm:pl-4 border-l-2 border-slate-800/80 my-2">
                 {scheduleList.length === 0 ? (
                   <p className="text-xs font-mono py-6 text-center opacity-70">Belum ada jadwal rundown acara pada periode ini.</p>
                 ) : (
-                  scheduleList.map((s) => (
-                    <div key={s.id} className="print-card p-3.5 bg-black/40 border theme-border rounded-xl flex justify-between items-center text-xs">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="bg-black/40 border theme-border px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                            🗓️ {formatDate(s.event_date)}
-                          </span>
-                          <span className="bg-black/20 px-2 py-0.5 rounded text-[10px] font-mono border theme-border">
-                            ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
-                          </span>
+                  scheduleList.map((s) => {
+                    const status = getEventStatus(s.event_date, s.time_start, s.time_end);
+
+                    return (
+                      <div 
+                        key={s.id} 
+                        className="print-card relative p-4 bg-slate-900/40 hover:bg-slate-900/60 border border-white/10 hover:border-amber-500/30 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs transition-all shadow-md group"
+                      >
+                        {/* Dot Timeline Visual Indicator */}
+                        <div className="absolute -left-[15px] sm:-left-[23px] top-6 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-950 shadow-sm shadow-amber-400/50 print:hidden" />
+
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="bg-black/40 border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold text-slate-300">
+                              🗓️ {formatDate(s.event_date)}
+                            </span>
+                            <span className="bg-black/30 border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-amber-300 font-semibold">
+                              ⏰ {s.time_start || '-'} - {s.time_end || '-'} WIB
+                            </span>
+
+                            {/* 🏷️ STATUS BADGE (COMING SOON / LIVE / SELESAI) */}
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold border ${status.style}`}>
+                              {status.label}
+                            </span>
+                          </div>
+
+                          <p className="font-extrabold text-sm sm:text-base tracking-wide text-slate-100 group-hover:text-amber-300 transition-colors">
+                            {s.agenda || 'Agenda Tanpa Nama'}
+                          </p>
+                          <p className="text-[10px] opacity-80 font-mono text-slate-400 flex items-center gap-1">
+                            <span>👤 PIC:</span> <strong className="text-slate-300">{s.pic || '-'}</strong>
+                          </p>
                         </div>
-                        <p className="font-bold text-sm mt-1.5 tracking-wide">{s.agenda || 'Agenda Tanpa Nama'}</p>
-                        <p className="text-[10px] opacity-80 font-mono mt-0.5">PIC: {s.pic || '-'}</p>
+
+                        {/* TOMBOL AKSI ADMIN */}
+                        {isAdmin && (
+                          <div className="flex gap-3 font-mono shrink-0 ml-auto sm:ml-2 print:hidden pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
+                            {currentPeriodeObj?.is_closed ? (
+                              <span className="italic text-[10px] text-slate-500">🔒 Terkunci</span>
+                            ) : (
+                              <>
+                                <button 
+                                  onClick={() => handleEdit(s)} 
+                                  className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 transition-all font-bold text-[10px]"
+                                >
+                                  Edit
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(s.id)} 
+                                  className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg border border-rose-500/30 transition-all font-bold text-[10px]"
+                                >
+                                  Hapus
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {isAdmin && (
-                        <div className="flex gap-3 font-mono shrink-0 ml-2 print:hidden">
-                          {currentPeriodeObj?.is_closed ? (
-                            <span className="italic text-[10px]">🔒 Terkunci</span>
-                          ) : (
-                            <>
-                              <button onClick={() => handleEdit(s)} className="hover:underline font-bold">Edit</button>
-                              <button onClick={() => handleDelete(s.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
