@@ -1,50 +1,49 @@
 @import "tailwindcss";
 
-/* ==================== 1. DARK & LIGHT MODE VARIABLES ==================== */
-
-/* 🌙 TEMA GELAP / DARK MODE (DEFAULT) */
-:root,
-html.dark {
-  --theme-bg-primary: #030712;
-  --theme-bg-secondary: #0f172a;
-  --theme-bg-tertiary: #1e293b;
-  --theme-bg-card: #0f1e3a;
-  --theme-text-primary: #f8fafc;
-  --theme-text-secondary: #94a3b8;
-  --theme-text-tertiary: #64748b;
-  --theme-border: rgba(255, 255, 255, 0.1);
-  color-scheme: dark;
-}
-
-/* ==================== COMPREHENSIVE THEME VARIABLES ==================== */
+/* ==================== 1. CORE THEME & FALLBACK VARIABLES ==================== */
 
 :root {
-  /* Default Navy Theme Fallback */
+  /* Default Theme Variables */
   --bg-primary: #050b14;
   --bg-secondary: #0f172a;
   --bg-tertiary: #1e293b;
   --bg-card: #0f1e3a;
   --border-color: rgba(51, 65, 85, 0.5);
+  
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
   --text-tertiary: #94a3b8;
+  
   --accent-primary: #22d3ee;
   --accent-secondary: #06b6d4;
   --accent-light: #67e8f9;
+  
   --gradient-main: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
   --gradient-accent: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   --shadow-color: rgba(34, 211, 238, 0.1);
 
-  /* Glass Card System Fallbacks */
+  /* Legacy / Theme Namespace Aliases */
+  --theme-bg-primary: var(--bg-primary);
+  --theme-bg-secondary: var(--bg-secondary);
+  --theme-bg-tertiary: var(--bg-tertiary);
+  --theme-bg-card: var(--bg-card);
+  --theme-text-primary: var(--text-primary);
+  --theme-text-secondary: var(--text-secondary);
+  --theme-text-tertiary: var(--text-tertiary);
+  --theme-border: var(--border-color);
+
+  /* Glass Card System */
   --glass-opacity: .72;
   --glass-blur: 18px;
   --glass-radius: 24px;
   --glass-bg: rgba(15, 30, 58, 0.65);
   --glass-border: rgba(34, 211, 238, 0.2);
   --glass-shadow: rgba(34, 211, 238, 0.15);
+
+  color-scheme: dark;
 }
 
-/* ==================== 15 COMPREHENSIVE THEMES ==================== */
+/* ==================== 2. THEMES CONFIGURATION ==================== */
 
 body.theme-default {
   --bg-primary: #050b14;
@@ -366,90 +365,58 @@ body.theme-retro-wave {
   --glass-shadow: rgba(244, 63, 94, .2);
 }
 
-/* ==================== PENGUNCI LAYAR & PREVENSI ZOOM PWA ==================== */
+/* ==================== 3. BASE STYLING & LOCK SCREEN ==================== */
+
 html, body {
-  background-color: var(--bg-primary) !important;
-  color: var(--text-primary) !important;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
   transition: background-color 0.4s ease, color 0.4s ease;
 
-  /* 🚫 Mengunci gestur zoom di Android/iOS */
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
   user-select: none;
-
-  /* ✅ Allow smooth scrolling behavior */
   scroll-behavior: smooth;
 }
 
-/* ✅ Mobile devices: disable overscroll bounce effect */
 @media (max-width: 768px) {
   html, body {
     overscroll-behavior-y: none;
   }
 }
 
-/* ✅ Desktop: allow normal scroll behavior */
 @media (min-width: 769px) {
   html, body {
     overscroll-behavior-y: auto;
   }
 }
 
-/* Membolehkan elemen input/form bisa diseleksi dan diketik normal */
 input, textarea, select {
   user-select: text !important;
   -webkit-user-select: text !important;
 }
 
-/* ==================== THEME UTILITY CLASSES ==================== */
-.theme-bg-primary {
-  background-color: var(--bg-primary) !important;
-}
+/* ==================== 4. THEME UTILITY CLASSES ==================== */
 
-.theme-bg-secondary {
-  background-color: var(--bg-secondary) !important;
-}
-
-.theme-bg-tertiary {
-  background-color: var(--bg-tertiary) !important;
-}
-
+.theme-bg-primary { background-color: var(--bg-primary) !important; }
+.theme-bg-secondary { background-color: var(--bg-secondary) !important; }
+.theme-bg-tertiary { background-color: var(--bg-tertiary) !important; }
 .theme-bg-card {
   background-color: var(--bg-card) !important;
   border-color: var(--border-color) !important;
 }
 
-.theme-text-primary {
-  color: var(--text-primary) !important;
-}
+.theme-text-primary { color: var(--text-primary) !important; }
+.theme-text-secondary { color: var(--text-secondary) !important; }
+.theme-text-accent { color: var(--accent-primary) !important; }
 
-.theme-text-secondary {
-  color: var(--text-secondary) !important;
-}
+.theme-border { border-color: var(--border-color) !important; }
+.theme-gradient-main { background: var(--gradient-main); }
+.theme-gradient-accent { background: var(--gradient-accent); }
+.theme-shadow { box-shadow: 0 10px 30px var(--shadow-color); }
 
-.theme-text-accent {
-  color: var(--accent-primary) !important;
-}
-
-.theme-border {
-  border-color: var(--border-color) !important;
-}
-
-.theme-gradient-main {
-  background: var(--gradient-main);
-}
-
-.theme-gradient-accent {
-  background: var(--gradient-accent);
-}
-
-.theme-shadow {
-  box-shadow: 0 10px 30px var(--shadow-color);
-}
-
-/* ==================== SIDEBAR THEME ==================== */
+/* SIDEBAR & CARDS */
 aside.theme-sidebar {
   background-color: var(--bg-secondary);
   border-color: var(--border-color);
@@ -460,7 +427,6 @@ aside.theme-sidebar .menu-item-active {
   color: var(--bg-primary);
 }
 
-/* ==================== CARD STYLING ==================== */
 .theme-card {
   background-color: var(--bg-card);
   border-color: var(--border-color);
@@ -476,7 +442,7 @@ aside.theme-sidebar .menu-item-active {
   box-shadow: 0 4px 20px var(--shadow-color);
 }
 
-/* ==================== ANIMASI MARQUEE ==================== */
+/* ANIMATION & BUTTONS */
 @keyframes marquee {
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
@@ -488,7 +454,6 @@ aside.theme-sidebar .menu-item-active {
   animation: marquee 22s linear infinite;
 }
 
-/* ==================== BUTTON STYLING ==================== */
 .btn-theme-primary {
   background: var(--gradient-main);
   color: white;
@@ -511,14 +476,7 @@ aside.theme-sidebar .menu-item-active {
   background-color: var(--bg-tertiary);
 }
 
-@layer base {
-  .bg-zinc-950, .bg-neutral-950, .bg-stone-950, .bg-gray-950, .bg-slate-950 {}
-}
-
-/* ==========================================================
-   GLASS CARD SYSTEM (UNIFIED)
-   ========================================================== */
-
+/* GLASS CARD SYSTEM */
 .glass-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -534,9 +492,7 @@ aside.theme-sidebar .menu-item-active {
   box-shadow: 0 15px 35px var(--glass-shadow);
 }
 
-/* ===========================
-   K&B Splash Screen (Integrated)
-=========================== */
+/* ==================== 5. SPLASH SCREEN ==================== */
 
 .kb-splash {
   position: fixed;
@@ -553,9 +509,7 @@ aside.theme-sidebar .menu-item-active {
   transition: opacity .5s ease;
 }
 
-.kb-splash.fade-out {
-  opacity: 0;
-}
+.kb-splash.fade-out { opacity: 0; }
 
 .kb-content {
   width: 340px;
@@ -576,12 +530,7 @@ aside.theme-sidebar .menu-item-active {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: radial-gradient(
-      circle,
-      var(--shadow-color) 0%,
-      rgba(0, 229, 168, .12) 70%,
-      transparent 100%
-  );
+  background: radial-gradient(circle, var(--shadow-color) 0%, rgba(0, 229, 168, .12) 70%, transparent 100%);
   filter: blur(22px);
   animation: pulseGlow 3s ease-in-out infinite;
   z-index: 0;
@@ -630,9 +579,7 @@ aside.theme-sidebar .menu-item-active {
   border-radius: 20px;
   background: var(--gradient-main);
   background-size: 300% 100%;
-  animation: 
-      loading 2.5s linear forwards,
-      shimmer 1.5s linear infinite;
+  animation: loading 2.5s linear forwards, shimmer 1.5s linear infinite;
 }
 
 @keyframes loading {
@@ -647,18 +594,9 @@ aside.theme-sidebar .menu-item-active {
 }
 
 @keyframes pulseGlow {
-  0% {
-    transform: translateX(-50%) scale(.9);
-    opacity: .55;
-  }
-  50% {
-    transform: translateX(-50%) scale(1.08);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) scale(.9);
-    opacity: .55;
-  }
+  0% { transform: translateX(-50%) scale(.9); opacity: .55; }
+  50% { transform: translateX(-50%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) scale(.9); opacity: .55; }
 }
 
 @keyframes shimmer {
@@ -666,160 +604,43 @@ aside.theme-sidebar .menu-item-active {
   to { background-position: 300% 0; }
 }
 
-/* ==========================================================
-   FORCE LIGHT MODE OVERRIDE (FIX MODERN VIBRANT ICONS & UI)
-   ========================================================== */
+/* ==================== 6. CLEAN LIGHT MODE OVERRIDE ==================== */
 
 html.light-mode,
-body.light-mode,
-html.light-mode body {
-  /* Override CSS Variables Utama */
-  --bg-primary: #f8fafc !important;
-  --bg-secondary: #ffffff !important;
-  --bg-tertiary: #f1f5f9 !important;
-  --bg-card: #ffffff !important;
-  --border-color: rgba(15, 23, 42, 0.12) !important;
+body.light-mode {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --border-color: rgba(15, 23, 42, 0.12);
   
-  /* Teks Hitam Pekat untuk Kontras Maksimal */
-  --text-primary: #020617 !important;
-  --text-secondary: #1e293b !important;
-  --text-tertiary: #475569 !important;
+  --text-primary: #020617;
+  --text-secondary: #1e293b;
+  --text-tertiary: #475569;
 
-  /* Glass Card Override */
-  --glass-bg: rgba(255, 255, 255, 0.95) !important;
-  --glass-border: rgba(15, 23, 42, 0.12) !important;
-  --glass-shadow: rgba(15, 23, 42, 0.08) !important;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(15, 23, 42, 0.12);
+  --glass-shadow: rgba(15, 23, 42, 0.08);
 
-  /* Theme Namespace Fallback */
-  --theme-bg-primary: #f8fafc !important;
-  --theme-bg-secondary: #ffffff !important;
-  --theme-bg-tertiary: #f1f5f9 !important;
-  --theme-text-primary: #020617 !important;
-  --theme-text-secondary: #1e293b !important;
-  --theme-text-tertiary: #475569 !important;
-  --theme-border: rgba(15, 23, 42, 0.12) !important;
-
-  background-color: #f8fafc !important;
-  color: #020617 !important;
-  color-scheme: light !important;
+  color-scheme: light;
 }
 
-/* Force Warna Latar & Border Universal */
-html.light-mode .theme-bg-primary { background-color: #f8fafc !important; }
-html.light-mode .theme-bg-secondary { background-color: #ffffff !important; }
-html.light-mode .theme-bg-tertiary { background-color: #f1f5f9 !important; }
-
-html.light-mode .theme-bg-card,
-html.light-mode .theme-card,
-html.light-mode .glass-card {
-  background-color: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  color: #020617 !important;
-}
-
-/* 🎯 FORCE OVERRIDE LATAR BELAKANG STATIS (HALAMAN ACARA & MODAL) */
-html.light-mode div[class*="bg-slate-9"],
-html.light-mode div[class*="bg-slate-8"],
-html.light-mode div[class*="bg-black"]:not(.fixed),
-html.light-mode div[class*="bg-zinc-"],
-html.light-mode div[class*="bg-neutral-"] {
-  background-color: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-}
-
-/* 🎯 FORCE WARNA TEKS SANGAT KONTRAS & JELAS */
-html.light-mode h1, html.light-mode h2, html.light-mode h3, 
-html.light-mode h4, html.light-mode h5, html.light-mode h6,
-html.light-mode .theme-text-primary {
-  color: #020617 !important; /* Hitam Pekat */
-}
-
-html.light-mode p, 
-html.light-mode span:not(:has(svg)), 
-html.light-mode label, 
-html.light-mode .theme-text-secondary {
-  color: #1e293b !important; /* Slate 800 */
-}
-
-html.light-mode .theme-text-tertiary {
-  color: #475569 !important; /* Slate 600 */
-}
-
-/* Force Teks Bawaan Tailwind */
-html.light-mode .text-white:not(button *):not([class*="bg-gradient"] *) {
-  color: #020617 !important;
-}
-
-html.light-mode .text-slate-100,
-html.light-mode .text-slate-200,
-html.light-mode .text-slate-300 {
-  color: #020617 !important;
-}
-
-html.light-mode .text-slate-400,
-html.light-mode .text-slate-500,
-html.light-mode .text-gray-400 {
-  color: #334155 !important;
-}
-
-html.light-mode .theme-border {
-  border-color: rgba(15, 23, 42, 0.12) !important;
-}
-
-/* ==========================================================
-   ✨ TRANSFORMASI IKON MENU JADI MODERN & TAMPIL ELEGAN (LIGHT MODE)
-   ========================================================== */
-
-/* 1. Paksa Warna Latar Belakang Soft Pastel Modern pada Wadah Ikon */
 html.light-mode [class*="bg-emerald-500/"] { background-color: rgba(16, 185, 129, 0.12) !important; border-color: rgba(16, 185, 129, 0.25) !important; }
 html.light-mode [class*="bg-cyan-500/"] { background-color: rgba(6, 182, 212, 0.12) !important; border-color: rgba(6, 182, 212, 0.25) !important; }
 html.light-mode [class*="bg-amber-500/"] { background-color: rgba(245, 158, 11, 0.12) !important; border-color: rgba(245, 158, 11, 0.25) !important; }
 html.light-mode [class*="bg-rose-500/"] { background-color: rgba(244, 63, 94, 0.12) !important; border-color: rgba(244, 63, 94, 0.25) !important; }
 html.light-mode [class*="bg-purple-500/"] { background-color: rgba(168, 85, 247, 0.12) !important; border-color: rgba(168, 85, 247, 0.25) !important; }
 html.light-mode [class*="bg-blue-500/"] { background-color: rgba(59, 130, 246, 0.12) !important; border-color: rgba(59, 130, 246, 0.25) !important; }
-html.light-mode [class*="bg-teal-500/"] { background-color: rgba(20, 184, 166, 0.12) !important; border-color: rgba(20, 184, 166, 0.25) !important; }
-html.light-mode [class*="bg-orange-500/"] { background-color: rgba(249, 115, 22, 0.12) !important; border-color: rgba(249, 115, 22, 0.25) !important; }
-html.light-mode [class*="bg-red-500/"] { background-color: rgba(239, 68, 68, 0.12) !important; border-color: rgba(239, 68, 68, 0.25) !important; }
 
-/* 2. Tingkatkan Kontras Warna Garis Ikon Lucide Agar Sangat Tajam & Modern */
-html.light-mode .text-emerald-400 { color: #059669 !important; } /* Emerald 600 */
-html.light-mode .text-cyan-400 { color: #0891b2 !important; }    /* Cyan 600 */
-html.light-mode .text-amber-400 { color: #d97706 !important; }   /* Amber 600 */
-html.light-mode .text-rose-400 { color: #e11d48 !important; }    /* Rose 600 */
-html.light-mode .text-purple-400 { color: #9333ea !important; }  /* Purple 600 */
-html.light-mode .text-blue-400 { color: #2563eb !important; }    /* Blue 600 */
-html.light-mode .text-teal-400 { color: #0d9488 !important; }    /* Teal 600 */
-html.light-mode .text-orange-400 { color: #ea580c !important; }  /* Orange 600 */
-html.light-mode .text-red-400 { color: #dc2626 !important; }     /* Red 600 */
+html.light-mode .text-emerald-400 { color: #059669 !important; }
+html.light-mode .text-cyan-400 { color: #0891b2 !important; }
+html.light-mode .text-amber-400 { color: #d97706 !important; }
+html.light-mode .text-rose-400 { color: #e11d48 !important; }
+html.light-mode .text-purple-400 { color: #9333ea !important; }
+html.light-mode .text-blue-400 { color: #2563eb !important; }
 
-/* 3. Amankan Rendering SVG & Tambahkan Efek Sizing Modern */
-html.light-mode svg,
-html.light-mode svg.lucide,
-html.light-mode .lucide {
+html.light-mode svg.lucide {
   background-color: transparent !important;
   display: inline-block !important;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
-}
-
-/* 🛡️ PENGECUALIAN: Tombol & Badge Berwarna Tetap Memiliki Teks & Ikon Putih */
-html.light-mode .bg-emerald-500,
-html.light-mode .bg-emerald-600,
-html.light-mode .bg-rose-600,
-html.light-mode .bg-blue-600,
-html.light-mode .bg-amber-500,
-html.light-mode .bg-purple-600,
-html.light-mode .btn-theme-primary,
-html.light-mode [class*="bg-gradient-to-"] {
-  color: #ffffff !important;
-}
-
-html.light-mode .bg-emerald-500 *,
-html.light-mode .bg-emerald-600 *,
-html.light-mode .bg-rose-600 *,
-html.light-mode .bg-blue-600 *,
-html.light-mode .bg-amber-500 *,
-html.light-mode .bg-purple-600 *,
-html.light-mode .btn-theme-primary *,
-html.light-mode [class*="bg-gradient-to-"] * {
-  color: #ffffff !important;
 }
