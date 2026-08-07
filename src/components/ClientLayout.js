@@ -590,13 +590,11 @@ export default function ClientLayout({ children }) {
           
          {/* HEADER */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
-            <div 
-              className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 shadow-lg ${
-                appMode === 'light'
-                  ? 'bg-amber-500/10 border-amber-500/40 shadow-amber-500/10 text-slate-900'
-                  : 'bg-slate-900/90 border-amber-500/50 shadow-black/40 text-white'
-              }`}
-            >
+   <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-lg ${
+  appMode === 'light'
+    ? 'border-amber-600/80 bg-amber-200/60 shadow-amber-600/20'
+    : 'border-amber-400/80 bg-amber-950/40 shadow-amber-500/30'
+}`}>
               
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-md ${
