@@ -551,8 +551,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-       {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/60 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
+        {/* CARD 2: TOTAL UANG MASUK */}
+        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/70 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">{dict.totalIncome}</span>
@@ -577,7 +577,7 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/40 bg-rose-500/10 dark:bg-rose-950/60 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
+        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/40 bg-rose-500/10 dark:bg-rose-950/70 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-400">{dict.totalExpense}</span>
@@ -600,6 +600,8 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
+
+      </div>
 
       {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
