@@ -551,26 +551,29 @@ export default function DashboardPage() {
           </div>
         </div>
 
-      {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/50 bg-emerald-50/90 dark:bg-emerald-950/80 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden group">
+     {/* CARD 2: TOTAL UANG MASUK (MOTIF DONASI / INFLOW) */}
+        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/50 bg-emerald-50/95 dark:bg-emerald-950/80 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden group">
           
-          {/* Motif Ornamen Background */}
+          {/* Ornamen Motif Khusus Pemasukan / Donasi */}
           <div className="absolute inset-0 pointer-events-none select-none z-0">
-            {/* Pola Titik (Dot Matrix) */}
-            <div className="absolute inset-0 bg-[radial-gradient(#10b981_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-[0.08] dark:opacity-[0.12]"></div>
-            {/* Watermark Geometris (Hexagon) */}
-            <svg className="absolute -right-8 -bottom-8 w-44 h-44 text-emerald-600 dark:text-emerald-400 opacity-[0.07] dark:opacity-10 group-hover:scale-110 transition-transform duration-700" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-              <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" />
-              <polygon points="50,25 75,40 75,70 50,85 25,70 25,40" />
+            {/* Pola Grid Bintang/Inflow Subtle */}
+            <div className="absolute inset-0 bg-[radial-gradient(#059669_1.2px,transparent_1.2px)] [background-size:12px_12px] opacity-[0.09] dark:opacity-[0.15]"></div>
+            
+            {/* Watermark Ornamen: Islamic Star & Dome (Melambangkan Donasi / Infak Kas) */}
+            <svg className="absolute -right-6 -bottom-6 w-40 h-40 text-emerald-700 dark:text-emerald-400 opacity-[0.08] dark:opacity-15 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3.5">
+              {/* Bintang 8 (Rub el Hizb) */}
+              <rect x="25" y="25" width="50" height="50" />
+              <rect x="25" y="25" width="50" height="50" transform="rotate(45 50 50)" />
+              <circle cx="50" cy="50" r="16" strokeWidth="2.5" />
             </svg>
           </div>
 
           <div className="relative z-10 flex justify-between items-start">
             <div>
-              <span className="font-mono text-[11px] font-black uppercase tracking-widest text-emerald-900 dark:text-emerald-300">{dict.totalIncome}</span>
+              <span className="font-mono text-[11px] font-black uppercase tracking-widest text-emerald-950 dark:text-emerald-300">{dict.totalIncome}</span>
               <p className="text-[10px] text-slate-700 dark:text-slate-200 font-bold mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-600/50 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0 shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-600/50 flex items-center justify-center text-emerald-800 dark:text-emerald-300 shrink-0 shadow-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
               </svg>
@@ -588,26 +591,33 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/50 bg-rose-50/90 dark:bg-rose-950/80 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden group">
+        {/* CARD 3: TOTAL UANG BELANJA (MOTIF BELANJA / LOGISTIK) */}
+        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/50 bg-rose-50/95 dark:bg-rose-950/80 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden group">
           
-          {/* Motif Ornamen Background */}
+          {/* Ornamen Motif Khusus Pengeluaran / Logistik */}
           <div className="absolute inset-0 pointer-events-none select-none z-0">
-            {/* Pola Titik (Dot Matrix) */}
-            <div className="absolute inset-0 bg-[radial-gradient(#f43f5e_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-[0.08] dark:opacity-[0.12]"></div>
-            {/* Watermark Geometris (Diamond) */}
-            <svg className="absolute -right-8 -bottom-8 w-44 h-44 text-rose-600 dark:text-rose-400 opacity-[0.07] dark:opacity-10 group-hover:scale-110 transition-transform duration-700" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-              <rect x="15" y="15" width="70" height="70" transform="rotate(45 50 50)" />
-              <rect x="30" y="30" width="40" height="40" transform="rotate(45 50 50)" />
+            {/* Pola Garis Diagonal Stripe (Alokasi Belanja) */}
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,#e11d48_10%,transparent_10%,transparent_50%,#e11d48_50%,#e11d48_60%,transparent_60%,transparent)] [background-size:16px_16px] opacity-[0.05] dark:opacity-[0.09]"></div>
+            
+            {/* Watermark Ornamen: Rincian Nota & Centang Belanja (Melambangkan Realisasi Pengeluaran) */}
+            <svg className="absolute -right-5 -bottom-5 w-36 h-36 text-rose-700 dark:text-rose-400 opacity-[0.08] dark:opacity-15 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-700" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3.5">
+              {/* Kertas Rincian Belanja/Nota */}
+              <rect x="25" y="15" width="50" height="70" rx="6" />
+              <line x1="35" y1="30" x2="65" y2="30" strokeWidth="3" />
+              <line x1="35" y1="42" x2="55" y2="42" strokeWidth="3" />
+              <line x1="35" y1="54" x2="60" y2="54" strokeWidth="3" />
+              {/* Seal / Badge Centang Akuntabilitas */}
+              <circle cx="62" cy="65" r="12" strokeWidth="2.5" />
+              <path d="M57 65l3 3 6-6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
 
           <div className="relative z-10 flex justify-between items-start">
             <div>
-              <span className="font-mono text-[11px] font-black uppercase tracking-widest text-rose-900 dark:text-rose-300">{dict.totalExpense}</span>
+              <span className="font-mono text-[11px] font-black uppercase tracking-widest text-rose-950 dark:text-rose-300">{dict.totalExpense}</span>
               <p className="text-[10px] text-slate-700 dark:text-slate-200 font-bold mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-600/50 flex items-center justify-center text-rose-700 dark:text-rose-300 shrink-0 shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-600/50 flex items-center justify-center text-rose-800 dark:text-rose-300 shrink-0 shadow-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
               </svg>
