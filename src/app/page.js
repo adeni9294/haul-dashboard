@@ -551,25 +551,25 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/70 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
+       {/* CARD 2: TOTAL UANG MASUK */}
+        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/80 rounded-3xl transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
-              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-950 dark:text-emerald-300">{dict.totalIncome}</span>
+              <p className="text-[10px] text-emerald-800 dark:text-emerald-200 font-bold mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
               </svg>
             </div>
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400 my-1 drop-shadow-sm">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 font-mono mt-2 flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-950 dark:text-emerald-300 my-1">{formatRupiah(totals.masuk)}</h3>
+            <p className="text-[10px] font-extrabold text-emerald-900 dark:text-emerald-200 font-mono mt-2 flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
               </svg>
               {catSummaryMasuk.length} {dict.categories}
             </p>
@@ -577,30 +577,30 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/40 bg-rose-500/10 dark:bg-rose-950/70 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
+        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/50 bg-rose-50 dark:bg-rose-950/80 rounded-3xl transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
-              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">Realisasi Pengeluaran</p>
+              <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-950 dark:text-rose-300">{dict.totalExpense}</span>
+              <p className="text-[10px] text-rose-800 dark:text-rose-200 font-bold mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
               </svg>
             </div>
           </div>
 
           <div className="relative z-10 mt-3">
-            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400 my-1 drop-shadow-sm">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300 font-mono mt-2 flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-950 dark:text-rose-300 my-1">{formatRupiah(totals.keluar)}</h3>
+            <p className="text-[10px] font-extrabold text-rose-900 dark:text-rose-200 font-mono mt-2 flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
               </svg>
               {catSummaryKeluar.length} {dict.allocation}
             </p>
           </div>
         </div>
-
+              
       </div>
 
       {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
