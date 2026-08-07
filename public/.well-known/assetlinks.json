@@ -1,8 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "app.vercel.haul_cibogo.twa",
-    "sha256_cert_fingerprints": ["8A:D9:A4:17:13:D5:A5:DC:29:70:F1:32:A6:FA:32:1D:C9:E4:E6:75:1A:20:89:0E:EE:BD:C4:E3:DB:55:94:49"]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.haulcibogo.app",
+      "sha256_cert_fingerprints": [
+        "8A:D9:A4:17:13:D5:A5:DC:29:70:F1:32:A6:FA:32:1D:C9:E4:E6:75:1A:20:89:0E:EE:BD:C4:E3:DB:55:94:49"
+      ]
+    }
   }
-}]
+]
