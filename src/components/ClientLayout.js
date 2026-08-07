@@ -588,21 +588,21 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER */}
+         {/* HEADER */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
-              className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 ${
+              className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 shadow-lg ${
                 appMode === 'light'
-                  ? 'bg-amber-100/80 border-amber-400/60 shadow-lg shadow-amber-500/10'
-                  : 'bg-amber-500/10 border-amber-500/40 shadow-xl shadow-amber-500/20'
+                  ? 'bg-amber-500/10 border-amber-500/40 shadow-amber-500/10 text-slate-900'
+                  : 'bg-slate-900/90 border-amber-500/50 shadow-black/40 text-white'
               }`}
             >
               
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-lg ${
+                <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-md ${
                   appMode === 'light'
-                    ? 'border-amber-600/80 bg-amber-200/60 shadow-amber-600/20'
-                    : 'border-amber-400/80 bg-amber-950/40 shadow-amber-500/30'
+                    ? 'border-amber-600 bg-amber-100'
+                    : 'border-amber-400 bg-slate-800'
                 }`}>
                   {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
@@ -614,23 +614,23 @@ export default function ClientLayout({ children }) {
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className={`text-xs sm:text-sm font-black tracking-wide uppercase leading-tight ${
-                      appMode === 'light' ? 'text-amber-900' : 'text-amber-300 drop-shadow-sm'
+                      appMode === 'light' ? 'text-slate-900' : 'text-amber-300 drop-shadow-sm'
                     }`}>
                       {orgName}
                     </h1>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black font-mono shadow-sm ${
                       appMode === 'light'
-                        ? 'bg-amber-500/20 text-amber-900 border border-amber-500/40'
+                        ? 'bg-amber-500/20 text-amber-950 border border-amber-600/40'
                         : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
                     }`}>
                       {isAdmin ? '⚡ ADMIN' : 'PUBLIC'}
                     </span>
                   </div>
 
-                  <p className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-medium md:whitespace-normal ${
-                    appMode === 'light' ? 'text-slate-700' : 'text-amber-200/80'
+                  <p className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-bold md:whitespace-normal ${
+                    appMode === 'light' ? 'text-slate-700' : 'text-amber-100/90'
                   }`}>
-                    <MapPin className={`w-3.5 h-3.5 shrink-0 ${appMode === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
+                    <MapPin className={`w-3.5 h-3.5 shrink-0 ${appMode === 'light' ? 'text-amber-700' : 'text-amber-400'}`} />
                     <span className="truncate md:whitespace-normal">{address}</span>
                   </p>
                 </div>
@@ -645,8 +645,8 @@ export default function ClientLayout({ children }) {
                   type="button"
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer border ${
                     appMode === 'light'
-                      ? 'bg-white/80 hover:bg-white text-slate-800 border-amber-400/50'
-                      : 'bg-black/40 hover:bg-black/60 text-amber-300 border-amber-400/40'
+                      ? 'bg-white text-slate-900 border-amber-400 hover:bg-amber-50'
+                      : 'bg-slate-800 text-amber-300 border-amber-400/40 hover:bg-slate-700'
                   }`}
                   title={appMode === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
                 >
@@ -667,17 +667,17 @@ export default function ClientLayout({ children }) {
                   onClick={() => setShowSholatModal(true)} 
                   className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all duration-300 font-bold shadow-sm cursor-pointer border ${
                     appMode === 'light'
-                      ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 border-amber-500/40'
-                      : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-400/40'
+                      ? 'bg-amber-200/80 hover:bg-amber-200 text-slate-900 border-amber-500/50'
+                      : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40'
                   }`}
                 >
-                  <Clock className={`w-3.5 h-3.5 animate-pulse ${appMode === 'light' ? 'text-amber-700' : 'text-amber-400'}`} />
+                  <Clock className={`w-3.5 h-3.5 animate-pulse ${appMode === 'light' ? 'text-amber-800' : 'text-amber-400'}`} />
                   <span>Jadwal Sholat</span>
                 </button>
 
                 {isMounted && timeString && (
-                  <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold shrink-0 ${
-                    appMode === 'light' ? 'text-amber-900' : 'text-amber-300'
+                  <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-black shrink-0 px-2 py-1 rounded-lg ${
+                    appMode === 'light' ? 'text-slate-900 bg-amber-200/50' : 'text-amber-300 bg-slate-800/80'
                   }`}>
                     <span>{timeString}</span>
                     <span>•</span>
