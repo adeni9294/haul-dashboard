@@ -588,24 +588,24 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-         {/* HEADER */}
+         {/* HEADER UTUH & CERAH */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
-   <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-lg ${
-  appMode === 'light'
-    ? 'border-amber-600/80 bg-amber-200/60 shadow-amber-600/20'
-    : 'border-amber-400/80 bg-amber-950/40 shadow-amber-500/30'
-}`}>
-              
+            <div 
+              className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 shadow-lg ${
+                appMode === 'light'
+                  ? 'bg-amber-500/10 border-amber-500/40 shadow-amber-500/10 text-slate-900'
+                  : 'bg-slate-900/90 border-amber-500/50 shadow-black/40 text-white'
+              }`}
+            >
+              {/* BAGIAN KIRI: LOGO + JUDUL + ALAMAT */}
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-md ${
-                  appMode === 'light'
-                    ? 'border-amber-600 bg-amber-100'
-                    : 'border-amber-400 bg-slate-800'
-                }`}>
+                
+                {/* KONTAINER LOGO PUTIH CERAH */}
+                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-white p-0.5 shadow-md shadow-amber-500/20 flex items-center justify-center">
                   {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover rounded-full" />
                   ) : (
-                    <Building2 className={`w-6 h-6 ${appMode === 'light' ? 'text-amber-700' : 'text-amber-400'}`} />
+                    <Building2 className="w-6 h-6 text-amber-600" />
                   )}
                 </div>
 
@@ -634,6 +634,7 @@ export default function ClientLayout({ children }) {
                 </div>
               </div>
 
+              {/* BAGIAN KANAN: TOMBOL MODES, SHOLAT & JAM */}
               <div className={`pt-3 md:pt-0 border-t md:border-t-0 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0 ${
                 appMode === 'light' ? 'border-amber-300/60' : 'border-amber-500/30'
               }`}>
@@ -674,8 +675,8 @@ export default function ClientLayout({ children }) {
                 </button>
 
                 {isMounted && timeString && (
-                  <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-black shrink-0 px-2 py-1 rounded-lg ${
-                    appMode === 'light' ? 'text-slate-900 bg-amber-200/50' : 'text-amber-300 bg-slate-800/80'
+                  <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-black shrink-0 px-2.5 py-1 rounded-xl ${
+                    appMode === 'light' ? 'text-slate-900 bg-amber-200/60 border border-amber-300' : 'text-amber-300 bg-slate-800/80 border border-slate-700'
                   }`}>
                     <span>{timeString}</span>
                     <span>•</span>
