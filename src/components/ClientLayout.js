@@ -13,7 +13,6 @@ import {
   Gift, 
   ClipboardList, 
   Menu, 
-  ChevronRight, 
   Lock, 
   LogOut, 
   Building2, 
@@ -23,16 +22,13 @@ import {
   CreditCard,    
   Calendar,      
   Images,        
-  Users,         
+  Users,          
   Settings,
   Clock,
   Compass,
   Bell,
   BellOff,
   MapPin,
-  CheckCircle2,
-  AlertCircle,
-  Info,
   BookOpen,
   Volume2,
   VolumeX,
@@ -46,7 +42,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
-// Helper untuk konversi VAPID Key Public Base64 ke Uint8Array
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -101,9 +96,7 @@ export default function ClientLayout({ children }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 🌙 / ☀️ STATE TOGGLE MODE GELAP / TERANG
   const [appMode, setAppMode] = useState('dark');
-
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
 
   const showToast = (type, title, message, action = null) => {
@@ -122,6 +115,7 @@ export default function ClientLayout({ children }) {
   const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
   useEffect(() => {
+    setIsMounted(true);
     const savedMode = localStorage.getItem('app_mode') || 'dark';
     setAppMode(savedMode);
     applyAppMode(savedMode);
@@ -131,11 +125,9 @@ export default function ClientLayout({ children }) {
       setCurrentThemeKey(savedTheme);
     }
 
-    // Registrasi Web Push Notification saat aplikasi pertama kali dimuat
     subscribeUserToPush();
   }, []);
 
-  // 📱 PENANGANAN TOMBOL BACK HP DI HOME (TANPA BLANK PUTIH)
   useEffect(() => {
     if (pathname === '/') {
       window.history.pushState(null, '', window.location.href);
@@ -148,13 +140,9 @@ export default function ClientLayout({ children }) {
     }
   }, [pathname]);
 
-  // 🔔 FUNGSI REGISTRASI SERVICE WORKER & WEB PUSH NOTIFICATIONS
   const subscribeUserToPush = async () => {
     if (typeof window === 'undefined') return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.log('Push notification tidak didukung di browser ini.');
-      return;
-    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
@@ -164,10 +152,7 @@ export default function ClientLayout({ children }) {
         await Notification.requestPermission();
       }
 
-      if (Notification.permission !== 'granted') {
-        console.log('Izin notifikasi belum diberikan atau ditolak.');
-        return;
-      }
+      if (Notification.permission !== 'granted') return;
 
       const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''; 
       let subscription = await registration.pushManager.getSubscription();
@@ -190,7 +175,6 @@ export default function ClientLayout({ children }) {
           },
           { onConflict: 'endpoint' }
         );
-        console.log('Berhasil terdaftar untuk Web Push Notification!');
       }
     } catch (err) {
       console.error('Gagal meregister Web Push:', err);
@@ -244,35 +228,6 @@ export default function ClientLayout({ children }) {
   const lastTriggeredSholat = useRef('');
 
   useEffect(() => {
-    setIsMounted(true);
-    const handleTouchStart = (e) => {
-      if (e.touches && e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-
-    let lastTouchEnd = 0;
-    const handleTouchEnd = (e) => {
-      const now = new Date().getTime();
-      if (now - lastTouchEnd <= 300) {
-        const tag = e.target.tagName.toLowerCase();
-        if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
-          e.preventDefault();
-        }
-      }
-      lastTouchEnd = now;
-    };
-
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd, false);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
-
-  useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
 
@@ -310,7 +265,6 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // 🧹 FUNGSI MEMBERSIHKAN CACHE PWA DI BROWSER
   const handleClearPWACache = async () => {
     try {
       showToast('info', 'Pembersihan Dimulai', 'Sedang menghapus file temporary & cache PWA...');
@@ -351,10 +305,8 @@ export default function ClientLayout({ children }) {
     }
   };
 
-  // 🚪 FUNGSI KELUAR DARI APLIKASI (AMAK TANPA LAYAR BLANK PUTIH)
   const handleExitApp = () => {
     setShowMainMenuDrawer(false);
-
     try {
       window.close();
     } catch (e) {
@@ -616,10 +568,8 @@ export default function ClientLayout({ children }) {
     showToast('info', 'Log Out Berhasil', 'Anda telah keluar dari Mode Admin.', () => window.location.reload());
   };
 
-  const currentStyle = THEME_STYLES[currentThemeKey] || THEME_STYLES['default'];
   const listRekening = parseBankInfo(bankInfo);
 
-  // 📖 DRAWER MENUS (RESPONSIF DENGAN REPLACE LINK)
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
@@ -638,7 +588,7 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER RESPONSIF ADAPTIF MODE DARK/LIGHT */}
+          {/* HEADER */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
               className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 ${
@@ -648,7 +598,6 @@ export default function ClientLayout({ children }) {
               }`}
             >
               
-              {/* Sisi Kiri: Logo, Judul & Alamat */}
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <div className={`relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-lg ${
                   appMode === 'light'
@@ -687,12 +636,10 @@ export default function ClientLayout({ children }) {
                 </div>
               </div>
 
-              {/* Sisi Kanan: Toggle Mode Gelap/Terang, Jadwal Sholat & Live Clock */}
               <div className={`pt-3 md:pt-0 border-t md:border-t-0 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0 ${
                 appMode === 'light' ? 'border-amber-300/60' : 'border-amber-500/30'
               }`}>
                 
-                {/* 🌙 / ☀️ TOMBOL TOGGLE DARK & LIGHT MODE */}
                 <button
                   onClick={toggleAppMode}
                   type="button"
@@ -742,19 +689,19 @@ export default function ClientLayout({ children }) {
             </div>
           </header>
 
-          {/* MAIN CONTENT RESPONSIF */}
+          {/* MAIN CONTENT */}
           <main className="flex-1 max-w-xl md:max-w-5xl w-full mx-auto px-3 sm:px-6 pt-4 pb-6">
             {children}
           </main>
 
           {/* FOOTER */}
           <footer className="py-4 border-t theme-border theme-text-tertiary text-center text-[10px] font-mono tracking-widest uppercase mb-4 transition-colors duration-300">
-            Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {new Date().getFullYear()}
+            Dashboard Panitia Haul Maqbaroh Buyut Kepuh &copy; {isMounted ? new Date().getFullYear() : '2026'}
           </footer>
 
         </div>
 
-        {/* 🎯 BOTTOM NAV BAR DOCK */}
+        {/* BOTTOM NAV BAR */}
         <div className="fixed bottom-0 left-0 right-0 w-full z-50 theme-bg-secondary/95 backdrop-blur-md border-t theme-border theme-shadow">
           <div className="w-full max-w-md md:max-w-xl mx-auto h-16 flex items-center justify-around px-3">
             <Link 
@@ -817,11 +764,10 @@ export default function ClientLayout({ children }) {
               <Menu className="w-5 h-5" />
               <span className="text-[9px] font-bold mt-0.5">Menu</span>
             </button>
-
           </div>
         </div>
 
-        {/* 📢 POP-UP OTOMATIS SAAT ADZAN BERBUNYI */}
+        {/* POP-UP ADZAN */}
         {isPlayingAdzan && (
           <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md animate-bounce">
             <GlassCard className="p-4 border-2 border-emerald-400 bg-emerald-950/90 backdrop-blur-xl rounded-3xl shadow-2xl flex items-center justify-between gap-3 text-white">
@@ -850,7 +796,7 @@ export default function ClientLayout({ children }) {
           </div>
         )}
 
-        {/* 🕌 MODAL JADWAL SHOLAT */}
+        {/* MODAL JADWAL SHOLAT */}
         {showSholatModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="theme-bg-secondary border border-emerald-500/40 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
@@ -950,7 +896,7 @@ export default function ClientLayout({ children }) {
                 </div>
               ) : (
                 <div className="text-center py-6 text-xs font-mono theme-text-secondary animate-pulse">
-                  Mndeteksi lokasi & jadwal sholat...
+                  Mendeteksi lokasi & jadwal sholat...
                 </div>
               )}
 
@@ -1010,7 +956,7 @@ export default function ClientLayout({ children }) {
           </div>
         )}
 
-        {/* 📱 DRAWER MENU */}
+        {/* DRAWER MENU */}
         {showMainMenuDrawer && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="absolute inset-0 z-0" onClick={() => setShowMainMenuDrawer(false)} />
@@ -1131,7 +1077,7 @@ export default function ClientLayout({ children }) {
           </div>
         )}
 
-        {/* 🔔 CUSTOM FLOATING TOAST DIALOG (CENTER TOP) */}
+        {/* FLOATING TOAST DIALOG */}
         {toastConfig.show && (
           <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
             <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
