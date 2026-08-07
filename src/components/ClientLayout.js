@@ -732,11 +732,17 @@ export default function ClientLayout({ children }) {
 
          <button 
   onClick={() => setShowDonationModal(true)} 
-  className="relative -top-2 flex flex-col items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-400 text-slate-950 font-black shadow-lg shadow-emerald-500/30 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-white dark:border-slate-800 shrink-0"
+  className="relative -top-3 flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-amber-200 via-yellow-400 to-amber-600 text-slate-950 font-black shadow-[0_8px_0_#b45309,0_15px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_4px_0_#b45309,0_8px_10px_rgba(0,0,0,0.25)] hover:translate-y-1 active:translate-y-2 active:shadow-none transition-all duration-200 cursor-pointer border-2 border-amber-100 shrink-0 group overflow-hidden"
   title="Rekening Donasi"
 >
-  <Gift className="w-5 h-5 stroke-[2.5] text-slate-950 animate-bounce" />
-  <span className="text-[8px] font-black uppercase font-mono tracking-tighter leading-none mt-0.5 text-slate-950">
+  {/* Efek Kilatan Cahaya (Shine Effect) */}
+  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+
+  {/* Ikon Kado dengan Bayangan 3D Drop Shadow */}
+  <Gift className="w-5 h-5 stroke-[2.8] text-amber-950 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)] animate-bounce" />
+  
+  {/* Label Teks Donasi Emas Pekat */}
+  <span className="text-[8px] font-black uppercase font-mono tracking-tighter leading-none mt-0.5 text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
     Donasi
   </span>
 </button>
