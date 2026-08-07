@@ -1,0 +1,6 @@
+{
+  "appId": "com.haulcibogo.app",
+  "appName": "Haul Cibogo",
+  "webDir": "out",
+  "bundledWebRuntime": false
+}
