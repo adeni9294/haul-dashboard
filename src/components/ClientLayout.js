@@ -730,12 +730,16 @@ export default function ClientLayout({ children }) {
               <span className="text-[9px] font-bold mt-0.5">Stat</span>
             </Link>
 
-            <button 
-              onClick={() => setShowDonationModal(true)} 
-              className="flex flex-col items-center justify-center w-12 h-12 rounded-2xl theme-text-primary theme-gradient-main hover:scale-105 shadow-lg transition-all duration-300 cursor-pointer"
-            >
-              <Gift className="w-6 h-6 stroke-[2.5]" />
-            </button>
+         <button 
+  onClick={() => setShowDonationModal(true)} 
+  className="relative -top-2 flex flex-col items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-400 via-teal-300 to-cyan-400 text-slate-950 font-black shadow-lg shadow-emerald-500/30 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-white dark:border-slate-800 shrink-0"
+  title="Rekening Donasi"
+>
+  <Gift className="w-5 h-5 stroke-[2.5] text-slate-950 animate-bounce" />
+  <span className="text-[8px] font-black uppercase font-mono tracking-tighter leading-none mt-0.5 text-slate-950">
+    Donasi
+  </span>
+</button>
 
             <Link 
               href="/anggaran" 
