@@ -4,12 +4,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from "@/components/GlassCard";
 
-// Inisialisasi Supabase Client Tunggal di Luar Render Loop
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
-// 🌐 KAMUS 3 BAHASA (ID / JV / EN)
 const DICTIONARY = {
   id: {
     loading: 'Memuat Antarmuka Cirebonan Premium...',
@@ -415,11 +413,9 @@ export default function DashboardPage() {
     return angka < 0 ? `-${formatted}` : formatted;
   }, []);
 
-  // 🚀 TAMPILAN LOADING MODERN (SKELETON SHIMMER UI)
   if (loading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto px-2 sm:px-4 pb-12 animate-fadeIn">
-        {/* Loading Indicator Modern */}
         <div className="flex items-center justify-center gap-3 py-6 theme-text-accent font-mono text-xs tracking-widest uppercase">
           <svg className="animate-spin h-5 w-5 theme-text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -428,13 +424,11 @@ export default function DashboardPage() {
           <span className="animate-pulse">{dict.loading}</span>
         </div>
 
-        {/* Top Selectors Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="h-10 rounded-2xl theme-bg-tertiary animate-pulse theme-border border" />
           <div className="h-10 rounded-2xl theme-bg-tertiary animate-pulse theme-border border" />
         </div>
 
-        {/* 3 Main Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div 
@@ -451,12 +445,6 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Middle Stats Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-28 rounded-2xl theme-bg-secondary theme-border border p-4 animate-pulse" />
-          <div className="md:col-span-2 h-28 rounded-2xl theme-bg-secondary theme-border border p-4 animate-pulse" />
         </div>
       </div>
     );
@@ -479,7 +467,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 max-w-5xl mx-auto px-2 sm:px-4 pb-12 text-xs transition-all duration-500 theme-text-primary">
       
-      {/* 🌐 SELEKTOR PERIODE & BAHASA */}
+      {/* SELEKTOR PERIODE & BAHASA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs print:hidden">
         {periodeList.length > 0 && (
           <GlassCard className="p-2.5 flex items-center justify-between">
@@ -522,7 +510,7 @@ export default function DashboardPage() {
         </GlassCard>
       </div>
 
-      {/* 📢 ANNOUNCEMENT BANNER */}
+      {/* ANNOUNCEMENT BANNER */}
       {announcement && (
         <GlassCard className="w-full py-2.5 px-4 overflow-hidden flex items-center gap-2 print:hidden">
           <svg className="w-4 h-4 theme-text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -534,29 +522,29 @@ export default function DashboardPage() {
         </GlassCard>
       )}
 
-      {/* 💳 3 KARTU KAS UTAMA MODERN */}
+      {/* 3 KARTU KAS UTAMA */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* CARD 1: KAS UTAMA HAUL */}
-        <div className="md:col-span-1 p-5 sm:p-6 theme-gradient-main text-slate-950 shadow-xl border border-white/20 rounded-3xl relative overflow-hidden">
-          <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-25 pointer-events-none select-none">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-950">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.3" />
-              <circle cx="100" cy="100" r="55" fill="none" stroke="currentColor" strokeWidth="10" opacity="0.5" />
-              <circle cx="100" cy="100" r="30" fill="none" stroke="currentColor" strokeWidth="14" opacity="0.8" />
+        <div className="md:col-span-1 p-5 sm:p-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-500 text-white shadow-xl border border-white/20 rounded-3xl relative overflow-hidden">
+          <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-20 pointer-events-none select-none">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-white">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.4" />
+              <circle cx="100" cy="100" r="55" fill="none" stroke="currentColor" strokeWidth="10" opacity="0.6" />
+              <circle cx="100" cy="100" r="30" fill="none" stroke="currentColor" strokeWidth="14" opacity="0.9" />
             </svg>
           </div>
 
           <div className="relative z-10">
-            <span className="font-mono text-[10px] font-black uppercase tracking-widest text-slate-900/80">{dict.mainCash}</span>
-            <p className="text-[11px] font-bold text-slate-900 mt-0.5">{dict.netBalance}</p>
+            <span className="font-mono text-[10px] font-black uppercase tracking-widest text-white/90">{dict.mainCash}</span>
+            <p className="text-[11px] font-bold text-white/80 mt-0.5">{dict.netBalance}</p>
           </div>
 
           <div className="relative z-10 mt-3">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono tracking-tight leading-none text-slate-950">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono tracking-tight leading-none text-white drop-shadow-md">
               {formatRupiah(totals.total)}
             </h2>
-            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider text-slate-900/90 font-bold">
+            <div className="flex justify-between items-center mt-5 font-mono text-[10px] tracking-wider text-white/90 font-bold">
               <span>{dict.initialBalance}: {formatRupiah(totals.saldoAwal)}</span>
               <span className="font-extrabold uppercase">{dict.committee}</span>
             </div>
@@ -564,13 +552,13 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 2: TOTAL UANG MASUK */}
-        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/50 bg-emerald-950/30 dark:bg-emerald-950/40 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
+        <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/60 bg-emerald-950/80 rounded-3xl transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-400">{dict.totalIncome}</span>
-              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Akumulasi Donasi & Kas</p>
+              <p className="text-[10px] text-slate-300 font-medium mt-0.5">Akumulasi Donasi & Kas</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
               </svg>
@@ -579,7 +567,7 @@ export default function DashboardPage() {
 
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-400 my-1">{formatRupiah(totals.masuk)}</h3>
-            <p className="text-[10px] font-bold text-emerald-400 font-mono mt-2 flex items-center gap-1.5">
+            <p className="text-[10px] font-bold text-emerald-300 font-mono mt-2 flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
               </svg>
@@ -589,13 +577,13 @@ export default function DashboardPage() {
         </div>
 
         {/* CARD 3: TOTAL UANG BELANJA */}
-        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/50 bg-rose-950/30 dark:bg-rose-950/40 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden">
+        <div className="p-5 flex flex-col justify-between border-2 border-rose-500/60 bg-rose-950/80 rounded-3xl transition-all shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-rose-400">{dict.totalExpense}</span>
-              <p className="text-[10px] theme-text-secondary font-medium mt-0.5">Realisasi Pengeluaran</p>
+              <p className="text-[10px] text-slate-300 font-medium mt-0.5">Realisasi Pengeluaran</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-400 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-rose-400 shrink-0">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
               </svg>
@@ -604,7 +592,7 @@ export default function DashboardPage() {
 
           <div className="relative z-10 mt-3">
             <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-400 my-1">{formatRupiah(totals.keluar)}</h3>
-            <p className="text-[10px] font-bold text-rose-400 font-mono mt-2 flex items-center gap-1.5">
+            <p className="text-[10px] font-bold text-rose-300 font-mono mt-2 flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
               </svg>
@@ -618,7 +606,6 @@ export default function DashboardPage() {
       {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
 
-        {/* LOG TRAFIK PENGUNJUNG */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:col-span-1">
           <GlassCard className="p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
@@ -645,7 +632,6 @@ export default function DashboardPage() {
           </GlassCard>
         </div>
 
-        {/* TARGET PLAFON PROGRESS */}
         <GlassCard className="md:col-span-2 p-4 flex flex-col justify-center space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 theme-text-primary">
