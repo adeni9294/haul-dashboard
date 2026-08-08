@@ -6,58 +6,30 @@ import GlassCard from '@/components/GlassCard';
 import { 
   Building2, 
   MapPin, 
-  CreditCard, 
-  Palette, 
   Lock, 
   FolderPlus, 
   Calendar, 
   Upload, 
   Save, 
   Key, 
-  CheckCircle2, 
   AlertCircle, 
-  Info, 
   Trash2, 
   Edit2, 
-  Check, 
-  X,
-  Sparkles,
-  Navigation,
-  Globe
+  Sparkles, 
+  Navigation
 } from 'lucide-react';
-
-// 🎨 SINKRONISASI 16 TEMA RESMI CLIENTLAYOUT.JS
-const THEME_OPTIONS = [
-  { key: 'default', name: 'Default Navy', color: 'bg-cyan-500' },
-  { key: 'emerald-cyber', name: 'Emerald Cyber', color: 'bg-emerald-400' },
-  { key: 'velvet-rose', name: 'Velvet Rose', color: 'bg-pink-500' },
-  { key: 'neon-sunset', name: 'Neon Sunset', color: 'bg-orange-500' },
-  { key: 'nordic-frost', name: 'Nordic Frost', color: 'bg-sky-400' },
-  { key: 'tokyo-night', name: 'Tokyo Night', color: 'bg-purple-500' },
-  { key: 'amber-gold', name: 'Amber Gold', color: 'bg-amber-400' },
-  { key: 'cyberpunk-2076', name: 'Cyberpunk 2076', color: 'bg-yellow-400' },
-  { key: 'ocean-deep', name: 'Ocean Deep', color: 'bg-blue-600' },
-  { key: 'forest-moss', name: 'Forest Moss', color: 'bg-emerald-600' },
-  { key: 'crimson-tide', name: 'Crimson Tide', color: 'bg-red-600' },
-  { key: 'obsidian-stark', name: 'Obsidian Stark', color: 'bg-slate-400' },
-  { key: 'dracula-vamp', name: 'Dracula Vamp', color: 'bg-purple-600' },
-  { key: 'coffee-latte', name: 'Coffee Latte', color: 'bg-amber-700' },
-  { key: 'mint-fresh', name: 'Mint Fresh', color: 'bg-teal-400' },
-  { key: 'retro-wave', name: 'Retro Wave', color: 'bg-rose-500' }
-];
 
 export default function PengaturanPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
    
-  // 🔔 State Toast Modal Dialog
+  // State Toast Modal Dialog
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '' });
    
-  // ❓ State Dialog Konfirmasi Aksi
+  // State Dialog Konfirmasi Aksi
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', action: null });
 
-  // 📝 State Konfigurasi
-  const [theme, setTheme] = useState('default');
+  // State Konfigurasi Identitas
   const [orgName, setOrgName] = useState('');
   const [address, setAddress] = useState('');
   const [bankInfo, setBankInfo] = useState('');
@@ -65,24 +37,24 @@ export default function PengaturanPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  // 🗺️ State Pengaturan Peta Lokasi
+  // State Pengaturan Peta Lokasi
   const [mapTitle, setMapTitle] = useState('');
   const [mapLat, setMapLat] = useState('');
   const [mapLon, setMapLon] = useState('');
   const [mapEmbedUrl, setMapEmbedUrl] = useState('');
   const [mapAddressDetail, setMapAddressDetail] = useState('');
 
-  // 🔒 State Ubah Sandi
+  // State Ubah Sandi
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // 📁 State Kategori Pos Kas
+  // State Kategori Pos Kas
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
   const [categoryType, setCategoryType] = useState('pemasukan');
 
-  // 🏛️ State Kelola Periode Haul
+  // State Kelola Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [namaPeriodeInput, setNamaPeriodeInput] = useState('');
   const [saldoAwalInput, setSaldoAwalInput] = useState('');
@@ -146,7 +118,6 @@ export default function PengaturanPage() {
       setBankInfo(c.bank_info || '');
       setBannerText(c.announcement || c.banner_text || '');
       setLogoUrl(c.logo_url || '');
-      setTheme(c.theme || 'default');
     }
   }
 
@@ -173,14 +144,6 @@ export default function PengaturanPage() {
     const { data } = await supabase.from('periode_haul').select('*').order('created_at', { ascending: false });
     if (data) setPeriodeList(data);
   }
-
-  // 🎨 Mengubah Tema Secara Real-time di Browser
-  const handleThemeChange = (selectedKey) => {
-    setTheme(selectedKey);
-    localStorage.setItem('app-theme', selectedKey);
-    document.body.className = document.body.className.replace(/theme-[^\s]+/g, '').trim();
-    document.body.classList.add(`theme-${selectedKey}`);
-  };
 
   const handleUploadLogo = async (e) => {
     const file = e.target.files?.[0];
@@ -223,12 +186,11 @@ export default function PengaturanPage() {
       p_address: address,
       p_bank_info: bankInfo,
       p_banner_text: bannerText,
-      p_logo_url: logoUrl,
-      p_theme: theme
+      p_logo_url: logoUrl
     });
 
     if (!error) {
-      showToast('success', 'Berhasil Disimpan', 'Konfigurasi & Pilihan tema berhasil diperbarui!');
+      showToast('success', 'Berhasil Disimpan', 'Konfigurasi identitas organisasi berhasil diperbarui!');
     } else {
       console.error(error);
       showToast('error', 'Gagal Menyimpan', error.message || 'Terjadi kesalahan sistem.');
@@ -421,7 +383,7 @@ export default function PengaturanPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  // 🚀 SKELETON LOADING STATE
+  // SKELETON LOADING STATE
   if (loading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -434,8 +396,8 @@ export default function PengaturanPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
-          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+          <GlassCard className="p-6 h-64 animate-pulse theme-bg-secondary theme-border" />
+          <GlassCard className="p-6 h-64 animate-pulse theme-bg-secondary theme-border" />
         </div>
       </div>
     );
@@ -456,7 +418,7 @@ export default function PengaturanPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary relative">
       
-      {/* 🔔 FLOATING TOAST NOTIFICATION (POSISI CENTER ATAS MENCOLOK) */}
+      {/* FLOATING TOAST NOTIFICATION */}
       {toastConfig.show && (
         <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
           <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
@@ -473,7 +435,7 @@ export default function PengaturanPage() {
               <h4 className="font-mono font-black text-xs uppercase">{toastConfig.title}</h4>
               <p className="font-mono text-[11px] opacity-90 truncate">{toastConfig.message}</p>
             </div>
-            <button onClick={closeToast} className="text-xs font-bold hover:underline opacity-80">Tutup</button>
+            <button onClick={closeToast} className="text-xs font-bold hover:underline opacity-80 cursor-pointer">Tutup</button>
           </div>
         </div>
       )}
@@ -486,7 +448,7 @@ export default function PengaturanPage() {
             Setelan Sistem & Antarmuka
           </h2>
           <p className="text-[11px] theme-text-secondary mt-1 font-medium">
-            Kelola tema tampilan global, identitas organisasi, koordinat peta lokasi (ShareLoc), periode haul, dan kata sandi admin.
+            Kelola identitas organisasi, koordinat peta lokasi (ShareLoc), periode haul, dan kata sandi admin.
           </p>
         </div>
         <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -496,42 +458,10 @@ export default function PengaturanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* KOLOM KIRI: FORM TEMA, IDENTITAS & PETA */}
+        {/* KOLOM KIRI: IDENTITAS & PETA */}
         <div className="space-y-6">
           
-          {/* SEKSI 1: TEMA GLOBAL */}
-          <GlassCard className="p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
-              <Palette className="w-4 h-4 theme-text-accent" />
-              Pilihan Tema Tampilan Beranda
-            </h3>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {THEME_OPTIONS.map((th) => {
-                const isSelected = theme === th.key;
-                return (
-                  <button
-                    key={th.key}
-                    type="button"
-                    onClick={() => handleThemeChange(th.key)}
-                    className={`p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-1.5 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-black/30 border-cyan-400 shadow-md scale-[1.02]' 
-                        : 'bg-black/10 theme-border opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`w-3 h-3 rounded-full shrink-0 ${th.color}`} />
-                      <span className="text-[10px] font-bold theme-text-primary truncate">{th.name}</span>
-                    </div>
-                    {isSelected && <Check className="w-3.5 h-3.5 theme-text-accent shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-          </GlassCard>
-
-          {/* SEKSI 2: IDENTITAS & KOP ORGANISASI */}
+          {/* SEKSI 1: IDENTITAS & KOP ORGANISASI */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleSaveConfig} className="space-y-4">
               <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
@@ -546,7 +476,7 @@ export default function PengaturanPage() {
                     type="text" 
                     value={orgName} 
                     onChange={(e) => setOrgName(e.target.value)} 
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 font-semibold text-xs" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 font-semibold text-xs" 
                   />
                 </div>
 
@@ -556,7 +486,7 @@ export default function PengaturanPage() {
                     rows="2" 
                     value={bannerText} 
                     onChange={(e) => setBannerText(e.target.value)} 
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 text-xs" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 text-xs" 
                   />
                 </div>
 
@@ -566,7 +496,7 @@ export default function PengaturanPage() {
                     type="text" 
                     value={address} 
                     onChange={(e) => setAddress(e.target.value)} 
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 text-xs" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 text-xs" 
                   />
                 </div>
 
@@ -577,19 +507,19 @@ export default function PengaturanPage() {
                     value={bankInfo} 
                     onChange={(e) => setBankInfo(e.target.value)} 
                     placeholder="Mandiri : 1234xxx | BCA : 5678xxx"
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 font-mono text-[11px]" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-cyan-500 font-mono text-[11px]" 
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold theme-text-secondary mb-1">Logo Organisasi Resmi</label>
-                  <div className="flex items-center gap-3 p-3 bg-black/20 border theme-border rounded-2xl">
-                    <div className="w-12 h-12 rounded-2xl border theme-border bg-black/30 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="flex items-center gap-3 p-3 theme-bg-tertiary border theme-border rounded-2xl">
+                    <div className="w-12 h-12 rounded-2xl border theme-border theme-bg-secondary overflow-hidden shrink-0 flex items-center justify-center">
                       {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <span className="text-[9px] theme-text-tertiary">NO LOGO</span>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <input type="file" accept="image/*" id="upload-logo-input" onChange={handleUploadLogo} disabled={isUploading} className="hidden" />
-                      <label htmlFor="upload-logo-input" className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider cursor-pointer transition-all ${isUploading ? 'bg-black/30 text-slate-400' : 'btn-theme-primary'}`}>
+                      <label htmlFor="upload-logo-input" className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider cursor-pointer transition-all ${isUploading ? 'bg-slate-700 text-slate-400' : 'btn-theme-primary'}`}>
                         <Upload className="w-3.5 h-3.5" />
                         {isUploading ? 'Mengunggah...' : 'Pilih Logo'}
                       </label>
@@ -601,12 +531,12 @@ export default function PengaturanPage() {
 
               <button type="submit" className="w-full py-3 btn-theme-primary font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer">
                 <Save className="w-4 h-4" />
-                Simpan Konfigurasi & Tema
+                Simpan Konfigurasi Organisasi
               </button>
             </form>
           </GlassCard>
 
-          {/* SEKSI 3: PENGATURAN PETA LOKASI HAUL */}
+          {/* SEKSI 2: PENGATURAN PETA LOKASI HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleSaveMapConfig} className="space-y-4">
               <div className="border-b theme-border pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -617,7 +547,7 @@ export default function PengaturanPage() {
                 <button
                   type="button"
                   onClick={handleShareLocationGPS}
-                  className="px-3 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                  className="px-3 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/40 rounded-xl font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
                   title="Ambil titik koordinat otomatis dari GPS HP/Laptop Anda saat ini"
                 >
                   📍 Ambil Lokasi Saat Ini (ShareLoc)
@@ -632,7 +562,7 @@ export default function PengaturanPage() {
                     value={mapTitle} 
                     onChange={(e) => setMapTitle(e.target.value)} 
                     placeholder="Contoh: Maqbaroh Buyut Kepuh & Buyut Besus"
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-rose-500 font-semibold text-xs" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none focus:border-rose-500 font-semibold text-xs" 
                   />
                 </div>
 
@@ -644,7 +574,7 @@ export default function PengaturanPage() {
                       value={mapLat} 
                       onChange={(e) => setMapLat(e.target.value)} 
                       placeholder="-6.6983"
-                      className="px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-xs w-full" 
+                      className="px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-xs w-full" 
                     />
                   </div>
                   <div>
@@ -654,7 +584,7 @@ export default function PengaturanPage() {
                       value={mapLon} 
                       onChange={(e) => setMapLon(e.target.value)} 
                       placeholder="108.4812"
-                      className="px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-xs w-full" 
+                      className="px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-xs w-full" 
                     />
                   </div>
                 </div>
@@ -666,7 +596,7 @@ export default function PengaturanPage() {
                     value={mapEmbedUrl} 
                     onChange={(e) => setMapEmbedUrl(e.target.value)} 
                     placeholder="https://www.google.com/maps/embed?pb=..."
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-[11px]" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-[11px]" 
                   />
                 </div>
 
@@ -677,7 +607,7 @@ export default function PengaturanPage() {
                     value={mapAddressDetail} 
                     onChange={(e) => setMapAddressDetail(e.target.value)} 
                     placeholder="Blok Cibogo Kidul RT/RW 002/003 Desa Warujaya..."
-                    className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none text-xs" 
+                    className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none text-xs" 
                   />
                 </div>
               </div>
@@ -689,7 +619,7 @@ export default function PengaturanPage() {
             </form>
           </GlassCard>
 
-          {/* SEKSI 4: KELOLA PERIODE HAUL */}
+          {/* SEKSI 3: KELOLA PERIODE HAUL */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4 theme-text-accent" />
@@ -704,14 +634,14 @@ export default function PengaturanPage() {
                   required 
                   value={namaPeriodeInput} 
                   onChange={(e) => setNamaPeriodeInput(e.target.value)} 
-                  className="px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none" 
+                  className="px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none" 
                 />
                 <input 
                   type="number" 
                   placeholder="Saldo Kas Awal (Rp)" 
                   value={saldoAwalInput} 
                   onChange={(e) => setSaldoAwalInput(e.target.value)} 
-                  className="px-4 py-2.5 bg-black/30 border theme-border theme-text-accent font-mono font-bold rounded-2xl focus:outline-none" 
+                  className="px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-accent font-mono font-bold rounded-2xl focus:outline-none" 
                 />
               </div>
               <div className="flex gap-2">
@@ -719,14 +649,14 @@ export default function PengaturanPage() {
                   {editingPeriodeId ? '💾 Perbarui Periode' : '➕ Tambah Periode Baru'}
                 </button>
                 {editingPeriodeId && (
-                  <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-4 py-2.5 bg-black/30 border theme-border theme-text-secondary rounded-2xl text-xs cursor-pointer">Batal</button>
+                  <button type="button" onClick={() => { setEditingPeriodeId(null); setNamaPeriodeInput(''); setSaldoAwalInput(''); }} className="px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-secondary rounded-2xl text-xs cursor-pointer">Batal</button>
                 )}
               </div>
             </form>
 
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {periodeList.map((p) => (
-                <div key={p.id} className="flex justify-between items-center p-3 bg-black/20 border theme-border rounded-2xl text-xs">
+                <div key={p.id} className="flex justify-between items-center p-3 theme-bg-tertiary border theme-border rounded-2xl text-xs">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold theme-text-primary">{p.nama_periode}</span>
@@ -759,7 +689,7 @@ export default function PengaturanPage() {
         {/* KOLOM KANAN: KATEGORI POS & OTORISASI SANDI */}
         <div className="space-y-6">
           
-          {/* SEKSI 5: KATEGORI POS BUKU KAS */}
+          {/* SEKSI 4: KATEGORI POS BUKU KAS */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
               <FolderPlus className="w-4 h-4 theme-text-accent" />
@@ -773,15 +703,15 @@ export default function PengaturanPage() {
                 required 
                 value={newCategory} 
                 onChange={(e) => setNewCategory(e.target.value)} 
-                className="flex-1 px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none" 
+                className="flex-1 px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none" 
               />
               <select
                 value={categoryType}
                 onChange={(e) => setCategoryType(e.target.value)}
-                className="px-3 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none cursor-pointer font-bold"
+                className="px-3 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none cursor-pointer font-bold"
               >
-                <option value="pemasukan" className="bg-zinc-900 text-emerald-400">📥 Pemasukan</option>
-                <option value="pengeluaran" className="bg-zinc-900 text-rose-400">📤 Pengeluaran</option>
+                <option value="pemasukan" className="bg-zinc-900 text-emerald-400 dark:bg-zinc-900 dark:text-emerald-400">📥 Pemasukan</option>
+                <option value="pengeluaran" className="bg-zinc-900 text-rose-400 dark:bg-zinc-900 dark:text-rose-400">📤 Pengeluaran</option>
               </select>
               <button type="submit" className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl transition-all shrink-0 shadow-md uppercase font-mono cursor-pointer">
                 Tambah
@@ -790,23 +720,23 @@ export default function PengaturanPage() {
 
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
               {categories.map((cat) => (
-                <div key={cat.id} className="flex justify-between items-center p-3 bg-black/20 border theme-border rounded-2xl text-xs">
+                <div key={cat.id} className="flex justify-between items-center p-3 theme-bg-tertiary border theme-border rounded-2xl text-xs">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="truncate font-semibold theme-text-primary">🏷️ {cat.name}</span>
                     <select
                       value={cat.type || ''}
                       onChange={(e) => handleUpdateCategoryType(cat.id, e.target.value)}
-                      className={`px-2 py-0.5 rounded-lg bg-black/30 border text-[10px] focus:outline-none cursor-pointer font-mono font-bold ${
+                      className={`px-2 py-0.5 rounded-lg theme-bg-secondary border text-[10px] focus:outline-none cursor-pointer font-mono font-bold ${
                         cat.type === 'pemasukan' 
-                          ? 'text-emerald-300 border-emerald-500/50' 
+                          ? 'text-emerald-400 border-emerald-500/50' 
                           : cat.type === 'pengeluaran' 
-                          ? 'text-rose-300 border-rose-500/50' 
+                          ? 'text-rose-400 border-rose-500/50' 
                           : 'theme-text-secondary border-slate-700'
                       }`}
                     >
-                      <option value="" disabled className="bg-zinc-900 text-white">Pilih Jenis</option>
-                      <option value="pemasukan" className="text-emerald-400 bg-zinc-900">📥 Pemasukan</option>
-                      <option value="pengeluaran" className="text-rose-400 bg-zinc-900">📤 Pengeluaran</option>
+                      <option value="" disabled className="bg-zinc-900 text-white dark:bg-zinc-900 dark:text-white">Pilih Jenis</option>
+                      <option value="pemasukan" className="text-emerald-400 bg-zinc-900 dark:bg-zinc-900 dark:text-emerald-400">📥 Pemasukan</option>
+                      <option value="pengeluaran" className="text-rose-400 bg-zinc-900 dark:bg-zinc-900 dark:text-rose-400">📤 Pengeluaran</option>
                     </select>
                   </div>
                   <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-rose-400 hover:text-rose-300 ml-2 shrink-0 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -815,7 +745,7 @@ export default function PengaturanPage() {
             </div>
           </GlassCard>
 
-          {/* SEKSI 6: UBAH SANDI OTORISASI */}
+          {/* SEKSI 5: UBAH SANDI OTORISASI */}
           <GlassCard className="p-5 sm:p-6 space-y-4">
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <h3 className="text-xs font-extrabold uppercase tracking-wider theme-text-primary border-b theme-border pb-3 flex items-center gap-2">
@@ -826,15 +756,15 @@ export default function PengaturanPage() {
               <div className="space-y-3 text-xs">
                 <div>
                   <label className="block text-[11px] font-bold theme-text-secondary mb-1">Sandi Lama Saat Ini</label>
-                  <input type="password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-center" />
+                  <input type="password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-center" />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold theme-text-secondary mb-1">Sandi Baru</label>
-                  <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-center" />
+                  <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-center" />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold theme-text-secondary mb-1">Konfirmasi Sandi Baru</label>
-                  <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2.5 bg-black/30 border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-center" />
+                  <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none font-mono text-center" />
                 </div>
               </div>
 
@@ -849,7 +779,7 @@ export default function PengaturanPage() {
 
       </div>
 
-      {/* ❓ MODAL KONFIRMASI AKSI (TENGAH LAYAR) */}
+      {/* MODAL KONFIRMASI AKSI */}
       {confirmModal.show && (
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <GlassCard className="p-6 max-w-sm w-full space-y-4 shadow-2xl text-center relative overflow-hidden">
@@ -866,7 +796,7 @@ export default function PengaturanPage() {
               <button
                 type="button"
                 onClick={() => setConfirmModal({ show: false, title: '', message: '', action: null })}
-                className="flex-1 py-3 bg-black/40 border theme-border theme-text-secondary font-bold text-xs uppercase rounded-2xl cursor-pointer"
+                className="flex-1 py-3 theme-bg-tertiary border theme-border theme-text-secondary font-bold text-xs uppercase rounded-2xl cursor-pointer"
               >
                 Batal
               </button>
