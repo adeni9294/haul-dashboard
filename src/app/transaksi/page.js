@@ -309,7 +309,7 @@ export default function TransaksiPage() {
       setAllExpenses(expensesDb || []);
     } catch (e) {
       console.error("Gagal load data: ", e);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   }
