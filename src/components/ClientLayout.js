@@ -7,6 +7,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import GlassCard from '@/components/GlassCard';
 
+// Import Plugin Capacitor (fallback aman jika dijalankan di browser web biasa)
+import { Geolocation } from '@capacitor/geolocation';
+import { LocalNotifications } from '@capacitor/local-notifications';
+
 import { 
   Home, 
   BarChart3, 
@@ -98,8 +102,54 @@ export default function ClientLayout({ children }) {
     setAppMode(savedMode);
     applyAppMode(savedMode);
 
+    requestCapacitorPermissions();
     subscribeUserToPush();
+    initRealtimeTransactionListener();
   }, []);
+
+  // Minta Izin Notifikasi untuk Capacitor Android Native
+  const requestCapacitorPermissions = async () => {
+    try {
+      if (typeof window !== 'undefined' && window.Capacitor) {
+        const status = await LocalNotifications.checkPermissions();
+        if (status.display !== 'granted') {
+          await LocalNotifications.requestPermissions();
+        }
+      }
+    } catch (e) {
+      console.warn('Gagal meminta izin notifikasi Capacitor:', e);
+    }
+  };
+
+  // Realtime Listener untuk Transaksi Kas Masuk/Keluar
+  const initRealtimeTransactionListener = () => {
+    if (!supabase) return;
+
+    // Transaksi Masuk (Donasi)
+    const donationChannel = supabase
+      .channel('realtime_donations')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'donation_details' }, (payload) => {
+        const data = payload.new;
+        const nominal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.amount || 0);
+        triggerNotification('💰 Donasi Masuk Baru', `Terima kasih! Donasi ${nominal} dari ${data.donor_name || 'Hamba Allah'} telah diterima.`);
+      })
+      .subscribe();
+
+    // Transaksi Keluar (Pengeluaran Kas)
+    const expenseChannel = supabase
+      .channel('realtime_expenses')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, (payload) => {
+        const data = payload.new;
+        const nominal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.amount || 0);
+        triggerNotification('💸 Pengeluaran Kas Baru', `Pencatatan pengeluaran: ${data.note || 'Pengeluaran'} sebesar ${nominal}.`);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(donationChannel);
+      supabase.removeChannel(expenseChannel);
+    };
+  };
 
   const subscribeUserToPush = async () => {
     if (typeof window === 'undefined') return;
@@ -248,45 +298,51 @@ export default function ClientLayout({ children }) {
     }
   }
 
+  // Deteksi GPS Menggunakan Capacitor Plugin (Fallback ke HTML5 Web GPS)
   async function fetchJadwalAutoGPS() {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          try {
-            const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=20`);
-            const result = await res.json();
-            
-            if (result && result.code === 200 && result.data) {
-              const timings = result.data.timings;
-              const hijri = result.data.date.hijri;
+    try {
+      let lat, lon;
 
-              setKotaSholat('LOKASI SAYA (GPS)');
-              setJadwalSholat({
-                imsak: timings.Imsak,
-                subuh: timings.Fajr,
-                terbit: timings.Sunrise,
-                dzuhur: timings.Dhuhr,
-                ashar: timings.Asr,
-                maghrib: timings.Maghrib,
-                isya: timings.Isha
-              });
+      if (typeof window !== 'undefined' && window.Capacitor) {
+        const coordinates = await Geolocation.getCurrentPosition();
+        lat = coordinates.coords.latitude;
+        lon = coordinates.coords.longitude;
+      } else if ('geolocation' in navigator) {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
+        });
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+      }
 
-              if (hijri) {
-                setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
-              }
-              return;
-            }
-            fetchJadwalSholatDirect('1219');
-          } catch (e) {
-            fetchJadwalSholatDirect('1219');
+      if (lat && lon) {
+        const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=20`);
+        const result = await res.json();
+        
+        if (result && result.code === 200 && result.data) {
+          const timings = result.data.timings;
+          const hijri = result.data.date.hijri;
+
+          setKotaSholat('LOKASI SAYA (GPS)');
+          setJadwalSholat({
+            imsak: timings.Imsak,
+            subuh: timings.Fajr,
+            terbit: timings.Sunrise,
+            dzuhur: timings.Dhuhr,
+            ashar: timings.Asr,
+            maghrib: timings.Maghrib,
+            isya: timings.Isha
+          });
+
+          if (hijri) {
+            setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
           }
-        },
-        () => fetchJadwalSholatDirect('1219'),
-        { timeout: 8000, enableHighAccuracy: false }
-      );
-    } else {
+          return;
+        }
+      }
+      fetchJadwalSholatDirect('1219');
+    } catch (e) {
+      console.warn('Gagal memperoleh lokasi GPS:', e);
       fetchJadwalSholatDirect('1219');
     }
   }
@@ -320,7 +376,7 @@ export default function ClientLayout({ children }) {
       if (s.time === currentHHMM && lastTriggeredSholat.current !== `${s.name}_${currentHHMM}`) {
         lastTriggeredSholat.current = `${s.name}_${currentHHMM}`;
         playAlarmSound(s.name);
-        triggerNotification(s.name);
+        triggerNotification(`🕌 Waktu Sholat ${s.name} Tiba!`, `Telah masuk waktu sholat ${s.name} untuk wilayah ${kotaSholat} dan sekitarnya.`);
       }
     });
   };
@@ -362,14 +418,33 @@ export default function ClientLayout({ children }) {
     setCurrentActiveSholat('');
   };
 
-  const triggerNotification = (namaSholat) => {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification(`🕌 Waktu Sholat ${namaSholat} Tiba!`, {
-        body: `Telah masuk waktu sholat ${namaSholat} untuk wilayah ${kotaSholat} dan sekitarnya.`,
-        icon: logoUrl || '/favicon.ico'
-      });
-    } else {
-      showToast('info', '🕌 Waktu Sholat Tiba', `Telah masuk waktu sholat ${namaSholat} untuk wilayah ${kotaSholat} dan sekitarnya.`);
+  // Fungsi Pemicu Notifikasi (Gabungan Capacitor Local Notifications & Web Notification API)
+  const triggerNotification = async (title, message) => {
+    try {
+      if (typeof window !== 'undefined' && window.Capacitor) {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: title,
+              body: message,
+              id: new Date().getTime(),
+              schedule: { at: new Date(Date.now() + 500) },
+              sound: null,
+              actionTypeId: "",
+              extra: null
+            }
+          ]
+        });
+      } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+          body: message,
+          icon: logoUrl || '/favicon.ico'
+        });
+      } else {
+        showToast('info', title, message);
+      }
+    } catch (err) {
+      showToast('info', title, message);
     }
   };
 
