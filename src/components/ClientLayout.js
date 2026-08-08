@@ -22,7 +22,7 @@ import {
   CreditCard,    
   Calendar,      
   Images,        
-  Users,          
+  Users,         
   Settings,
   Clock,
   Compass,
@@ -52,25 +52,6 @@ function urlBase64ToUint8Array(base64String) {
   }
   return outputArray;
 }
-
-const THEME_STYLES = {
-  'default': { name: 'Default Navy', accentBadge: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold', accentText: 'text-cyan-400' },
-  'emerald-cyber': { name: 'Emerald Cyber', accentBadge: 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30 font-bold', accentText: 'text-emerald-400' },
-  'velvet-rose': { name: 'Velvet Rose', accentBadge: 'bg-pink-500/20 text-pink-400 border border-pink-500/30 font-bold', accentText: 'text-pink-400' },
-  'neon-sunset': { name: 'Neon Sunset', accentBadge: 'bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold', accentText: 'text-orange-400' },
-  'nordic-frost': { name: 'Nordic Frost', accentBadge: 'bg-sky-400/20 text-sky-400 border border-sky-400/30 font-bold', accentText: 'text-sky-400' },
-  'tokyo-night': { name: 'Tokyo Night', accentBadge: 'bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold', accentText: 'text-purple-400' },
-  'amber-gold': { name: 'Amber Gold', accentBadge: 'bg-amber-400/20 text-amber-400 border border-amber-400/30 font-bold', accentText: 'text-amber-400' },
-  'cyberpunk-2076': { name: 'Cyberpunk 2076', accentBadge: 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold', accentText: 'text-yellow-400' },
-  'ocean-deep': { name: 'Ocean Deep', accentBadge: 'bg-blue-600/20 text-blue-400 border border-blue-600/30 font-bold', accentText: 'text-blue-400' },
-  'forest-moss': { name: 'Forest Moss', accentBadge: 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 font-bold', accentText: 'text-emerald-400' },
-  'crimson-tide': { name: 'Crimson Tide', accentBadge: 'bg-red-600/20 text-red-400 border border-red-600/30 font-bold', accentText: 'text-red-400' },
-  'obsidian-stark': { name: 'Obsidian Stark', accentBadge: 'bg-slate-400/20 text-slate-300 border border-slate-400/30 font-bold', accentText: 'text-slate-300' },
-  'dracula-vamp': { name: 'Dracula Vamp', accentBadge: 'bg-purple-600/20 text-purple-400 border border-purple-600/30 font-bold', accentText: 'text-purple-400' },
-  'coffee-latte': { name: 'Coffee Latte', accentBadge: 'bg-amber-700/20 text-amber-500 border border-amber-700/30 font-bold', accentText: 'text-amber-500' },
-  'mint-fresh': { name: 'Mint Fresh', accentBadge: 'bg-teal-400/20 text-teal-300 border border-teal-400/30 font-bold', accentText: 'text-teal-300' },
-  'retro-wave': { name: 'Retro Wave', accentBadge: 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold', accentText: 'text-rose-400' }
-};
 
 const DAFTAR_KOTA = [
   { id: '1219', name: 'Kab. Cirebon', city: 'Cirebon', country: 'Indonesia', lat: -6.7589, lng: 108.4812 },
@@ -112,18 +93,12 @@ export default function ClientLayout({ children }) {
   const [address, setAddress] = useState('Blok. Cibogo Kidul RT/RW. 002/003 Desa Warujaya Kec. Depok Kab. Cirebon');
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
   const [logoUrl, setLogoUrl] = useState('');
-  const [currentThemeKey, setCurrentThemeKey] = useState('default');
 
   useEffect(() => {
     setIsMounted(true);
     const savedMode = localStorage.getItem('app_mode') || 'dark';
     setAppMode(savedMode);
     applyAppMode(savedMode);
-
-    const savedTheme = localStorage.getItem('app-theme');
-    if (savedTheme && THEME_STYLES[savedTheme]) {
-      setCurrentThemeKey(savedTheme);
-    }
 
     subscribeUserToPush();
   }, []);
@@ -205,14 +180,6 @@ export default function ClientLayout({ children }) {
     applyAppMode(nextMode);
   };
 
-  useEffect(() => {
-    document.body.className = document.body.className
-      .replace(/theme-[^\s]+/g, '')
-      .trim();
-
-    document.body.classList.add(`theme-${currentThemeKey}`);
-  }, [currentThemeKey]);
-
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
 
@@ -285,13 +252,11 @@ export default function ClientLayout({ children }) {
 
       const savedAdminPassword = localStorage.getItem('admin_password_haul');
       const savedThemeMode = localStorage.getItem('app_mode');
-      const savedAppTheme = localStorage.getItem('app-theme');
 
       localStorage.clear();
 
       if (savedAdminPassword) localStorage.setItem('admin_password_haul', savedAdminPassword);
       if (savedThemeMode) localStorage.setItem('app_mode', savedThemeMode);
-      if (savedAppTheme) localStorage.setItem('app-theme', savedAppTheme);
 
       showToast('success', 'Cache Dibersihkan!', 'PWA telah segar kembali. Memuat ulang aplikasi...');
 
@@ -498,7 +463,6 @@ export default function ClientLayout({ children }) {
         if (config.address) setAddress(config.address);
         if (config.bank_info) setBankInfo(config.bank_info);
         if (config.logo_url) setLogoUrl(config.logo_url);
-        if (config.theme && THEME_STYLES[config.theme]) setCurrentThemeKey(config.theme);
       }
     } catch (err) {
       console.error(err);
@@ -588,7 +552,7 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-         {/* HEADER UTUH & CERAH */}
+          {/* HEADER UTUH & CERAH */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
               className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 shadow-lg ${
@@ -729,22 +693,22 @@ export default function ClientLayout({ children }) {
               <span className="text-[9px] font-bold mt-0.5">Stat</span>
             </Link>
 
-         <button 
-  onClick={() => setShowDonationModal(true)} 
-  className="relative -top-2 flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-amber-200 via-yellow-400 to-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-amber-200 shrink-0 group overflow-hidden"
-  title="Rekening Donasi"
->
-  {/* Kilatan Cahaya */}
-  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            <button 
+              onClick={() => setShowDonationModal(true)} 
+              className="relative -top-2 flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-amber-200 via-yellow-400 to-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-amber-200 shrink-0 group overflow-hidden"
+              title="Rekening Donasi"
+            >
+              {/* Kilatan Cahaya */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
 
-  {/* Ikon Kado */}
-  <Gift className="w-5 h-5 stroke-[2.8] text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] animate-bounce" />
-  
-  {/* Label Donasi */}
-  <span className="text-[8px] font-black uppercase font-mono tracking-tighter leading-none mt-0.5 text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
-    Donasi
-  </span>
-</button>
+              {/* Ikon Kado */}
+              <Gift className="w-5 h-5 stroke-[2.8] text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] animate-bounce" />
+              
+              {/* Label Donasi */}
+              <span className="text-[8px] font-black uppercase font-mono tracking-tighter leading-none mt-0.5 text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
+                Donasi
+              </span>
+            </button>
 
             <Link 
               href="/anggaran" 
