@@ -1,0 +1,32 @@
+{
+  "name": "Dashboard Panitia Haul Maqbaroh Buyut Kepuh",
+  "short_name": "DB Haul",
+  "description": "Aplikasi resmi pengelolaan data kas, anggaran, dan jadwal acara Panitia Haul Maqbaroh Buyut Kepuh & Buyut Besus",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050b14",
+  "theme_color": "#050b14",
+  "orientation": "portrait",
+  "categories": [
+    "finance",
+    "lifestyle",
+    "productivity",
+    "utilities"
+  ],
+  "id": "/haul-dashboard-app",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "dir": "ltr"
+}
