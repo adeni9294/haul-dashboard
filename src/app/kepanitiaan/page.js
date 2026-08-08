@@ -14,12 +14,12 @@ export default function KepanitiaanPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [viewMode, setViewMode] = useState('chart'); // 'chart' atau 'list'
 
-  // ➕ State Periode Haul
+  // State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
   const [currentPeriodeObj, setCurrentPeriodeObj] = useState(null);
 
-  // 🔔 Custom Toast & Confirm Modal States
+  // Custom Toast & Confirm Modal States
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
 
@@ -110,7 +110,7 @@ export default function KepanitiaanPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAdmin) return showToast('Aksi ditolak. Anda belum login sebagai admin!', 'error');
-    if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini telah ditutup buku.', 'error');
+    if (currentPeriodeObj?.is_closed) return showToast('Periode ini telah ditutup buku.', 'error');
     if (!nama.trim()) return;
 
     const supabase = getSupabase();
@@ -126,11 +126,11 @@ export default function KepanitiaanPage() {
       if (editingId) {
         const { error } = await supabase.from('committee').update(payload).eq('id', editingId);
         if (error) throw error;
-        showToast('🟢 Data kepanitiaan berhasil diperbarui!', 'success');
+        showToast('Data kepanitiaan berhasil diperbarui!', 'success');
       } else {
         const { error } = await supabase.from('committee').insert([payload]);
         if (error) throw error;
-        showToast('🟢 Anggota panitia baru berhasil ditambahkan!', 'success');
+        showToast('Anggota panitia baru berhasil ditambahkan!', 'success');
       }
 
       setNama('');
@@ -140,13 +140,13 @@ export default function KepanitiaanPage() {
       await loadPanitia();
     } catch (err) {
       console.error(err);
-      showToast(`❌ Gagal menyimpan data: ${err?.message || err}`, 'error');
+      showToast(`Gagal menyimpan data: ${err?.message || err}`, 'error');
     }
   };
 
   const handleEdit = (p) => {
     if (!isAdmin) return showToast('Aksi ditolak. Anda bukan admin!', 'error');
-    if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini sudah ditutup buku!', 'error');
+    if (currentPeriodeObj?.is_closed) return showToast('Periode ini sudah ditutup buku!', 'error');
     setEditingId(p.id);
     setNama(p.name || '');
     setJabatan(p.position || '');
@@ -156,7 +156,7 @@ export default function KepanitiaanPage() {
 
   const handleDelete = (id) => {
     if (!isAdmin) return showToast('Aksi ditolak. Anda bukan admin!', 'error');
-    if (currentPeriodeObj?.is_closed) return showToast('🔒 Periode ini sudah ditutup buku!', 'error');
+    if (currentPeriodeObj?.is_closed) return showToast('Periode ini sudah ditutup buku!', 'error');
 
     showConfirm(
       'Hapus Anggota Panitia',
@@ -166,10 +166,10 @@ export default function KepanitiaanPage() {
           const supabase = getSupabase();
           const { error } = await supabase.from('committee').delete().eq('id', id);
           if (error) throw error;
-          showToast('🗑️ Anggota panitia berhasil dihapus.', 'success');
+          showToast('Anggota panitia berhasil dihapus.', 'success');
           await loadPanitia();
         } catch (err) {
-          showToast(`❌ Gagal menghapus: ${err?.message || err}`, 'error');
+          showToast(`Gagal menghapus: ${err?.message || err}`, 'error');
         } finally {
           closeConfirm();
         }
@@ -177,7 +177,7 @@ export default function KepanitiaanPage() {
     );
   };
 
-  // 💡 HELPER: KELOMPOKKAN ANGGOTA SESUAI LEVEL JABATAN UNTUK BAGAN HIERARKI
+  // HELPER: KELOMPOKKAN ANGGOTA SESUAI LEVEL JABATAN UNTUK BAGAN HIERARKI
   const getCategorizedCommittee = () => {
     const topTier = [];     // Pelindung, Penasehat, Penanggung Jawab, Ketua, Wakil Ketua
     const middleTier = [];  // Sekretaris, Bendahara, Koordinator Utama
@@ -210,7 +210,7 @@ export default function KepanitiaanPage() {
 
   const { topTier, middleTier, sectionTier } = getCategorizedCommittee();
 
-  // 🚀 TAMPILAN SKELETON LOADING
+  // SKELETON LOADING
   if (loading) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
@@ -223,8 +223,8 @@ export default function KepanitiaanPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
-          <GlassCard className="lg:col-span-2 p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+          <GlassCard className="p-6 h-64 animate-pulse theme-bg-secondary theme-border" />
+          <GlassCard className="lg:col-span-2 p-6 h-64 animate-pulse theme-bg-secondary theme-border" />
         </div>
       </div>
     );
@@ -233,7 +233,7 @@ export default function KepanitiaanPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
 
-      {/* 🔔 FLOATING TOAST NOTIFICATION (POSISI CENTER ATAS) */}
+      {/* FLOATING TOAST NOTIFICATION */}
       {toast.show && (
         <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
           <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
@@ -247,7 +247,7 @@ export default function KepanitiaanPage() {
         </div>
       )}
 
-      {/* ❓ CUSTOM CONFIRMATION MODAL */}
+      {/* CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
         <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
@@ -257,13 +257,13 @@ export default function KepanitiaanPage() {
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={closeConfirm}
-                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
+                className="px-4 py-2 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary font-mono rounded-xl border theme-border transition-all cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md cursor-pointer"
               >
                 Ya, Hapus
               </button>
@@ -283,10 +283,10 @@ export default function KepanitiaanPage() {
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* TOGGLE VIEW MODE (BAGAN VS LIST) */}
-          <div className="flex bg-black/40 p-1 border theme-border rounded-xl font-mono text-[10px]">
+          <div className="flex theme-bg-tertiary p-1 border theme-border rounded-xl font-mono text-[10px]">
             <button
               onClick={() => setViewMode('chart')}
-              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                 viewMode === 'chart' 
                   ? 'bg-amber-500 text-slate-950 shadow' 
                   : 'theme-text-secondary hover:theme-text-primary'
@@ -296,7 +296,7 @@ export default function KepanitiaanPage() {
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                 viewMode === 'list' 
                   ? 'bg-amber-500 text-slate-950 shadow' 
                   : 'theme-text-secondary hover:theme-text-primary'
@@ -308,15 +308,15 @@ export default function KepanitiaanPage() {
 
           {/* SELECTOR PERIODE */}
           {periodeList.length > 0 && (
-            <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
+            <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
               <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode:</span>
               <select
                 value={selectedPeriodeId || ''}
                 onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+                className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
               >
                 {periodeList.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                  <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                     {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
                   </option>
                 ))}
@@ -328,7 +328,7 @@ export default function KepanitiaanPage() {
 
       {/* INDIKATOR TUTUP BUKU */}
       {currentPeriodeObj?.is_closed && (
-        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs">
+        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-400 font-mono text-xs">
           <span>🔒 Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Susunan kepanitiaan bersifat Read-Only.</span>
           <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
         </GlassCard>
@@ -336,7 +336,7 @@ export default function KepanitiaanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* FORM INPUT ADMIN (GLASSMORPHISM) */}
+        {/* FORM INPUT ADMIN */}
         {isAdmin && !currentPeriodeObj?.is_closed ? (
           <GlassCard className="p-6 h-fit space-y-4">
             <h3 className="text-xs font-black theme-text-accent uppercase tracking-wider flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function KepanitiaanPage() {
                   value={nama} 
                   onChange={(e) => setNama(e.target.value)} 
                   placeholder="Contoh: Ahmad Deni" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
               <div>
@@ -361,7 +361,7 @@ export default function KepanitiaanPage() {
                   value={jabatan} 
                   onChange={(e) => setJabatan(e.target.value)} 
                   placeholder="Contoh: Ketua Panitia / Seksi Konsumsi" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
               <div>
@@ -371,7 +371,7 @@ export default function KepanitiaanPage() {
                   value={nomorHp} 
                   onChange={(e) => setNomorHp(e.target.value)} 
                   placeholder="Contoh: +62 812-3456-789" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" 
                 />
               </div>
               
@@ -382,7 +382,7 @@ export default function KepanitiaanPage() {
                 <button 
                   type="button" 
                   onClick={() => { setEditingId(null); setNama(''); setJabatan(''); setNomorHp(''); }} 
-                  className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border cursor-pointer"
+                  className="w-full py-1.5 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border cursor-pointer"
                 >
                   Batal Edit
                 </button>
@@ -429,21 +429,21 @@ export default function KepanitiaanPage() {
                         {topTier.map((p) => (
                           <div 
                             key={p.id} 
-                            className="w-full sm:w-64 p-4 rounded-2xl bg-gradient-to-b from-amber-500/20 to-slate-900/60 border-2 border-amber-400/50 text-center shadow-lg relative group"
+                            className="w-full sm:w-64 p-4 rounded-2xl theme-bg-tertiary border-2 border-amber-400/50 text-center shadow-lg relative group"
                           >
                             <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-lg">
                               👤
                             </div>
-                            <h4 className="font-extrabold text-sm text-slate-100 uppercase tracking-wide">{p.name}</h4>
-                            <p className="text-[11px] font-bold text-amber-300 font-mono mt-0.5">{p.position}</p>
+                            <h4 className="font-extrabold text-sm theme-text-primary uppercase tracking-wide">{p.name}</h4>
+                            <p className="text-[11px] font-bold text-amber-400 font-mono mt-0.5">{p.position}</p>
                             {p.phone && p.phone !== '-' && (
-                              <p className="text-[10px] text-slate-400 font-mono mt-1">📱 {p.phone}</p>
+                              <p className="text-[10px] theme-text-tertiary font-mono mt-1">📱 {p.phone}</p>
                             )}
 
                             {isAdmin && !currentPeriodeObj?.is_closed && (
-                              <div className="mt-3 pt-2 border-t border-white/10 flex justify-center gap-3 font-mono text-[10px]">
-                                <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                                <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                              <div className="mt-3 pt-2 border-t theme-border flex justify-center gap-3 font-mono text-[10px]">
+                                <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold cursor-pointer">Edit</button>
+                                <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold cursor-pointer">Hapus</button>
                               </div>
                             )}
                           </div>
@@ -469,23 +469,23 @@ export default function KepanitiaanPage() {
                         {middleTier.map((p) => (
                           <div 
                             key={p.id} 
-                            className="p-3.5 rounded-2xl bg-slate-900/60 border border-cyan-400/30 flex items-center gap-3 shadow-md group"
+                            className="p-3.5 rounded-2xl theme-bg-tertiary border border-cyan-400/30 flex items-center gap-3 shadow-md group"
                           >
                             <div className="w-10 h-10 rounded-xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-base shrink-0">
                               📑
                             </div>
                             <div className="min-w-0 flex-1">
-                              <h4 className="font-bold text-xs text-slate-100 uppercase truncate">{p.name}</h4>
-                              <p className="text-[10px] font-mono text-cyan-300 font-semibold">{p.position}</p>
+                              <h4 className="font-bold text-xs theme-text-primary uppercase truncate">{p.name}</h4>
+                              <p className="text-[10px] font-mono text-cyan-400 font-semibold">{p.position}</p>
                               {p.phone && p.phone !== '-' && (
-                                <p className="text-[9px] text-slate-400 font-mono mt-0.5">📱 {p.phone}</p>
+                                <p className="text-[9px] theme-text-tertiary font-mono mt-0.5">📱 {p.phone}</p>
                               )}
                             </div>
 
                             {isAdmin && !currentPeriodeObj?.is_closed && (
                               <div className="flex gap-2 font-mono text-[10px] shrink-0">
-                                <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                                <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                                <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold cursor-pointer">Edit</button>
+                                <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold cursor-pointer">Hapus</button>
                               </div>
                             )}
                           </div>
@@ -499,7 +499,7 @@ export default function KepanitiaanPage() {
                     <div className="w-0.5 h-6 bg-cyan-400/40 mx-auto" />
                   )}
 
-                  {/* LEVEL 3: SEKSI-SEKSI SEKSI & OPERASIONAL */}
+                  {/* LEVEL 3: SEKSI-SEKSI & OPERASIONAL */}
                   {sectionTier.length > 0 && (
                     <div className="space-y-3">
                       <div className="text-center">
@@ -511,17 +511,17 @@ export default function KepanitiaanPage() {
                         {sectionTier.map((p) => (
                           <div 
                             key={p.id} 
-                            className="p-3 rounded-xl bg-black/30 border border-white/10 flex justify-between items-center text-xs hover:border-emerald-400/30 transition-all"
+                            className="p-3 rounded-xl theme-bg-tertiary border theme-border flex justify-between items-center text-xs hover:border-emerald-400/40 transition-all"
                           >
                             <div>
-                              <p className="font-bold text-slate-200 uppercase">{p.name}</p>
+                              <p className="font-bold theme-text-primary uppercase">{p.name}</p>
                               <p className="text-[10px] text-emerald-400 font-mono font-medium">{p.position}</p>
                             </div>
 
                             {isAdmin && !currentPeriodeObj?.is_closed && (
                               <div className="flex gap-2 font-mono text-[10px]">
-                                <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold">Edit</button>
-                                <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                                <button onClick={() => handleEdit(p)} className="text-amber-400 hover:underline font-bold cursor-pointer">Edit</button>
+                                <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold cursor-pointer">Hapus</button>
                               </div>
                             )}
                           </div>
@@ -545,7 +545,7 @@ export default function KepanitiaanPage() {
                   <p className="text-xs theme-text-tertiary font-mono py-6 text-center">Belum ada daftar kepanitiaan yang ditemukan pada periode ini.</p>
                 ) : (
                   panitiaList.map((p) => (
-                    <div key={p.id} className="p-3.5 bg-black/20 border theme-border rounded-xl flex justify-between items-center text-xs hover:border-white/30 transition-all">
+                    <div key={p.id} className="p-3.5 theme-bg-tertiary border theme-border rounded-xl flex justify-between items-center text-xs hover:border-cyan-400/40 transition-all">
                       <div>
                         <p className="font-bold theme-text-primary text-sm tracking-wide uppercase">{p.name || 'Tanpa Nama'}</p>
                         <div className="flex flex-col gap-0.5 text-[10px] theme-text-secondary font-mono mt-1">
@@ -560,8 +560,8 @@ export default function KepanitiaanPage() {
                             <span className="theme-text-accent italic text-[10px]">🔒 Terkunci</span>
                           ) : (
                             <>
-                              <button onClick={() => handleEdit(p)} className="theme-text-accent hover:underline font-bold">Edit</button>
-                              <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold">Hapus</button>
+                              <button onClick={() => handleEdit(p)} className="theme-text-accent hover:underline font-bold cursor-pointer">Edit</button>
+                              <button onClick={() => handleDelete(p.id)} className="text-rose-400 hover:underline font-bold cursor-pointer">Hapus</button>
                             </>
                           )}
                         </div>
