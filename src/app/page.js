@@ -551,17 +551,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-     {/* CARD 2: TOTAL UANG MASUK (MOTIF DONASI / INFLOW) */}
+        {/* CARD 2: TOTAL UANG MASUK */}
         <div className="p-5 flex flex-col justify-between border-2 border-emerald-500/50 bg-emerald-50/95 dark:bg-emerald-950/80 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden group">
-          
-          {/* Ornamen Motif Khusus Pemasukan / Donasi */}
           <div className="absolute inset-0 pointer-events-none select-none z-0">
-            {/* Pola Grid Bintang/Inflow Subtle */}
             <div className="absolute inset-0 bg-[radial-gradient(#059669_1.2px,transparent_1.2px)] [background-size:12px_12px] opacity-[0.09] dark:opacity-[0.15]"></div>
-            
-            {/* Watermark Ornamen: Islamic Star & Dome (Melambangkan Donasi / Infak Kas) */}
             <svg className="absolute -right-6 -bottom-6 w-40 h-40 text-emerald-700 dark:text-emerald-400 opacity-[0.08] dark:opacity-15 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3.5">
-              {/* Bintang 8 (Rub el Hizb) */}
               <rect x="25" y="25" width="50" height="50" />
               <rect x="25" y="25" width="50" height="50" transform="rotate(45 50 50)" />
               <circle cx="50" cy="50" r="16" strokeWidth="2.5" />
@@ -591,22 +585,15 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* CARD 3: TOTAL UANG BELANJA (MOTIF BELANJA / LOGISTIK) */}
+        {/* CARD 3: TOTAL UANG BELANJA */}
         <div className="p-5 flex flex-col justify-between border-2 border-rose-500/50 bg-rose-50/95 dark:bg-rose-950/80 rounded-3xl backdrop-blur-md transition-all shadow-lg relative overflow-hidden group">
-          
-          {/* Ornamen Motif Khusus Pengeluaran / Logistik */}
           <div className="absolute inset-0 pointer-events-none select-none z-0">
-            {/* Pola Garis Diagonal Stripe (Alokasi Belanja) */}
             <div className="absolute inset-0 bg-[linear-gradient(135deg,#e11d48_10%,transparent_10%,transparent_50%,#e11d48_50%,#e11d48_60%,transparent_60%,transparent)] [background-size:16px_16px] opacity-[0.05] dark:opacity-[0.09]"></div>
-            
-            {/* Watermark Ornamen: Rincian Nota & Centang Belanja (Melambangkan Realisasi Pengeluaran) */}
             <svg className="absolute -right-5 -bottom-5 w-36 h-36 text-rose-700 dark:text-rose-400 opacity-[0.08] dark:opacity-15 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-700" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3.5">
-              {/* Kertas Rincian Belanja/Nota */}
               <rect x="25" y="15" width="50" height="70" rx="6" />
               <line x1="35" y1="30" x2="65" y2="30" strokeWidth="3" />
               <line x1="35" y1="42" x2="55" y2="42" strokeWidth="3" />
               <line x1="35" y1="54" x2="60" y2="54" strokeWidth="3" />
-              {/* Seal / Badge Centang Akuntabilitas */}
               <circle cx="62" cy="65" r="12" strokeWidth="2.5" />
               <path d="M57 65l3 3 6-6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
