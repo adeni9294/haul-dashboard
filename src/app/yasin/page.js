@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import GlassCard from '@/components/GlassCard';
 import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen } from 'lucide-react';
 
 // BACAAN TAHLIL KUBRO SESUAI URUTAN MAJMU' SYARIF / PESANTREN
@@ -210,7 +211,7 @@ export default function YasinPage() {
   }, []);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary font-sans">
       {/* Font Amiri khas Mushaf Al-Qur'an */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
@@ -220,33 +221,33 @@ export default function YasinPage() {
       `}</style>
 
       {/* Navigation Header */}
-      <div className="flex items-center justify-between theme-bg-secondary theme-border p-4 rounded-2xl">
-        <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold theme-text-accent hover:opacity-80">
+      <GlassCard className="p-4 flex items-center justify-between">
+        <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold theme-text-accent hover:opacity-80 transition-opacity cursor-pointer">
           <ArrowLeft className="w-4 h-4" /> Kembali ke Utama
         </Link>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setFontSize(prev => Math.max(22, prev - 2))}
-            className="p-2 theme-bg-tertiary rounded-xl theme-text-primary text-xs font-bold border theme-border flex items-center gap-1"
+            className="p-2 theme-bg-tertiary rounded-xl theme-text-primary text-xs font-bold border theme-border flex items-center gap-1 cursor-pointer"
             title="Kecilkan Teks"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button 
             onClick={() => setFontSize(prev => Math.min(54, prev + 2))}
-            className="p-2 theme-bg-tertiary rounded-xl theme-text-primary text-xs font-bold border theme-border flex items-center gap-1"
+            className="p-2 theme-bg-tertiary rounded-xl theme-text-primary text-xs font-bold border theme-border flex items-center gap-1 cursor-pointer"
             title="Besarkan Teks"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
         </div>
-      </div>
+      </GlassCard>
 
       {/* Tabs */}
-      <div className="grid grid-cols-3 gap-2 p-1.5 theme-bg-secondary rounded-2xl theme-border">
+      <GlassCard className="p-1.5 grid grid-cols-3 gap-2">
         <button
           onClick={() => setActiveTab('yasin')}
-          className={`py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'yasin' 
               ? 'bg-emerald-500 text-slate-950 shadow-md font-black' 
               : 'theme-text-secondary hover:theme-text-primary'
@@ -256,7 +257,7 @@ export default function YasinPage() {
         </button>
         <button
           onClick={() => setActiveTab('tahlil')}
-          className={`py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'tahlil' 
               ? 'bg-emerald-500 text-slate-950 shadow-md font-black' 
               : 'theme-text-secondary hover:theme-text-primary'
@@ -266,7 +267,7 @@ export default function YasinPage() {
         </button>
         <button
           onClick={() => setActiveTab('doa')}
-          className={`py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'doa' 
               ? 'bg-emerald-500 text-slate-950 shadow-md font-black' 
               : 'theme-text-secondary hover:theme-text-primary'
@@ -274,17 +275,17 @@ export default function YasinPage() {
         >
           Doa
         </button>
-      </div>
+      </GlassCard>
 
       {/* Title */}
       <div className="text-center space-y-1 py-2">
         <h2 className="text-base font-black uppercase tracking-wider theme-text-primary flex items-center justify-center gap-2">
           <BookOpen className="w-5 h-5 text-emerald-400" />
           {activeTab === 'yasin' && 'Surah YaSiin (Lengkap 83 Ayat)'}
-          {activeTab === 'tahlil' && 'Tahlil Kubro Versi Majmu\' Syarif / Sunan Gunung Jati'}
-          {activeTab === 'doa' && 'Doa Tahlil & Haul Keraton / Masyayikh Cirebon'}
+          {activeTab === 'tahlil' && 'Tahlil'}
+          {activeTab === 'doa' && 'Doa Tahlil'}
         </h2>
-        <p className="text-xs theme-text-secondary font-medium">
+        <p className="text-xs theme-text-secondary font-semibold">
           Susunan Resmi: Tawassul → Ayat Pilihan → Istighfar → Shalawat → Tasbih → Tahlil → Doa
         </p>
       </div>
@@ -295,35 +296,35 @@ export default function YasinPage() {
           {loadingYasin ? (
             <div className="text-center py-12 space-y-3">
               <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
-              <p className="text-xs theme-text-secondary font-mono animate-pulse">Memuat 83 Ayat Surah YaSiin...</p>
+              <p className="text-xs theme-text-secondary font-mono font-bold animate-pulse">Memuat 83 Ayat Surah YaSiin...</p>
             </div>
           ) : (
             yasinAyat.map((item) => (
-              <div key={item.nomorAyat} className="bg-white border border-slate-200 p-6 rounded-3xl space-y-4 shadow-md">
-                <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <GlassCard key={item.nomorAyat} className="p-5 sm:p-6 space-y-4 shadow-md">
+                <div className="flex justify-between items-center border-b theme-border pb-3">
                   <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
                     {item.nomorAyat}
                   </span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-800 uppercase tracking-wide">Surah YaSiin : Ayat {item.nomorAyat}</span>
+                  <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wide">Surah YaSiin : Ayat {item.nomorAyat}</span>
                 </div>
 
                 <p 
-                  className="text-right font-quran text-slate-900 py-3 font-bold whitespace-pre-line"
+                  className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
                   style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
                   dir="rtl"
                 >
                   {item.teksArab}
                 </p>
 
-                <div className="space-y-1.5 pt-3 border-t border-slate-100">
-                  <p className="text-xs font-bold text-emerald-700 italic font-mono">
+                <div className="space-y-1.5 pt-3 border-t theme-border">
+                  <p className="text-xs font-bold text-emerald-400 italic font-mono">
                     {item.teksLatin}
                   </p>
-                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                  <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
                     "{item.teksIndonesia}"
                   </p>
                 </div>
-              </div>
+              </GlassCard>
             ))
           )}
         </div>
@@ -333,31 +334,31 @@ export default function YasinPage() {
       {activeTab === 'tahlil' && (
         <div className="space-y-4">
           {TAHLIL_GUNUNGJATI.map((item) => (
-            <div key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl space-y-4 shadow-md">
-              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+            <GlassCard key={item.id} className="p-5 sm:p-6 space-y-4 shadow-md">
+              <div className="flex justify-between items-center border-b theme-border pb-3">
                 <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
                   {item.id}
                 </span>
-                <span className="text-[11px] font-mono font-bold text-emerald-800 uppercase tracking-wide">Urutan Tahlil #{item.id}</span>
+                <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wide">Urutan Tahlil #{item.id}</span>
               </div>
 
               <p 
-                className="text-right font-quran text-slate-900 py-3 font-bold whitespace-pre-line"
+                className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
                 style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
                 dir="rtl"
               >
                 {item.arab}
               </p>
 
-              <div className="space-y-1.5 pt-3 border-t border-slate-100">
-                <p className="text-xs font-bold text-emerald-700 italic font-mono">
+              <div className="space-y-1.5 pt-3 border-t theme-border">
+                <p className="text-xs font-bold text-emerald-400 italic font-mono">
                   {item.latin}
                 </p>
-                <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
                   "{item.indo}"
                 </p>
               </div>
-            </div>
+            </GlassCard>
           ))}
         </div>
       )}
@@ -366,31 +367,31 @@ export default function YasinPage() {
       {activeTab === 'doa' && (
         <div className="space-y-4">
           {DOA_GUNUNGJATI.map((item) => (
-            <div key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl space-y-4 shadow-md">
-              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+            <GlassCard key={item.id} className="p-5 sm:p-6 space-y-4 shadow-md">
+              <div className="flex justify-between items-center border-b theme-border pb-3">
                 <span className="w-8 h-8 rounded-full bg-amber-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
                   {item.id}
                 </span>
-                <span className="text-[11px] font-mono font-bold text-amber-800 uppercase tracking-wide">Doa Haul Cirebon #{item.id}</span>
+                <span className="text-[11px] font-mono font-bold theme-text-accent uppercase tracking-wide">Doa Haul Cirebon #{item.id}</span>
               </div>
 
               <p 
-                className="text-right font-quran text-slate-900 py-3 font-bold whitespace-pre-line"
+                className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
                 style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
                 dir="rtl"
               >
                 {item.arab}
               </p>
 
-              <div className="space-y-1.5 pt-3 border-t border-slate-100">
-                <p className="text-xs font-bold text-emerald-700 italic font-mono">
+              <div className="space-y-1.5 pt-3 border-t theme-border">
+                <p className="text-xs font-bold text-emerald-400 italic font-mono">
                   {item.latin}
                 </p>
-                <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
                   "{item.indo}"
                 </p>
               </div>
-            </div>
+            </GlassCard>
           ))}
         </div>
       )}
