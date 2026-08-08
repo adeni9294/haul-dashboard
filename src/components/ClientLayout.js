@@ -7,10 +7,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import GlassCard from '@/components/GlassCard';
 
-// Import Plugin Capacitor (fallback aman jika dijalankan di browser web biasa)
-import { Geolocation } from '@capacitor/geolocation';
-import { LocalNotifications } from '@capacitor/local-notifications';
-
 import { 
   Home, 
   BarChart3, 
@@ -107,10 +103,11 @@ export default function ClientLayout({ children }) {
     initRealtimeTransactionListener();
   }, []);
 
-  // Minta Izin Notifikasi untuk Capacitor Android Native
+  // Minta Izin Notifikasi untuk Capacitor Android Native via Dynamic Import
   const requestCapacitorPermissions = async () => {
     try {
       if (typeof window !== 'undefined' && window.Capacitor) {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
         const status = await LocalNotifications.checkPermissions();
         if (status.display !== 'granted') {
           await LocalNotifications.requestPermissions();
@@ -298,12 +295,13 @@ export default function ClientLayout({ children }) {
     }
   }
 
-  // Deteksi GPS Menggunakan Capacitor Plugin (Fallback ke HTML5 Web GPS)
+  // Deteksi GPS via Dynamic Import (Aman dari Build Error Vercel)
   async function fetchJadwalAutoGPS() {
     try {
       let lat, lon;
 
       if (typeof window !== 'undefined' && window.Capacitor) {
+        const { Geolocation } = await import('@capacitor/geolocation');
         const coordinates = await Geolocation.getCurrentPosition();
         lat = coordinates.coords.latitude;
         lon = coordinates.coords.longitude;
@@ -418,10 +416,11 @@ export default function ClientLayout({ children }) {
     setCurrentActiveSholat('');
   };
 
-  // Fungsi Pemicu Notifikasi (Gabungan Capacitor Local Notifications & Web Notification API)
+  // Pemicu Notifikasi via Dynamic Import (Aman dari Build Error Vercel)
   const triggerNotification = async (title, message) => {
     try {
       if (typeof window !== 'undefined' && window.Capacitor) {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
         await LocalNotifications.schedule({
           notifications: [
             {
