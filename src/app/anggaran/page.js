@@ -196,7 +196,7 @@ export default function AnggaranPage() {
   const totalRealisasi = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.real_amount || curr.realized_amount) || 0), 0);
   const totalSelisih = totalRencana - totalRealisasi;
 
-  // 🚀 TAMPILAN SKELETON LOADING MODERN
+  // SKELETON LOADING STATE
   if (loading) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
@@ -210,13 +210,13 @@ export default function AnggaranPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-2xl bg-slate-900/40 border border-white/5 p-4 animate-pulse" />
+            <div key={i} className="h-20 rounded-2xl theme-bg-secondary theme-border border p-4 animate-pulse" />
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
-          <GlassCard className="lg:col-span-2 p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+          <GlassCard className="p-6 h-64 animate-pulse theme-bg-secondary theme-border" />
+          <GlassCard className="lg:col-span-2 p-6 h-64 animate-pulse theme-bg-secondary theme-border" />
         </div>
       </div>
     );
@@ -225,7 +225,7 @@ export default function AnggaranPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
 
-      {/* 🔔 MODERN FLOATING TOAST ALERT (POSISI ATAS TENGAH LAYAR) */}
+      {/* MODERN FLOATING TOAST ALERT */}
       {toast.show && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
           <div className={`px-4 py-3 rounded-2xl flex items-start gap-3 shadow-2xl backdrop-blur-2xl border transition-all ${
@@ -258,7 +258,7 @@ export default function AnggaranPage() {
             </div>
             <button 
               onClick={() => setToast({ show: false, message: '', type: 'success' })}
-              className="text-white/60 hover:text-white p-1 transition-colors"
+              className="text-white/60 hover:text-white p-1 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -268,7 +268,7 @@ export default function AnggaranPage() {
         </div>
       )}
 
-      {/* ❓ CUSTOM CONFIRMATION MODAL */}
+      {/* CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
         <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
@@ -283,14 +283,14 @@ export default function AnggaranPage() {
               <button
                 type="button"
                 onClick={closeConfirm}
-                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
+                className="px-4 py-2 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary font-mono rounded-xl border theme-border transition-all cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -327,7 +327,7 @@ export default function AnggaranPage() {
         </div>
 
         {periodeList.length > 0 && (
-          <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
+          <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
             <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase flex items-center gap-1">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -337,10 +337,10 @@ export default function AnggaranPage() {
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
             >
               {periodeList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                   {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
                 </option>
               ))}
@@ -351,14 +351,14 @@ export default function AnggaranPage() {
 
       {/* INDIKATOR TUTUP BUKU */}
       {currentPeriodeObj?.is_closed && (
-        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs">
+        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-400 font-mono text-xs">
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
             <span>Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Data anggaran bersifat Read-Only.</span>
           </span>
-          <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase">Arsip</span>
+          <span className="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px] uppercase shrink-0">Arsip</span>
         </GlassCard>
       )}
 
@@ -385,7 +385,7 @@ export default function AnggaranPage() {
               </svg>
             </div>
           </div>
-          <h3 className="text-xl font-black mt-1 text-rose-300">{formatRupiah(totalRealisasi)}</h3>
+          <h3 className="text-xl font-black mt-1 text-rose-400">{formatRupiah(totalRealisasi)}</h3>
         </GlassCard>
 
         <GlassCard className="p-4">
@@ -397,7 +397,7 @@ export default function AnggaranPage() {
               </svg>
             </div>
           </div>
-          <h3 className={`text-xl font-black mt-1 ${totalSelisih >= 0 ? 'text-emerald-300' : 'text-rose-400'}`}>
+          <h3 className={`text-xl font-black mt-1 ${totalSelisih >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {formatRupiah(totalSelisih)}
           </h3>
         </GlassCard>
@@ -430,7 +430,7 @@ export default function AnggaranPage() {
                   value={allocationName} 
                   onChange={(e) => setAllocationName(e.target.value)} 
                   placeholder="Contoh: Sewa Tenda Utama & Panggung" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
 
@@ -442,7 +442,7 @@ export default function AnggaranPage() {
                   value={plannedAmount} 
                   onChange={(e) => setPlannedAmount(e.target.value)} 
                   placeholder="Contoh: 5000000" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-accent font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-accent font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
 
@@ -453,7 +453,7 @@ export default function AnggaranPage() {
                   value={realizedAmount} 
                   onChange={(e) => setRealizedAmount(e.target.value)} 
                   placeholder="Contoh: 4500000 (Opsional/Manual)" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs text-rose-300 font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs text-rose-400 font-mono font-bold focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
 
@@ -491,7 +491,7 @@ export default function AnggaranPage() {
                 <button 
                   type="button" 
                   onClick={() => { setEditingId(null); setAllocationName(''); setPlannedAmount(''); setRealizedAmount(''); }} 
-                  className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl transition-all border theme-border"
+                  className="w-full py-1.5 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary text-xs font-bold rounded-xl transition-all border theme-border cursor-pointer"
                 >
                   Batal Edit
                 </button>
@@ -500,7 +500,7 @@ export default function AnggaranPage() {
           </GlassCard>
         ) : (
           <GlassCard className="p-6 h-fit text-center space-y-2">
-            <div className="w-10 h-10 rounded-full bg-white/5 border theme-border flex items-center justify-center mx-auto theme-text-tertiary">
+            <div className="w-10 h-10 rounded-full theme-bg-tertiary border theme-border flex items-center justify-center mx-auto theme-text-tertiary">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12v-.008z" />
               </svg>
@@ -514,7 +514,7 @@ export default function AnggaranPage() {
           </GlassCard>
         )}
 
-        {/* 📊 TABEL DAFTAR RENCANA ANGGARAN */}
+        {/* TABEL DAFTAR RENCANA ANGGARAN */}
         <GlassCard className="lg:col-span-2 p-6 space-y-4">
           <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
             <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -525,7 +525,7 @@ export default function AnggaranPage() {
 
           <div className="overflow-x-auto max-h-[550px] overflow-y-auto pr-1 border theme-border rounded-xl">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-black/60 sticky top-0 backdrop-blur-md z-10 border-b theme-border font-mono text-[10px] uppercase theme-text-tertiary">
+              <thead className="theme-bg-tertiary sticky top-0 backdrop-blur-md z-10 border-b theme-border font-mono text-[10px] uppercase theme-text-tertiary">
                 <tr>
                   <th className="py-3 px-3">No</th>
                   <th className="py-3 px-4">Nama Alokasi</th>
@@ -566,9 +566,9 @@ export default function AnggaranPage() {
                         </td>
 
                         {/* REALISASI + PROGRESS BAR */}
-                        <td className="py-3 px-4 text-right text-rose-300">
+                        <td className="py-3 px-4 text-right text-rose-400">
                           <div>{formatRupiah(real)}</div>
-                          <div className="w-full bg-black/40 h-1 rounded-full overflow-hidden mt-1 ml-auto max-w-[100px]">
+                          <div className="w-full theme-bg-tertiary h-1 rounded-full overflow-hidden mt-1 ml-auto max-w-[100px]">
                             <div 
                               className={`h-full ${real > plan ? 'bg-rose-500' : 'bg-emerald-400'}`}
                               style={{ width: `${percentUsed}%` }}
@@ -577,7 +577,7 @@ export default function AnggaranPage() {
                         </td>
 
                         {/* SISA / SELISIH */}
-                        <td className={`py-3 px-4 text-right font-bold ${selisih >= 0 ? 'text-emerald-300' : 'text-rose-400'}`}>
+                        <td className={`py-3 px-4 text-right font-bold ${selisih >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {formatRupiah(selisih)}
                         </td>
 
@@ -592,7 +592,7 @@ export default function AnggaranPage() {
                               <div className="flex items-center justify-center gap-2">
                                 <button 
                                   onClick={() => handleEdit(b)} 
-                                  className="theme-text-accent hover:underline font-bold text-[11px] flex items-center gap-0.5"
+                                  className="theme-text-accent hover:underline font-bold text-[11px] flex items-center gap-0.5 cursor-pointer"
                                 >
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -601,7 +601,7 @@ export default function AnggaranPage() {
                                 </button>
                                 <button 
                                   onClick={() => handleDelete(b.id)} 
-                                  className="text-rose-400 hover:underline font-bold text-[11px] flex items-center gap-0.5"
+                                  className="text-rose-400 hover:underline font-bold text-[11px] flex items-center gap-0.5 cursor-pointer"
                                 >
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
