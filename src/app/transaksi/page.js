@@ -18,7 +18,6 @@ import {
   ArrowUpRight, 
   ArrowDownLeft, 
   Loader2,
-  Calendar as CalendarIcon,
   DollarSign,
   ShieldAlert
 } from 'lucide-react';
@@ -27,7 +26,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// 🌐 KAMUS MULTI-BAHASA
+// KAMUS MULTI-BAHASA
 const translations = {
   id: {
     title: "Buku Kas & Transaksi Haul",
@@ -166,10 +165,10 @@ export default function TransaksiPage() {
   const [allExpenses, setAllExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  // 🔔 STATE NOTIFIKASI MODERN (TOAST POSISI ATAS)
+  // STATE NOTIFIKASI TOAST
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
-  // 🗑️ STATE MODAL KONFIRMASI HAPUS
+  // STATE MODAL KONFIRMASI HAPUS
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null, isExpenses: false });
   
   // State Periode Haul
@@ -203,7 +202,6 @@ export default function TransaksiPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
 
-  // 🛠️ HELPER MENGELUARKAN TOAST NOTIFIKASI
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -311,7 +309,7 @@ export default function TransaksiPage() {
       setAllExpenses(expensesDb || []);
     } catch (e) {
       console.error("Gagal load data: ", e);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   }
@@ -395,7 +393,6 @@ export default function TransaksiPage() {
     setShowModal(true);
   };
 
-  // 🗑️ MEMBUKA DIALOG KONFIRMASI HAPUS
   const triggerHapus = (id, isFromExpenses) => {
     if (!isAdmin) return;
     if (currentPeriodeObj?.is_closed) {
@@ -405,7 +402,6 @@ export default function TransaksiPage() {
     setDeleteConfirm({ show: true, id, isExpenses: isFromExpenses });
   };
 
-  // 🗑️ EKSEKUSI HAPUS DATA
   const executeDelete = async () => {
     const { id, isExpenses } = deleteConfirm;
     setDeleteConfirm({ show: false, id: null, isExpenses: false });
@@ -569,16 +565,16 @@ export default function TransaksiPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-xs font-mono theme-text-primary">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-        <span>{t.syncData}</span>
+        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <span className="font-bold">{t.syncData}</span>
       </div>
     );
   }
 
   return (
-    <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
+    <div id="root-transaksi-container" className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative font-sans">
       
-      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN (POSISI ATAS TENGAH) */}
+      {/* FLOATING TOAST NOTIFICATION */}
       {toast.show && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] print:hidden animate-in fade-in slide-in-from-top duration-300">
           <div className={`px-4 py-3 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl border-2 ${
@@ -592,16 +588,16 @@ export default function TransaksiPage() {
               {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
               {toast.type === 'warning' && <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />}
               {toast.type === 'info' && <Info className="w-5 h-5 text-cyan-400 shrink-0" />}
-              <span className="font-semibold text-xs leading-snug truncate">{toast.message}</span>
+              <span className="font-bold text-xs leading-snug truncate">{toast.message}</span>
             </div>
-            <button onClick={() => setToast({ ...toast, show: false })} className="p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0">
+            <button onClick={() => setToast({ ...toast, show: false })} className="p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0 cursor-pointer">
               <X className="w-4 h-4 opacity-80 hover:opacity-100" />
             </button>
           </div>
         </div>
       )}
 
-      {/* 🗑️ MODAL DIALOG KONFIRMASI HAPUS MODERN */}
+      {/* MODAL DIALOG KONFIRMASI HAPUS */}
       {deleteConfirm.show && (
         <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200">
           <GlassCard className="max-w-sm w-full text-center space-y-4 p-6 shadow-2xl border theme-border">
@@ -609,16 +605,16 @@ export default function TransaksiPage() {
               <AlertCircle className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-sm uppercase theme-text-primary">Konfirmasi Hapus</h3>
-            <p className="text-xs theme-text-secondary leading-relaxed">Apakah Anda yakin ingin menghapus catatan transaksi internal ini secara permanen?</p>
+            <p className="text-xs theme-text-secondary leading-relaxed font-semibold">Apakah Anda yakin ingin menghapus catatan transaksi internal ini secara permanen?</p>
             <div className="flex gap-2 pt-2">
-              <button onClick={() => setDeleteConfirm({ show: false, id: null, isExpenses: false })} className="flex-1 py-2.5 bg-black/30 hover:bg-black/50 theme-text-secondary font-bold rounded-xl text-xs border theme-border cursor-pointer">Batal</button>
-              <button onClick={executeDelete} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs uppercase shadow-lg cursor-pointer">Hapus</button>
+              <button onClick={() => setDeleteConfirm({ show: false, id: null, isExpenses: false })} className="flex-1 py-2.5 theme-bg-tertiary hover:bg-black/50 theme-text-secondary font-bold rounded-xl text-xs border theme-border cursor-pointer">Batal</button>
+              <button onClick={executeDelete} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl text-xs uppercase shadow-lg cursor-pointer">Hapus</button>
             </div>
           </GlassCard>
         </div>
       )}
 
-      {/* 🛠️ PRINT STYLES UNTUK LPJ PROFESIONAL */}
+      {/* PRINT STYLES UNTUK LPJ PROFESIONAL */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
@@ -680,29 +676,29 @@ export default function TransaksiPage() {
                 {t.title}
               </h2>
               {isAdmin ? (
-                <span className="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase">
+                <span className="bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 text-[9px] font-black px-2 py-0.5 rounded-full font-mono uppercase">
                   ADMIN
                 </span>
               ) : (
-                <span className="bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase">
+                <span className="bg-rose-500/20 border border-rose-400/40 text-rose-400 text-[9px] font-black px-2 py-0.5 rounded-full font-mono uppercase">
                   PUBLIC
                 </span>
               )}
             </div>
-            <p className="text-[10px] font-mono mt-0.5 theme-text-tertiary">{t.subtitle}</p>
+            <p className="text-[10px] font-mono mt-0.5 theme-text-secondary font-semibold">{t.subtitle}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {periodeList.length > 0 && (
-              <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl mr-1">
-                <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">{t.selectPeriod}</span>
+              <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl mr-1">
+                <span className="text-[9px] font-mono font-bold theme-text-secondary px-2 uppercase">{t.selectPeriod}</span>
                 <select
                   value={selectedPeriodeId || ''}
                   onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                  className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+                  className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
                 >
                   {periodeList.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                    <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                       {p.nama_periode} {p.is_closed ? t.statusClosed : t.statusActive}
                     </option>
                   ))}
@@ -710,10 +706,10 @@ export default function TransaksiPage() {
               </div>
             )}
 
-            <div className="flex bg-black/30 p-1 border theme-border rounded-xl mr-1">
-              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'id' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>ID 🇮🇩</button>
-              <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'jv' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>JV 🎯</button>
-              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-bold text-[10px] transition-all cursor-pointer ${lang === 'en' ? 'bg-[#BFEC25] text-black font-black' : 'theme-text-secondary'}`}>EN 🇬🇧</button>
+            <div className="flex theme-bg-tertiary p-1 border theme-border rounded-xl mr-1">
+              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-lg font-black text-[10px] transition-all cursor-pointer ${lang === 'id' ? 'bg-[#BFEC25] text-black' : 'theme-text-secondary'}`}>ID 🇮🇩</button>
+              <button onClick={() => setLang('jv')} className={`px-2 py-1 rounded-lg font-black text-[10px] transition-all cursor-pointer ${lang === 'jv' ? 'bg-[#BFEC25] text-black' : 'theme-text-secondary'}`}>JV 🎯</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-lg font-black text-[10px] transition-all cursor-pointer ${lang === 'en' ? 'bg-[#BFEC25] text-black' : 'theme-text-secondary'}`}>EN 🇬🇧</button>
             </div>
 
             {isAdmin && currentPeriodeObj && !currentPeriodeObj.is_closed && (
@@ -745,7 +741,7 @@ export default function TransaksiPage() {
         </GlassCard>
 
         {currentPeriodeObj?.is_closed && (
-          <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs">
+          <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-400 font-mono text-xs">
             <span className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-amber-400 shrink-0" />
               <span>Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku pada {currentPeriodeObj.tanggal_selesai}. Data bersifat Read-Only.</span>
@@ -756,29 +752,29 @@ export default function TransaksiPage() {
 
         <GlassCard className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3">
           <div className="relative flex items-center">
-            <Search className="w-4 h-4 absolute left-3 text-slate-400" />
-            <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary placeholder:theme-text-tertiary text-xs" />
+            <Search className="w-4 h-4 absolute left-3 theme-text-tertiary" />
+            <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none theme-text-primary placeholder:theme-text-tertiary text-xs font-semibold" />
           </div>
           
           <div className="relative flex items-center">
-            <Filter className="w-4 h-4 absolute left-3 text-slate-400" />
-            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-black/30 border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold text-xs">
-              <option value="all" className="bg-slate-900 text-white">{t.allCash}</option>
-              <option value="masuk" className="bg-slate-900 text-emerald-400">{t.onlyIn}</option>
-              <option value="keluar" className="bg-slate-900 text-rose-400">{t.onlyOut}</option>
+            <Filter className="w-4 h-4 absolute left-3 theme-text-tertiary" />
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="w-full pl-9 pr-3 py-2 theme-bg-tertiary border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold text-xs">
+              <option value="all" className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">{t.allCash}</option>
+              <option value="masuk" className="bg-slate-900 text-emerald-400 dark:bg-slate-900 dark:text-emerald-400">{t.onlyIn}</option>
+              <option value="keluar" className="bg-slate-900 text-rose-400 dark:bg-slate-900 dark:text-rose-400">{t.onlyOut}</option>
             </select>
           </div>
 
-          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold text-xs">
-            <option value="all" className="bg-slate-900 text-white">{t.allCat}</option>
-            {categories.map((c, i) => <option key={i} value={c.name} className="bg-slate-900 text-white">{c.name}</option>)}
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl theme-text-primary focus:outline-none cursor-pointer font-bold text-xs">
+            <option value="all" className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">{t.allCat}</option>
+            {categories.map((c, i) => <option key={i} value={c.name} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">{c.name}</option>)}
           </select>
         </GlassCard>
 
         <GlassCard className="p-0 overflow-x-auto max-h-[500px] overflow-y-auto shadow-xl relative scrollbar-thin">
           <table className="w-full text-left border-collapse min-w-[620px] sm:min-w-full">
             <thead>
-              <tr className="bg-black/40 theme-text-secondary border-b theme-border font-mono uppercase text-[9px] tracking-wider sticky top-0 z-20 backdrop-blur-md">
+              <tr className="theme-bg-tertiary theme-text-primary border-b theme-border font-mono uppercase text-[10px] font-bold tracking-wider sticky top-0 z-20 backdrop-blur-md">
                 <th className="p-3 w-24">{t.thDate}</th>
                 <th className="p-3 w-28">{t.thCat}</th>
                 <th className="p-3">{t.thDesc}</th>
@@ -790,24 +786,24 @@ export default function TransaksiPage() {
               {filteredTrans.map((tItem, idx) => {
                 const isKeluar = tItem.aliranJenis === 'Keluar';
                 return (
-                  <tr key={idx} className="hover:bg-black/20 transition-all">
-                    <td className="p-3 font-mono theme-text-tertiary text-[10px] whitespace-nowrap">{tItem.transaction_date}</td>
+                  <tr key={idx} className="hover:bg-white/5 transition-all">
+                    <td className="p-3 font-mono theme-text-secondary font-bold text-[10px] whitespace-nowrap">{tItem.transaction_date}</td>
                     <td className="p-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 border rounded-full font-mono text-[9px] uppercase font-bold inline-flex items-center gap-1 ${!isKeluar ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-rose-500/20 border-rose-400/40 text-rose-300'}`}>
+                      <span className={`px-2 py-0.5 border rounded-full font-mono text-[9px] uppercase font-black inline-flex items-center gap-1 ${!isKeluar ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-400' : 'bg-rose-500/20 border-rose-400/40 text-rose-400'}`}>
                         {!isKeluar ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                         {tItem.category}
                       </span> 
                     </td>
-                    <td className="p-3 font-medium text-[11px] sm:text-xs uppercase tracking-wide">
+                    <td className="p-3 font-bold text-[11px] sm:text-xs uppercase tracking-wide theme-text-primary">
                       {tItem.uraian}
                     </td>
-                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isKeluar ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    <td className={`p-3 text-right font-mono font-black whitespace-nowrap ${!isKeluar ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {!isKeluar ? '+' : '-'}{formatRupiah(tItem.amount)}
                     </td>
                     {isAdmin && (
                       <td className="p-3 text-center space-x-2 font-mono whitespace-nowrap">
                         {currentPeriodeObj?.is_closed ? (
-                          <span className="theme-text-accent italic text-[10px] flex items-center justify-center gap-1">
+                          <span className="theme-text-accent italic font-bold text-[10px] flex items-center justify-center gap-1">
                             <Lock className="w-3 h-3" /> Terkunci
                           </span>
                         ) : tItem.isSystem ? (
@@ -822,7 +818,7 @@ export default function TransaksiPage() {
                             </button>
                           </div>
                         ) : (
-                          <span className="theme-text-tertiary italic text-[10px]">🔒 Terkunci Privasi</span>
+                          <span className="theme-text-secondary italic font-semibold text-[10px]">🔒 Terkunci Privasi</span>
                         )}
                       </td>
                     )}
@@ -830,7 +826,7 @@ export default function TransaksiPage() {
                 );
               })}
               {filteredTrans.length === 0 && (
-                <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center theme-text-tertiary font-mono">{t.noData}</td></tr>
+                <tr><td colSpan={isAdmin ? 5 : 4} className="p-6 text-center theme-text-secondary font-mono font-bold">{t.noData}</td></tr>
               )}
             </tbody>
           </table>
@@ -841,27 +837,27 @@ export default function TransaksiPage() {
       {showModalTutupBuku && isAdmin && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
           <GlassCard className="p-6 w-full max-w-md space-y-4 shadow-2xl border theme-border">
-            <h3 className="text-sm font-black uppercase tracking-wider text-purple-300 flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
               <Lock className="w-4 h-4" />
               <span>Konfirmasi Tutup Buku Periode</span>
             </h3>
-            <p className="text-xs theme-text-secondary leading-relaxed">
-              Proses ini akan mengunci seluruh transaksi di <strong>{currentPeriodeObj?.nama_periode}</strong> dan membentuk Saldo Kas Akhir sebesar <strong className="text-emerald-300">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</strong> menjadi Saldo Kas Awal periode baru.
+            <p className="text-xs theme-text-secondary leading-relaxed font-semibold">
+              Proses ini akan mengunci seluruh transaksi di <strong>{currentPeriodeObj?.nama_periode}</strong> dan membentuk Saldo Kas Akhir sebesar <strong className="text-emerald-400">{formatRupiah(totalLpjMasuk - totalLpjKeluar)}</strong> menjadi Saldo Kas Awal periode baru.
             </p>
             <form onSubmit={handleProsesTutupBuku} className="space-y-4">
               <div>
-                <label className="block theme-text-secondary mb-1 text-[11px] font-semibold">Nama Periode Baru</label>
+                <label className="block theme-text-secondary mb-1 text-[11px] font-bold">Nama Periode Baru</label>
                 <input 
                   type="text" 
                   placeholder="Contoh: Haul 2027" 
                   required 
                   value={namaPeriodeBaruInput} 
                   onChange={e => setNamaPeriodeBaruInput(e.target.value)} 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none font-bold theme-text-accent text-xs" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none font-bold theme-text-accent text-xs" 
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowModalTutupBuku(false)} className="flex-1 py-2.5 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                <button type="button" onClick={() => setShowModalTutupBuku(false)} className="flex-1 py-2.5 theme-bg-tertiary border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
                 <button type="submit" className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl shadow-lg text-xs cursor-pointer">Eksekusi Tutup Buku</button>
               </div>
             </form>
@@ -880,33 +876,33 @@ export default function TransaksiPage() {
             <form onSubmit={handleSaveTransaction} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Tanggal</label>
-                  <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none text-center font-mono theme-text-primary text-xs" />
+                  <label className="block theme-text-secondary mb-1 font-bold text-[11px]">Tanggal</label>
+                  <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none text-center font-mono theme-text-primary text-xs font-bold" />
                 </div>
                 <div>
-                  <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Aliran Jenis</label>
-                  <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary cursor-pointer text-xs">
-                    <option value="Pengeluaran" className="bg-slate-900 text-rose-400">Pengeluaran (Merah)</option>
-                    <option value="Pemasukan" className="bg-slate-900 text-emerald-400">Pemasukan (Hijau)</option>
+                  <label className="block theme-text-secondary mb-1 font-bold text-[11px]">Aliran Jenis</label>
+                  <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none theme-text-primary cursor-pointer text-xs font-bold">
+                    <option value="Pengeluaran" className="bg-slate-900 text-rose-400 dark:bg-slate-900 dark:text-rose-400">Pengeluaran (Merah)</option>
+                    <option value="Pemasukan" className="bg-slate-900 text-emerald-400 dark:bg-slate-900 dark:text-emerald-400">Pemasukan (Hijau)</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Kategori Pos Buku Kas</label>
-                <select required value={formCategory} onChange={e => setFormCategory(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary cursor-pointer text-xs">
-                  {categories.map((c, i) => <option key={i} value={c.name} className="bg-slate-900 text-white">{c.name}</option>)}
+                <label className="block theme-text-secondary mb-1 font-bold text-[11px]">Kategori Pos Buku Kas</label>
+                <select required value={formCategory} onChange={e => setFormCategory(e.target.value)} className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none theme-text-primary cursor-pointer text-xs font-bold">
+                  {categories.map((c, i) => <option key={i} value={c.name} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">{c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Nominal Rupiah</label>
-                <input type="number" placeholder="Contoh: 500000" required value={formAmount} onChange={e => setFormAmount(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none font-mono text-right font-bold theme-text-accent text-sm" />
+                <label className="block theme-text-secondary mb-1 font-bold text-[11px]">Nominal Rupiah</label>
+                <input type="number" placeholder="Contoh: 500000" required value={formAmount} onChange={e => setFormAmount(e.target.value)} className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none font-mono text-right font-black theme-text-accent text-sm" />
               </div>
               <div>
-                <label className="block theme-text-secondary mb-1 font-semibold text-[11px]">Uraian Keterangan</label>
-                <input type="text" placeholder="Misal: DP Sound System" required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none theme-text-primary text-xs" />
+                <label className="block theme-text-secondary mb-1 font-bold text-[11px]">Uraian Keterangan</label>
+                <input type="text" placeholder="Misal: DP Sound System" required value={formDescription} onChange={e => setFormDescription(e.target.value)} className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none theme-text-primary text-xs font-bold" />
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={resetForm} className="flex-1 py-2.5 bg-black/30 border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                <button type="button" onClick={resetForm} className="flex-1 py-2.5 theme-bg-tertiary border theme-border theme-text-secondary font-bold rounded-xl text-xs cursor-pointer">Batal</button>
                 <button type="submit" className="flex-1 py-2.5 btn-theme-primary font-black uppercase rounded-xl shadow-lg text-xs cursor-pointer">Simpan Kas</button>
               </div>
             </form>
@@ -914,7 +910,7 @@ export default function TransaksiPage() {
         </div>
       )}
 
-      {/* 🖨️ AREA CETAK LPJ PROFESIONAL (FORMAL A4 PRINT OUT ONLY) */}
+      {/* AREA CETAK LPJ PROFESIONAL (FORMAL A4 PRINT OUT ONLY) */}
       <div className="hidden print:block bg-white text-black p-0 font-serif text-[11px] leading-relaxed w-full">
         <div className="print-page-wrapper">
           
