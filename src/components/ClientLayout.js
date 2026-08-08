@@ -33,9 +33,7 @@ import {
   Volume2,
   VolumeX,
   Sun,
-  Moon,
-  RotateCcw,
-  Power
+  Moon
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -102,18 +100,6 @@ export default function ClientLayout({ children }) {
 
     subscribeUserToPush();
   }, []);
-
-  useEffect(() => {
-    if (pathname === '/') {
-      window.history.pushState(null, '', window.location.href);
-      const handlePopState = () => {
-        showToast('info', 'Aplikasi Selesai', 'Silakan usap/tutup aplikasi dari daftar Recent Apps HP Anda.');
-      };
-
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
-    }
-  }, [pathname]);
 
   const subscribeUserToPush = async () => {
     if (typeof window === 'undefined') return;
@@ -231,60 +217,6 @@ export default function ClientLayout({ children }) {
   useEffect(() => {
     setShowMainMenuDrawer(false);
   }, [pathname]);
-
-  const handleClearPWACache = async () => {
-    try {
-      showToast('info', 'Pembersihan Dimulai', 'Sedang menghapus file temporary & cache PWA...');
-
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
-      }
-
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (let registration of registrations) {
-          await registration.unregister();
-        }
-      }
-
-      const savedAdminPassword = localStorage.getItem('admin_password_haul');
-      const savedThemeMode = localStorage.getItem('app_mode');
-
-      localStorage.clear();
-
-      if (savedAdminPassword) localStorage.setItem('admin_password_haul', savedAdminPassword);
-      if (savedThemeMode) localStorage.setItem('app_mode', savedThemeMode);
-
-      showToast('success', 'Cache Dibersihkan!', 'PWA telah segar kembali. Memuat ulang aplikasi...');
-
-      setTimeout(() => {
-        window.location.reload(true);
-      }, 1500);
-
-    } catch (error) {
-      console.error('Gagal menghapus cache:', error);
-      showToast('error', 'Gagal Hapus Cache', 'Terjadi kendala saat membersihkan memori PWA.');
-    }
-  };
-
-  const handleExitApp = () => {
-    setShowMainMenuDrawer(false);
-    try {
-      window.close();
-    } catch (e) {
-      console.log('window.close diblokir browser:', e);
-    }
-
-    if (typeof window !== 'undefined') {
-      if (window.history.length > 1) {
-        window.history.go(-(window.history.length - 1));
-      }
-      showToast('info', 'Aplikasi Selesai', 'Silakan usap/tutup aplikasi dari daftar Recent Apps HP Anda.');
-    }
-  };
 
   async function fetchJadwalSholatDirect(idKota) {
     try {
@@ -542,8 +474,6 @@ export default function ClientLayout({ children }) {
     { name: 'Jadwal Acara', href: '/acara', icon: Calendar, color: 'text-amber-400 bg-amber-500/20' },
     { name: 'Galeri Dokumentasi', href: '/dokumentasi', icon: Images, color: 'text-purple-400 bg-purple-500/20' },
     { name: 'Kepanitiaan', href: '/kepanitiaan', icon: Users, color: 'text-blue-400 bg-blue-500/20' },
-    { name: 'Bersihkan Cache PWA', action: handleClearPWACache, icon: RotateCcw, color: 'text-amber-400 bg-amber-500/20' },
-    { name: 'Keluar Aplikasi', action: handleExitApp, icon: Power, color: 'text-rose-400 bg-rose-500/20' },
     ...(isAdmin ? [{ name: 'Setelan Sistem', href: '/pengaturan', icon: Settings, color: 'text-rose-400 bg-rose-500/20' }] : [])
   ];
 
