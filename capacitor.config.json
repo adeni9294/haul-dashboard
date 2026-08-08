@@ -2,5 +2,20 @@
   "appId": "com.haulcibogo.app",
   "appName": "Haul Cibogo",
   "webDir": "out",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "backgroundColor": "#0f172a"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#4DEEEA",
+      "sound": "adzan.wav"
+    },
+    "CapacitorCookies": {
+      "enabled": true
+    }
+  }
 }
