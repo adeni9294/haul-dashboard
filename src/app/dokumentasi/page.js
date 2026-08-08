@@ -8,7 +8,7 @@ export default function DokumentasiPage() {
   const [photos, setPhotos] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ➕ State Periode Haul
+  // State Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
 
@@ -18,7 +18,7 @@ export default function DokumentasiPage() {
   const [formFile, setFormFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // 🔔 Custom Toast & Confirm Modal States
+  // Custom Toast & Confirm Modal States
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
 
@@ -135,11 +135,11 @@ export default function DokumentasiPage() {
 
       if (insertError) throw insertError;
 
-      showToast('🟢 Foto dokumentasi kegiatan berhasil disimpan!', 'success');
+      showToast('Foto dokumentasi kegiatan berhasil disimpan!', 'success');
       resetForm();
       await loadPhotos();
     } catch (err) {
-      showToast(`❌ Gagal menyimpan dokumentasi: ${err.message || err}`, 'error');
+      showToast(`Gagal menyimpan dokumentasi: ${err.message || err}`, 'error');
     } finally {
       setUploading(false);
     }
@@ -164,10 +164,10 @@ export default function DokumentasiPage() {
           const { error } = await supabase.from('photos').delete().eq('id', item.id);
           if (error) throw error;
 
-          showToast('🗑️ Foto dokumentasi berhasil dihapus.', 'success');
+          showToast('Foto dokumentasi berhasil dihapus.', 'success');
           await loadPhotos();
         } catch (err) {
-          showToast(`❌ Gagal menghapus: ${err.message}`, 'error');
+          showToast(`Gagal menghapus: ${err.message}`, 'error');
         } finally {
           closeConfirm();
         }
@@ -198,7 +198,7 @@ export default function DokumentasiPage() {
     setShowModal(false);
   };
 
-  // 🚀 TAMPILAN SKELETON LOADING MODERN
+  // SKELETON LOADING STATE
   if (loading) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
@@ -212,9 +212,9 @@ export default function DokumentasiPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="rounded-2xl bg-slate-900/40 border border-white/5 p-2 space-y-3 animate-pulse">
-              <div className="aspect-video w-full bg-slate-800/60 rounded-xl" />
-              <div className="h-4 w-2/3 bg-slate-800/60 rounded px-2" />
+            <div key={i} className="rounded-2xl theme-bg-secondary theme-border border p-2 space-y-3 animate-pulse">
+              <div className="aspect-video w-full theme-bg-tertiary rounded-xl" />
+              <div className="h-4 w-2/3 theme-bg-tertiary rounded px-2" />
             </div>
           ))}
         </div>
@@ -225,7 +225,7 @@ export default function DokumentasiPage() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
 
-      {/* 🔔 FLOATING TOAST NOTIFICATION (POSISI CENTER ATAS MENCOLOK) */}
+      {/* FLOATING TOAST NOTIFICATION */}
       {toast.show && (
         <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-300">
           <div className={`px-5 py-3.5 border-2 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-xl ${
@@ -241,7 +241,7 @@ export default function DokumentasiPage() {
         </div>
       )}
 
-      {/* ❓ CUSTOM CONFIRMATION MODAL (TENGAH LAYAR) */}
+      {/* CUSTOM CONFIRMATION MODAL */}
       {confirmModal.show && (
         <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
           <GlassCard className="max-w-sm w-full p-6 space-y-4 shadow-2xl border theme-border text-center">
@@ -251,13 +251,13 @@ export default function DokumentasiPage() {
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={closeConfirm}
-                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono rounded-xl border theme-border transition-all"
+                className="px-4 py-2 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary font-mono rounded-xl border theme-border transition-all cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold rounded-xl transition-all shadow-md cursor-pointer"
               >
                 Ya, Hapus
               </button>
@@ -278,15 +278,15 @@ export default function DokumentasiPage() {
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* SELECTOR PERIODE HAUL */}
           {periodeList.length > 0 && (
-            <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
+            <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
               <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode:</span>
               <select
                 value={selectedPeriodeId || ''}
                 onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+                className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
               >
                 {periodeList.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                  <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                     {p.nama_periode}
                   </option>
                 ))}
@@ -297,7 +297,7 @@ export default function DokumentasiPage() {
           {isAdmin && (
             <button 
               onClick={() => setShowModal(true)} 
-              className="px-4 py-2 btn-theme-primary font-black uppercase rounded-xl transition-all shadow-md text-[10px]"
+              className="px-4 py-2 btn-theme-primary font-black uppercase rounded-xl transition-all shadow-md text-[10px] cursor-pointer"
             >
               ➕ Tambah Foto
             </button>
@@ -313,8 +313,8 @@ export default function DokumentasiPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {photos.map((p, idx) => (
-            <GlassCard key={idx} className="overflow-hidden flex flex-col justify-between group hover:border-white/40 transition-all p-0">
-              <div className="relative bg-black/40 aspect-video w-full flex items-center justify-center overflow-hidden">
+            <GlassCard key={idx} className="overflow-hidden flex flex-col justify-between group hover:border-cyan-400/50 transition-all p-0">
+              <div className="relative theme-bg-tertiary aspect-video w-full flex items-center justify-center overflow-hidden">
                 <img 
                   src={p.image_url} 
                   alt={p.title}
@@ -322,21 +322,21 @@ export default function DokumentasiPage() {
                   loading="lazy"
                 />
               </div>
-              <div className="p-3.5 flex justify-between items-center bg-black/20 border-t theme-border">
+              <div className="p-3.5 flex justify-between items-center theme-bg-secondary border-t theme-border">
                 <span className="text-xs font-bold theme-text-primary truncate max-w-[150px] sm:max-w-[180px] tracking-wide">
                   {p.title}
                 </span>
                 <div className="flex gap-2 shrink-0">
                   <button 
                     onClick={() => handleDownload(p.image_url, p.title)}
-                    className="bg-black/30 hover:bg-black/50 theme-text-primary text-[11px] font-bold px-3 py-1.5 rounded-xl border theme-border transition-all"
+                    className="theme-bg-tertiary hover:bg-slate-800 theme-text-primary text-[11px] font-bold px-3 py-1.5 rounded-xl border theme-border transition-all cursor-pointer"
                   >
                     Unduh
                   </button>
                   {isAdmin && (
                     <button 
                       onClick={() => triggerHapus(p)}
-                      className="bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-300 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                      className="bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-400 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer"
                     >
                       Hapus
                     </button>
@@ -365,7 +365,7 @@ export default function DokumentasiPage() {
                   placeholder="Contoh: Pendirian Tenda Utama Maqbaroh"
                   value={formTitle} 
                   onChange={e => setFormTitle(e.target.value)} 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl focus:outline-none font-medium text-xs theme-text-primary placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl focus:outline-none font-medium text-xs theme-text-primary placeholder:theme-text-tertiary" 
                 />
               </div>
 
@@ -376,7 +376,7 @@ export default function DokumentasiPage() {
                   required
                   accept="image/*"
                   onChange={e => setFormFile(e.target.files[0])} 
-                  className="w-full text-xs theme-text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-black/40 file:text-white file:font-bold hover:file:bg-black/60 cursor-pointer focus:outline-none" 
+                  className="w-full text-xs theme-text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-cyan-500/20 file:text-cyan-400 file:font-bold hover:file:bg-cyan-500/30 cursor-pointer focus:outline-none" 
                 />
               </div>
 
@@ -385,14 +385,14 @@ export default function DokumentasiPage() {
                   type="button" 
                   onClick={resetForm} 
                   disabled={uploading} 
-                  className="flex-1 py-2 bg-black/30 hover:bg-black/50 theme-text-secondary font-bold rounded-xl border theme-border disabled:opacity-50 transition-all"
+                  className="flex-1 py-2 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary font-bold rounded-xl border theme-border disabled:opacity-50 transition-all cursor-pointer"
                 >
                   Batal
                 </button>
                 <button 
                   type="submit" 
                   disabled={uploading} 
-                  className="flex-1 py-2 btn-theme-primary font-black uppercase rounded-xl shadow-lg disabled:opacity-50 transition-all text-xs"
+                  className="flex-1 py-2 btn-theme-primary font-black uppercase rounded-xl shadow-lg disabled:opacity-50 transition-all text-xs cursor-pointer"
                 >
                   {uploading ? '⏳ Mengunggah...' : 'Simpan Foto'}
                 </button>
