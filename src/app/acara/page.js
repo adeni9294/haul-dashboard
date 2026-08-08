@@ -18,7 +18,6 @@ import {
   Info,
   Lock,
   RefreshCw,
-  HelpCircle,
   Radio,
   Loader2,
   Save,
@@ -260,7 +259,7 @@ export default function AcaraPage() {
 
   // LOGIKA STATUS JADWAL ACARA
   const getEventStatus = (eventDateStr, timeStartStr, timeEndStr) => {
-    if (!eventDateStr) return { label: 'Coming Soon', icon: Clock, style: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30' };
+    if (!eventDateStr) return { label: 'Coming Soon', icon: Clock, style: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' };
     
     const now = new Date();
     const [year, month, day] = eventDateStr.split('-').map(Number);
@@ -286,19 +285,19 @@ export default function AcaraPage() {
       return { 
         label: 'Coming Soon', 
         icon: Clock,
-        style: 'bg-cyan-500/10 text-cyan-300 border-cyan-400/40 shadow-sm shadow-cyan-500/10' 
+        style: 'bg-cyan-500/10 text-cyan-400 border-cyan-400/40 shadow-sm shadow-cyan-500/10' 
       };
     } else if (now >= startDate && now <= endDate) {
       return { 
         label: 'Live Now', 
         icon: Radio,
-        style: 'bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse font-black' 
+        style: 'bg-rose-500/20 text-rose-400 border-rose-500/50 animate-pulse font-black' 
       };
     } else {
       return { 
         label: 'Selesai', 
         icon: CheckCircle2,
-        style: 'bg-slate-800/60 text-slate-400 border-slate-700/50' 
+        style: 'theme-bg-tertiary theme-text-tertiary theme-border' 
       };
     }
   };
@@ -313,10 +312,10 @@ export default function AcaraPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <GlassCard className="p-6 h-48 animate-pulse bg-slate-900/40 border border-white/5" />
+          <GlassCard className="p-6 h-48 animate-pulse theme-bg-secondary theme-border" />
           <div className="lg:col-span-2 space-y-3">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="h-20 rounded-xl bg-slate-900/40 border border-amber-500/10 p-4 animate-pulse" />
+              <div key={n} className="h-20 rounded-xl theme-bg-secondary theme-border p-4 animate-pulse" />
             ))}
           </div>
         </div>
@@ -394,13 +393,13 @@ export default function AcaraPage() {
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={closeConfirm}
-                className="px-4 py-2 bg-black/40 hover:bg-black/60 theme-text-secondary font-mono text-xs rounded-xl border theme-border transition-all flex items-center gap-1.5"
+                className="px-4 py-2 theme-bg-tertiary theme-text-secondary font-mono text-xs rounded-xl border theme-border transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" /> Batal
               </button>
               <button
                 onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Ya, Hapus
               </button>
@@ -426,15 +425,15 @@ export default function AcaraPage() {
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {periodeList.length > 0 && (
-            <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
+            <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
               <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase">Periode:</span>
               <select
                 value={selectedPeriodeId || ''}
                 onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+                className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
               >
                 {periodeList.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                  <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                     {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
                   </option>
                 ))}
@@ -446,14 +445,14 @@ export default function AcaraPage() {
           <button
             onClick={handleDownloadImageNative}
             disabled={downloading}
-            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1.5 transition-all disabled:opacity-50"
+            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-md text-[10px] flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
           >
             {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
             Simpan Gambar
           </button>
           <button
             onClick={handlePrintPDF}
-            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md text-[10px] flex items-center gap-1.5 transition-all"
+            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md text-[10px] flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             Cetak / PDF
@@ -463,7 +462,7 @@ export default function AcaraPage() {
 
       {/* INDIKATOR TUTUP BUKU */}
       {currentPeriodeObj?.is_closed && (
-        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-300 font-mono text-xs print:hidden">
+        <GlassCard className="p-3 border-amber-500/40 flex items-center justify-between text-amber-400 font-mono text-xs print:hidden">
           <span className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-amber-400 shrink-0" />
             <span>Periode <strong>{currentPeriodeObj.nama_periode}</strong> telah ditutup buku. Susunan acara bersifat Read-Only.</span>
@@ -484,20 +483,20 @@ export default function AcaraPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-[11px] theme-text-secondary mb-1 font-semibold flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-amber-400/80" /> Tanggal Acara
+                  <Calendar className="w-3.5 h-3.5 text-amber-400" /> Tanggal Acara
                 </label>
                 <input 
                   type="date" 
                   required 
                   value={dateEvent} 
                   onChange={(e) => setDateEvent(e.target.value)} 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono" 
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] theme-text-secondary mb-1 font-semibold flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-400/80" /> Mulai
+                    <Clock className="w-3.5 h-3.5 text-amber-400" /> Mulai
                   </label>
                   <input 
                     type="text" 
@@ -505,19 +504,19 @@ export default function AcaraPage() {
                     value={timeStart} 
                     onChange={(e) => setTimeStart(e.target.value)} 
                     placeholder="08:00" 
-                    className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" 
+                    className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" 
                   />
                 </div>
                 <div>
                   <label className="block text-[11px] theme-text-secondary mb-1 font-semibold flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-400/80" /> Selesai
+                    <Clock className="w-3.5 h-3.5 text-amber-400" /> Selesai
                   </label>
                   <input 
                     type="text" 
                     value={timeEnd} 
                     onChange={(e) => setTimeEnd(e.target.value)} 
                     placeholder="09:30 / Selesai" 
-                    className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" 
+                    className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none font-mono placeholder:theme-text-tertiary" 
                   />
                 </div>
               </div>
@@ -529,24 +528,24 @@ export default function AcaraPage() {
                   value={agenda} 
                   onChange={(e) => setAgenda(e.target.value)} 
                   placeholder="Contoh: Pembukaan & Tahlil" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
               <div>
                 <label className="block text-[11px] theme-text-secondary mb-1 font-semibold flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-amber-400/80" /> PIC (Penanggung Jawab)
+                  <User className="w-3.5 h-3.5 text-amber-400" /> PIC (Penanggung Jawab)
                 </label>
                 <input 
                   type="text" 
                   value={pic} 
                   onChange={(e) => setPic(e.target.value)} 
                   placeholder="Contoh: Warya & Kurma" 
-                  className="w-full px-3 py-2 bg-black/30 border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
+                  className="w-full px-3 py-2 theme-bg-tertiary border theme-border rounded-xl text-xs theme-text-primary focus:outline-none placeholder:theme-text-tertiary" 
                 />
               </div>
               <button 
                 type="submit" 
-                className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                className="w-full py-2.5 btn-theme-primary font-black text-xs uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 {editingId ? 'Simpan Perubahan' : 'Simpan Rundown'}
@@ -555,7 +554,7 @@ export default function AcaraPage() {
                 <button 
                   type="button" 
                   onClick={() => { setEditingId(null); setAgenda(''); setTimeStart(''); setTimeEnd(''); setPic(''); setDateEvent(''); }} 
-                  className="w-full py-1.5 bg-black/30 hover:bg-black/50 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border flex items-center justify-center gap-1"
+                  className="w-full py-1.5 theme-bg-tertiary hover:bg-slate-800 theme-text-secondary text-xs font-bold rounded-xl mt-2 transition-all border theme-border flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" /> Batal Edit
                 </button>
@@ -579,9 +578,9 @@ export default function AcaraPage() {
         {/* LIST DAFTAR RUNDOWN ACARA MODERN */}
         <div id="printable-area" className="lg:col-span-2">
           <GlassCard className="p-6 space-y-3">
-            <div ref={printRef} className="space-y-4 p-3 rounded-xl bg-slate-950/80">
+            <div ref={printRef} className="space-y-4 p-3 rounded-xl theme-bg-secondary border theme-border">
               <div className="flex justify-between items-center border-b theme-border pb-3">
-                <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
                   <Calendar className="w-4 h-4 text-amber-400" />
                   SUSUNAN AGENDA RUNDOWN HAUL ({scheduleList.length})
                 </h3>
@@ -591,9 +590,9 @@ export default function AcaraPage() {
               </div>
 
               {/* TIMELINE RUNDOWN CONTAINER */}
-              <div className="space-y-3 relative pl-2 sm:pl-4 border-l-2 border-slate-800/80 my-2">
+              <div className="space-y-3 relative pl-2 sm:pl-4 border-l-2 theme-border my-2">
                 {scheduleList.length === 0 ? (
-                  <p className="text-xs font-mono py-6 text-center opacity-70">Belum ada jadwal rundown acara pada periode ini.</p>
+                  <p className="text-xs font-mono py-6 text-center theme-text-tertiary">Belum ada jadwal rundown acara pada periode ini.</p>
                 ) : (
                   scheduleList.map((s) => {
                     const status = getEventStatus(s.event_date, s.time_start, s.time_end);
@@ -602,18 +601,18 @@ export default function AcaraPage() {
                     return (
                       <div 
                         key={s.id} 
-                        className="print-card relative p-4 bg-slate-900/40 hover:bg-slate-900/60 border border-white/10 hover:border-amber-500/30 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs transition-all shadow-md group"
+                        className="print-card relative p-4 theme-bg-tertiary hover:border-amber-500/30 theme-border border rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs transition-all shadow-md group"
                       >
                         {/* Dot Timeline Visual Indicator */}
                         <div className="absolute -left-[15px] sm:-left-[23px] top-6 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-950 shadow-sm shadow-amber-400/50 print:hidden" />
 
                         <div className="space-y-1.5 min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="bg-black/40 border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold text-slate-300 flex items-center gap-1">
-                              <Calendar className="w-3 h-3 text-slate-400" />
+                            <span className="theme-bg-secondary border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold theme-text-secondary flex items-center gap-1">
+                              <Calendar className="w-3 h-3 theme-text-tertiary" />
                               {formatDate(s.event_date)}
                             </span>
-                            <span className="bg-black/30 border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-amber-300 font-semibold flex items-center gap-1">
+                            <span className="theme-bg-secondary border theme-border px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-amber-400 font-semibold flex items-center gap-1">
                               <Clock className="w-3 h-3 text-amber-400" />
                               {s.time_start || '-'} - {s.time_end || '-'} WIB
                             </span>
@@ -625,35 +624,35 @@ export default function AcaraPage() {
                             </span>
                           </div>
 
-                          <p className="font-extrabold text-sm sm:text-base tracking-wide text-slate-100 group-hover:text-amber-300 transition-colors">
+                          <p className="font-extrabold text-sm sm:text-base tracking-wide theme-text-primary group-hover:text-amber-400 transition-colors">
                             {s.agenda || 'Agenda Tanpa Nama'}
                           </p>
-                          <p className="text-[10px] opacity-80 font-mono text-slate-400 flex items-center gap-1.5">
-                            <User className="w-3 h-3 text-slate-400" />
+                          <p className="text-[10px] theme-text-tertiary font-mono flex items-center gap-1.5">
+                            <User className="w-3 h-3 theme-text-tertiary" />
                             <span>PIC:</span>
-                            <strong className="text-slate-300">{s.pic || '-'}</strong>
+                            <strong className="theme-text-secondary">{s.pic || '-'}</strong>
                           </p>
                         </div>
 
                         {/* TOMBOL AKSI ADMIN */}
                         {isAdmin && (
-                          <div className="flex gap-2 font-mono shrink-0 ml-auto sm:ml-2 print:hidden pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
+                          <div className="flex gap-2 font-mono shrink-0 ml-auto sm:ml-2 print:hidden pt-2 sm:pt-0 border-t sm:border-t-0 theme-border w-full sm:w-auto justify-end">
                             {currentPeriodeObj?.is_closed ? (
-                              <span className="italic text-[10px] text-slate-500 flex items-center gap-1">
+                              <span className="italic text-[10px] theme-text-tertiary flex items-center gap-1">
                                 <Lock className="w-3 h-3" /> Terkunci
                               </span>
                             ) : (
                               <>
                                 <button 
                                   onClick={() => handleEdit(s)} 
-                                  className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 transition-all font-bold text-[10px] flex items-center gap-1"
+                                  className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 transition-all font-bold text-[10px] flex items-center gap-1 cursor-pointer"
                                 >
                                   <Pencil className="w-3 h-3" />
                                   Edit
                                 </button>
                                 <button 
                                   onClick={() => handleDelete(s.id)} 
-                                  className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg border border-rose-500/30 transition-all font-bold text-[10px] flex items-center gap-1"
+                                  className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg border border-rose-500/30 transition-all font-bold text-[10px] flex items-center gap-1 cursor-pointer"
                                 >
                                   <Trash2 className="w-3 h-3" />
                                   Hapus
