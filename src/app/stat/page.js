@@ -36,7 +36,7 @@ export default function StatPage() {
     persentaseSerapan: 0
   });
 
-  // 🔔 Custom Toast State (Center Top Modern)
+  // Custom Toast State
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const showToast = (message, type = 'success') => {
@@ -205,33 +205,33 @@ export default function StatPage() {
 
   const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
-  // 🚀 TAMPILAN SKELETON LOADING MODERN
+  // SKELETON LOADING STATE
   if (loading) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
         <div className="flex items-center justify-center gap-3 py-10 text-amber-400 font-mono text-xs tracking-widest uppercase">
           <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
-          <span className="animate-pulse">Kalkulasi Statistik & Capaian Finansial...</span>
+          <span className="animate-pulse font-bold">Kalkulasi Statistik & Capaian Finansial...</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <GlassCard key={i} className="p-4 space-y-2 animate-pulse bg-slate-900/40 border border-white/5">
-              <div className="h-3 w-3/4 bg-slate-800/80 rounded" />
-              <div className="h-6 w-1/2 bg-slate-800/80 rounded" />
+            <GlassCard key={i} className="p-4 space-y-2 animate-pulse theme-bg-secondary theme-border border">
+              <div className="h-3 w-3/4 theme-bg-tertiary rounded" />
+              <div className="h-6 w-1/2 theme-bg-tertiary rounded" />
             </GlassCard>
           ))}
         </div>
 
-        <GlassCard className="p-6 h-64 animate-pulse bg-slate-900/40 border border-white/5" />
+        <GlassCard className="p-6 h-64 animate-pulse theme-bg-secondary theme-border border" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
+    <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative font-sans">
 
-      {/* 🔔 FLOATING TOAST NOTIFICATION MODERN (POSISI ATAS TENGAH) */}
+      {/* FLOATING TOAST NOTIFICATION */}
       {toast.show && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] animate-in fade-in slide-in-from-top duration-300">
           <div className={`px-4 py-3 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl border-2 ${
@@ -245,10 +245,10 @@ export default function StatPage() {
               ) : (
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               )}
-              <span className="font-semibold text-xs leading-snug truncate">{toast.message}</span>
+              <span className="font-bold text-xs leading-snug truncate">{toast.message}</span>
             </div>
-            <button onClick={() => setToast({ ...toast, show: false })} className="p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0">
-              <X className="w-4 h-4 opacity-80 hover:opacity-100" />
+            <button onClick={() => setToast({ ...toast, show: false })} className="p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0 cursor-pointer">
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -261,21 +261,23 @@ export default function StatPage() {
             <TrendingUp className="w-4 h-4 text-emerald-400" />
             <span>Statistik & Pencapaian Finansial Haul</span>
           </h2>
-          <p className="text-[10px] theme-text-tertiary font-mono mt-0.5">Komparasi pencapaian antar periode & realisasi target anggaran</p>
+          <p className="text-[10px] theme-text-secondary font-mono mt-0.5 font-semibold">
+            Komparasi pencapaian antar periode & realisasi target anggaran
+          </p>
         </div>
 
         {periodeList.length > 0 && (
-          <div className="flex items-center bg-black/30 p-1 border theme-border rounded-xl">
-            <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase flex items-center gap-1">
+          <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
+            <span className="text-[9px] font-mono font-bold theme-text-secondary px-2 uppercase flex items-center gap-1">
               <Calendar className="w-3 h-3 text-amber-400" /> Fokus Periode:
             </span>
             <select
               value={selectedPeriodeId || ''}
               onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="bg-black/40 border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
             >
               {periodeList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
                   {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
                 </option>
               ))}
@@ -295,39 +297,39 @@ export default function StatPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <GlassCard className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-mono theme-text-tertiary uppercase">Total Pemasukan</p>
+              <p className="text-[10px] font-mono theme-text-secondary font-bold uppercase">Total Pemasukan</p>
               <div className="p-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
                 <ArrowDownLeft className="w-3.5 h-3.5" />
               </div>
             </div>
-            <h4 className="text-base font-black font-mono text-emerald-300">{formatRupiah(currentSummary.totalMasuk)}</h4>
+            <h4 className="text-base font-black font-mono text-emerald-400">{formatRupiah(currentSummary.totalMasuk)}</h4>
           </GlassCard>
 
           <GlassCard className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-mono theme-text-tertiary uppercase">Total Pengeluaran</p>
+              <p className="text-[10px] font-mono theme-text-secondary font-bold uppercase">Total Pengeluaran</p>
               <div className="p-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400">
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </div>
             </div>
-            <h4 className="text-base font-black font-mono text-rose-300">{formatRupiah(currentSummary.totalKeluar)}</h4>
+            <h4 className="text-base font-black font-mono text-rose-400">{formatRupiah(currentSummary.totalKeluar)}</h4>
           </GlassCard>
 
           <GlassCard className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-mono theme-text-tertiary uppercase">Sisa Kas Bersih</p>
+              <p className="text-[10px] font-mono theme-text-secondary font-bold uppercase">Sisa Kas Bersih</p>
               <div className="p-1.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400">
                 <Wallet className="w-3.5 h-3.5" />
               </div>
             </div>
-            <h4 className={`text-base font-black font-mono ${currentSummary.saldoBersih >= 0 ? 'text-blue-300' : 'text-rose-400'}`}>
+            <h4 className={`text-base font-black font-mono ${currentSummary.saldoBersih >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
               {formatRupiah(currentSummary.saldoBersih)}
             </h4>
           </GlassCard>
 
           <GlassCard className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-mono theme-text-tertiary uppercase">Target Anggaran</p>
+              <p className="text-[10px] font-mono theme-text-secondary font-bold uppercase">Target Anggaran</p>
               <div className="p-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400">
                 <Target className="w-3.5 h-3.5" />
               </div>
@@ -337,13 +339,13 @@ export default function StatPage() {
 
           <GlassCard className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-mono theme-text-tertiary uppercase">Serapan Anggaran</p>
+              <p className="text-[10px] font-mono theme-text-secondary font-bold uppercase">Serapan Anggaran</p>
               <div className="p-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400">
                 <PieChart className="w-3.5 h-3.5" />
               </div>
             </div>
-            <h4 className="text-base font-black font-mono text-purple-300">
-              {currentSummary.persentaseSerapan}% <span className="text-[9px] font-normal opacity-70">terserap</span>
+            <h4 className="text-base font-black font-mono text-purple-400">
+              {currentSummary.persentaseSerapan}% <span className="text-[9px] font-bold theme-text-secondary">terserap</span>
             </h4>
           </GlassCard>
         </div>
@@ -360,7 +362,7 @@ export default function StatPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-black/40 theme-text-secondary border-b theme-border font-mono uppercase text-[9px] tracking-wider">
+                <tr className="theme-bg-tertiary theme-text-primary border-b theme-border font-mono uppercase text-[10px] font-bold tracking-wider">
                   <th className="p-3">Periode Haul</th>
                   <th className="p-3 text-right">Total Pemasukan</th>
                   <th className="p-3 text-right">Total Pengeluaran</th>
@@ -371,24 +373,24 @@ export default function StatPage() {
               </thead>
               <tbody className="divide-y theme-border font-mono text-[11px]">
                 {allPeriodeStats.map((stat) => (
-                  <tr key={stat.id} className="hover:bg-black/20 transition-all">
+                  <tr key={stat.id} className="hover:bg-white/5 transition-all">
                     <td className="p-3 font-bold font-sans theme-text-primary text-xs flex items-center gap-2">
-                      <Layers className="w-3.5 h-3.5 text-slate-400" />
+                      <Layers className="w-3.5 h-3.5 theme-text-secondary" />
                       <span>{stat.nama_periode}</span>
                     </td>
-                    <td className="p-3 text-right text-emerald-300 font-bold">{formatRupiah(stat.totalMasuk)}</td>
-                    <td className="p-3 text-right text-rose-300 font-bold">{formatRupiah(stat.totalKeluar)}</td>
-                    <td className="p-3 text-right theme-text-accent">{formatRupiah(stat.totalRencanaBudget)}</td>
-                    <td className={`p-3 text-right font-black ${stat.saldoBersih >= 0 ? 'text-blue-300' : 'text-rose-400'}`}>
+                    <td className="p-3 text-right text-emerald-400 font-bold">{formatRupiah(stat.totalMasuk)}</td>
+                    <td className="p-3 text-right text-rose-400 font-bold">{formatRupiah(stat.totalKeluar)}</td>
+                    <td className="p-3 text-right theme-text-accent font-bold">{formatRupiah(stat.totalRencanaBudget)}</td>
+                    <td className={`p-3 text-right font-black ${stat.saldoBersih >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
                       {formatRupiah(stat.saldoBersih)}
                     </td>
                     <td className="p-3 text-center">
                       {stat.is_closed ? (
-                        <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-black text-[9px] uppercase inline-flex items-center gap-1">
+                        <span className="bg-amber-500/20 text-amber-400 border border-amber-400/40 px-2 py-0.5 rounded-full font-black text-[9px] uppercase inline-flex items-center gap-1">
                           <Archive className="w-3 h-3" /> Arsip (Closed)
                         </span>
                       ) : (
-                        <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-black text-[9px] uppercase inline-flex items-center gap-1">
+                        <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 px-2 py-0.5 rounded-full font-black text-[9px] uppercase inline-flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" /> Aktif (Running)
                         </span>
                       )}
