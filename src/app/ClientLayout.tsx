@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Geolocation } from '@capacitor/geolocation'
 import { LocalNotifications } from '@capacitor/local-notifications'
+import { Preferences } from '@capacitor/preferences'
 
 type Props = {
   children?: React.ReactNode
@@ -10,6 +11,7 @@ type Props = {
 
 const DEFAULT_COORDS = { latitude: -6.732, longitude: 108.557 } // Cirebon
 const PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
+const ANDROID_CHANNEL_ID = 'adzan_channel'
 
 export default function ClientLayout({ children }: Props) {
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function ClientLayout({ children }: Props) {
       }
       await cancelExistingScheduledNotifications()
       await scheduleDailyAdzan(timings)
+      await persistTimingsForNative(timings)
       console.log('Penjadwalan notifikasi adzan selesai.')
     } catch (err) {
       console.error('Gagal inisialisasi adzan otomatis:', err)
@@ -136,6 +139,9 @@ export default function ClientLayout({ children }: Props) {
             at: t.at,
             repeats: true,
           },
+          // include channelId for Android so custom sound from channel is used
+          android: { channelId: ANDROID_CHANNEL_ID },
+          channelId: ANDROID_CHANNEL_ID,
           sound: 'adzan.mp3',
         }
       })
@@ -144,6 +150,15 @@ export default function ClientLayout({ children }: Props) {
       console.log('Scheduled notifications:', notifications.map((n) => ({ id: n.id, at: n.schedule?.at })))
     } catch (err) {
       console.error('Gagal schedule notifications:', err)
+    }
+  }
+
+  async function persistTimingsForNative(timings: { name: string; at: Date }[]) {
+    try {
+      const data = timings.map((t) => ({ name: t.name, time: t.at.toISOString() }))
+      await Preferences.set({ key: 'adzan_timings', value: JSON.stringify(data) })
+    } catch (err) {
+      console.warn('Gagal simpan jadwal ke Preferences:', err)
     }
   }
 
