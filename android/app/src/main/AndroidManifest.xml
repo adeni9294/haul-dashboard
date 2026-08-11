@@ -40,6 +40,8 @@
    <!-- Izin Lokasi GPS -->
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<!-- Izin lokasi di background (opsional, diperlukan jika ingin dapat lokasi saat app di background) -->
+<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
 <!-- Izin Notifikasi (Android 13+) -->
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -48,4 +50,10 @@
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+<!-- Exact alarms (jika diperlukan untuk alarm tepat waktu) -->
+<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+<!-- Untuk reschedule setelah perangkat reboot -->
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>
