@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-import GlassCard from '@/components/GlassCard';
+import GlassCard from '../components/GlassCard';
 import { ArrowLeft, MapPin, Navigation, ExternalLink, Loader2 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';

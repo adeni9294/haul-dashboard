@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import GlassCard from '@/components/GlassCard';
+import GlassCard from '../components/GlassCard';
 import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen } from 'lucide-react';
 
 // BACAAN TAHLIL KUBRO SESUAI URUTAN MAJMU' SYARIF / PESANTREN

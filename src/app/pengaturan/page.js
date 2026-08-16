@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import GlassCard from '@/components/GlassCard';
+import GlassCard from '../components/GlassCard';
 import { 
   Building2, 
   MapPin, 
