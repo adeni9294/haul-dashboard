@@ -101,7 +101,6 @@ export default function ClientLayout({ children }) {
     requestCapacitorPermissions();
     subscribeUserToPush();
     
-    // Perbaikan: Cleanup Listener Realtime Supabase
     const cleanupRealtime = initRealtimeTransactionListener();
     return () => {
       if (cleanupRealtime) cleanupRealtime();
@@ -266,7 +265,7 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // Menjadwalkan alarm sholat langsung ke Sistem Android (Local Notifications)
+  // Memisahkan file MP3 adzan_subuh.mp3 & adzan_biasa.mp3 untuk sistem Android
   const scheduleSholatAlarms = async (timings, namaKota) => {
     try {
       if (typeof window === 'undefined' || !window.Capacitor) return;
@@ -278,17 +277,16 @@ export default function ClientLayout({ children }) {
         await LocalNotifications.requestPermissions();
       }
 
-      // Bersihkan alarm sholat sebelumnya (ID 101 s/d 105)
       await LocalNotifications.cancel({
         notifications: [{ id: 101 }, { id: 102 }, { id: 103 }, { id: 104 }, { id: 105 }]
       });
 
       const daftarSholat = [
-        { id: 101, name: 'Subuh', time: timings.subuh || timings.Fajr },
-        { id: 102, name: 'Dzuhur', time: timings.dzuhur || timings.Dhuhr },
-        { id: 103, name: 'Ashar', time: timings.ashar || timings.Asr },
-        { id: 104, name: 'Maghrib', time: timings.maghrib || timings.Maghrib },
-        { id: 105, name: 'Isya', time: timings.isya || timings.Isha }
+        { id: 101, name: 'Subuh', time: timings.subuh || timings.Fajr, sound: 'adzan_subuh.mp3' },
+        { id: 102, name: 'Dzuhur', time: timings.dzuhur || timings.Dhuhr, sound: 'adzan_biasa.mp3' },
+        { id: 103, name: 'Ashar', time: timings.ashar || timings.Asr, sound: 'adzan_biasa.mp3' },
+        { id: 104, name: 'Maghrib', time: timings.maghrib || timings.Maghrib, sound: 'adzan_biasa.mp3' },
+        { id: 105, name: 'Isya', time: timings.isya || timings.Isha, sound: 'adzan_biasa.mp3' }
       ];
 
       const now = new Date();
@@ -310,7 +308,7 @@ export default function ClientLayout({ children }) {
           title: `🕌 Waktu Sholat ${item.name} Tiba!`,
           body: `Telah masuk waktu sholat ${item.name} untuk wilayah ${namaKota || 'Cirebon'} dan sekitarnya.`,
           schedule: { at: scheduledTime },
-          sound: null,
+          sound: item.sound,
           actionTypeId: "",
           extra: { sholatName: item.name }
         });

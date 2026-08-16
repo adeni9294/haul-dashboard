@@ -9,6 +9,14 @@
     "backgroundColor": "#0f172a"
   },
   "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1000,
+      "launchAutoHide": true,
+      "backgroundColor": "#0f172a",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashImmersive": true
+    },
     "LocalNotifications": {
       "smallIcon": "ic_stat_icon_config_sample",
       "iconColor": "#4DEEEA",
