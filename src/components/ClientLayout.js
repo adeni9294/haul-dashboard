@@ -266,6 +266,64 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
+  // Menjadwalkan alarm sholat langsung ke Sistem Android (Local Notifications)
+  const scheduleSholatAlarms = async (timings, namaKota) => {
+    try {
+      if (typeof window === 'undefined' || !window.Capacitor) return;
+
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      
+      const perm = await LocalNotifications.checkPermissions();
+      if (perm.display !== 'granted') {
+        await LocalNotifications.requestPermissions();
+      }
+
+      // Bersihkan alarm sholat sebelumnya (ID 101 s/d 105)
+      await LocalNotifications.cancel({
+        notifications: [{ id: 101 }, { id: 102 }, { id: 103 }, { id: 104 }, { id: 105 }]
+      });
+
+      const daftarSholat = [
+        { id: 101, name: 'Subuh', time: timings.subuh || timings.Fajr },
+        { id: 102, name: 'Dzuhur', time: timings.dzuhur || timings.Dhuhr },
+        { id: 103, name: 'Ashar', time: timings.ashar || timings.Asr },
+        { id: 104, name: 'Maghrib', time: timings.maghrib || timings.Maghrib },
+        { id: 105, name: 'Isya', time: timings.isya || timings.Isha }
+      ];
+
+      const now = new Date();
+      const notificationList = [];
+
+      daftarSholat.forEach((item) => {
+        if (!item.time) return;
+        const [hours, minutes] = item.time.split(':').map(Number);
+        
+        const scheduledTime = new Date();
+        scheduledTime.setHours(hours, minutes, 0, 0);
+
+        if (scheduledTime <= now) {
+          scheduledTime.setDate(scheduledTime.getDate() + 1);
+        }
+
+        notificationList.push({
+          id: item.id,
+          title: `🕌 Waktu Sholat ${item.name} Tiba!`,
+          body: `Telah masuk waktu sholat ${item.name} untuk wilayah ${namaKota || 'Cirebon'} dan sekitarnya.`,
+          schedule: { at: scheduledTime },
+          sound: null,
+          actionTypeId: "",
+          extra: { sholatName: item.name }
+        });
+      });
+
+      if (notificationList.length > 0) {
+        await LocalNotifications.schedule({ notifications: notificationList });
+      }
+    } catch (err) {
+      console.warn('Gagal menjadwalkan alarm sholat ke sistem Android:', err);
+    }
+  };
+
   async function fetchJadwalSholatDirect(idKota) {
     try {
       const foundKota = DAFTAR_KOTA.find(k => k.id === idKota) || DAFTAR_KOTA[0];
@@ -277,7 +335,7 @@ export default function ClientLayout({ children }) {
         const timings = result.data.timings;
         const hijri = result.data.date.hijri;
 
-        setJadwalSholat({
+        const dataJadwal = {
           imsak: timings.Imsak,
           subuh: timings.Fajr,
           terbit: timings.Sunrise,
@@ -285,7 +343,10 @@ export default function ClientLayout({ children }) {
           ashar: timings.Asr,
           maghrib: timings.Maghrib,
           isya: timings.Isha
-        });
+        };
+
+        setJadwalSholat(dataJadwal);
+        scheduleSholatAlarms(dataJadwal, foundKota.name);
 
         if (hijri) {
           setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
@@ -321,8 +382,7 @@ export default function ClientLayout({ children }) {
           const timings = result.data.timings;
           const hijri = result.data.date.hijri;
 
-          setKotaSholat('LOKASI SAYA (GPS)');
-          setJadwalSholat({
+          const dataJadwal = {
             imsak: timings.Imsak,
             subuh: timings.Fajr,
             terbit: timings.Sunrise,
@@ -330,7 +390,11 @@ export default function ClientLayout({ children }) {
             ashar: timings.Asr,
             maghrib: timings.Maghrib,
             isya: timings.Isha
-          });
+          };
+
+          setKotaSholat('LOKASI SAYA (GPS)');
+          setJadwalSholat(dataJadwal);
+          scheduleSholatAlarms(dataJadwal, 'LOKASI SAYA (GPS)');
 
           if (hijri) {
             setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
@@ -637,7 +701,6 @@ export default function ClientLayout({ children }) {
                   <span>Jadwal Sholat</span>
                 </button>
 
-                {/* Perbaikan Hydration: Dibungkus penuh dengan condition isMounted */}
                 {isMounted && (
                   <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-black shrink-0 px-2.5 py-1 rounded-xl ${
                     appMode === 'light' ? 'text-slate-900 bg-amber-200/60 border border-amber-300' : 'text-amber-300 bg-slate-800/80 border border-slate-700'
