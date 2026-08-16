@@ -1,5 +1,5 @@
 import ClientLayout from '@/components/ClientLayout';
-import '@/app/globals.css';
+import './globals.css';
 
 export const metadata = {
   title: 'Panitia Haul Maqbaroh Buyut Kepuh',
