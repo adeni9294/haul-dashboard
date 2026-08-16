@@ -11,8 +11,8 @@
   "dependencies": {
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
-    "@capacitor/geolocation": "^8.2.1",
-    "@capacitor/local-notifications": "^8.2.1",
+    "@capacitor/geolocation": "^8.2.2",
+    "@capacitor/local-notifications": "^8.3.0",
     "@supabase/supabase-js": "^2.108.2",
     "cordova-plugin-printer": "^0.8.0",
     "framer-motion": "^12.42.2",

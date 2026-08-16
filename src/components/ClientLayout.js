@@ -100,10 +100,14 @@ export default function ClientLayout({ children }) {
 
     requestCapacitorPermissions();
     subscribeUserToPush();
-    initRealtimeTransactionListener();
+    
+    // Perbaikan: Cleanup Listener Realtime Supabase
+    const cleanupRealtime = initRealtimeTransactionListener();
+    return () => {
+      if (cleanupRealtime) cleanupRealtime();
+    };
   }, []);
 
-  // Minta Izin Notifikasi untuk Capacitor Android Native via Dynamic Import
   const requestCapacitorPermissions = async () => {
     try {
       if (typeof window !== 'undefined' && window.Capacitor) {
@@ -118,11 +122,9 @@ export default function ClientLayout({ children }) {
     }
   };
 
-  // Realtime Listener untuk Transaksi Kas Masuk/Keluar
   const initRealtimeTransactionListener = () => {
     if (!supabase) return;
 
-    // Transaksi Masuk (Donasi)
     const donationChannel = supabase
       .channel('realtime_donations')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'donation_details' }, (payload) => {
@@ -132,7 +134,6 @@ export default function ClientLayout({ children }) {
       })
       .subscribe();
 
-    // Transaksi Keluar (Pengeluaran Kas)
     const expenseChannel = supabase
       .channel('realtime_expenses')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, (payload) => {
@@ -295,7 +296,6 @@ export default function ClientLayout({ children }) {
     }
   }
 
-  // Deteksi GPS via Dynamic Import (Aman dari Build Error Vercel)
   async function fetchJadwalAutoGPS() {
     try {
       let lat, lon;
@@ -416,7 +416,6 @@ export default function ClientLayout({ children }) {
     setCurrentActiveSholat('');
   };
 
-  // Pemicu Notifikasi via Dynamic Import (Aman dari Build Error Vercel)
   const triggerNotification = async (title, message) => {
     try {
       if (typeof window !== 'undefined' && window.Capacitor) {
@@ -556,7 +555,7 @@ export default function ClientLayout({ children }) {
       <div className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col pb-24 md:pb-8 transition-all duration-300 antialiased relative overflow-x-hidden">
         <div className="w-full min-h-screen flex flex-col relative z-10">
           
-          {/* HEADER UTUH & CERAH */}
+          {/* HEADER */}
           <header className="w-full max-w-xl md:max-w-5xl mx-auto px-3 sm:px-6 pt-4 relative">
             <div 
               className={`backdrop-blur-md p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full relative overflow-hidden transition-all duration-300 border-2 shadow-lg ${
@@ -565,10 +564,7 @@ export default function ClientLayout({ children }) {
                   : 'bg-slate-900/90 border-amber-500/50 shadow-black/40 text-white'
               }`}
             >
-              {/* BAGIAN KIRI: LOGO + JUDUL + ALAMAT */}
               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                
-                {/* KONTAINER LOGO PUTIH CERAH */}
                 <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-white p-0.5 shadow-md shadow-amber-500/20 flex items-center justify-center">
                   {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="w-full h-full object-cover rounded-full" />
@@ -602,7 +598,6 @@ export default function ClientLayout({ children }) {
                 </div>
               </div>
 
-              {/* BAGIAN KANAN: TOMBOL MODES, SHOLAT & JAM */}
               <div className={`pt-3 md:pt-0 border-t md:border-t-0 flex flex-wrap items-center justify-between md:justify-end gap-2.5 text-xs shrink-0 ${
                 appMode === 'light' ? 'border-amber-300/60' : 'border-amber-500/30'
               }`}>
@@ -642,7 +637,8 @@ export default function ClientLayout({ children }) {
                   <span>Jadwal Sholat</span>
                 </button>
 
-                {isMounted && timeString && (
+                {/* Perbaikan Hydration: Dibungkus penuh dengan condition isMounted */}
+                {isMounted && (
                   <div className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-black shrink-0 px-2.5 py-1 rounded-xl ${
                     appMode === 'light' ? 'text-slate-900 bg-amber-200/60 border border-amber-300' : 'text-amber-300 bg-slate-800/80 border border-slate-700'
                   }`}>
@@ -702,13 +698,8 @@ export default function ClientLayout({ children }) {
               className="relative -top-2 flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-amber-200 via-yellow-400 to-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-amber-200 shrink-0 group overflow-hidden"
               title="Rekening Donasi"
             >
-              {/* Kilatan Cahaya */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-
-              {/* Ikon Kado */}
               <Gift className="w-5 h-5 stroke-[2.8] text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] animate-bounce" />
-              
-              {/* Label Donasi */}
               <span className="text-[8px] font-black uppercase font-mono tracking-tighter leading-none mt-0.5 text-amber-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
                 Donasi
               </span>
