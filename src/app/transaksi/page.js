@@ -309,10 +309,19 @@ export default function TransaksiPage() {
       setAllExpenses(expensesDb || []);
     } catch (e) {
       console.error("Gagal load data: ", e);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   }
+
+  // FUNGSI HANDLER CETAK LPJ (SUPPORT ANDROID NATIVE APK & WEB BROWSER)
+  const handleCetakLPJ = () => {
+    if (typeof window !== 'undefined' && window.cordova && window.cordova.plugins && window.cordova.plugins.printer) {
+      window.cordova.plugins.printer.print();
+    } else {
+      window.print();
+    }
+  };
 
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
@@ -733,7 +742,9 @@ export default function TransaksiPage() {
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>{t.btnExcel}</span>
             </button>
-            <button onClick={() => window.print()} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
+
+            {/* TOMBOL CETAK LPJ YANG SUDAH DI-UPDATE */}
+            <button onClick={handleCetakLPJ} className="flex-1 sm:flex-initial px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black uppercase rounded-xl shadow-md text-[10px] flex items-center justify-center gap-1.5 cursor-pointer">
               <Printer className="w-3.5 h-3.5" />
               <span>{t.btnCetak}</span>
             </button>
