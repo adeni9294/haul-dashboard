@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import GlassCard from '../components/GlassCard';
+import { Geolocation } from '@capacitor/geolocation';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 import { 
   Home, 
@@ -227,7 +229,7 @@ export default function ClientLayout({ children }) {
   const audioRef = useRef(null);
   const lastTriggeredSholat = useRef('');
 
-  useEffect(() => {
+useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
 
@@ -247,7 +249,7 @@ export default function ClientLayout({ children }) {
     const updateTime = () => {
       const sekarang = new Date();
       const jamMenitDetik = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-      
+
       setTimeString(jamMenitDetik);
       setDateString(sekarang.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
 
@@ -265,15 +267,63 @@ export default function ClientLayout({ children }) {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
+  // === BACKGROUND LOCATION TRACKING ===
+  useEffect(() => {
+    const initBackgroundLocation = async () => {
+      try {
+        if (typeof window!== 'undefined' && window.Capacitor) {
+          const { Geolocation } = await import('@capacitor/geolocation');
+          const { LocalNotifications } = await import('@capacitor/local-notifications');
+
+          // Minta izin lokasi + notif
+          const perm = await Geolocation.requestPermissions();
+          await LocalNotifications.requestPermissions();
+          console.log("Permission Lokasi:", perm);
+
+          // Kalau diizinkan "Sepanjang waktu" langsung jalanin watch
+          if (perm.location === 'granted') {
+            Geolocation.watchPosition(
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+              },
+              async (position, err) => {
+                if (position) {
+                  console.log("Tracking BG:", position.coords.latitude, position.coords.longitude);
+
+                  // Update ke Supabase biar 1 device 1 row
+                  if(supabase){
+                    await supabase.from('tracking_panitia').upsert({
+                      id: 1, // ganti ke user_id kalau mau per panitia
+                      lat: position.coords.latitude,
+                      lng: position.coords.longitude,
+                      updated_at: new Date().toISOString()
+                    }, { onConflict: 'id' })
+                  }
+                }
+                if (err) console.error("Watch error:", err);
+              }
+            );
+          }
+        }
+      } catch (e) {
+        console.warn('Gagal inisialisasi Geolocation:', e);
+      }
+    };
+    initBackgroundLocation();
+  }, []);
+  // === END BACKGROUND LOCATION ===
+
   // Memisahkan file MP3 adzan_subuh.mp3 & adzan_biasa.mp3 untuk sistem Android
   const scheduleSholatAlarms = async (timings, namaKota) => {
     try {
-      if (typeof window === 'undefined' || !window.Capacitor) return;
+      if (typeof window === 'undefined' ||!window.Capacitor) return;
 
       const { LocalNotifications } = await import('@capacitor/local-notifications');
-      
+
       const perm = await LocalNotifications.checkPermissions();
-      if (perm.display !== 'granted') {
+      if (perm.display!== 'granted') {
         await LocalNotifications.requestPermissions();
       }
 
@@ -295,7 +345,7 @@ export default function ClientLayout({ children }) {
       daftarSholat.forEach((item) => {
         if (!item.time) return;
         const [hours, minutes] = item.time.split(':').map(Number);
-        
+
         const scheduledTime = new Date();
         scheduledTime.setHours(hours, minutes, 0, 0);
 
@@ -320,7 +370,7 @@ export default function ClientLayout({ children }) {
     } catch (err) {
       console.warn('Gagal menjadwalkan alarm sholat ke sistem Android:', err);
     }
-  };
+  }; // <-- ini kurung tutupnya
 
   async function fetchJadwalSholatDirect(idKota) {
     try {

@@ -10,7 +10,7 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1000,
+      "launchShowDuration": 0,
       "launchAutoHide": true,
       "backgroundColor": "#0f172a",
       "androidScaleType": "CENTER_CROP",
@@ -21,6 +21,9 @@
       "smallIcon": "ic_stat_icon_config_sample",
       "iconColor": "#4DEEEA",
       "sound": "adzan.wav"
+    },
+    "Geolocation": {
+      "backgroundModeEnabled": true
     },
     "CapacitorCookies": {
       "enabled": true
