@@ -6,8 +6,6 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import GlassCard from '../components/GlassCard';
-import { Geolocation } from '@capacitor/geolocation';
-import { LocalNotifications } from '@capacitor/local-notifications';
 
 import { 
   Home, 
@@ -35,7 +33,8 @@ import {
   Volume2,
   VolumeX,
   Sun,
-  Moon
+  Moon,
+  Navigation
 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -66,12 +65,26 @@ const DAFTAR_KOTA = [
   { id: '1609', name: 'Kota Surabaya', city: 'Surabaya', country: 'Indonesia', lat: -7.2575, lng: 112.7521 }
 ];
 
+function calculateQiblaDirection(latitude, longitude) {
+  const KAABA_LAT = 21.4225 * (Math.PI / 180);
+  const KAABA_LNG = 39.8262 * (Math.PI / 180);
+  const userLat = latitude * (Math.PI / 180);
+  const userLng = longitude * (Math.PI / 180);
+
+  const dLng = KAABA_LNG - userLng;
+  const y = Math.sin(dLng);
+  const x = Math.cos(userLat) * Math.tan(KAABA_LAT) - Math.sin(userLat) * Math.cos(dLng);
+  let qibla = Math.atan2(y, x) * (180 / Math.PI);
+  return (qibla + 360) % 360;
+}
+
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false); 
   const [showSholatModal, setShowSholatModal] = useState(false);
+  const [showKiblatModal, setShowKiblatModal] = useState(false);
   const [showMainMenuDrawer, setShowMainMenuDrawer] = useState(false); 
   const [passwordInput, setPasswordInput] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -79,6 +92,11 @@ export default function ClientLayout({ children }) {
 
   const [appMode, setAppMode] = useState('dark');
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
+
+  const [heading, setHeading] = useState(0);
+  const [qiblaBearing, setQiblaBearing] = useState(295);
+  const [isCompassPermissionGranted, setIsCompassPermissionGranted] = useState(false);
+  const [compassError, setCompassError] = useState('');
 
   const showToast = (type, title, message, action = null) => {
     setToastConfig({ show: true, type, title, message, action });
@@ -94,6 +112,20 @@ export default function ClientLayout({ children }) {
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
   const [logoUrl, setLogoUrl] = useState('');
 
+  const [timeString, setTimeString] = useState('');
+  const [dateString, setDateString] = useState('');
+
+  const [jadwalSholat, setJadwalSholat] = useState(null);
+  const [tanggalHijriah, setTanggalHijriah] = useState('');
+  const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
+  const [selectedKotaId, setSelectedKotaId] = useState('1219');
+  const [isAlarmActive, setIsAlarmActive] = useState(true);
+  
+  const [isPlayingAdzan, setIsPlayingAdzan] = useState(false);
+  const [currentActiveSholat, setCurrentActiveSholat] = useState('');
+  const audioRef = useRef(null);
+  const lastTriggeredSholat = useRef('');
+
   useEffect(() => {
     setIsMounted(true);
     const savedMode = localStorage.getItem('app_mode') || 'dark';
@@ -108,6 +140,52 @@ export default function ClientLayout({ children }) {
       if (cleanupRealtime) cleanupRealtime();
     };
   }, []);
+
+  useEffect(() => {
+    if (!showKiblatModal) return;
+
+    const currentKota = DAFTAR_KOTA.find(k => k.id === selectedKotaId) || DAFTAR_KOTA[0];
+    const targetQibla = calculateQiblaDirection(currentKota.lat, currentKota.lng);
+    setQiblaBearing(targetQibla);
+
+    const handleOrientation = (e) => {
+      let compassHeading = null;
+      if (e.webkitCompassHeading) {
+        compassHeading = e.webkitCompassHeading;
+      } else if (e.alpha !== null) {
+        compassHeading = 360 - e.alpha;
+      }
+
+      if (compassHeading !== null) {
+        setHeading(compassHeading);
+        setIsCompassPermissionGranted(true);
+      }
+    };
+
+    if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation, true);
+            } else {
+              setCompassError('Izin akses sensor kompas ditolak.');
+            }
+          })
+          .catch(() => setCompassError('Gagal meminta izin sensor kompas.'));
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+      }
+    } else {
+      setCompassError('Perangkat tidak mendukung sensor arah kompas.');
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('deviceorientation', handleOrientation, true);
+      }
+    };
+  }, [showKiblatModal, selectedKotaId]);
 
   const requestCapacitorPermissions = async () => {
     try {
@@ -215,21 +293,7 @@ export default function ClientLayout({ children }) {
     applyAppMode(nextMode);
   };
 
-  const [timeString, setTimeString] = useState('');
-  const [dateString, setDateString] = useState('');
-
-  const [jadwalSholat, setJadwalSholat] = useState(null);
-  const [tanggalHijriah, setTanggalHijriah] = useState('');
-  const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
-  const [selectedKotaId, setSelectedKotaId] = useState('1219');
-  const [isAlarmActive, setIsAlarmActive] = useState(true);
-  
-  const [isPlayingAdzan, setIsPlayingAdzan] = useState(false);
-  const [currentActiveSholat, setCurrentActiveSholat] = useState('');
-  const audioRef = useRef(null);
-  const lastTriggeredSholat = useRef('');
-
-useEffect(() => {
+  useEffect(() => {
     checkAdminSession();
     loadHeaderSettings();
 
@@ -249,7 +313,7 @@ useEffect(() => {
     const updateTime = () => {
       const sekarang = new Date();
       const jamMenitDetik = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-
+      
       setTimeString(jamMenitDetik);
       setDateString(sekarang.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
 
@@ -267,63 +331,14 @@ useEffect(() => {
     setShowMainMenuDrawer(false);
   }, [pathname]);
 
-  // === BACKGROUND LOCATION TRACKING ===
-  useEffect(() => {
-    const initBackgroundLocation = async () => {
-      try {
-        if (typeof window!== 'undefined' && window.Capacitor) {
-          const { Geolocation } = await import('@capacitor/geolocation');
-          const { LocalNotifications } = await import('@capacitor/local-notifications');
-
-          // Minta izin lokasi + notif
-          const perm = await Geolocation.requestPermissions();
-          await LocalNotifications.requestPermissions();
-          console.log("Permission Lokasi:", perm);
-
-          // Kalau diizinkan "Sepanjang waktu" langsung jalanin watch
-          if (perm.location === 'granted') {
-            Geolocation.watchPosition(
-              {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-              },
-              async (position, err) => {
-                if (position) {
-                  console.log("Tracking BG:", position.coords.latitude, position.coords.longitude);
-
-                  // Update ke Supabase biar 1 device 1 row
-                  if(supabase){
-                    await supabase.from('tracking_panitia').upsert({
-                      id: 1, // ganti ke user_id kalau mau per panitia
-                      lat: position.coords.latitude,
-                      lng: position.coords.longitude,
-                      updated_at: new Date().toISOString()
-                    }, { onConflict: 'id' })
-                  }
-                }
-                if (err) console.error("Watch error:", err);
-              }
-            );
-          }
-        }
-      } catch (e) {
-        console.warn('Gagal inisialisasi Geolocation:', e);
-      }
-    };
-    initBackgroundLocation();
-  }, []);
-  // === END BACKGROUND LOCATION ===
-
-  // Memisahkan file MP3 adzan_subuh.mp3 & adzan_biasa.mp3 untuk sistem Android
   const scheduleSholatAlarms = async (timings, namaKota) => {
     try {
-      if (typeof window === 'undefined' ||!window.Capacitor) return;
+      if (typeof window === 'undefined' || !window.Capacitor) return;
 
       const { LocalNotifications } = await import('@capacitor/local-notifications');
-
+      
       const perm = await LocalNotifications.checkPermissions();
-      if (perm.display!== 'granted') {
+      if (perm.display !== 'granted') {
         await LocalNotifications.requestPermissions();
       }
 
@@ -345,7 +360,7 @@ useEffect(() => {
       daftarSholat.forEach((item) => {
         if (!item.time) return;
         const [hours, minutes] = item.time.split(':').map(Number);
-
+        
         const scheduledTime = new Date();
         scheduledTime.setHours(hours, minutes, 0, 0);
 
@@ -370,7 +385,7 @@ useEffect(() => {
     } catch (err) {
       console.warn('Gagal menjadwalkan alarm sholat ke sistem Android:', err);
     }
-  }; // <-- ini kurung tutupnya
+  };
 
   async function fetchJadwalSholatDirect(idKota) {
     try {
@@ -653,6 +668,7 @@ useEffect(() => {
 
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
+    { name: 'Kompas Arah Kiblat', action: () => setShowKiblatModal(true), icon: Compass, color: 'text-teal-400 bg-teal-500/20' },
     { name: 'Yasin, Tahlil & Doa NU', href: '/yasin', icon: BookOpen, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Peta & Lokasi Haul', href: '/peta', icon: MapPin, color: 'text-rose-400 bg-rose-500/20' },
     { name: 'Transaksi Kas', href: '/transaksi', icon: CreditCard, color: 'text-cyan-400 bg-cyan-500/20' },
@@ -981,6 +997,84 @@ useEffect(() => {
 
               <button onClick={() => setShowSholatModal(false)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white dark:text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase cursor-pointer">
                 Tutup Jadwal
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL KOMPAS ARAH KIBLAT */}
+        {showKiblatModal && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="theme-bg-secondary border border-teal-500/40 p-5 rounded-3xl w-full max-w-sm space-y-4 shadow-2xl relative theme-text-primary transition-all duration-300">
+              <button 
+                onClick={() => setShowKiblatModal(false)} 
+                className="absolute top-4 right-4 p-1.5 rounded-full theme-bg-tertiary hover:theme-bg-tertiary theme-border theme-text-primary cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="text-center space-y-1">
+                <div className="p-3 bg-teal-500/20 text-teal-400 w-fit rounded-2xl mx-auto mb-2 border border-teal-400/30">
+                  <Navigation className="w-6 h-6 animate-pulse" />
+                </div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-teal-500 dark:text-teal-300">Kompas Arah Kiblat</h3>
+                <p className="text-[10px] font-mono theme-text-secondary uppercase">📍 {kotaSholat}</p>
+              </div>
+
+              <div className="relative w-56 h-56 mx-auto my-2 flex items-center justify-center">
+                <div 
+                  className="w-full h-full rounded-full border-4 border-teal-500/30 bg-slate-950/80 shadow-2xl relative flex items-center justify-center transition-transform duration-200 ease-out"
+                  style={{ transform: `rotate(${-heading}deg)` }}
+                >
+                  <span className="absolute top-2 text-xs font-black font-mono text-rose-500">N</span>
+                  <span className="absolute right-3 text-xs font-black font-mono text-slate-400">E</span>
+                  <span className="absolute bottom-2 text-xs font-black font-mono text-slate-400">S</span>
+                  <span className="absolute left-3 text-xs font-black font-mono text-slate-400">W</span>
+
+                  <div className="absolute inset-2 rounded-full border border-dashed border-teal-500/20" />
+
+                  <div 
+                    className="absolute w-full h-full flex justify-center items-start pt-3 transition-transform duration-300"
+                    style={{ transform: `rotate(${qiblaBearing}deg)` }}
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[20px] border-b-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      <span className="text-[9px] font-black font-mono bg-emerald-500 text-slate-950 px-1.5 py-0.5 rounded mt-0.5 shadow-md">
+                        🕋 KIBLAT
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="absolute w-4 h-4 rounded-full bg-teal-400 border-2 border-white shadow-lg pointer-events-none" />
+              </div>
+
+              <div className="p-3 theme-bg-tertiary border border-teal-500/30 rounded-2xl text-center space-y-1">
+                <div className="flex justify-between items-center text-xs font-mono font-bold">
+                  <span className="theme-text-secondary">Sudut Kiblat:</span>
+                  <span className="text-teal-400 font-black">{qiblaBearing.toFixed(1)}° (dari Utara)</span>
+                </div>
+                <div className="flex justify-between items-center text-xs font-mono font-bold">
+                  <span className="theme-text-secondary">Arah Perangkat:</span>
+                  <span className="text-amber-400 font-black">{heading.toFixed(1)}°</span>
+                </div>
+              </div>
+
+              {compassError && (
+                <p className="text-[10px] text-rose-400 text-center font-mono bg-rose-500/10 p-2 rounded-xl border border-rose-500/20">
+                  ⚠️ {compassError}
+                </p>
+              )}
+
+              <p className="text-[9px] text-center theme-text-secondary font-medium italic">
+                *Pegang HP secara mendatar untuk hasil yang akurat. Jauhkan dari benda bermagnet.
+              </p>
+
+              <button 
+                onClick={() => setShowKiblatModal(false)} 
+                className="w-full py-2.5 bg-teal-600 hover:bg-teal-500 text-white dark:text-slate-950 text-xs font-black rounded-xl transition-all font-mono uppercase cursor-pointer"
+              >
+                Tutup Kompas
               </button>
             </div>
           </div>
