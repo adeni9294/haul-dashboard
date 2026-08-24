@@ -65,7 +65,6 @@ const DAFTAR_KOTA = [
   { id: '1609', name: 'Kota Surabaya', city: 'Surabaya', country: 'Indonesia', lat: -7.2575, lng: 112.7521 }
 ];
 
-// Fungsi kalkulasi azimuth Kiblat dari koordinat (Lat, Lng)
 function calculateQiblaDirection(latitude, longitude) {
   const KAABA_LAT = 21.4225 * (Math.PI / 180);
   const KAABA_LNG = 39.8262 * (Math.PI / 180);
@@ -94,9 +93,8 @@ export default function ClientLayout({ children }) {
   const [appMode, setAppMode] = useState('dark');
   const [toastConfig, setToastConfig] = useState({ show: false, type: 'info', title: '', message: '', action: null });
 
-  // State untuk Sensor Kompas Kiblat
   const [heading, setHeading] = useState(0);
-  const [qiblaBearing, setQiblaBearing] = useState(295); // Default kisaran Indonesia
+  const [qiblaBearing, setQiblaBearing] = useState(295);
   const [isCompassPermissionGranted, setIsCompassPermissionGranted] = useState(false);
   const [compassError, setCompassError] = useState('');
 
@@ -114,6 +112,20 @@ export default function ClientLayout({ children }) {
   const [bankInfo, setBankInfo] = useState('Bank Mandiri - 134xxxxxxxx | BCA - 822xxxxxxx | BJB - 009xxxxxxx');
   const [logoUrl, setLogoUrl] = useState('');
 
+  const [timeString, setTimeString] = useState('');
+  const [dateString, setDateString] = useState('');
+
+  const [jadwalSholat, setJadwalSholat] = useState(null);
+  const [tanggalHijriah, setTanggalHijriah] = useState('');
+  const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
+  const [selectedKotaId, setSelectedKotaId] = useState('1219');
+  const [isAlarmActive, setIsAlarmActive] = useState(true);
+  
+  const [isPlayingAdzan, setIsPlayingAdzan] = useState(false);
+  const [currentActiveSholat, setCurrentActiveSholat] = useState('');
+  const audioRef = useRef(null);
+  const lastTriggeredSholat = useRef('');
+
   useEffect(() => {
     setIsMounted(true);
     const savedMode = localStorage.getItem('app_mode') || 'dark';
@@ -129,11 +141,9 @@ export default function ClientLayout({ children }) {
     };
   }, []);
 
-  // Sensor Kompas Listener
   useEffect(() => {
     if (!showKiblatModal) return;
 
-    // Menghitung Kiblat berdasarkan lokasi saat ini / kota terpilih
     const currentKota = DAFTAR_KOTA.find(k => k.id === selectedKotaId) || DAFTAR_KOTA[0];
     const targetQibla = calculateQiblaDirection(currentKota.lat, currentKota.lng);
     setQiblaBearing(targetQibla);
@@ -141,10 +151,8 @@ export default function ClientLayout({ children }) {
     const handleOrientation = (e) => {
       let compassHeading = null;
       if (e.webkitCompassHeading) {
-        // iOS
         compassHeading = e.webkitCompassHeading;
       } else if (e.alpha !== null) {
-        // Android (Absolute Orientation)
         compassHeading = 360 - e.alpha;
       }
 
@@ -156,7 +164,6 @@ export default function ClientLayout({ children }) {
 
     if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS 13+ require permission
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
             if (permissionState === 'granted') {
@@ -285,20 +292,6 @@ export default function ClientLayout({ children }) {
     localStorage.setItem('app_mode', nextMode);
     applyAppMode(nextMode);
   };
-
-  const [timeString, setTimeString] = useState('');
-  const [dateString, setDateString] = useState('');
-
-  const [jadwalSholat, setJadwalSholat] = useState(null);
-  const [tanggalHijriah, setTanggalHijriah] = useState('');
-  const [kotaSholat, setKotaSholat] = useState('KAB. CIREBON');
-  const [selectedKotaId, setSelectedKotaId] = useState('1219');
-  const [isAlarmActive, setIsAlarmActive] = useState(true);
-  
-  const [isPlayingAdzan, setIsPlayingAdzan] = useState(false);
-  const [currentActiveSholat, setCurrentActiveSholat] = useState('');
-  const audioRef = useRef(null);
-  const lastTriggeredSholat = useRef('');
 
   useEffect(() => {
     checkAdminSession();
@@ -673,7 +666,6 @@ export default function ClientLayout({ children }) {
 
   const listRekening = parseBankInfo(bankInfo);
 
-  // MENU DRAWER DENGAN TAMBAHAN MENU KOMPAS KIBLAT
   const drawerMenus = [
     { name: 'Jadwal Sholat & Alarm', action: () => setShowSholatModal(true), icon: Clock, color: 'text-emerald-400 bg-emerald-500/20' },
     { name: 'Kompas Arah Kiblat', action: () => setShowKiblatModal(true), icon: Compass, color: 'text-teal-400 bg-teal-500/20' },
@@ -1029,23 +1021,18 @@ export default function ClientLayout({ children }) {
                 <p className="text-[10px] font-mono theme-text-secondary uppercase">📍 {kotaSholat}</p>
               </div>
 
-              {/* TAMPILAN KOMPAS INTERAKTIF */}
               <div className="relative w-56 h-56 mx-auto my-2 flex items-center justify-center">
-                {/* Dial Kompas */}
                 <div 
                   className="w-full h-full rounded-full border-4 border-teal-500/30 bg-slate-950/80 shadow-2xl relative flex items-center justify-center transition-transform duration-200 ease-out"
                   style={{ transform: `rotate(${-heading}deg)` }}
                 >
-                  {/* Penanda Utara/Timur/Selatan/Barat */}
                   <span className="absolute top-2 text-xs font-black font-mono text-rose-500">N</span>
                   <span className="absolute right-3 text-xs font-black font-mono text-slate-400">E</span>
                   <span className="absolute bottom-2 text-xs font-black font-mono text-slate-400">S</span>
                   <span className="absolute left-3 text-xs font-black font-mono text-slate-400">W</span>
 
-                  {/* Garis Skala */}
                   <div className="absolute inset-2 rounded-full border border-dashed border-teal-500/20" />
 
-                  {/* Jarum Kiblat */}
                   <div 
                     className="absolute w-full h-full flex justify-center items-start pt-3 transition-transform duration-300"
                     style={{ transform: `rotate(${qiblaBearing}deg)` }}
@@ -1059,7 +1046,6 @@ export default function ClientLayout({ children }) {
                   </div>
                 </div>
 
-                {/* Titik Tengah Kompas */}
                 <div className="absolute w-4 h-4 rounded-full bg-teal-400 border-2 border-white shadow-lg pointer-events-none" />
               </div>
 
