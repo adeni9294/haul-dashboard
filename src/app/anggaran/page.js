@@ -3,11 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from '../components/GlassCard';
 
-// Import Library Ekspor
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
 export default function AnggaranPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -201,118 +196,6 @@ export default function AnggaranPage() {
   const totalRealisasi = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.real_amount || curr.realized_amount) || 0), 0);
   const totalSelisih = totalRencana - totalRealisasi;
 
-  // ==========================================
-  // FUNGSI EKSPOR EXCEL
-  // ==========================================
-  const handleExportExcel = () => {
-    if (budgetList.length === 0) return showToast('Tidak ada data anggaran untuk diekspor!', 'error');
-
-    const periodeNama = currentPeriodeObj?.nama_periode || 'Semua Periode';
-    
-    // Formatting data tabel
-    const excelData = budgetList.map((b, index) => {
-      const plan = parseFloat(b.planned_amount) || 0;
-      const real = parseFloat(b.real_amount || b.realized_amount) || 0;
-      const selisih = plan - real;
-      const titleName = b.category || b.category_name || b.name || b.title || 'Tanpa Nama Alokasi';
-
-      return {
-        'No': index + 1,
-        'Nama Alokasi': titleName,
-        'Rencana Anggaran (Rp)': plan,
-        'Realisasi Belanja (Rp)': real,
-        'Sisa / Selisih (Rp)': selisih,
-      };
-    });
-
-    // Baris Total Rekapitulasi
-    excelData.push({
-      'No': '',
-      'Nama Alokasi': 'TOTAL KESELURUHAN',
-      'Rencana Anggaran (Rp)': totalRencana,
-      'Realisasi Belanja (Rp)': totalRealisasi,
-      'Sisa / Selisih (Rp)': totalSelisih,
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Anggaran Haul');
-
-    // Buat file excel
-    XLSX.writeFile(workbook, `Laporan_Anggaran_Haul_${periodeNama.replace(/\s+/g, '_')}.xlsx`);
-    showToast('File Excel berhasil diunduh!', 'success');
-  };
-
-  // ==========================================
-  // FUNGSI EKSPOR / CETAK PDF
-  // ==========================================
-  const handleExportPDF = () => {
-    if (budgetList.length === 0) return showToast('Tidak ada data anggaran untuk dicetak!', 'error');
-
-    const doc = new jsPDF();
-    const periodeNama = currentPeriodeObj?.nama_periode || 'Semua Periode';
-
-    // Header Dokumen
-    doc.setFontSize(16);
-    doc.text('LAPORAN RENCANA ANGGARAN & REALISASI HAUL', 14, 18);
-    
-    doc.setFontSize(10);
-    doc.text(`Periode: ${periodeNama}`, 14, 25);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 30);
-
-    // Format Data Tabel
-    const tableRows = budgetList.map((b, index) => {
-      const plan = parseFloat(b.planned_amount) || 0;
-      const real = parseFloat(b.real_amount || b.realized_amount) || 0;
-      const selisih = plan - real;
-      const titleName = b.category || b.category_name || b.name || b.title || 'Tanpa Nama Alokasi';
-
-      return [
-        index + 1,
-        titleName,
-        formatRupiah(plan),
-        formatRupiah(real),
-        formatRupiah(selisih)
-      ];
-    });
-
-    // Tambah Baris Total di paling bawah
-    tableRows.push([
-      '',
-      'TOTAL KESELURUHAN',
-      formatRupiah(totalRencana),
-      formatRupiah(totalRealisasi),
-      formatRupiah(totalSelisih)
-    ]);
-
-    // Generate Tabel
-    doc.autoTable({
-      startY: 36,
-      head: [['No', 'Nama Alokasi', 'Rencana Anggaran', 'Realisasi Belanja', 'Sisa / Selisih']],
-      body: tableRows,
-      headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
-      footStyles: { fillColor: [241, 245, 249], fontStyle: 'bold' },
-      styles: { fontSize: 8 },
-      columnStyles: {
-        0: { cellWidth: 12, halign: 'center' },
-        2: { halign: 'right' },
-        3: { halign: 'right' },
-        4: { halign: 'right' }
-      },
-      didParseCell: function(data) {
-        // Highlight baris total terakhir
-        if (data.row.index === tableRows.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [240, 240, 240];
-        }
-      }
-    });
-
-    // Simpan PDF
-    doc.save(`Laporan_Anggaran_Haul_${periodeNama.replace(/\s+/g, '_')}.pdf`);
-    showToast('File PDF berhasil dicetak!', 'success');
-  };
-
   // SKELETON LOADING STATE
   if (loading) {
     return (
@@ -419,7 +302,7 @@ export default function AnggaranPage() {
         </div>
       )}
 
-      {/* HEADER PAGE STATUS, PERIODE SELECTOR & TOMBOL EKSPOR */}
+      {/* HEADER PAGE STATUS & PERIODE SELECTOR */}
       <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
@@ -443,50 +326,27 @@ export default function AnggaranPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {periodeList.length > 0 && (
-            <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
-              <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                </svg>
-                Periode:
-              </span>
-              <select
-                value={selectedPeriodeId || ''}
-                onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-                className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
-              >
-                {periodeList.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
-                    {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* TOMBOL EKSPOR EXCEL & PDF */}
-          <button
-            onClick={handleExportExcel}
-            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-bold rounded-xl transition-all shadow-md flex items-center gap-1 cursor-pointer"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Excel
-          </button>
-
-          <button
-            onClick={handleExportPDF}
-            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-mono text-[10px] font-bold rounded-xl transition-all shadow-md flex items-center gap-1 cursor-pointer"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24-1.076-.673-2.199-1.24-3.17-.57-.97-1.32-1.802-2.19-2.42-.87-.618-1.89-.968-2.95-.968H0V21h2.25v-5.25h1.22c.98 0 1.93-.32 2.73-.9 1.13-.82 1.98-2.01 2.52-3.321zM10.5 7.271H8.25V21h2.25c1.45 0 2.85-.45 4.02-1.28 1.63-1.16 2.73-2.93 3.03-4.91.31-1.98-.12-4.01-1.21-5.61C15.25 7.6 12.93 7.27 10.5 7.271z" />
-            </svg>
-            PDF
-          </button>
-        </div>
+        {periodeList.length > 0 && (
+          <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
+            <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              Periode Haul:
+            </span>
+            <select
+              value={selectedPeriodeId || ''}
+              onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+              className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+            >
+              {periodeList.map((p) => (
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
+                  {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </GlassCard>
 
       {/* INDIKATOR TUTUP BUKU */}
@@ -656,14 +516,12 @@ export default function AnggaranPage() {
 
         {/* TABEL DAFTAR RENCANA ANGGARAN */}
         <GlassCard className="lg:col-span-2 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
-              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-              </svg>
-              Rencana Anggaran vs Realisasi Belanja ({budgetList.length})
-            </h3>
-          </div>
+          <h3 className="text-xs font-black theme-text-primary uppercase tracking-wider flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+            Rencana Anggaran vs Realisasi Belanja ({budgetList.length})
+          </h3>
 
           <div className="overflow-x-auto max-h-[550px] overflow-y-auto pr-1 border theme-border rounded-xl">
             <table className="w-full text-left border-collapse text-xs">
