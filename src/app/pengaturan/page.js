@@ -168,7 +168,7 @@ export default function PengaturanPage() {
     } catch (error) {
       console.error(error);
       showToast('error', 'Gagal Unggah', `Terjadi kesalahan: ${error.message || error}`);
-    } finally {
+    } fontally {
       setIsUploading(false);
     }
   };
@@ -331,28 +331,30 @@ export default function PengaturanPage() {
     }
   };
 
-const handleAddCategory = async (e) => {
-  e.preventDefault();
-  if (!newCategory.trim()) return;
-  const supabase = getSupabase();
+  // HANDLER TAMBAH KATEGORI (FIXED)
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.trim()) return;
+    const supabase = getSupabase();
 
-  const { error } = await supabase.from('category').insert([
-    { 
-      name: newCategory.trim(), 
-      type: categoryType // Akan mengirim 'income' atau 'expense'
+    const { error } = await supabase.from('category').insert([
+      { 
+        name: newCategory.trim(), 
+        type: categoryType // Nilai 'income' atau 'expense'
+      }
+    ]);
+
+    if (!error) {
+      setNewCategory('');
+      showToast('success', 'Kategori Ditambah', 'Pos kategori kas berhasil disimpan.');
+      await loadCategories();
+    } else {
+      console.error('Insert category error:', error);
+      showToast('error', 'Gagal Tambah', error.message || 'Gagal menambah kategori baru.');
     }
-  ]);
+  };
 
-  if (!error) {
-    setNewCategory('');
-    showToast('success', 'Kategori Ditambah', 'Pos kategori kas berhasil disimpan.');
-    await loadCategories();
-  } else {
-    console.error('Insert category error:', error);
-    showToast('error', 'Gagal Tambah', error.message || 'Gagal menambah kategori baru.');
-  }
-};
-
+  // HANDLER UPDATE TIPE KATEGORI (FIXED)
   const handleUpdateCategoryType = async (id, updatedType) => {
     const supabase = getSupabase();
     const { error } = await supabase
@@ -368,6 +370,7 @@ const handleAddCategory = async (e) => {
     }
   };
 
+  // HANDLER HAPUS KATEGORI (FIXED)
   const handleDeleteCategory = (id) => {
     askConfirm(
       'Hapus Kategori',
@@ -379,7 +382,7 @@ const handleAddCategory = async (e) => {
           showToast('success', 'Terhapus', 'Kategori berhasil dihapus.');
           await loadCategories();
         } else {
-          showToast('error', 'Gagal Hapus', 'Kategori gagal dihapus.');
+          showToast('error', 'Gagal Hapus', error.message || 'Kategori gagal dihapus.');
         }
       }
     );
@@ -728,19 +731,18 @@ const handleAddCategory = async (e) => {
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="truncate font-semibold theme-text-primary">🏷️ {cat.name}</span>
                     <select
-                      value={cat.type || ''}
+                      value={cat.type || 'income'}
                       onChange={(e) => handleUpdateCategoryType(cat.id, e.target.value)}
                       className={`px-2 py-0.5 rounded-lg theme-bg-secondary border text-[10px] focus:outline-none cursor-pointer font-mono font-bold ${
-                        cat.type === 'pemasukan' 
+                        cat.type === 'income' 
                           ? 'text-emerald-400 border-emerald-500/50' 
-                          : cat.type === 'pengeluaran' 
+                          : cat.type === 'expense' 
                           ? 'text-rose-400 border-rose-500/50' 
                           : 'theme-text-secondary border-slate-700'
                       }`}
                     >
-                      <option value="" disabled className="bg-zinc-900 text-white dark:bg-zinc-900 dark:text-white">Pilih Jenis</option>
-                      <option value="pemasukan" className="text-emerald-400 bg-zinc-900 dark:bg-zinc-900 dark:text-emerald-400">📥 Pemasukan</option>
-                      <option value="pengeluaran" className="text-rose-400 bg-zinc-900 dark:bg-zinc-900 dark:text-rose-400">📤 Pengeluaran</option>
+                      <option value="income" className="text-emerald-400 bg-zinc-900 dark:bg-zinc-900 dark:text-emerald-400">📥 Pemasukan</option>
+                      <option value="expense" className="text-rose-400 bg-zinc-900 dark:bg-zinc-900 dark:text-rose-400">📤 Pengeluaran</option>
                     </select>
                   </div>
                   <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-rose-400 hover:text-rose-300 ml-2 shrink-0 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
