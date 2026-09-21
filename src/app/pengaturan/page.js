@@ -52,7 +52,7 @@ export default function PengaturanPage() {
   // State Kategori Pos Kas
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
-  const [categoryType, setCategoryType] = useState('pemasukan');
+  const [categoryType, setCategoryType] = useState('income');
 
   // State Kelola Periode Haul
   const [periodeList, setPeriodeList] = useState([]);
@@ -331,23 +331,27 @@ export default function PengaturanPage() {
     }
   };
 
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (!newCategory.trim()) return;
-    const supabase = getSupabase();
+const handleAddCategory = async (e) => {
+  e.preventDefault();
+  if (!newCategory.trim()) return;
+  const supabase = getSupabase();
 
-    const { error } = await supabase.from('category').insert([
-      { name: newCategory.trim(), type: categoryType }
-    ]);
-
-    if (!error) {
-      setNewCategory('');
-      showToast('success', 'Kategori Ditambah', 'Pos kategori kas berhasil disimpan.');
-      await loadCategories();
-    } else {
-      showToast('error', 'Gagal Tambah', 'Gagal menambah kategori baru.');
+  const { error } = await supabase.from('category').insert([
+    { 
+      name: newCategory.trim(), 
+      type: categoryType // Akan mengirim 'income' atau 'expense'
     }
-  };
+  ]);
+
+  if (!error) {
+    setNewCategory('');
+    showToast('success', 'Kategori Ditambah', 'Pos kategori kas berhasil disimpan.');
+    await loadCategories();
+  } else {
+    console.error('Insert category error:', error);
+    showToast('error', 'Gagal Tambah', error.message || 'Gagal menambah kategori baru.');
+  }
+};
 
   const handleUpdateCategoryType = async (id, updatedType) => {
     const supabase = getSupabase();
@@ -710,8 +714,8 @@ export default function PengaturanPage() {
                 onChange={(e) => setCategoryType(e.target.value)}
                 className="px-3 py-2.5 theme-bg-tertiary border theme-border theme-text-primary rounded-2xl focus:outline-none cursor-pointer font-bold"
               >
-                <option value="pemasukan" className="bg-zinc-900 text-emerald-400 dark:bg-zinc-900 dark:text-emerald-400">📥 Pemasukan</option>
-                <option value="pengeluaran" className="bg-zinc-900 text-rose-400 dark:bg-zinc-900 dark:text-rose-400">📤 Pengeluaran</option>
+                <option value="income" className="bg-zinc-900 text-emerald-400 dark:bg-zinc-900 dark:text-emerald-400">📥 Pemasukan</option>
+                <option value="expense" className="bg-zinc-900 text-rose-400 dark:bg-zinc-900 dark:text-rose-400">📤 Pengeluaran</option>
               </select>
               <button type="submit" className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl transition-all shrink-0 shadow-md uppercase font-mono cursor-pointer">
                 Tambah
