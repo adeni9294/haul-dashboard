@@ -168,7 +168,7 @@ export default function PengaturanPage() {
     } catch (error) {
       console.error(error);
       showToast('error', 'Gagal Unggah', `Terjadi kesalahan: ${error.message || error}`);
-    } fontally {
+    } finally {
       setIsUploading(false);
     }
   };
