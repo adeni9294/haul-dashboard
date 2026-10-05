@@ -96,7 +96,7 @@ const TAHLIL_GUNUNGJATI = [
   },
   { 
     id: 15, 
-    arab: "لِلّٰهِ مَا فِي السَّمٰوٰتِ وَمَا فِي الْأَرْضِ ۗ وَإِنْ تُبْدُوْا مَا فِيْ أَنْفُسِكُمْ أَوْ تُخْفُوْهُ يُحَاسِبْكُمْ بِهِ اللّٰهُ ۗ فَيَغْفِرُ لِمَنْ يَّشَآءُ وَيُعَذِّبُ مَنْ يَّشَآءُ ۗ وَاللّٰهُ عَلٰى كُلِّ شَيْءٍ قَدِيْرٌ \n\n آمَنَ الرَّسُوْلُ بِمَآ أُنْزِلَ إِلَيْهِ مِنْ رَّبِّهِ وَالْمُؤْمِنُوْنَ ۗ كُلٌّ آمَنَ بِاللّٰهِ وَمَلٰۤئِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ ۗ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِّنْ رُّسُلِهِ ۚ وَقَالُوْا سَمِعْنَا وَأَطَعْنَا ۖ غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيْرُ \n\n لَا يُكَلِّفُ اللّٰهُ نَفْسًا أِلَّا وُسْعَهَا ۗ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَآ إِنْ نَّسِيْنَآ أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَآ إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِيْنَ مِنْ قَبْلِنَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا (٧x) أَنْتَ مَوْلٰىنَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكٰفِرِيْنَ", 
+    arab: "لِلّٰهِ مَا فِي السَّمٰوٰتِ وَمَا فِي الْأَرْضِ ۗ وَإِنْ تُبْدُوْا مَا فِيْ أَنْفُسِكُمْ أَوْ تُخْفُوْهُ يُحَاسِبْكُمْ بِهِ اللّٰهُ ۗ فَيَغْفِرُ لِمَنْ يَّشَآءُ وَيُعَذِّبُ مَنْ يَّشَآءُ ۗ وَاللّٰهُ عَلٰى كُلِّ شَيْءٍ قَدِيْرٌ \n\n آمَنَ الرَّسُوْلُ بِمَآ أُنْزِلَ إِلَيْهِ مِنْ رَّبِّهِ وَالْمُؤْمِنُوْنَ ۗ كُلٌّ آمَنَ بِاللّٰهِ وَمَلٰۤئِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ ۗ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِّنْ رُّسُلِهِ ۚ وَقَالُوْا سَمِعْنَا وَأَطَعْنَا ۖ غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيْرُ \n\n لَا يُكَلِّفُ اللّٰهُ نَفْسًا أِلَّا وُسْعَهَا ۗ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَآ إِنْ نَّسِيْنَآ أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَآ إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِيْنَ مِنْ قَبْلِنَا ۚ رَبَّنَا وَلَا تَحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا (٧x) أَنْتَ مَوْلٰىنَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكٰفِرِيْنَ", 
     latin: "Lillahi ma fis-samawati wa ma fil-ardz... Wa'fu 'anna waghfir lana warhamna (7x) anta maulana fansurna 'alal-qaumil-kafirin.", 
     indo: "Akhir Al-Baqarah (Ayat 284-286) & Permohonan Rahmat (7x)." 
   },
@@ -189,19 +189,19 @@ const DOA_GUNUNGJATI = [
 export default function YasinPage() {
   const [activeTab, setActiveTab] = useState('yasin');
   const [fontSize, setFontSize] = useState(32);
-  const [yasinAyat, setYasinAyat] = useState<any[]>([]);
+  const [yasinAyat, setYasinAyat] = useState([]);
   const [loadingYasin, setLoadingYasin] = useState(true);
-  const [errorYasin, setErrorYasin] = useState<string | null>(null);
+  const [errorYasin, setErrorYasin] = useState(null);
 
   const fetchYasinFull = async () => {
     try {
       setLoadingYasin(true);
       setErrorYasin(null);
 
-      // Mencoba Primary API (equran.id)
+      // Primary API
       let res = await fetch('https://equran.id/api/v2/surat/36');
       
-      // Fallback ke Secondary API (kemenag quran api / myquran) jika equran.id gagal
+      // Secondary API
       if (!res.ok) {
         res = await fetch('https://api.myquran.com/v2/quran/surat/36');
       }
@@ -212,13 +212,11 @@ export default function YasinPage() {
 
       const data = await res.json();
 
-      // Normalisasi data dari equran.id
       if (data && data.data && Array.isArray(data.data.ayat)) {
         setYasinAyat(data.data.ayat);
       } 
-      // Normalisasi data jika me-refer ke struktur MyQuran / Kemenag
       else if (data && data.data && Array.isArray(data.data.verses)) {
-        const mapped = data.data.verses.map((v: any) => ({
+        const mapped = data.data.verses.map((v) => ({
           nomorAyat: v.number || v.verse,
           teksArab: v.text?.ar || v.arab,
           teksLatin: v.text?.latin || v.latin || '',
@@ -226,11 +224,11 @@ export default function YasinPage() {
         }));
         setYasinAyat(mapped);
       } else {
-        throw new Error('Format data Al-Qur\'an tidak dikenali');
+        throw new Error("Format data Al-Qur'an tidak dikenali");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Gagal memuat Surah Yasin:', err);
-      setErrorYasin(err?.message || 'Gagal memuat data Yasin. Pastikan koneksi internet aktif.');
+      setErrorYasin(err?.message || 'Gagal memuat data Yasin.');
     } finally {
       setLoadingYasin(false);
     }
@@ -242,7 +240,6 @@ export default function YasinPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary font-sans">
-      {/* Font Amiri khas Mushaf Al-Qur'an */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
         .font-quran {
@@ -353,7 +350,7 @@ export default function YasinPage() {
               </button>
             </GlassCard>
           ) : (
-            yasinAyat.map((item: any) => (
+            yasinAyat.map((item) => (
               <GlassCard key={item.nomorAyat} className="p-5 sm:p-6 space-y-4 shadow-md">
                 <div className="flex justify-between items-center border-b theme-border pb-3">
                   <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
