@@ -1,9 +1,96 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import GlassCard from '../components/GlassCard';
-import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ZoomIn, ZoomOut, BookOpen } from 'lucide-react';
+
+// DATA LOKAL 83 AYAT SURAH YASIN (STABIL & TANPA DEPENDENCY API EXTERNAL)
+const YASIN_LOKAL = [
+  { nomorAyat: 1, teksArab: "يسٓ", teksLatin: "Ya-Sin.", teksIndonesia: "Ya Sin." },
+  { nomorAyat: 2, teksArab: "وَالْقُرْآنِ الْحَكِيمِ", teksLatin: "Wal-qur'anil-hakim.", teksIndonesia: "Demi Al-Qur'an yang penuh hikmah," },
+  { nomorAyat: 3, teksArab: "إِنَّكَ لَمِنَ الْمُرْسَلِينَ", teksLatin: "Innaka laminal-mursalin.", teksIndonesia: "Sungguh, engkau (Muhammad) adalah salah seorang dari rasul-rasul," },
+  { nomorAyat: 4, teksArab: "عَلَىٰ صِرَاطٍ مُسْتَقِيمٍ", teksLatin: "'Ala siratim mustaqim.", teksIndonesia: "(yang berada) di atas jalan yang lurus," },
+  { nomorAyat: 5, teksArab: "تَنْزِيلَ الْعَزِيزِ الرَّحِيمِ", teksLatin: "Tanzilal-'azizir-rahim.", teksIndonesia: "(sebagai wahyu) yang diturunkan oleh Yang Mahaperkasa, Maha Penyayang," },
+  { nomorAyat: 6, teksArab: "لِتُنْذِرَ قَوْمًا مَا أُنْذِرَ آبَاؤُهُمْ فَهُمْ غَافِلُونَ", teksLatin: "Litundzira qaumam ma undzira aba'uhum fahum ghafilun.", teksIndonesia: "agar engkau memberi peringatan kepada suatu kaum yang nenek moyangnya belum pernah diberi peringatan, karena itu mereka lalai." },
+  { nomorAyat: 7, teksArab: "لَقَدْ حَقَّ الْقَوْلُ عَلَىٰ أَكْثَرِهِمْ فَهُمْ لَا يُؤْمِنُونَ", teksLatin: "Laqad haqqal-qaulu 'ala aktsarihim fahum la yu'minun.", teksIndonesia: "Sungguh, keputusan (azab) telah berlaku terhadap kebanyakan mereka, karena mereka tidak beriman." },
+  { nomorAyat: 8, teksArab: "إِنَّا جَعَلْنَا فِي أَعْنَاقِهِمْ أَغْلَالًا فَهِيَ إِلَى الْأَذْقَانِ فَهُمْ مُقْمَحُونَ", teksLatin: "Inna ja'alna fi a'naqihim aghlalan fahiya ilal-adzaqani fahum muqmahun.", teksIndonesia: "Sungguh, Kami telah memasang belenggu di leher mereka, lalu tangan mereka (diangkat) ke dagu, karena itu mereka tertengadah." },
+  { nomorAyat: 9, teksArab: "وَجَعَلْنَا مِنْ بَيْنِ أَيْدِيهِمْ سَدًّا وَمِنْ خَلْفِهِمْ سَدًّا فَأَغْشَيْنَاهُمْ فَهُمْ لَا يُبْصِرُونَ", teksLatin: "Wa ja'alna mim baini aidihim saddaw wa min khalfihim saddan fa aghsyainahum fahum la yubsirun.", teksIndonesia: "Dan Kami jadikan di hadapan mereka penyekat dan di belakang mereka penyekat (pula), dan Kami tutup (mata) mereka sehingga mereka tidak dapat melihat." },
+  { nomorAyat: 10, teksArab: "وَسَوَاءٌ عَلَيْهِمْ أَأَنْذَرْتَهُمْ أَمْ لَمْ تُنْذِرْهُمْ لَا يُؤْمِنُونَ", teksLatin: "Wa sawa'un 'alaihim a-andzartahum am lam tundzirhum la yu'minun.", teksIndonesia: "Dan sama saja bagi mereka, apakah engkau memberi peringatan kepada mereka atau engkau tidak memberi peringatan kepada mereka, mereka tidak akan beriman." },
+  { nomorAyat: 11, teksArab: "إِنَّمَا تُنْذِرُ مَنِ اتَّبَعَ الذِّكْرَ وَخَشِيَ الرَّحْمَٰنَ بِالْغَيْبِ ۖ فَبَشِّرْهُ بِمَغْفِرَةٍ وَأَجْرٍ كَرِيمٍ", teksLatin: "Innama tundziru manittaba'adz-dzikra wa khasyiyar-rahmana bil-ghaib, fa basysyirhu bimaghfiratiw wa ajrin karim.", teksIndonesia: "Sesungguhnya engkau hanya memberi peringatan kepada orang-orang yang mau mengikuti peringatan dan yang takut kepada Tuhan Yang Maha Pengasih tanpa melihat-Nya. Maka berilah mereka kabar gembira dengan ampunan dan pahala yang mulia." },
+  { nomorAyat: 12, teksArab: "إِنَّا نَحْنُ نُحْيِي الْمَوْتَىٰ وَنَكْتُبُ مَا قَدَّمُوا وَآثَارَهُمْ ۚ وَكُلَّ شَيْءٍ أَحْصَيْنَاهُ فِي إِمَامٍ مُبِينٍ", teksLatin: "Inna nahnu nuhyil-mauta wa naktubu ma qaddamu wa atsarahum, wa kulla syai'in ahsainahu fi imamim mubin.", teksIndonesia: "Sungguh, Kamilah yang menghidupkan orang-orang yang mati, dan Kamilah yang mencatat apa yang telah mereka kerjakan dan bekas-bekas yang mereka tinggalkan. Dan segala sesuatu Kami kumpulkan dalam Kitab Induk yang jelas (Lauh Mahfuzh)." },
+  { nomorAyat: 13, teksArab: "وَاضْرِبْ لَهُمْ مَثَلًا أَصْحَابَ الْقَرْيَةِ إِذْ جَاءَهَا الْمُرْسَلُونَ", teksLatin: "Wadrib lahum matsalan as-habal-qaryah, idz ja'ahal-mursalun.", teksIndonesia: "Dan buatlah suatu perumpamaan bagi mereka, yaitu penduduk suatu negeri ketika utusan-utusan datang kepada mereka." },
+  { nomorAyat: 14, teksArab: "إِذْ أَرْسَلْنَا إِلَيْهِمُ اثْنَيْنِ فَكَذَّبُوهُمَا فَعَزَّزْنَا بِثَالِثٍ فَقَالُوا إِنَّا إِلَيْكُمْ مُرْسَلُونَ", teksLatin: "Idz arsalna ilaihimuts-naini fakadz-dzabuhuma fa 'azzazna bitsalitsin faqalu inna ilaikum mursalun.", teksIndonesia: "(yaitu) ketika Kami mengutus kepada mereka dua orang utusan, lalu mereka mendustakan keduanya; kemudian Kami kuatkan dengan (utusan) yang ketiga, maka ketiga utusan itu berkata, 'Sungguh, kami adalah orang-orang yang diutus kepadamu.'" },
+  { nomorAyat: 15, teksArab: "قَالُوا مَا أَنْتُمْ إِلَّا بَشَرٌ مِثْلُنَا وَمَا أَنْزَلَ الرَّحْمَٰنُ مِنْ شَيْءٍ إِنْ أَنْتُمْ إِلَّا تَكْذِبُونَ", teksLatin: "Qalu ma antum illa basyarum mitsluna wa ma anzalar-rahmanu min syai'in in antum illa takdzibun.", teksIndonesia: "Merek (penduduk negeri) menjawab, 'Kamu ini tidak lain hanyalah manusia seperti kami, dan Tuhan Yang Maha Pengasih tidak menurunkan sesuatu apa pun; kamu hanyalah pendusta belaka.'" },
+  { nomorAyat: 16, teksArab: "قَالُوا رَبُّنَا يَعْلَمُ إِنَّا إِلَيْكُمْ لَمُرْسَلُونَ", teksLatin: "Qalu rabbuna ya'lamu inna ilaikum lamursalun.", teksIndonesia: "Mereka (utusan-utusan) berkata, 'Tuhan kami mengetahui bahwa sesungguhnya kami benar-benar diutus kepadamu.'" },
+  { nomorAyat: 17, teksArab: "وَمَا عَلَيْنَا إِلَّا الْبَلَاغُ الْمُبِينُ", teksLatin: "Wa ma 'alaina illal-balaghul-mubin.", teksIndonesia: "Dan kewajiban kami tidak lain hanyalah menyampaikan (perintah Allah) dengan jelas.'" },
+  { nomorAyat: 18, teksArab: "قَالُوا إِنَّا تَطَيَّرْنَا بِكُمْ ۖ لَئِنْ لَمْ تَنْتَهُوا لَنَرْجُمَنَّكُمْ وَلَيَمَسَّنَّكُمْ مِنَّا عَذَابٌ أَلِيمٌ", teksLatin: "Qalu inna tatayyarna bikum, la'il lam tantahu lanarjumpannakum wa layamassan-nakum minna 'adzabun alim.", teksIndonesia: "Mereka menjawab, 'Sesungguhnya kami bernasib malang karena kamu. Sungguh, jika kamu tidak berhenti (menyeru kami), niscaya kami rajam kamu dan kamu pasti akan merasakan azab yang pedih dari kami.'" },
+  { nomorAyat: 19, teksArab: "قَالُوا طَائِرُكُمْ مَعَكُمْ ۚ أَئِنْ ذُكِّرْتُمْ ۚ بَلْ أَنْتُمْ قَوْمٌ مُسْرِفُونَ", teksLatin: "Qalu ta'irukum ma'akum, a'in dzukkirtum, bal antum qaumum musrifun.", teksIndonesia: "Utusan-utusan itu berkata, 'Kemalangan kamu itu adalah karena kamu sendiri. Apakah karena kamu diberi peringatan (kamu mengancam kami)? Sebenarnya kamu adalah kaum yang melampaui batas.'" },
+  { nomorAyat: 20, teksArab: "وَجَاءَ مِنْ أَقْصَى الْمَدِينَةِ رَجُلٌ يَسْعَىٰ قَالَ يَا قَوْمِ اتَّبِعُوا الْمُرْسَلِينَ", teksLatin: "Wa ja'a min aqsal-madinati rajuluy yas'a qala ya qaumittabi'ul-mursalin.", teksIndonesia: "Dan datanglah dari ujung kota, seorang laki-laki dengan bergegas dia berkata, 'Wahai kaumku! Ikutilah utusan-utusan itu.'" },
+  { nomorAyat: 21, teksArab: "اتَّبِعُوا مَنْ لَا يَسْأَلُكُمْ أَجْرًا وَهُمْ مُهْتَدُونَ", teksLatin: "Ittabi'u mal la yas'alukum ajraw wa hum muhtadun.", teksIndonesia: "Ikutilah orang yang tidak meminta imbalan kepadamu; dan mereka adalah orang-orang yang mendapat petunjuk." },
+  { nomorAyat: 22, teksArab: "وَمَا لِيَ لَا أَعْبُدُ الَّذِي فَطَرَنِي وَإِلَيْهِ تُرْجَعُونَ", teksLatin: "Wa ma liya la a'budul-ladzi fatarani wa ilaihi turja'un.", teksIndonesia: "Dan tidak ada alasan bagiku untuk tidak menyembah (Allah) yang telah mencitakanku dan hanya kepada-Nyalah kamu akan dikembalikan." },
+  { nomorAyat: 23, teksArab: "أَأَتَّخِذُ مِنْ دُونِهِ آلِهَةً إِنْ يُرِدْنِ الرَّحْمَٰنُ بِضُرٍّ لَا تُغْنِ عَنِّي شَفَاعَتُهُمْ شَيْئًا وَلَا يُنْقِذُونِ", teksLatin: "A-'attakhidzu min dunihi alihatan iy yuridnir-rahmanu bidurril la tughni 'anni syafa'atuhum syai'aw wa la yunqidzun.", teksIndonesia: "Mengapa aku harus menyembah tuhan-tuhan selain-Nya? Jika (Allah) Yang Maha Pengasih menghendaki bencana terhadapku, niscaya pertolongan mereka tidak berguna sama sekali bagiku dan mereka tidak dapat menyelamatkanku." },
+  { nomorAyat: 24, teksArab: "إِنِّي إِذًا لَفِي ضَلَالٍ مُبِينٍ", teksLatin: "Inni idzal lafi dalalim mubin.", teksIndonesia: "Sesungguhnya jika aku (berbuat) demikian, sungguh aku berada dalam kesesatan yang nyata." },
+  { nomorAyat: 25, teksArab: "إِنِّي آمَنْتُ بِرَبِّكُمْ فَاسْمَعُونِ", teksLatin: "Inni amantu birabbikum fasma'un.", teksIndonesia: "Sesungguhnya aku telah beriman kepada Tuhanmu; maka dengarkanlah (pengakuan iman)-ku.'" },
+  { nomorAyat: 26, teksArab: "قِيلَ ادْخُلِ الْجَنَّةَ ۖ قَالَ يَا لَيْتَ قَوْمِي يَعْلَمُونَ", teksLatin: "Qiladkhulil-jannah, qala ya laita qaumi ya'lamun.", teksIndonesia: "Dikatakan (kepadanya), 'Masuklah ke surga.' Dia berkata, 'Betapa menyenangkan sekiranya kaumku mengetahui,'" },
+  { nomorAyat: 27, teksArab: "بِمَا غَفَرَ لِي رَبِّي وَجَعَلَنِي مِنَ الْمُكْرَمِينَ", teksLatin: "Bima ghafara li rabbi wa ja'alani minal-mukramin.", teksIndonesia: "apa yang menyebabkan Tuhanku memberi ampunan kepadaku dan menjadikan aku termasuk orang-orang yang dimuliakan." },
+  { nomorAyat: 28, teksArab: "وَمَا أَنْزَلْنَا عَلَىٰ قَوْمِهِ مِنْ بَعْدِهِ مِنْ جُنْدٍ مِنَ السَّمَاءِ وَمَا كُنَّا مُنْزِلِينَ", teksLatin: "Wa ma anzalna 'ala qaumihi mim ba'dihi min jundim minas-sama'i wa ma kunna munzilin.", teksIndonesia: "Dan setelah dia (dibunuh), Kami tidak menurunkan suatu pasukan pun dari langit kepada kaumnya, dan Kami tidak perlu menurunannya." },
+  { nomorAyat: 29, teksArab: "إِنْ كَانَتْ إِلَّا صَيْحَةً وَاحِدَةً فَإِذَا هُمْ خَامِدُونَ", teksLatin: "In kanat illa saihataw wahidatan fa idza hum khamidun.", teksIndonesia: "Tidak ada siksaan terhadap mereka melainkan satu teriakan saja; maka seketika itu mereka mati." },
+  { nomorAyat: 30, teksArab: "يَا حَسْرَةً عَلَى الْعِبَادِ ۚ مَا يَأْتِيهِمْ مِنْ رَسُولٍ إِلَّا كَانُوا بِهِ يَسْتَهْزِئُونَ", teksLatin: "Ya hasratan 'alal-'ibad, ma ya'tihim mir rasulin illa kanu bihi yastahzi'un.", teksIndonesia: "Betapa besar penyesalan terhadap hamba-hamba itu, setiap datang seorang rasul kepada mereka, mereka selalu memperolok-olokannya." },
+  { nomorAyat: 31, teksArab: "أَلَمْ يَرَوْا كَمْ أَهْلَكْنَا قَبْلَهُمْ مِنَ الْقُرُونِ أَنَّهُمْ إِلَيْهِمْ لَا يَرْجِعُونَ", teksLatin: "Alam yarau kam ahlakna qablahum minal-quruni annahum ilaihim la yarji'un.", teksIndonesia: "Tidakkah mereka mengetahui berapa banyak umat sebelum mereka yang telah Kami binasakan. Mereka (orang-orang yang telah dibinasakan itu) tidak ada yang kembali kepada mereka." },
+  { nomorAyat: 32, teksArab: "وَإِنْ كُلٌّ لَمَّا جَمِيعٌ لَدَيْنَا مُحْضَرُونَ", teksLatin: "Wa in kullul lamma jami'ul ladaina muhdarun.", teksIndonesia: "Dan setiap mereka, semuanya akan dihadapkan kepada Kami." },
+  { nomorAyat: 33, teksArab: "وَآيَةٌ لَهُمُ الْأَرْضُ الْمَيْتَةُ أَحْيَيْنَاهَا وَأَخْرَجْنَا مِنْهَا حَبًّا فَمِنْهُ يَأْكُلُونَ", teksLatin: "Wa ayatul lahumul-ardul-maitatu ahyainaha wa akhrajna minha habban faminhu ya'kulun.", teksIndonesia: "Dan suatu tanda (kebesaran Allah) bagi mereka adalah bumi yang mati (tandus). Kami hidupkan bumi itu dan Kami keluarkan darinya biji-bijian, maka dari (biji-bijian) itu mereka makan." },
+  { nomorAyat: 34, teksArab: "وَجَعَلْنَا فِيهَا جَنَّاتٍ مِنْ نَخِيلٍ وَأَعْنَابٍ وَفَجَّرْنَا فِيهَا مِنَ الْعُيُونِ", teksLatin: "Wa ja'alna fiha jannatim min nakhiliw wa a'nabiw wa fajjarna fiha minal-'uyun.", teksIndonesia: "Dan Kami jadikan padanya di bumi itu kebun-kebun kurma dan anggur dan Kami pancarkan padanya beberapa mata air," },
+  { nomorAyat: 35, teksArab: "لِيَأْكُلُوا مِنْ ثَمَرِهِ وَمَا عَمِلَتْهُ أَيْدِيهِمْ ۖ أَفَلَا يَشْكُرُونَ", teksLatin: "Liya'kulu min tsamarihi wa ma 'amilathu aidihim, afala yasykurun.", teksIndonesia: "agar mereka dapat makan dari buahnya, dan dari hasil usaha tangan mereka. Maka mengapa mereka tidak bersyukur?" },
+  { nomorAyat: 36, teksArab: "سُبْحَانَ الَّذِي خَلَقَ الْأَزْوَاجَ كُلَّهَا مِمَّا تُنْبِتُ الْأَرْضُ وَمِنْ أَنْفُسِهِمْ وَمِمَّا لَا يَعْلَمُونَ", teksLatin: "Subhanal-ladzi khalaqal-azwaja kullaha mimma tumbitul-ardu wa min anfusihim wa mimma la ya'lamun.", teksIndonesia: "Mahasuci (Allah) yang telah menciptakan semuanya berpasang-pasangan, baik dari apa yang ditumbuhkan oleh bumi dan dari diri mereka sendiri maupun dari apa yang tidak mereka ketahui." },
+  { nomorAyat: 37, teksArab: "وَآيَةٌ لَهُمُ اللَّيْلُ نَسْلَخُ مِنْهُ النَّهَارَ فَإِذَا هُمْ مُظْلِمُونَ", teksLatin: "Wa ayatul lahumul-lailu naslakhu minhun-nahara fa idza hum mudzlimun.", teksIndonesia: "Dan suatu tanda (kebesaran Allah) bagi mereka adalah malam; Kami tanggalkan siang dari (malam) itu, maka seketika itu mereka (berada dalam) kegelapan." },
+  { nomorAyat: 38, teksArab: "وَالشَّمْسُ تَجْرِي لِمُسْتَقَرٍّ لَهَا ۚ ذَٰلِكَ تَقْدِيرُ الْعَزِيزِ الْعَلِيمِ", teksLatin: "Wasy-syamsu tajri limustaqarril laha, dzalika taqdirul-'azizil-'alim.", teksIndonesia: "dan matahari berjalan di tempat peredarannya. Demikianlah ketetapan (Allah) Yang Mahaperkasa, Maha Mengetahui." },
+  { nomorAyat: 39, teksArab: "وَالْقَمَرَ قَدَّرْنَاهُ مَنَازِلَ حَتَّىٰ عَادَ كَالْعُرْجُونِ الْقَدِيمِ", teksLatin: "Wal-qamara qaddarnahu manazila hatta 'ada kal-'urjunil-qadim.", teksIndonesia: "Dan telah Kami tetapkan tempat peredaran bagi bulan, sehingga (setelah ia sampai ke tempat peredaran yang terakhir) kembalilah ia seperti bentuk tandan yang tua." },
+  { nomorAyat: 40, teksArab: "لَا الشَّمْسُ يَنْبَغِي لَهَا أَنْ تُدْرِكَ الْقَمَرَ وَلَا اللَّيْلُ سَابِقُ النَّهَارِ ۚ وَكُلٌّ فِي فَلَكٍ يَسْبَحُونَ", teksLatin: "Lasy-syamsu yambaghi laha an tudrikal-qamara wa lal-lailu sabiqun-nahar, wa kullun fi falaki yasbahun.", teksIndonesia: "Tidaklah mungkin bagi matahari mengejar bulan dan malam pun tidak dapat mendahului siang. Masing-masing beredar pada garis edarnya." },
+  { nomorAyat: 41, teksArab: "وَآيَةٌ لَهُمْ أَنَّا حَمَلْنَا ذُرِّيَّتَهُمْ فِي الْفُلْكِ الْمَشْحُونِ", teksLatin: "Wa ayatul lahum anna hamalna dhurriyyatahum fil-fulkil-masyhun.", teksIndonesia: "Dan suatu tanda (kebesaran Allah) bagi mereka adalah bahwa Kami mengangkut keturunan mereka dalam kapal yang penuh muatan," },
+  { nomorAyat: 42, teksArab: "وَخَلَقْنَا لَهُمْ مِنْ مِثْلِهِ مَا يَرْكَبُونَ", teksLatin: "Wa khalaqna lahum mim mitslihi ma yarkabun.", teksIndonesia: "dan Kami ciptakan (juga) untuk mereka angkutan lain seperti kapal itu yang mereka kendarai." },
+  { nomorAyat: 43, teksArab: "وَإِنْ نَشَأْ نُغْرِقْهُمْ فَلَا صَرِيخَ لَهُمْ وَلَا هُمْ يُنْقَذُونَ", teksLatin: "Wa in nasya' nughriqhum fala sarikha lahum wa la hum yunqadzun.", teksIndonesia: "Dan jika Kami menghendaki, Kami tenggelamkan mereka, maka tidak ada penolong bagi mereka dan tidak (pula) mereka diselamatkan," },
+  { nomorAyat: 44, teksArab: "إِلَّا رَحْمَةً مِنَّا وَمَتَاعًا إِلَىٰ حِينٍ", teksLatin: "Illa rahmatam minna wa mata'an ilai hin.", teksIndonesia: "melainkan (Kami selamatkan) karena rahmat yang besar dari Kami dan untuk memberikan kesenangan hidup sampai waktu tertentu." },
+  { nomorAyat: 45, teksArab: "وَإِذَا قِيلَ لَهُمُ اتَّقُوا مَا بَيْنَ أَيْدِيكُمْ وَمَا خَلْفَكُمْ لَعَلَّكُمْ تُرْحَمُونَ", teksLatin: "Wa idza qila lahumuttaqu ma baina aidikum wa ma khalfakum la'allakum turhamun.", teksIndonesia: "Dan apabila dikatakan kepada mereka, 'Takutlah kamu akan siksa yang di hadapanmu dan siksa yang akan datang agar kamu mendapat rahmat.'" },
+  { nomorAyat: 46, teksArab: "وَمَا تَأْتِيهِمْ مِنْ آيَةٍ مِنْ آيَاتِ رَبِّهِمْ إِلَّا كَانُوا عَنْهَا مُعْرِضِينَ", teksLatin: "Wa ma ta'tihim min ayatim min ayati rabbihim illa kanu 'anha mu'ridin.", teksIndonesia: "Dan setiap kali suatu tanda dari tanda-tanda kebesaran Tuhan datang kepada mereka, mereka selalu berpaling darinya." },
+  { nomorAyat: 47, teksArab: "وَإِذَا قِيلَ لَهُمْ أَنْفِقُوا مِمَّا رَزَقَكُمُ اللَّهُ قَالَ الَّذِينَ كَفَرُوا لِلَّذِينَ آمَنُوا أَنُطْعِمُ مَنْ لَوْ يَشَاءُ اللَّهُ أَطْعَمَهُ إِنْ أَنْتُمْ إِلَّا فِي ضَلَالٍ مُبِينٍ", teksLatin: "Wa idza qila lahum anfiqu mimma razaqakumullahu qalal-ladzina kafaru lilladzina amanu anut'imu mal lau yasya'ullahu at'amah, in antum illa fi dalalim mubin.", teksIndonesia: "Dan apabila dikatakan kepada mereka, 'Infakkanlah sebagian rezeki yang diberikan Allah kepadamu,' orang-orang yang kafir itu berkata kepada orang-orang yang beriman, 'Apakah kami pantas memberi makan kepada orang-orang yang jika Allah menghendaki Dia akan meberinya makan? Kamu benar-benar dalam kesesatan yang nyata.'" },
+  { nomorAyat: 48, teksArab: "وَيَقُولُونَ مَتَىٰ هَٰذَا الْوَعْدُ إِنْ كُنْتُمْ صَادِقِينَ", teksLatin: "Wa yaquluna mata hadzal-wa'du in kuntum sadiqin.", teksIndonesia: "Dan mereka berkata, 'Bilakah janji (hari berbangkit) itu (terjadi) jika kamu orang-orang yang benar?'" },
+  { nomorAyat: 49, teksArab: "مَا يَنْظُرُونَ إِلَّا صَيْحَةً وَاحِدَةً تَأْخُذُهُمْ وَهُمْ يَخِصِّمُونَ", teksLatin: "Ma yandzuruna illa saihataw wahidatan ta'khudzubum wa hum yakhissimun.", teksIndonesia: "Mereka hanya menunggu satu teriakan saja yang akan membinasakan mereka ketika mereka sedang bertengkar." },
+  { nomorAyat: 50, teksArab: "فَلَا يَسْتَطِيعُونَ تَوْصِيَةً وَلَا إِلَىٰ أَهْلِهِمْ يَرْجِعُونَ", teksLatin: "Fala yastati'una tausiyataw wa la ila ahlihim yarji'un.", teksIndonesia: "Maka mereka tidak mampu membuat suatu wasiat pun dan mereka tidak dapat kembali kepada keluarganya." },
+  { nomorAyat: 51, teksArab: "وَنُفِخَ فِي الصُّورِ فَإِذَا هُمْ مِنَ الْأَجْدَاثِ إِلَىٰ رَبِّهِمْ يَنْسِلُونَ", teksLatin: "Wa nufikha fis-suri fa idza hum minal-ajdatsi ila rabbihim yansilun.", teksIndonesia: "Lalu ditiuplah sangkakala, maka seketika itu mereka keluar dari kuburnya (dalam keadaan hidup), menuju kepada Tuhan mereka." },
+  { nomorAyat: 52, teksArab: "قَالُوا يَا وَيْلَنَا مَنْ بَعَثَنَا مِنْ مَرْقَدِنَا ۗ هَٰذَا مَا وَعَدَ الرَّحْمَٰنُ وَصَدَقَ الْمُرْسَلُونَ", teksLatin: "Qalu ya wailana mam ba'atsana mim marqadina, hadza ma wa'adar-rahmanu wa sadaqal-mursalun.", teksIndonesia: "Mereka berkata, 'Celakalah kami! Siapakah yang membangkitkan kami dari tempat tidur kami (kubur)?' Inilah yang dijanjikan (Allah) Yang Maha Pengasih dan benarlah rasul-rasul(-Nya)." },
+  { nomorAyat: 53, teksArab: "إِنْ كَانَتْ إِلَّا صَيْحَةً وَاحِدَةً فَإِذَا هُمْ جَمِيعٌ لَدَيْنَا مُحْضَرُونَ", teksLatin: "In kanat illa saihataw wahidatan fa idza hum jami'ul ladaina muhdarun.", teksIndonesia: "Teriakan itu hanya sekali saja, maka seketika itu mereka semua dihadapkan kepada Kami (untuk dihisab)." },
+  { nomorAyat: 54, teksArab: "فَالْيَوْمَ لَا تُظْلَمُ نَفْسٌ شَيْئًا وَلَا تُجْزَوْنَ إِلَّا مَا كُنْتُمْ تَعْمَلُونَ", teksLatin: "Fal-yauma la tudzlamu nafsun syai'aw wa la tujzauna illa ma kuntum ta'malun.", teksIndonesia: "Maka pada hari itu tidak ada seseorang yang dirugikan sedikit pun dan kamu tidak diberi balasan, kecuali apa yang telah kamu kerjakan." },
+  { nomorAyat: 55, teksArab: "إِنَّ أَصْحَابَ الْجَنَّةِ الْيَوْمَ فِي شُغُلٍ فَاكِهُونَ", teksLatin: "Inna as-habal-jannatil-yauma fi syughulin fakihun.", teksIndonesia: "Sesungguhnya penghuni surga pada hari itu bersenang-senang dalam kesibukan (mereka)." },
+  { nomorAyat: 56, teksArab: "هُمْ وَأَزْوَاجُهُمْ فِي ظِلَالٍ عَلَى الْأَرَائِكِ مُتَّكِئُونَ", teksLatin: "Hum wa azwajuhum fi dzilalin 'alal-ara'iki muttaki'un.", teksIndonesia: "Mereka dan pasangan-pasangannya berada dalam tempat yang teduh, bersandar di atas dipan-dipan." },
+  { nomorAyat: 57, teksArab: "لَهُمْ فِيهَا فَاكِهَةٌ وَلَهُمْ مَا يَدَّعُونَ", teksLatin: "Lahum fiha fakihatuw wa lahum ma yadda'un.", teksIndonesia: "Di surga itu mereka memperoleh buah-buahan dan memperoleh apa saja yang mereka inginkan." },
+  { nomorAyat: 58, teksArab: "سَلَامٌ قَوْلًا مِنْ رَبٍّ رَحِيمٍ", teksLatin: "Salamun qaulam mir rabbir rahim.", teksIndonesia: "(Kepada mereka dikatakan), 'Salam,' sebagai ucapan selamat dari Tuhan Yang Maha Penyayang." },
+  { nomorAyat: 59, teksArab: "وَامْتَازُوا الْيَوْمَ أَيُّهَا الْمُجْرِمُونَ", teksLatin: "Wamtazul-yauma ayyuhal-mujrimun.", teksIndonesia: "Dan (dikatakan kepada orang-orang kafir), 'Terpisahlah kamu (dari orang-orang mukmin) pada hari ini, wahai orang-orang yang berbuat jahat!'" },
+  { nomorAyat: 60, teksArab: "أَلَمْ أَعْهَدْ إِلَيْكُمْ يَا بَنِي آدَمَ أَنْ لَا تَعْبُدُوا الشَّيْطَانَ ۖ إِنَّهُ لَكُمْ عَدُوٌّ مُبِينٌ", teksLatin: "Alam a'had ilaikum ya bani adama al la ta'budusy-syaitan, innahu lakum 'aduwwum mubin.", teksIndonesia: "Bukankah Aku telah memerintahkan kepadamu wahai anak cucu Adam agar kamu tidak menyembah setan? Sungguh, setan itu musuh yang nyata bagi kamu," },
+  { nomorAyat: 61, teksArab: "وَأَنِ اعْبُدُونِي ۚ هَٰذَا صِرَاطٌ مُسْتَقِيمٌ", teksLatin: "Wa ani'buduni, hadza siratum mustaqim.", teksIndonesia: "dan hendaklah kamu menyembah-Ku. Inilah jalan yang lurus." },
+  { nomorAyat: 62, teksArab: "وَلَقَدْ أَضَلَّ مِنْكُمْ جِبِلًّا كَثِيرًا ۖ أَفَلَمْ تَكُونُوا تَعْقِلُونَ", teksLatin: "Wa laqad adalla minkum jibillan katsira, afalam takunu ta'qilun.", teksIndonesia: "Dan sungguh, ia (setan itu) telah menyesatkan sebagian besar di antara kamu. Maka apakah kamu tidak mengerti?" },
+  { nomorAyat: 63, teksArab: "هَٰذِهِ جَهَنَّمُ الَّتِي كُنْتُمْ تُوعَدُونَ", teksLatin: "Hadzihi jahannamul-lati kuntum tu'adun.", teksIndonesia: "Inilah (neraka) Jahanam yang dahulu diancamkan kepadamu." },
+  { nomorAyat: 64, teksArab: "اصْلَوْهَا الْيَوْمَ بِمَا كُنْتُمْ تَكْفُرُونَ", teksLatin: "Islauhal-yauma bima kuntum takfurun.", teksIndonesia: "Masuklah ke dalamnya pada hari ini karena dahulu kamu mengingkarinya." },
+  { nomorAyat: 65, teksArab: "الْيَوْمَ نَخْتِمُ عَلَىٰ أَفْوَاهِهِمْ وَتُكَلِّمُنَا أَيْدِيهِمْ وَتَشْهَدُ أَرْجُلُهُمْ بِمَا كَانُوا يَكْسِبُونَ", teksLatin: "Al-yauma nakhtimu 'ala afwahihim wa tukallimuna aidihim wa tasyhadu arjuluhum bima kanu yaksibun.", teksIndonesia: "Pada hari ini Kami tutup mulut mereka; tangan mereka akan berkata kepada Kami dan kaki mereka akan memberi kesaksian terhadap apa yang dahulu mereka kerjakan." },
+  { nomorAyat: 66, teksArab: "وَلَوْ نَشَاءُ لَطَمَسْنَا عَلَىٰ أَعْيُنِهِمْ فَاسْتَبَقُوا الصِّرَاطَ فَأَنَّىٰ يُبْصِرُونَ", teksLatin: "Wa lau nasya'u latamasna 'ala a'yunihim fastabaqus-sirata fa-anna yubsirun.", teksIndonesia: "Dan jika Kami menghendaki, pastilah Kami hapuskan (butakan) mata mereka; lalu mereka berlomba-lomba (mencari) jalan. Maka bagaimana mungkin mereka dapat melihat?" },
+  { nomorAyat: 67, teksArab: "وَلَوْ نَشَاءُ لَمَسَخْنَاهُمْ عَلَىٰ مَكَانَتِهِمْ فَمَا اسْتَطَاعُوا مُضِيًّا وَلَا يَرْجِعُونَ", teksLatin: "Wa lau nasya'u lamasakhnahum 'ala makanatihim famastata'u mudiyyaw wa la yarji'un.", teksIndonesia: "Dan jika Kami menghendaki, pastilah Kami ubah bentuk mereka di tempat mereka berada, sehingga mereka tidak sanggup meneruskan perjalanan dan juga tidak dapat kembali." },
+  { nomorAyat: 68, teksArab: "وَمَنْ نُعَمِّرْهُ نُنَكِّسْهُ فِي الْخَلْقِ ۖ أَفَلَا يَعْقِلُونَ", teksLatin: "Wa man nu'ammirhu nunakkishu fil-khalq, afala ya'qilun.", teksIndonesia: "Dan barang siapa yang Kami panjangkan umurnya niscaya Kami kembalikan dia kepada kejadiannya (kembali lemah). Maka apakah mereka tidak mengerti?" },
+  { nomorAyat: 69, teksArab: "وَمَا عَلَّمْنَاهُ الشِّعْرَ وَمَا يَنْبَغِي لَهُ ۚ إِنْ هُوَ إِلَّا ذِكْرٌ وَقُرْآنٌ مُبِينٌ", teksLatin: "Wa ma 'allamnahusy-syi'ra wa ma yambaghi lah, in huwa illa dzikruw wa qur'anum mubin.", teksIndonesia: "Dan Kami tidak mengajarkan syair kepadanya (Muhammad) dan bersyair itu tidaklah layak baginya. Al-Qur'an itu tidak lain hanyalah pelajaran dan kitab yang jelas," },
+  { nomorAyat: 70, teksArab: "لِيُنْذِرَ مَنْ كَانَ حَيًّا وَيَحِقَّ الْقَوْلُ عَلَى الْكَافِرِينَ", teksLatin: "Liyundzira man kana hayyaw wa yahiqqal-qaulu 'alal-kafirin.", teksIndonesia: "agar dia (Muhammad) memberi peringatan kepada orang-orang yang hidup (hatinya) dan agar pastilah ketetapan (azab) terhadap orang-orang kafir." },
+  { nomorAyat: 71, teksArab: "أَوَلَمْ يَرَوْا أَنَّا خَلَقْنَا لَهُمْ مِمَّا عَمِلَتْ أَيْدِينَا أَنْعَامًا فَهُمْ لَهَا مَالِكُونَ", teksLatin: "A wa lam yarau anna khalaqna lahum mimma 'amilat aidina an'aman fahum laha malikun.", teksIndonesia: "Dan tidakkah mereka melihat bahwa Kami telah menciptakan hewan ternak untuk mereka, yaitu sebagian dari apa yang telah Kami ciptakan dengan kekuasaan Kami, lalu mereka menguasainya?" },
+  { nomorAyat: 72, teksArab: "وَذَلَّلْنَاهَا لَهُمْ فَمِنْهَا رَكُوبُهُمْ وَمِنْهَا يَأْكُلُونَ", teksLatin: "Wa dzallalnaha lahum faminha rakubuhum wa minha ya'kuluun.", teksIndonesia: "Dan Kami tundukkan (hewan-hewan itu) untuk mereka; maka sebagian di antaranya menjadi tunggangan mereka dan sebagian lagi mereka makan." },
+  { nomorAyat: 73, teksArab: "وَلَهُمْ فِيهَا مَنَافِعُ وَمَشَارِبُ ۖ أَفَلَا يَشْكُرُونَ", teksLatin: "Wa lahum fiha manafi'u wa masyarib, afala yasykurun.", teksIndonesia: "Dan mereka memperoleh berbagai manfaat dan minuman darinya. Maka mengapa mereka tidak bersyukur?" },
+  { nomorAyat: 74, teksArab: "وَاتَّخَذُوا مِنْ دُونِ اللَّهِ آلِهَةً لَعَلَّهُمْ يُنْصَرُونَ", teksLatin: "Wattakhadzu min dunillahi alihatal la'allahum yunsarun.", teksIndonesia: "Dan mereka mengambil sesembahan selain Allah agar mereka mendapat pertolongan." },
+  { nomorAyat: 75, teksArab: "لَا يَسْتَطِيعُونَ نَصْرَهُمْ وَهُمْ لَهُمْ جُنْدٌ مُحْضَرُونَ", teksLatin: "La yastati'una nasrahum wa hum lahum jundum muhdarun.", teksIndonesia: "Sesembahan itu tidak dapat menolong mereka; padahal sesembahan itu menjadi prajurit yang disiapkan untuk menjaga mereka." },
+  { nomorAyat: 76, teksArab: "فَلَا يَحْزُنْكَ قَوْلُهُمْ ۘ إِنَّا نَعْلَمُ مَا يُسِرُّونَ وَمَا يُعْلِنُونَ", teksLatin: "Fala yahzunka qauluhum, inna na'lamu ma yusirruna wa ma yu'linun.", teksIndonesia: "Maka jangan sampai ucapan mereka membuat engkau (Muhammad) bersedih hati. Sungguh, Kami mengetahui apa yang mereka rahasiakan dan apa yang mereka nyatakan." },
+  { nomorAyat: 77, teksArab: "أَوَلَمْ يَرَ الْإِنْسَانُ أَنَّا خَلَقْنَاهُ مِنْ نُطْفَةٍ فَإِذَا هُوَ خَصِيمٌ مُبِينٌ", teksLatin: "A wa lam yaral-insanu anna khalaqnahu min nutfatin fa idza huwa khasimum mubin.", teksIndonesia: "Dan tidakkah manusia memperhatikan bahwa Kami meciptakannya dari setetes mani, ternyata dia menjadi musuh yang nyata!" },
+  { nomorAyat: 78, teksArab: "وَضَرَبَ لَنَا مَثَلًا وَنَسِيَ خَلْقَهُ ۖ قَالَ مَنْ يُحْيِي الْعِظَامَ وَهِيَ رَمِيمٌ", teksLatin: "Wa daraba lana matsalaw wa nasiya khalqah, qala may yuhyil-'idzama wa hiya ramim.", teksIndonesia: "Dan dia membuat perumpamaan bagi Kami dan melupakan kejadiannya; dia berkata, 'Siapakah yang dapat menghidupkan tulang-belulang yang telah hancur luluh?'" },
+  { nomorAyat: 79, teksArab: "قُلْ يُحْيِيهَا الَّذِي أَنْشَأَهَا أَوَّلَ مَرَّةٍ ۖ وَهُوَ بِكُلِّ خَلْقٍ عَلِيمٌ", teksLatin: "Qul yuhyihalladzi ansya'aha awwala marrah, wa huwa bikulli khalqin 'alim.", teksIndonesia: "Katakanlah (Muhammad), 'Yang akan menghidupkannya ialah (Allah) yang menciptakannya pertama kali. Dan Dia Maha Mengetahui tentang segala makhluk,'" },
+  { nomorAyat: 80, teksArab: "الَّذِي جَعَلَ لَكُمْ مِنَ الشَّجَرِ الْأَخْضَرِ نَارًا فَإِذَا أَنْتُمْ مِنْهُ تُوقِدُونَ", teksLatin: "Alladzi ja'ala lakum minasy-syajaril-akhdari naran fa idza antum minhu tuqidun.", teksIndonesia: "(yaitu) Allah yang menjadikan api untukmu dari kayu yang hijau, maka seketika itu kamu nyalakan (api) dari kayu itu." },
+  { nomorAyat: 81, teksArab: "أَوَلَيْسَ الَّذِي خَلَقَ السَّمَاوَاتِ وَالْأَرْضَ بِقَادِرٍ عَلَىٰ أَنْ يَخْلُقَ مِثْلَهُمْ ۚ بَلَىٰ وَهُوَ الْخَلَّاقُ الْعَلِيمُ", teksLatin: "A wa laisalladzi khalaqas-samawati wal-arda biqadirin 'ala ay yakhluqa mitslahum, bala wa huwal-khallaqul-'alim.", teksIndonesia: "Dan bukankah (Allah) yang menciptakan langit dan bumi, berkuasa menciptakan kembali jasad-jasad mereka yang telah hancur itu? Benar, Dia berkuasa. Dan Dialah Maha Pencipta, Maha Mengetahui." },
+  { nomorAyat: 82, teksArab: "إِنَّمَا أَمْرُهُ إِذَا أَرَادَ شَيْئًا أَنْ يَقُولَ لَهُ كُنْ فَيَكُونُ", teksLatin: "Innama amruhu idza arada syai'an ay yaqula lahu kun fa yakun.", teksIndonesia: "Sesungguhnya urusan-Nya apabila Dia menghendaki sesuatu hanyalah berkata kepadanya, 'Jadilah!' Maka jadilah sesuatu itu." },
+  { nomorAyat: 83, teksArab: "فَسُبْحَانَ الَّذِي بِيَدِهِ مَلَكُوتُ كُلِّ شَيْءٍ وَإِلَيْهِ تُرْجَعُونَ", teksLatin: "Fa subhanal-ladzi biyadihi malakutu kulli syai'iw wa ilaihi turja'un.", teksIndonesia: "Maka Mahasuci (Allah) yang di tangan-Nya kekuasaan atas segala sesuatu dan kepada-Nyalah kamu dikembalikan." }
+];
 
 // BACAAN TAHLIL KUBRO SESUAI URUTAN MAJMU' SYARIF / PESANTREN
 const TAHLIL_GUNUNGJATI = [
@@ -189,64 +276,6 @@ const DOA_GUNUNGJATI = [
 export default function YasinPage() {
   const [activeTab, setActiveTab] = useState('yasin');
   const [fontSize, setFontSize] = useState(32);
-  const [yasinAyat, setYasinAyat] = useState([]);
-  const [loadingYasin, setLoadingYasin] = useState(true);
-  const [errorYasin, setErrorYasin] = useState(null);
-
-  const fetchYasinFull = async () => {
-    try {
-      setLoadingYasin(true);
-      setErrorYasin(null);
-
-      // Endpoint API Kemenag / EQuran Publik
-      const endpoints = [
-        'https://equran.id/api/v2/surat/36',
-        'https://api.myquran.com/v2/quran/surat/36'
-      ];
-
-      let data = null;
-
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            data = await res.json();
-            break;
-          }
-        } catch (e) {
-          console.warn(`Gagal fetch dari ${url}:`, e);
-        }
-      }
-
-      if (!data) {
-        throw new Error('Tidak dapat terhubung ke server Al-Qur\'an.');
-      }
-
-      // Normalisasi data hasil response
-      if (data && data.data && Array.isArray(data.data.ayat)) {
-        setYasinAyat(data.data.ayat);
-      } else if (data && data.data && Array.isArray(data.data.verses)) {
-        const mapped = data.data.verses.map((v) => ({
-          nomorAyat: v.number || v.verse,
-          teksArab: v.text?.ar || v.arab,
-          teksLatin: v.text?.latin || v.latin || '',
-          teksIndonesia: v.translation?.id || v.id || v.text?.id
-        }));
-        setYasinAyat(mapped);
-      } else {
-        throw new Error("Format data Al-Qur'an tidak sesuai.");
-      }
-    } catch (err) {
-      console.error('Gagal memuat Surah Yasin:', err);
-      setErrorYasin(err?.message || 'Gagal memuat data Yasin.');
-    } finally {
-      setLoadingYasin(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchYasinFull();
-  }, []);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary font-sans">
@@ -330,68 +359,37 @@ export default function YasinPage() {
       {/* TAB 1: YASIN */}
       {activeTab === 'yasin' && (
         <div className="space-y-4">
-          {loadingYasin ? (
-            <div className="text-center py-12 space-y-3">
-              <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
-              <p className="text-xs theme-text-secondary font-mono font-bold animate-pulse">Memuat 83 Ayat Surah YaSiin...</p>
-            </div>
-          ) : errorYasin ? (
-            <GlassCard className="p-6 text-center space-y-4 border-red-500/30">
-              <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-red-400">Gagal Mengambil Data Yasin</p>
-                <p className="text-xs theme-text-secondary">{errorYasin}</p>
+          {YASIN_LOKAL.map((item) => (
+            <GlassCard key={item.nomorAyat} className="p-5 sm:p-6 space-y-4 shadow-md">
+              <div className="flex justify-between items-center border-b theme-border pb-3">
+                <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
+                  {item.nomorAyat}
+                </span>
+                <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wide">Surah YaSiin : Ayat {item.nomorAyat}</span>
               </div>
-              <button
-                onClick={fetchYasinFull}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 hover:bg-emerald-500 transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-4 h-4" /> Coba Muat Ulang
-              </button>
-            </GlassCard>
-          ) : yasinAyat.length === 0 ? (
-            <GlassCard className="p-6 text-center space-y-3">
-              <p className="text-xs theme-text-secondary font-medium">Data ayat tidak ditemukan.</p>
-              <button
-                onClick={fetchYasinFull}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 hover:bg-emerald-500 transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-4 h-4" /> Refresh Data
-              </button>
-            </GlassCard>
-          ) : (
-            yasinAyat.map((item) => (
-              <GlassCard key={item.nomorAyat} className="p-5 sm:p-6 space-y-4 shadow-md">
-                <div className="flex justify-between items-center border-b theme-border pb-3">
-                  <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
-                    {item.nomorAyat}
-                  </span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wide">Surah YaSiin : Ayat {item.nomorAyat}</span>
-                </div>
 
-                <p 
-                  className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
-                  style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
-                  dir="rtl"
-                >
-                  {item.teksArab}
-                </p>
+              <p 
+                className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
+                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
+                dir="rtl"
+              >
+                {item.teksArab}
+              </p>
 
-                <div className="space-y-1.5 pt-3 border-t theme-border">
-                  {item.teksLatin && (
-                    <p className="text-xs font-bold text-emerald-400 italic font-mono">
-                      {item.teksLatin}
-                    </p>
-                  )}
-                  {item.teksIndonesia && (
-                    <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
-                      "{item.teksIndonesia}"
-                    </p>
-                  )}
-                </div>
-              </GlassCard>
-            ))
-          )}
+              <div className="space-y-1.5 pt-3 border-t theme-border">
+                {item.teksLatin && (
+                  <p className="text-xs font-bold text-emerald-400 italic font-mono">
+                    {item.teksLatin}
+                  </p>
+                )}
+                {item.teksIndonesia && (
+                  <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
+                    "{item.teksIndonesia}"
+                  </p>
+                )}
+              </div>
+            </GlassCard>
+          ))}
         </div>
       )}
 
