@@ -198,16 +198,12 @@ export default function YasinPage() {
       setLoadingYasin(true);
       setErrorYasin(null);
 
-      // Primary API
-      let res = await fetch('https://equran.id/api/v2/surat/36');
-      
-      // Secondary API
-      if (!res.ok) {
-        res = await fetch('https://api.myquran.com/v2/quran/surat/36');
-      }
+      // Memanggil Internal API Route Proxy (Anti-CORS)
+      const res = await fetch('/api/yasin');
 
       if (!res.ok) {
-        throw new Error(`Gagal terhubung ke API (Status: ${res.status})`);
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `Gagal terhubung ke API (Status: ${res.status})`);
       }
 
       const data = await res.json();
