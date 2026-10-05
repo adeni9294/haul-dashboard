@@ -198,20 +198,34 @@ export default function YasinPage() {
       setLoadingYasin(true);
       setErrorYasin(null);
 
-      // Memanggil Internal API Route Proxy (Anti-CORS)
-      const res = await fetch('/api/yasin');
+      // Endpoint API Kemenag / EQuran Publik
+      const endpoints = [
+        'https://equran.id/api/v2/surat/36',
+        'https://api.myquran.com/v2/quran/surat/36'
+      ];
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || `Gagal terhubung ke API (Status: ${res.status})`);
+      let data = null;
+
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            data = await res.json();
+            break;
+          }
+        } catch (e) {
+          console.warn(`Gagal fetch dari ${url}:`, e);
+        }
       }
 
-      const data = await res.json();
+      if (!data) {
+        throw new Error('Tidak dapat terhubung ke server Al-Qur\'an.');
+      }
 
+      // Normalisasi data hasil response
       if (data && data.data && Array.isArray(data.data.ayat)) {
         setYasinAyat(data.data.ayat);
-      } 
-      else if (data && data.data && Array.isArray(data.data.verses)) {
+      } else if (data && data.data && Array.isArray(data.data.verses)) {
         const mapped = data.data.verses.map((v) => ({
           nomorAyat: v.number || v.verse,
           teksArab: v.text?.ar || v.arab,
@@ -220,7 +234,7 @@ export default function YasinPage() {
         }));
         setYasinAyat(mapped);
       } else {
-        throw new Error("Format data Al-Qur'an tidak dikenali");
+        throw new Error("Format data Al-Qur'an tidak sesuai.");
       }
     } catch (err) {
       console.error('Gagal memuat Surah Yasin:', err);
