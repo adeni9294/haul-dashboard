@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GlassCard from '../components/GlassCard';
-import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen } from 'lucide-react';
+import { ArrowLeft, ZoomIn, ZoomOut, Loader2, BookOpen, AlertCircle, RefreshCw } from 'lucide-react';
 
 // BACAAN TAHLIL KUBRO SESUAI URUTAN MAJMU' SYARIF / PESANTREN
 const TAHLIL_GUNUNGJATI = [
@@ -189,24 +189,54 @@ const DOA_GUNUNGJATI = [
 export default function YasinPage() {
   const [activeTab, setActiveTab] = useState('yasin');
   const [fontSize, setFontSize] = useState(32);
-  const [yasinAyat, setYasinAyat] = useState([]);
+  const [yasinAyat, setYasinAyat] = useState<any[]>([]);
   const [loadingYasin, setLoadingYasin] = useState(true);
+  const [errorYasin, setErrorYasin] = useState<string | null>(null);
+
+  const fetchYasinFull = async () => {
+    try {
+      setLoadingYasin(true);
+      setErrorYasin(null);
+
+      // Mencoba Primary API (equran.id)
+      let res = await fetch('https://equran.id/api/v2/surat/36');
+      
+      // Fallback ke Secondary API (kemenag quran api / myquran) jika equran.id gagal
+      if (!res.ok) {
+        res = await fetch('https://api.myquran.com/v2/quran/surat/36');
+      }
+
+      if (!res.ok) {
+        throw new Error(`Gagal terhubung ke API (Status: ${res.status})`);
+      }
+
+      const data = await res.json();
+
+      // Normalisasi data dari equran.id
+      if (data && data.data && Array.isArray(data.data.ayat)) {
+        setYasinAyat(data.data.ayat);
+      } 
+      // Normalisasi data jika me-refer ke struktur MyQuran / Kemenag
+      else if (data && data.data && Array.isArray(data.data.verses)) {
+        const mapped = data.data.verses.map((v: any) => ({
+          nomorAyat: v.number || v.verse,
+          teksArab: v.text?.ar || v.arab,
+          teksLatin: v.text?.latin || v.latin || '',
+          teksIndonesia: v.translation?.id || v.id || v.text?.id
+        }));
+        setYasinAyat(mapped);
+      } else {
+        throw new Error('Format data Al-Qur\'an tidak dikenali');
+      }
+    } catch (err: any) {
+      console.error('Gagal memuat Surah Yasin:', err);
+      setErrorYasin(err?.message || 'Gagal memuat data Yasin. Pastikan koneksi internet aktif.');
+    } finally {
+      setLoadingYasin(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchYasinFull() {
-      try {
-        setLoadingYasin(true);
-        const res = await fetch('https://equran.id/api/v2/surat/36');
-        const data = await res.json();
-        if (data && data.data && data.data.ayat) {
-          setYasinAyat(data.data.ayat);
-        }
-      } catch (err) {
-        console.error('Gagal memuat Surah Yasin:', err);
-      } finally {
-        setLoadingYasin(false);
-      }
-    }
     fetchYasinFull();
   }, []);
 
@@ -298,8 +328,32 @@ export default function YasinPage() {
               <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
               <p className="text-xs theme-text-secondary font-mono font-bold animate-pulse">Memuat 83 Ayat Surah YaSiin...</p>
             </div>
+          ) : errorYasin ? (
+            <GlassCard className="p-6 text-center space-y-4 border-red-500/30">
+              <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-red-400">Gagal Mengambil Data Yasin</p>
+                <p className="text-xs theme-text-secondary">{errorYasin}</p>
+              </div>
+              <button
+                onClick={fetchYasinFull}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 hover:bg-emerald-500 transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" /> Coba Muat Ulang
+              </button>
+            </GlassCard>
+          ) : yasinAyat.length === 0 ? (
+            <GlassCard className="p-6 text-center space-y-3">
+              <p className="text-xs theme-text-secondary font-medium">Data ayat tidak ditemukan.</p>
+              <button
+                onClick={fetchYasinFull}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 hover:bg-emerald-500 transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" /> Refresh Data
+              </button>
+            </GlassCard>
           ) : (
-            yasinAyat.map((item) => (
+            yasinAyat.map((item: any) => (
               <GlassCard key={item.nomorAyat} className="p-5 sm:p-6 space-y-4 shadow-md">
                 <div className="flex justify-between items-center border-b theme-border pb-3">
                   <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-mono text-xs font-black flex items-center justify-center shadow-sm">
@@ -317,12 +371,16 @@ export default function YasinPage() {
                 </p>
 
                 <div className="space-y-1.5 pt-3 border-t theme-border">
-                  <p className="text-xs font-bold text-emerald-400 italic font-mono">
-                    {item.teksLatin}
-                  </p>
-                  <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
-                    "{item.teksIndonesia}"
-                  </p>
+                  {item.teksLatin && (
+                    <p className="text-xs font-bold text-emerald-400 italic font-mono">
+                      {item.teksLatin}
+                    </p>
+                  )}
+                  {item.teksIndonesia && (
+                    <p className="text-xs theme-text-secondary leading-relaxed font-sans font-medium">
+                      "{item.teksIndonesia}"
+                    </p>
+                  )}
                 </div>
               </GlassCard>
             ))
@@ -330,7 +388,7 @@ export default function YasinPage() {
         </div>
       )}
 
-      {/* TAB 2: TAHLIL GUNUNG JATI (MAJMU' SYARIF) */}
+      {/* TAB 2: TAHLIL GUNUNG JATI */}
       {activeTab === 'tahlil' && (
         <div className="space-y-4">
           {TAHLIL_GUNUNGJATI.map((item) => (
