@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import GlassCard from '../components/GlassCard';
 
 export default function AnggaranPage() {
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [budgetList, setBudgetList] = useState([]);
@@ -26,6 +27,11 @@ export default function AnggaranPage() {
   // Custom Toast & Confirm Modal States
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+
+  // 1. Mencegah Hydration Layout Glitch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -50,12 +56,13 @@ export default function AnggaranPage() {
   };
 
   useEffect(() => {
+    if (!mounted) return;
     checkAdminSession();
     loadBudgets();
 
     const interval = setInterval(checkAdminSession, 1000);
     return () => clearInterval(interval);
-  }, [selectedPeriodeId]);
+  }, [mounted, selectedPeriodeId]);
 
   async function checkAdminSession() {
     const savedPassword = localStorage.getItem('admin_password_haul');
@@ -196,8 +203,8 @@ export default function AnggaranPage() {
   const totalRealisasi = budgetList.reduce((acc, curr) => acc + (parseFloat(curr.real_amount || curr.realized_amount) || 0), 0);
   const totalSelisih = totalRencana - totalRealisasi;
 
-  // SKELETON LOADING STATE
-  if (loading) {
+  // Cek mounted dulu agar tidak terjadi glitch saat SSR -> Client
+  if (!mounted || loading) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-0 pb-12">
         <div className="flex items-center justify-center gap-3 py-6 text-amber-400 font-mono text-xs tracking-widest uppercase">
@@ -223,7 +230,7 @@ export default function AnggaranPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative">
+    <div className="space-y-4 max-w-7xl mx-auto px-1 sm:px-0 pb-12 text-xs theme-text-primary relative transform-gpu">
 
       {/* MODERN FLOATING TOAST ALERT */}
       {toast.show && (
@@ -302,52 +309,54 @@ export default function AnggaranPage() {
         </div>
       )}
 
-      {/* HEADER PAGE STATUS & PERIODE SELECTOR */}
-      <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
-        <div>
-          <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
-            <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Rencana Anggaran & Alokasi Haul
-          </h2>
-          <p className="text-[10px] theme-text-tertiary font-mono mt-0.5 flex items-center gap-1">
-            Mode: {isAdmin ? (
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Admin Kontrol Penuh
-              </span>
-            ) : (
-              <span className="text-cyan-400 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                Public Read-Only
-              </span>
-            )}
-          </p>
-        </div>
-
-        {periodeList.length > 0 && (
-          <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
-            <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+      {/* HEADER PAGE STATUS & PERIODE SELECTOR - DIKUNCI MIN-HEIGHT */}
+      <div className="min-h-[72px] w-full">
+        <GlassCard className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 theme-text-primary">
+              <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Periode Haul:
-            </span>
-            <select
-              value={selectedPeriodeId || ''}
-              onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
-              className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
-            >
-              {periodeList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
-                  {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
-                </option>
-              ))}
-            </select>
+              Rencana Anggaran & Alokasi Haul
+            </h2>
+            <p className="text-[10px] theme-text-tertiary font-mono mt-0.5 flex items-center gap-1">
+              Mode: {isAdmin ? (
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Admin Kontrol Penuh
+                </span>
+              ) : (
+                <span className="text-cyan-400 font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                  Public Read-Only
+                </span>
+              )}
+            </p>
           </div>
-        )}
-      </GlassCard>
+
+          {periodeList.length > 0 && (
+            <div className="flex items-center theme-bg-tertiary p-1 border theme-border rounded-xl">
+              <span className="text-[9px] font-mono font-bold theme-text-tertiary px-2 uppercase flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+                Periode Haul:
+              </span>
+              <select
+                value={selectedPeriodeId || ''}
+                onChange={(e) => setSelectedPeriodeId(Number(e.target.value))}
+                className="theme-bg-secondary border theme-border text-[10px] theme-text-accent rounded-lg px-2 py-1 font-mono font-bold cursor-pointer focus:outline-none"
+              >
+                {periodeList.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-slate-900 text-white dark:bg-slate-900 dark:text-white">
+                    {p.nama_periode} {p.is_closed ? '(Tutup Buku)' : '(Aktif)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </GlassCard>
+      </div>
 
       {/* INDIKATOR TUTUP BUKU */}
       {currentPeriodeObj?.is_closed && (
