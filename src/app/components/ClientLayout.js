@@ -303,8 +303,8 @@ export default function ClientLayout({ children }) {
     if (savedKotaId === 'auto') {
       fetchJadwalAutoGPS();
     } else {
-      const foundKota = DAFTAR_KOTA.find(k => k.id === savedKotaId);
-      if (foundKota) setKotaSholat(foundKota.name.toUpperCase());
+      const foundKota = DAFTAR_KOTA.find(k => k.id === savedKotaId) || DAFTAR_KOTA[0];
+      setKotaSholat(foundKota.name.toUpperCase());
       fetchJadwalSholatDirect(savedKotaId);
     }
   }, [selectedKotaId]);
@@ -391,6 +391,7 @@ export default function ClientLayout({ children }) {
     try {
       const foundKota = DAFTAR_KOTA.find(k => k.id === idKota) || DAFTAR_KOTA[0];
       
+      // Request 1: Aladhan API (By Lat Lng)
       const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${foundKota.lat}&longitude=${foundKota.lng}&method=20`);
       const result = await res.json();
       
@@ -414,9 +415,38 @@ export default function ClientLayout({ children }) {
         if (hijri) {
           setTanggalHijriah(`${hijri.day} ${hijri.month.en} ${hijri.year} H`);
         }
+        return;
       }
     } catch (e) {
-      console.error('Gagal mengambil data jadwal sholat Aladhan:', e);
+      console.warn('Aladhan API gagal, mencoba Fallback ke MyQuran API:', e);
+      
+      // Fallback Request 2: MyQuran API (By ID Kota)
+      try {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        
+        const resMq = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${yyyy}/${mm}/${dd}`);
+        const resMqJson = await resMq.json();
+
+        if (resMqJson && resMqJson.status && resMqJson.data && resMqJson.data.jadwal) {
+          const j = resMqJson.data.jadwal;
+          const dataJadwal = {
+            imsak: j.imsak,
+            subuh: j.subuh,
+            terbit: j.terbit,
+            dzuhur: j.dzuhur,
+            ashar: j.ashar,
+            maghrib: j.maghrib,
+            isya: j.isya
+          };
+          setJadwalSholat(dataJadwal);
+          if (j.date) setTanggalHijriah(j.date);
+        }
+      } catch (err2) {
+        console.error('Semua API Jadwal Sholat Gagal:', err2);
+      }
     }
   }
 
@@ -480,8 +510,8 @@ export default function ClientLayout({ children }) {
     if (id === 'auto') {
       fetchJadwalAutoGPS();
     } else {
-      const foundKota = DAFTAR_KOTA.find(k => k.id === id);
-      if (foundKota) setKotaSholat(foundKota.name.toUpperCase());
+      const foundKota = DAFTAR_KOTA.find(k => k.id === id) || DAFTAR_KOTA[0];
+      setKotaSholat(foundKota.name.toUpperCase());
       fetchJadwalSholatDirect(id);
     }
   };
