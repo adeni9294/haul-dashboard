@@ -1,4 +1,17 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* ==================== 0. FONT ARABIC UTILITY (YASIN & TAHLIL) ==================== */
+.font-arabic {
+  font-family: 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif !important;
+  direction: rtl;
+  font-size: 2.1rem;      /* Ukuran font besar & jelas di layar HP */
+  line-height: 2.3;        /* Ruang vertikal cukup lebar agar harakat tidak bertumpuk */
+  text-align: right;
+  font-weight: 700;
+  letter-spacing: 0;
+  word-spacing: 2px;
+}
 
 /* ==================== 1. DARK MODE (DEFAULT) ==================== */
 :root {
@@ -140,8 +153,12 @@ aside.theme-sidebar .menu-item-active { background: var(--gradient-main); color:
 @keyframes pulseGlow { 0% { transform: translateX(-50%) scale(.9); opacity: .55; } 50% { transform: translateX(-50%) scale(1.08); opacity: 1; } 100% { transform: translateX(-50%) scale(.9); opacity: .55; } }
 @keyframes shimmer { from { background-position: 0% 0; } to { background-position: 300% 0; } }
 
-/* ==================== 6. FIX BERAT KHUSUS HP / APK - TAMBAHAN BARU ==================== */
+/* ==================== 6. FIX BERAT KHUSUS HP / APK ==================== */
 @media (max-width: 768px) {
+  .font-arabic {
+    font-size: 1.85rem;  /* Menyesuaikan layar kecil HP agar tidak overflow */
+    line-height: 2.2;
+  }
   .glass-card {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
