@@ -83,7 +83,7 @@ const YASIN_LOKAL = [
   { nomorAyat: 74, teksArab: "وَاتَّخَذُوا مِنْ دُونِ اللَّهِ آلِهَةً لَعَلَّهُمْ يُنْصَرُونَ", teksLatin: "Wattakhadzu min dunillahi alihatal la'allahum yunsarun.", teksIndonesia: "Dan mereka mengambil sesembahan selain Allah agar mereka mendapat pertolongan." },
   { nomorAyat: 75, teksArab: "لَا يَسْتَطِيعُونَ نَصْرَهُمْ وَهُمْ لَهُمْ جُنْدٌ مُحْضَرُونَ", teksLatin: "La yastati'una nasrahum wa hum lahum jundum muhdarun.", teksIndonesia: "Sesembahan itu tidak dapat menolong mereka; padahal sesembahan itu menjadi prajurit yang disiapkan untuk menjaga mereka." },
   { nomorAyat: 76, teksArab: "فَلَا يَحْزُنْكَ قَوْلُهُمْ ۘ إِنَّا نَعْلَمُ مَا يُسِرُّونَ وَمَا يُعْلِنُونَ", teksLatin: "Fala yahzunka qauluhum, inna na'lamu ma yusirruna wa ma yu'linun.", teksIndonesia: "Maka jangan sampai ucapan mereka membuat engkau (Muhammad) bersedih hati. Sungguh, Kami mengetahui apa yang mereka rahasiakan dan apa yang mereka nyatakan." },
-  { nomorAyat: 77, teksArab: "أَوَلَمْ يَرَ الْإِنْسَانُ أَنَّا خَلَقْنَاهُ مِنْ نُطْفَةٍ فَإِذَا هُوَ خَصِيمٌ مُبِينٌ", teksLatin: "A wa lam yaral-insanu anna khalaqnahu min nutfatin fa idza huwa khasimum mubin.", teksIndonesia: "Dan tidakkah manusia memperhatikan bahwa Kami meciptakannya dari setetes mani, ternyata dia menjadi musuh yang nyata!" },
+  { nomorAyat: 77, teksArab: "أَوَلَمْ يَرَ الْإINSَانُ أَنَّا خَلَقْنَاهُ مِنْ نُطْفَةٍ فَإِذَا هُوَ خَصِيمٌ مُبِينٌ", teksLatin: "A wa lam yaral-insanu anna khalaqnahu min nutfatin fa idza huwa khasimum mubin.", teksIndonesia: "Dan tidakkah manusia memperhatikan bahwa Kami meciptakannya dari setetes mani, ternyata dia menjadi musuh yang nyata!" },
   { nomorAyat: 78, teksArab: "وَضَرَبَ لَنَا مَثَلًا وَنَسِيَ خَلْقَهُ ۖ قَالَ مَنْ يُحْيِي الْعِظَامَ وَهِيَ رَمِيمٌ", teksLatin: "Wa daraba lana matsalaw wa nasiya khalqah, qala may yuhyil-'idzama wa hiya ramim.", teksIndonesia: "Dan dia membuat perumpamaan bagi Kami dan melupakan kejadiannya; dia berkata, 'Siapakah yang dapat menghidupkan tulang-belulang yang telah hancur luluh?'" },
   { nomorAyat: 79, teksArab: "قُلْ يُحْيِيهَا الَّذِي أَنْشَأَهَا أَوَّلَ مَرَّةٍ ۖ وَهُوَ بِكُلِّ خَلْقٍ عَلِيمٌ", teksLatin: "Qul yuhyihalladzi ansya'aha awwala marrah, wa huwa bikulli khalqin 'alim.", teksIndonesia: "Katakanlah (Muhammad), 'Yang akan menghidupkannya ialah (Allah) yang menciptakannya pertama kali. Dan Dia Maha Mengetahui tentang segala makhluk,'" },
   { nomorAyat: 80, teksArab: "الَّذِي جَعَلَ لَكُمْ مِنَ الشَّجَرِ الْأَخْضَرِ نَارًا فَإِذَا أَنْتُمْ مِنْهُ تُوقِدُونَ", teksLatin: "Alladzi ja'ala lakum minasy-syajaril-akhdari naran fa idza antum minhu tuqidun.", teksIndonesia: "(yaitu) Allah yang menjadikan api untukmu dari kayu yang hijau, maka seketika itu kamu nyalakan (api) dari kayu itu." },
@@ -94,7 +94,6 @@ const YASIN_LOKAL = [
 
 // BACAAN TAHLIL KUBRO SESUAI URUTAN MAJMU' SYARIF / PESANTREN
 const TAHLIL_GUNUNGJATI = [
-  // --- 1. TAWASSUL ---
   { 
     id: 1, 
     arab: "إِلَى حَضْرَةِ النَّبِيِّ الْمُصْطَفَى مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ وَآلِهِ وَأَزْوَاجِهِ وَذُرِّيَّاتِهِ وَأَهْلِ بَيْتِهِ الْكِرَامِ، شَيْءٌ لِلّٰهِ لَهُمُ الْفَاتِحَةُ...", 
@@ -119,8 +118,6 @@ const TAHLIL_GUNUNGJATI = [
     latin: "Thumma ila arwahi jami'i ahlil quburi... wa khususan ila sahibi hadhihil maqbarah (Buyut Kepuh & Buyut Besus)... lahumul fatihah...", 
     indo: "Tawasul Ahli Kubur: Khususon Pembuka Maqbaroh Buyut Kepuh & Buyut Besus serta Leluhur Desa Warujaya/Cibogo. (Al-Fatihah)" 
   },
-
-  // --- 2. AYAT-AYAT PILIHAN ---
   { 
     id: 5, 
     arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ \n قُلْ هُوَ اللّٰهُ أَحَدٌ ۚ اللّٰهُ الصَّمَدُ ۚ لَمْ يَلِدْ وَلَمْ يُولَدْ ۙ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ (٣x)", 
@@ -187,32 +184,24 @@ const TAHLIL_GUNUNGJATI = [
     latin: "Lillahi ma fis-samawati wa ma fil-ardz... Wa'fu 'anna waghfir lana warhamna (7x) anta maulana fansurna 'alal-qaumil-kafirin.", 
     indo: "Akhir Al-Baqarah (Ayat 284-286) & Permohonan Rahmat (7x)." 
   },
-
-  // --- 3. ISTIGHFAR ---
   { 
     id: 16, 
     arab: "أَسْتَغْفِرُ اللّٰهَ الْعَظِيْمَ (٣٣x)", 
     latin: "Astaghfirullahal 'Adzim (33x)", 
     indo: "Membaca Istighfar 33 kali." 
   },
-
-  // --- 4. SHOLAWAT ---
   { 
     id: 17, 
     arab: "اللّٰهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِ سَيِّدِنَا مُحَمَّدٍ (٣x) \n\n اللّٰهُمَّ صَلِّ صَلَاةً كَامِلَةً وَسَلِّمْ سَلَامًا تَامًّا عَلَى سَيِّدِنَا مُحَمَّدٍ الَّذِي تَنْحَلُّ بِهِ الْعُقَدُ وَتَنْفَرِجُ بِهِ الْكُرَبُ وَتُقْضَى بِهِ الْحَوَائِجُ وَتُنَالُ بِهِ الرَّغَائِبُ وَحُسْنُ الْخَوَاتِمِ وَيُسْتَسْقَى الْغَمَامُ بِوَجْهِهِ الْكَرِيْمِ وَعَلَى آلِهِ وَصَحْبِهِ فِي كُلِّ لَمْحَةٍ وَنَفَسٍ بِعَدَدِ كُلِّ مَعْلُوْمٍ لَكَ", 
     latin: "Allahumma shalli 'ala sayyidina muhammadin wa 'ala ali sayyidina muhammad (3x)... Shalawat Nariyah", 
     indo: "Membaca Shalawat Nabi & Shalawat Nariyah." 
   },
-
-  // --- 5. TASBIH ---
   { 
     id: 18, 
     arab: "سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ سُبْحَانَ اللّٰهِ الْعَظِيْمِ (٣٣x)", 
     latin: "Subhanallahi wa bihamdihi subhanallahil 'adzim (33x)", 
     indo: "Membaca Tasbih 33 kali." 
   },
-
-  // --- 6. MEMBACA KALIMAT THAYYIBAH (ZIKIR TAHLIL) ---
   { 
     id: 19, 
     arab: "أَفْضَلُ الذِّكْرِ فَاعْلَمْ أَنَّهُ لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَوْجُوْدٌ \n لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ مَعْبُوْدٌ \n لَا إِلٰهَ إِلَّا اللهُ، حَيٌّ بَاقٍ الَّذِي لَا يَمُوْتُ", 
@@ -221,7 +210,7 @@ const TAHLIL_GUNUNGJATI = [
   },
   { 
     id: 20, 
-    arab: "لَا إِلٰهَ إِلَّا اللهُ (٣٣x / ١٠٠x)", 
+    arab: "لَا إِلٰهَ إِلَّا اللهُ (٣٣x / ١٠0x)", 
     latin: "Laa ilaaha illallaah (33x / 100x)", 
     indo: "Membaca Kalimat Thayyibah (Dzikir Tahlil)." 
   },
@@ -233,7 +222,7 @@ const TAHLIL_GUNUNGJATI = [
   }
 ];
 
-// --- 7. DOA TAHLIL LENGKAP KASANAH MAJMU' SYARIF / GUNUNG JATI CIREBON ---
+// DOA TAHLIL
 const DOA_GUNUNGJATI = [
   { 
     id: 1, 
@@ -279,13 +268,6 @@ export default function YasinPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12 theme-text-primary font-sans">
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
-        .font-quran {
-          font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
-        }
-      `}</style>
-
       {/* Navigation Header */}
       <GlassCard className="p-4 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold theme-text-accent hover:opacity-80 transition-opacity cursor-pointer">
@@ -368,10 +350,10 @@ export default function YasinPage() {
                 <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wide">Surah YaSiin : Ayat {item.nomorAyat}</span>
               </div>
 
+              {/* Menggunakan Class .font-arabic agar menggunakan font Amiri & style yang tebal */}
               <p 
-                className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
-                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
-                dir="rtl"
+                className="font-arabic theme-text-primary py-3 whitespace-pre-line"
+                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.1}px` }}
               >
                 {item.teksArab}
               </p>
@@ -393,7 +375,7 @@ export default function YasinPage() {
         </div>
       )}
 
-      {/* TAB 2: TAHLIL GUNUNG JATI */}
+      {/* TAB 2: TAHLIL */}
       {activeTab === 'tahlil' && (
         <div className="space-y-4">
           {TAHLIL_GUNUNGJATI.map((item) => (
@@ -406,9 +388,8 @@ export default function YasinPage() {
               </div>
 
               <p 
-                className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
-                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
-                dir="rtl"
+                className="font-arabic theme-text-primary py-3 whitespace-pre-line"
+                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.1}px` }}
               >
                 {item.arab}
               </p>
@@ -439,9 +420,8 @@ export default function YasinPage() {
               </div>
 
               <p 
-                className="text-right font-quran theme-text-primary py-3 font-bold whitespace-pre-line"
-                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.2}px` }}
-                dir="rtl"
+                className="font-arabic theme-text-primary py-3 whitespace-pre-line"
+                style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 2.1}px` }}
               >
                 {item.arab}
               </p>
