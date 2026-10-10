@@ -23,10 +23,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id" className="dark" suppressHydrationWarning>
       <head>
-        {/* 🛡️ Content Security Policy (CSP) untuk mengatasi blokir Supabase WebSocket & Google Fonts */}
+        {/* 🛡️ Content Security Policy (CSP) - Mengizinkan Supabase, Google Fonts & API Jadwal Sholat */}
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' blob: data: https:;"
+          content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' blob: data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.myquran.com https://*.myquran.com https://api.aladhan.com https://fonts.googleapis.com https://fonts.gstatic.com https: wss:;"
         />
 
         <meta name="color-scheme" content="dark light" />
