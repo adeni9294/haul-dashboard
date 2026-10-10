@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import GlassCard from './components/GlassCard';
 
@@ -32,8 +32,6 @@ const DICTIONARY = {
     combinedDonor: 'GABUNGAN DARI',
     donorUpper: 'DONATUR',
     operasionalExpense: 'Pengeluaran Operasional',
-    totalKunjungan: 'Total Kunjungan Aplikasi',
-    pengunjungUnik: 'Pengunjung Unik (IP)',
     selectPeriod: 'PILIH PERIODE HAUL:',
     selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Saldo Awal Kas',
@@ -65,8 +63,6 @@ const DICTIONARY = {
     combinedDonor: 'GABUNGAN SAKING',
     donorUpper: 'DONATUR',
     operasionalExpense: 'Pragat Blonjo Operasional',
-    totalKunjungan: 'Kabeh Klik Sing Mlebu',
-    pengunjungUnik: 'Wong Sing Deleng (IP)',
     selectPeriod: 'PILIH PERIODE HAUL:',
     selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Bondo Awal Kas',
@@ -98,8 +94,6 @@ const DICTIONARY = {
     combinedDonor: 'COMBINED OF',
     donorUpper: 'DONORS',
     operasionalExpense: 'Operational Expenditure',
-    totalKunjungan: 'Total Hits / Pageviews',
-    pengunjungUnik: 'Unique Visitors (IP)',
     selectPeriod: 'SELECT HAUL PERIOD:',
     selectLanguage: 'SELECT LANGUAGE:',
     initialBalance: 'Opening Cash Balance',
@@ -124,43 +118,12 @@ export default function DashboardPage() {
   
   const [periodeList, setPeriodeList] = useState([]);
   const [selectedPeriodeId, setSelectedPeriodeId] = useState(null);
-  const [visitorStats, setVisitorStats] = useState({ totalViews: 0, uniqueCount: 0 });
-  
-  const visitorLogRecordedRef = useRef(false);
-  const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
-  useEffect(() => {
-    if (!visitorLogRecordedRef.current && supabase) {
-      visitorLogRecordedRef.current = true;
-      recordVisitorLog();
-    }
-  }, []);
+  const dict = DICTIONARY[lang] || DICTIONARY['id'];
 
   useEffect(() => {
     loadDashboardData();
   }, [selectedPeriodeId]);
-
-  async function recordVisitorLog() {
-    if (!supabase) return;
-    try {
-      let ipAddress = '127.0.0.1';
-      try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const ipData = await res.json();
-        ipAddress = ipData.ip;
-      } catch (e) {
-        console.log('IP fetch failed, using default');
-      }
-
-      await supabase.from('visitor_logs').insert({
-        path: typeof window !== 'undefined' ? window.location.pathname || '/' : '/',
-        ip_address: ipAddress,
-        user_agent: typeof window !== 'undefined' ? window.navigator.userAgent || 'unknown' : 'unknown'
-      });
-    } catch (err) {
-      console.error('Visitor log error:', err);
-    }
-  }
 
   async function loadDashboardData() {
     if (!supabase) return;
@@ -200,33 +163,17 @@ export default function DashboardPage() {
         setAnnouncement(settingsData.announcement || settingsData.banner_text || '');
       }
 
-      let visitorData = { totalViews: 0, uniqueCount: 0 };
-      try {
-        const { count: countViews, error: countError } = await supabase
-          .from('visitor_logs')
-          .select('*', { count: 'exact', head: true });
-
-        if (!countError) {
-          const { data: listIps, error: ipsError } = await supabase
-            .from('visitor_logs')
-            .select('ip_address');
-
-          const uniqueIpsCount = !ipsError && listIps ? new Set(listIps.map(v => v.ip_address)).size : 0;
-          visitorData = { totalViews: countViews || 0, uniqueCount: uniqueIpsCount };
-        }
-      } catch (visErr) {
-        console.error('Visitor stats error:', visErr);
+      // Memuat Plafon Target Anggaran dari Tabel Budgets Sesuai Periode Aktif
+      let budgetQuery = supabase.from('budgets').select('*');
+      if (activePeriodeId) {
+        budgetQuery = budgetQuery.eq('periode_id', activePeriodeId);
       }
-      setVisitorStats(visitorData);
-
-      const { data: budgetsData } = await supabase
-        .from('budgets')
-        .select('planned_amount');
+      const { data: budgetsData } = await budgetQuery;
 
       let totalPlafonDinamis = 0;
-      if (budgetsData) {
+      if (budgetsData && budgetsData.length > 0) {
         budgetsData.forEach(b => {
-          totalPlafonDinamis += parseFloat(b.planned_amount) || 0;
+          totalPlafonDinamis += parseFloat(b.amount) || parseFloat(b.planned_amount) || 0;
         });
       }
 
@@ -624,58 +571,28 @@ export default function DashboardPage() {
               
       </div>
 
-      {/* LOG TRAFIK PENGUNJUNG & TARGET PLAFON PROGRESS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
-
-        <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:col-span-1">
-          <GlassCard className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] font-mono theme-text-tertiary uppercase truncate">{dict.totalKunjungan}</p>
-              <h4 className="text-base font-black font-mono leading-tight">{visitorStats.totalViews}</h4>
-            </div>
-          </GlassCard>
-
-          <GlassCard className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-400 shrink-0">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] font-mono theme-text-tertiary uppercase truncate">{dict.pengunjungUnik}</p>
-              <h4 className="text-base font-black font-mono leading-tight">{visitorStats.uniqueCount}</h4>
-            </div>
-          </GlassCard>
+      {/* TARGET PLAFON PROGRESS (FULL WIDTH) */}
+      <GlassCard className="w-full p-4 flex flex-col justify-center space-y-3 print:hidden">
+        <div className="flex justify-between items-center">
+          <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 theme-text-primary">
+            <svg className="w-4 h-4 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {dict.progressTitle}
+          </h3>
+          <span className="theme-text-accent font-mono text-xs font-black theme-bg-tertiary px-2 py-0.5 rounded theme-border border">{progress.percent}%</span>
         </div>
-
-        <GlassCard className="md:col-span-2 p-4 flex flex-col justify-center space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 theme-text-primary">
-              <svg className="w-4 h-4 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              {dict.progressTitle}
-            </h3>
-            <span className="theme-text-accent font-mono text-xs font-black theme-bg-tertiary px-2 py-0.5 rounded theme-border border">{progress.percent}%</span>
-          </div>
-          <div className="w-full h-3 theme-bg-tertiary rounded-full overflow-hidden p-0.5 theme-border border">
-            <div
-              className="h-full theme-gradient-main rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(progress.percent, 100)}%` }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-[10px] font-mono theme-text-secondary">
-            <span>{dict.collected}: <strong className="theme-text-primary">{formatRupiah(progress.current)}</strong></span>
-            <span>{dict.target}: <strong className="theme-text-primary">{formatRupiah(progress.target)}</strong></span>
-          </div>
-        </GlassCard>
-
-      </div>
+        <div className="w-full h-3 theme-bg-tertiary rounded-full overflow-hidden p-0.5 theme-border border">
+          <div
+            className="h-full theme-gradient-main rounded-full transition-all duration-500"
+            style={{ width: `${Math.min(progress.percent, 100)}%` }}
+          />
+        </div>
+        <div className="flex justify-between items-center text-[10px] font-mono theme-text-secondary">
+          <span>{dict.collected}: <strong className="theme-text-primary">{formatRupiah(progress.current)}</strong></span>
+          <span>{dict.target}: <strong className="theme-text-primary">{formatRupiah(progress.target)}</strong></span>
+        </div>
+      </GlassCard>
 
       {/* REKAP KATEGORI */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
