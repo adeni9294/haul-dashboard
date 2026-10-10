@@ -125,6 +125,8 @@ aside.theme-sidebar .menu-item-active { background: var(--gradient-main); color:
 .btn-theme-primary:hover { box-shadow: 0 0 30px var(--shadow-color); transform: translateY(-2px); }
 .btn-theme-secondary { background-color: var(--bg-card); color: var(--accent-primary); border-color: var(--border-color); transition: all 0.3s ease; }
 .btn-theme-secondary:hover { background-color: var(--bg-tertiary); }
+
+/* ==================== GLASS CARD DEKSTOP ==================== */
 .glass-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -133,6 +135,10 @@ aside.theme-sidebar .menu-item-active { background: var(--gradient-main); color:
   border-radius: var(--glass-radius);
   box-shadow: 0 8px 30px var(--glass-shadow);
   transition: background .35s ease, border .35s ease, box-shadow .35s ease, transform .25s ease;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .glass-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px var(--glass-shadow); }
 
@@ -153,26 +159,32 @@ aside.theme-sidebar .menu-item-active { background: var(--gradient-main); color:
 @keyframes pulseGlow { 0% { transform: translateX(-50%) scale(.9); opacity: .55; } 50% { transform: translateX(-50%) scale(1.08); opacity: 1; } 100% { transform: translateX(-50%) scale(.9); opacity: .55; } }
 @keyframes shimmer { from { background-position: 0% 0; } to { background-position: 300% 0; } }
 
-/* ==================== 6. FIX BERAT KHUSUS HP / APK ==================== */
+/* ==================== 6. FIX GLITCH TOTAL KHUSUS HP (MOBILE) ==================== */
 @media (max-width: 768px) {
   .font-arabic {
-    font-size: 1.85rem;  /* Menyesuaikan layar kecil HP agar tidak overflow */
+    font-size: 1.85rem;
     line-height: 2.2;
   }
+  
+  /* Matikan total backdrop blur di mobile agar tidak merusak GPU rendering saat refresh */
   .glass-card {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     background: var(--bg-card) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+    transform: none !important;
   }
+  
   .glass-card:hover {
     transform: none !important;
   }
+  
   .kb-splash {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     background: var(--bg-primary) !important;
   }
+  
   .kb-glow {
     display: none !important;
   }
